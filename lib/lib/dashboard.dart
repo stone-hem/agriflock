@@ -1,0 +1,182 @@
+import 'package:agriflock360/lib/features/farm/farms_home_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:agriflock360/lib/home_screen.dart';
+import 'package:agriflock360/lib/features/profile/profile_screen.dart';
+import 'package:agriflock360/lib/reports_screen.dart';
+
+class MainDashboard extends StatefulWidget {
+  const MainDashboard({super.key});
+
+  @override
+  State<MainDashboard> createState() => _MainDashboardState();
+}
+
+class _MainDashboardState extends State<MainDashboard> {
+  int _selectedIndex = 0;
+
+  final List<Widget> _screens = [
+    const HomeScreen(),
+    const FarmsHomeScreen(),
+    const ReportsScreen(),
+    const ProfileScreen(),
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: _screens[_selectedIndex],
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 20,
+              offset: const Offset(0, -2),
+            ),
+          ],
+          border: Border(
+            top: BorderSide(
+              color: Colors.grey.shade200,
+              width: 1,
+            ),
+          ),
+        ),
+        child: NavigationBar(
+          selectedIndex: _selectedIndex,
+          onDestinationSelected: _onItemTapped,
+          indicatorColor: Colors.green.withOpacity(0.15),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          height: 72,
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+          animationDuration: const Duration(milliseconds: 300),
+          destinations: [
+            NavigationDestination(
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: _selectedIndex == 0
+                      ? Colors.green.withOpacity(0.1)
+                      : Colors.transparent,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.home_outlined,
+                  color: _selectedIndex == 0 ? Colors.green : Colors.grey.shade600,
+                  size: 24,
+                ),
+              ),
+              selectedIcon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.home,
+                  color: Colors.green,
+                  size: 24,
+                ),
+              ),
+              label: 'Home',
+            ),
+            NavigationDestination(
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: _selectedIndex == 1
+                      ? Colors.blue.withOpacity(0.1)
+                      : Colors.transparent,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.agriculture_outlined,
+                  color: _selectedIndex == 1 ? Colors.blue : Colors.grey.shade600,
+                  size: 24,
+                ),
+              ),
+              selectedIcon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.agriculture,
+                  color: Colors.blue,
+                  size: 24,
+                ),
+              ),
+              label: 'Farms',
+            ),
+            NavigationDestination(
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: _selectedIndex == 2
+                      ? Colors.purple.withOpacity(0.1)
+                      : Colors.transparent,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.bar_chart_outlined,
+                  color: _selectedIndex == 2 ? Colors.purple : Colors.grey.shade600,
+                  size: 24,
+                ),
+              ),
+              selectedIcon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.purple.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.bar_chart,
+                  color: Colors.purple,
+                  size: 24,
+                ),
+              ),
+              label: 'Reports',
+            ),
+            NavigationDestination(
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: _selectedIndex == 3
+                      ? Colors.teal.withOpacity(0.1)
+                      : Colors.transparent,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.person_outlined,
+                  color: _selectedIndex == 3 ? Colors.teal : Colors.grey.shade600,
+                  size: 24,
+                ),
+              ),
+              selectedIcon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.teal.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.person,
+                  color: Colors.teal,
+                  size: 24,
+                ),
+              ),
+              label: 'Profile',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
