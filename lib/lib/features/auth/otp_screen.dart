@@ -271,7 +271,7 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
     });
 
     // Navigate to create farm or dashboard
-    context.go('/create-farm');
+    context.go('/onboarding-quiz');
   }
 
   void _resendOTP() {

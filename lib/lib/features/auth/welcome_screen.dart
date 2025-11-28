@@ -33,7 +33,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     OnboardingPage(
       // Fresh farm eggs in baskets (poultry product focus)
-      imageUrl: 'assets/onboarding/three.png',
+      imageUrl: 'assets/onboarding/three.jpg',
       title: 'Boost Your Profits',
       description: 'Make data-driven decisions with detailed reports and insights to grow your business',
     ),

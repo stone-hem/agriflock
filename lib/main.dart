@@ -1,3 +1,4 @@
+import 'package:agriflock360/lib/features/auth/onboarding_quiz_screen.dart';
 import 'package:agriflock360/lib/features/batch/active_batches_screen.dart';
 import 'package:agriflock360/lib/features/batch/add_batch_screen.dart';
 import 'package:agriflock360/lib/features/batch/archived_batches_screen.dart';
@@ -68,6 +69,9 @@ final GoRouter _router = GoRouter(
     ),
     GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
     GoRoute(path: '/signup', builder: (context, state) => const SignupScreen()),
+    GoRoute(
+      path: '/onboarding-quiz',
+      builder: (context, state) => const OnboardingQuestionsScreen(),),
     GoRoute(
       path: '/otp-verify',
       builder: (context, state) => const OTPVerifyScreen(),

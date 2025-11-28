@@ -14,8 +14,6 @@ class _SignupScreenState extends State<SignupScreen> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _farmNameController = TextEditingController();
-  final _locationController = TextEditingController();
 
   bool _obscurePassword = true;
   bool _isLoading = false;
@@ -289,90 +287,6 @@ class _SignupScreenState extends State<SignupScreen> {
                             }
                             if (value.length < 6) {
                               return 'Password must be at least 6 characters';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Farm Name
-                        TextFormField(
-                          controller: _farmNameController,
-                          decoration: InputDecoration(
-                            labelText: 'Farm Name',
-                            hintText: 'Enter your farm name',
-                            prefixIcon: Container(
-                              margin: const EdgeInsets.only(right: 12),
-                              decoration: BoxDecoration(
-                                color: Colors.green.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(
-                                Icons.agriculture_outlined,
-                                color: Colors.green.shade600,
-                              ),
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Colors.green.shade600,
-                                width: 2,
-                              ),
-                            ),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your farm name';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Location
-                        TextFormField(
-                          controller: _locationController,
-                          decoration: InputDecoration(
-                            labelText: 'Location',
-                            hintText: 'Enter your farm location',
-                            prefixIcon: Container(
-                              margin: const EdgeInsets.only(right: 12),
-                              decoration: BoxDecoration(
-                                color: Colors.green.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(
-                                Icons.location_on_outlined,
-                                color: Colors.green.shade600,
-                              ),
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Colors.green.shade600,
-                                width: 2,
-                              ),
-                            ),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your location';
                             }
                             return null;
                           },
@@ -688,7 +602,7 @@ class _SignupScreenState extends State<SignupScreen> {
     });
 
     // TODO: Implement actual Google Sign In
-    context.go('/dashboard');
+    context.go('/onboarding-quiz');
   }
 
   void _signInWithApple() async {
@@ -704,7 +618,7 @@ class _SignupScreenState extends State<SignupScreen> {
     });
 
     // TODO: Implement actual Apple Sign In
-    context.go('/dashboard');
+    context.go('/onboarding-quiz');
   }
 
   void _showTermsDialog(BuildContext context) {
@@ -759,8 +673,6 @@ class _SignupScreenState extends State<SignupScreen> {
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
-    _farmNameController.dispose();
-    _locationController.dispose();
     super.dispose();
   }
 }
