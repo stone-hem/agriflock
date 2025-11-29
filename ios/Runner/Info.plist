@@ -4,8 +4,10 @@
 	<dict>
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
+
+		<!-- Updated app name -->
 		<key>CFBundleDisplayName</key>
-		<string>Agriflock360</string>
+		<string>Agriflock 360</string>
 		<key>CFBundleExecutable</key>
 		<string>$(EXECUTABLE_NAME)</string>
 		<key>CFBundleIdentifier</key>
@@ -13,7 +15,7 @@
 		<key>CFBundleInfoDictionaryVersion</key>
 		<string>6.0</string>
 		<key>CFBundleName</key>
-		<string>agriflock360</string>
+		<string>Agriflock 360</string>
 		<key>CFBundlePackageType</key>
 		<string>APPL</string>
 		<key>CFBundleShortVersionString</key>
@@ -47,5 +49,9 @@
 		<true/>
 		<key>UIStatusBarHidden</key>
 		<false/>
+
+		<!-- Permission for accessing Photo Library (file uploads) -->
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>This app requires access to your photo library to allow you to upload images for poultry tracking.</string>
 	</dict>
 </plist>
