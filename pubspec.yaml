@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+1
+version: 1.0.0+2
 
 environment:
   sdk: ^3.9.2
@@ -94,34 +94,35 @@ flutter:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/logos/Logo_0725.png"
+  remove_alpha: true
+  image_path: "assets/logos/logo_gen.png"
   min_sdk_android: 21 # android min sdk min:16, default 21
   web:
     generate: true
-    image_path: "assets/logos/Logo_0725.png"
+    image_path: "assets/logos/logo_gen.png"
     background_color: "#ffffff"
     theme_color: "#ffffff"
   windows:
     generate: true
-    image_path: "assets/logos/Logo_0725.png"
+    image_path: "assets/logos/logo_gen.png"
     icon_size: 48 # min:48, max:256, default: 48
   macos:
     generate: true
-    image_path: "assets/logos/Logo_0725.png"
+    image_path: "assets/logos/logo_gen.png"
 
 
 flutter_native_splash:
   color: "#ffffff"
-  image: assets/logos/Logo_0725.png
-  branding: assets/logos/Logo_0725.png
+  image: assets/logos/logo_gen.png
+  branding: assets/logos/logo_gen.png
   color_dark: "#121212"
-  image_dark: assets/logos/Logo_0725.png
-  branding_dark: assets/logos/Logo_0725.png
+  image_dark: assets/logos/logo_gen.png
+  branding_dark: assets/logos/logo_gen.png
 
   android_12:
-    image: assets/logos/Logo_0725.png
+    image: assets/logos/logo_gen.png
     icon_background_color: "#ffffff"
-    image_dark: assets/logos/Logo_0725.png
+    image_dark: assets/logos/logo_gen.png
     icon_background_color_dark: "#121212"
 
   web: false
