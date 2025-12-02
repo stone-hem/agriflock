@@ -64,20 +64,62 @@ class BatchVaccinationsTab extends StatelessWidget {
             // Upcoming & Recent Vaccinations & Recommended Schedule
             Expanded(
               child: DefaultTabController(
-                length: 3, // Changed from 2 to 3
+                length: 3,
                 child: Column(
                   children: [
-                    TabBar(
-                      labelColor: Colors.green,
-                      unselectedLabelColor: Colors.grey,
-                      indicatorColor: Colors.green,
-                      isScrollable: true,
-                      tabAlignment: TabAlignment.start,
-                      tabs: const [
-                        Tab(text: 'Upcoming'),
-                        Tab(text: 'History'),
-                        Tab(text: 'Recommended Schedule'),
-                      ],
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            blurRadius: 8,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: TabBar(
+                        isScrollable: true,
+                        tabAlignment: TabAlignment.start,
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.all(6),
+                        dividerColor: Colors.transparent,
+                        indicator: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF4CAF50), Color(0xFF2E7D32)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.green.withOpacity(0.3),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        indicatorSize: TabBarIndicatorSize.tab,
+                        labelColor: Colors.white,
+                        unselectedLabelColor: Colors.grey.shade600,
+                        labelStyle: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
+                        ),
+                        unselectedLabelStyle: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        splashFactory: NoSplash.splashFactory,
+                        overlayColor: MaterialStateProperty.all(Colors.transparent),
+                        tabs: [
+                          _buildTabWithIcon(Icons.upcoming, 'Upcoming'),
+                          _buildTabWithIcon(Icons.history, 'History'),
+                          _buildTabWithIcon(Icons.schedule, 'Schedule'),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Expanded(
@@ -106,6 +148,9 @@ class BatchVaccinationsTab extends StatelessWidget {
                                 statusColor: Colors.orange,
                                 dosage: '0.5ml per bird',
                                 administered: false,
+                                onCancel: () {
+                                  _showCancelDialog(context, 'Newcastle Disease', 'Dec 15, 2023');
+                                },
                               ),
                               _VaccinationItem(
                                 vaccineName: 'Infectious Bronchitis',
@@ -114,6 +159,9 @@ class BatchVaccinationsTab extends StatelessWidget {
                                 statusColor: Colors.orange,
                                 dosage: '0.3ml per bird',
                                 administered: false,
+                                onCancel: () {
+                                  _showCancelDialog(context, 'Infectious Bronchitis', 'Dec 20, 2023');
+                                },
                               ),
                               _VaccinationItem(
                                 vaccineName: 'Fowl Pox',
@@ -122,6 +170,9 @@ class BatchVaccinationsTab extends StatelessWidget {
                                 statusColor: Colors.red,
                                 dosage: 'Wing-stab method',
                                 administered: false,
+                                onCancel: () {
+                                  _showCancelDialog(context, 'Fowl Pox', 'Dec 5, 2023');
+                                },
                               ),
                             ],
                           ),
@@ -135,6 +186,7 @@ class BatchVaccinationsTab extends StatelessWidget {
                                 statusColor: Colors.green,
                                 dosage: '0.2ml per bird',
                                 administered: true,
+                                onCancel: null,
                               ),
                               _VaccinationItem(
                                 vaccineName: 'Gumboro',
@@ -143,6 +195,7 @@ class BatchVaccinationsTab extends StatelessWidget {
                                 statusColor: Colors.green,
                                 dosage: '0.5ml per bird',
                                 administered: true,
+                                onCancel: null,
                               ),
                               _VaccinationItem(
                                 vaccineName: 'Avian Influenza',
@@ -151,12 +204,31 @@ class BatchVaccinationsTab extends StatelessWidget {
                                 statusColor: Colors.green,
                                 dosage: '0.3ml per bird',
                                 administered: true,
+                                onCancel: null,
                               ),
                             ],
                           ),
                           // Recommended Schedule Tab
                           ListView(
                             children: [
+                              Container(
+                                margin: const EdgeInsets.only(bottom: 16),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: FilledButton.icon(
+                                        onPressed: () {},
+                                        icon: const Icon(Icons.download),
+                                        label: const Text('Adopt All Schedule'),
+                                        style: FilledButton.styleFrom(
+                                          backgroundColor: Colors.green,
+                                          foregroundColor: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 16),
                                 child: Container(
@@ -261,6 +333,133 @@ class BatchVaccinationsTab extends StatelessWidget {
       ),
     );
   }
+
+  void _showCancelDialog(BuildContext context, String vaccineName, String date) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Cancel $vaccineName'),
+        content: Text('This vaccination is scheduled for $date. What would you like to do?'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // Show reschedule dialog/functionality
+              _showRescheduleDialog(context, vaccineName, date);
+            },
+            child: const Text('Reschedule'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // Cancel entirely logic
+              _showConfirmCancelDialog(context, vaccineName);
+            },
+            child: const Text('Cancel Entirely'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Keep as Scheduled'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showRescheduleDialog(BuildContext context, String vaccineName, String date) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Reschedule $vaccineName'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Select new date for the vaccination:'),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 200,
+              child: CalendarDatePicker(
+                initialDate: DateTime.now().add(const Duration(days: 7)),
+                firstDate: DateTime.now(),
+                lastDate: DateTime.now().add(const Duration(days: 365)),
+                onDateChanged: (newDate) {
+                  // Handle date selection
+                  print('New date selected: $newDate');
+                },
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              // Handle reschedule logic
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('$vaccineName rescheduled successfully'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+              Navigator.pop(context);
+            },
+            child: const Text('Reschedule'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showConfirmCancelDialog(BuildContext context, String vaccineName) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Cancellation'),
+        content: Text('Are you sure you want to cancel $vaccineName vaccination? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('No, Keep It'),
+          ),
+          FilledButton(
+            onPressed: () {
+              // Handle cancellation logic
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('$vaccineName vaccination cancelled'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+              Navigator.pop(context);
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text('Yes, Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabWithIcon(IconData icon, String label) {
+    return Tab(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 16),
+            const SizedBox(width: 6),
+            Text(label),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _VaccinationMetricCard extends StatelessWidget {
@@ -285,32 +484,32 @@ class _VaccinationMetricCard extends StatelessWidget {
         side: BorderSide(color: Colors.grey.shade200),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14), // Reduced padding
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         child: Column(
-          mainAxisSize: MainAxisSize.min, // Important: prevents overflow
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(6), // Reduced from 8
+              padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
+                color: color.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 18, color: color), // Reduced from 20
+              child: Icon(icon, size: 18, color: color),
             ),
-            const SizedBox(height: 6), // Reduced from 8
+            const SizedBox(height: 6),
             Text(
               value,
               style: const TextStyle(
-                fontSize: 15, // Reduced from 16
+                fontSize: 15,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 2), // Reduced from 4
+            const SizedBox(height: 2),
             Text(
               label,
               style: TextStyle(
                 color: Colors.grey.shade600,
-                fontSize: 10, // Reduced from 11
+                fontSize: 10,
               ),
               textAlign: TextAlign.center,
               maxLines: 1,
@@ -330,6 +529,7 @@ class _VaccinationItem extends StatelessWidget {
   final Color statusColor;
   final String dosage;
   final bool administered;
+  final VoidCallback? onCancel;
 
   const _VaccinationItem({
     required this.vaccineName,
@@ -338,6 +538,7 @@ class _VaccinationItem extends StatelessWidget {
     required this.statusColor,
     required this.dosage,
     required this.administered,
+    this.onCancel,
   });
 
   @override
@@ -356,8 +557,8 @@ class _VaccinationItem extends StatelessWidget {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: administered
-                  ? Colors.green.withValues(alpha: 0.1)
-                  : Colors.orange.withValues(alpha: 0.1),
+                  ? Colors.green.withOpacity(0.1)
+                  : Colors.orange.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -395,21 +596,48 @@ class _VaccinationItem extends StatelessWidget {
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: statusColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              status,
-              style: TextStyle(
-                color: statusColor,
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
+          if (!administered && onCancel != null)
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    status,
+                    style: TextStyle(
+                      color: statusColor,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: Icon(Icons.cancel, color: Colors.red.shade600, size: 20),
+                  onPressed: onCancel,
+                  tooltip: 'Cancel vaccination',
+                ),
+              ],
+            )
+          else
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: statusColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                status,
+                style: TextStyle(
+                  color: statusColor,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -449,7 +677,7 @@ class _RecommendedVaccinationItem extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.purple.withValues(alpha: 0.1),
+                  color: Colors.purple.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -480,6 +708,27 @@ class _RecommendedVaccinationItem extends StatelessWidget {
                       ),
                     ),
                   ],
+                ),
+              ),
+              SizedBox(
+                width: 100,
+                child: FilledButton(
+                  onPressed: () {
+                    // Adopt this specific schedule item
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Adopted $vaccineName schedule'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  },
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                  child: const Text(
+                    'Adopt',
+                    style: TextStyle(fontSize: 12),
+                  ),
                 ),
               ),
             ],

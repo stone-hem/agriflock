@@ -3,6 +3,7 @@ import 'package:agriflock360/lib/features/batch/active_batches_screen.dart';
 import 'package:agriflock360/lib/features/batch/add_batch_screen.dart';
 import 'package:agriflock360/lib/features/batch/archived_batches_screen.dart';
 import 'package:agriflock360/lib/features/batch/log_feeding_screen.dart';
+import 'package:agriflock360/lib/features/batch/record_product_screen.dart';
 import 'package:agriflock360/lib/features/batch/record_vaccination_screen.dart';
 import 'package:agriflock360/lib/features/batch/schedule_vaccination_screen.dart';
 import 'package:agriflock360/lib/features/farm/add_inventory_item_screen.dart';
@@ -139,6 +140,13 @@ final GoRouter _router = GoRouter(
         GoRoute(
           path: 'schedule',
           builder: (context, state) => const ScheduleVaccinationScreen(),
+        ),
+        GoRoute(
+          path: '/:id/record-product',
+          builder: (context, state) {
+            final batchId = state.pathParameters['id']!;
+            return RecordProductScreen(batchId: '123');
+          },
         ),
       ],
     ),
