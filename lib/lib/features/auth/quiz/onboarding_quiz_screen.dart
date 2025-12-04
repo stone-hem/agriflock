@@ -1,6 +1,13 @@
+import 'package:agriflock360/lib/features/auth/quiz/shared/custom_text_field.dart';
+import 'package:agriflock360/lib/features/auth/quiz/shared/education_level_selector.dart';
+import 'package:agriflock360/lib/features/auth/quiz/shared/gender_selector.dart';
+import 'package:agriflock360/lib/features/auth/quiz/shared/user_type_selection.dart';
+import 'package:agriflock360/lib/features/auth/quiz/shared/photo_upload.dart';
+import 'package:agriflock360/lib/features/auth/quiz/shared/file_upload.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
+import 'dart:io';
 
 class OnboardingQuestionsScreen extends StatefulWidget {
   const OnboardingQuestionsScreen({super.key});
@@ -17,16 +24,28 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
   String? _selectedUserType;
 
   // Farmer data
-  final TextEditingController _farmNameController = TextEditingController();
+  final TextEditingController _chickenNumberController = TextEditingController();
   final TextEditingController _farmerAgeController = TextEditingController();
 
   // Vet data
-  final TextEditingController _qualificationsController = TextEditingController();
-  List<PlatformFile> _uploadedFiles = [];
+  final TextEditingController _vetAgeController = TextEditingController();
+  final TextEditingController _vetExperienceController = TextEditingController();
+  final TextEditingController _vetRegionController = TextEditingController();
+  final TextEditingController _vetProfileController = TextEditingController();
+
+  // For vet gender and education level
+  String? _selectedGender;
+  String? _selectedEducationLevel;
+
+  // For uploaded files
+  final List<PlatformFile> _uploadedFiles = [];
+
+  // For ID photo and selfie
+  File? _idPhotoFile;
+  File? _selfieFile;
 
   // Single green color scheme throughout
   static const Color primaryGreen = Color(0xFF2E7D32);
-  static const Color lightGreen = Color(0xFF4CAF50);
   static const Color backgroundColor = Color(0xFFF8F9FA);
 
   final List<String> _pageTitles = [
@@ -61,9 +80,12 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
   @override
   void dispose() {
     _pageController.dispose();
-    _farmNameController.dispose();
+    _chickenNumberController.dispose();
     _farmerAgeController.dispose();
-    _qualificationsController.dispose();
+    _vetAgeController.dispose();
+    _vetExperienceController.dispose();
+    _vetRegionController.dispose();
+    _vetProfileController.dispose();
     super.dispose();
   }
 
@@ -85,30 +107,13 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     }
   }
 
-  Future<void> _pickFiles() async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf', 'doc', 'docx'],
-        allowMultiple: true,
-      );
-
-      if (result != null) {
-        setState(() {
-          _uploadedFiles.addAll(result.files);
-        });
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error picking files: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+  void _onFilesSelected(List<PlatformFile> files) {
+    setState(() {
+      _uploadedFiles.addAll(files);
+    });
   }
 
-  void _removeFile(int index) {
+  void _onFileRemoved(int index) {
     setState(() {
       _uploadedFiles.removeAt(index);
     });
@@ -116,10 +121,8 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
 
   void _completeOnboarding() {
     if (_selectedUserType == 'farmer') {
-      // Farmer flow - go to login
       context.go('/login');
     } else if (_selectedUserType == 'vet') {
-      // Vet flow - show verification message and go to login
       _showVerificationMessage();
     }
   }
@@ -169,12 +172,22 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         return _selectedUserType != null;
       case 1:
         if (_selectedUserType == 'farmer') {
-          return _farmNameController.text.isNotEmpty &&
-              _farmerAgeController.text.isNotEmpty;
+          return true;
+          // return _chickenNumberController.text.isNotEmpty &&
+          //     _farmerAgeController.text.isNotEmpty;
         } else if (_selectedUserType == 'vet') {
-          return _qualificationsController.text.isNotEmpty;
+
+          return _vetAgeController.text.isNotEmpty;
+          // return _vetAgeController.text.isNotEmpty &&
+          //     _vetExperienceController.text.isNotEmpty &&
+          //     _vetRegionController.text.isNotEmpty &&
+          //     _vetProfileController.text.isNotEmpty &&
+          //     _selectedGender != null &&
+          //     _selectedEducationLevel != null &&
+          //     _idPhotoFile != null &&
+          //     _selfieFile != null;
         }
-        return false;
+        return true;
       case 2:
         return true;
       default:
@@ -256,7 +269,14 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
               physics: const NeverScrollableScrollPhysics(),
               children: [
                 // Page 1: User Type Selection
-                _buildUserTypeSelectionPage(),
+                UserTypeSelection(
+                  selectedUserType: _selectedUserType,
+                  onUserTypeSelected: (String userType) {
+                    setState(() {
+                      _selectedUserType = userType;
+                    });
+                  },
+                ),
 
                 // Page 2: Dynamic based on user type
                 _buildDetailsPage(),
@@ -269,133 +289,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         ],
       ),
       bottomNavigationBar: _buildBottomNavigation(),
-    );
-  }
-
-  Widget _buildUserTypeSelectionPage() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'How will you be using our platform?',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Select your role to customize your experience',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.black54,
-            ),
-          ),
-          const SizedBox(height: 40),
-
-          // Farmer Option
-          _buildRoleCard(
-            icon: Icons.agriculture,
-            title: 'Farmer',
-            subtitle: 'Manage your poultry farm and track your flock',
-            isSelected: _selectedUserType == 'farmer',
-            onTap: () {
-              setState(() {
-                _selectedUserType = 'farmer';
-              });
-            },
-          ),
-          const SizedBox(height: 20),
-
-          // Vet Doctor Option
-          _buildRoleCard(
-            icon: Icons.medical_services,
-            title: 'Veterinary Doctor',
-            subtitle: 'Provide professional services and consultations',
-            isSelected: _selectedUserType == 'vet',
-            onTap: () {
-              setState(() {
-                _selectedUserType = 'vet';
-              });
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRoleCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return Card(
-      elevation: isSelected ? 2 : 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: isSelected ? primaryGreen : Colors.grey.shade300,
-          width: isSelected ? 2 : 1,
-        ),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Row(
-            children: [
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: isSelected ? primaryGreen.withOpacity(0.1) : Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  icon,
-                  color: isSelected ? primaryGreen : Colors.grey.shade600,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: isSelected ? primaryGreen : Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (isSelected)
-                Icon(
-                  Icons.check_circle,
-                  color: primaryGreen,
-                ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 
@@ -435,22 +328,23 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
           ),
           const SizedBox(height: 40),
 
-          // Farm Name
-          _buildTextField(
-            controller: _farmNameController,
-            label: 'Farm Name',
-            hintText: 'Enter your farm name',
-            icon: Icons.business,
+          CustomTextField(
+            label: 'Current number of chickens',
+            hintText: 'Enter the number of chickens you rear',
+            icon: Icons.numbers,
+            keyboardType: TextInputType.number,
+            controller: _chickenNumberController,
+            value: '',
           ),
-          const SizedBox(height: 20),
 
-          // Age
-          _buildTextField(
-            controller: _farmerAgeController,
-            label: 'Your Age',
-            hintText: 'Enter your age',
+          const SizedBox(height: 20),
+          CustomTextField(
+            label: 'Years of experience',
+            hintText: 'Enter your years of experience in poultry farming',
             icon: Icons.person,
             keyboardType: TextInputType.number,
+            controller: _farmerAgeController,
+            value: '',
           ),
         ],
       ),
@@ -473,7 +367,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Please provide your qualifications for verification',
+            'Please provide your details for verification',
             style: TextStyle(
               fontSize: 16,
               color: Colors.black54,
@@ -481,179 +375,110 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
           ),
           const SizedBox(height: 40),
 
-          // Qualifications
-          _buildTextField(
-            controller: _qualificationsController,
-            label: 'Qualifications',
-            hintText: 'e.g., DVM, MVSc, etc.',
-            icon: Icons.school,
-            maxLines: 3,
-          ),
-          const SizedBox(height: 20),
-
-          // File Upload Section
-          const Text(
-            'Upload Certifications (PDF/DOC)',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Upload your professional certificates for verification',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.black54,
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Upload Button
-          Container(
-            width: double.infinity,
-            height: 120,
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: Colors.grey.shade300,
-                width: 2,
-                style: BorderStyle.solid,
-              ),
-              borderRadius: BorderRadius.circular(12),
-              color: Colors.grey.shade50,
-            ),
-            child: InkWell(
-              onTap: _pickFiles,
-              borderRadius: BorderRadius.circular(12),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.cloud_upload,
-                    size: 40,
-                    color: Colors.grey.shade400,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Tap to upload files',
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Text(
-                    'PDF, DOC files supported',
-                    style: TextStyle(
-                      color: Colors.grey.shade500,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Uploaded Files List
-          if (_uploadedFiles.isNotEmpty) ...[
-            const Text(
-              'Uploaded Files:',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 8),
-            ..._uploadedFiles.asMap().entries.map((entry) {
-              final index = entry.key;
-              final file = entry.value;
-              return _buildUploadedFileItem(file, index);
-            }),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hintText,
-    required IconData icon,
-    TextInputType keyboardType = TextInputType.text,
-    int maxLines = 1,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: TextField(
-            controller: controller,
-            keyboardType: keyboardType,
-            maxLines: maxLines,
-            decoration: InputDecoration(
-              hintText: hintText,
-              prefixIcon: Icon(icon, color: primaryGreen),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 16,
-              ),
-            ),
-            onChanged: (value) {
-              setState(() {}); // Update UI to enable/disable buttons
+          // Education Level Radio Buttons
+          EducationLevelSelector(
+            selectedEducationLevel: _selectedEducationLevel,
+            onEducationLevelSelected: (String level) {
+              setState(() {
+                _selectedEducationLevel = level;
+              });
             },
           ),
-        ),
-      ],
-    );
-  }
+          const SizedBox(height: 30),
 
-  Widget _buildUploadedFileItem(PlatformFile file, int index) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
-        title: Text(
-          file.name,
-          style: const TextStyle(fontSize: 14),
-          overflow: TextOverflow.ellipsis,
-        ),
-        subtitle: Text(
-          '${(file.size / 1024).toStringAsFixed(1)} KB',
-          style: const TextStyle(fontSize: 12),
-        ),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete, color: Colors.red),
-          onPressed: () => _removeFile(index),
-        ),
+          // Professional Profile
+          CustomTextField(
+            controller: _vetProfileController,
+            label: 'Professional Summary (max 100 characters)',
+            hintText: 'Brief description of your expertise and qualifications',
+            icon: Icons.description,
+            maxLines: 3,
+            maxLength: 100,
+            value: '',
+          ),
+          const SizedBox(height: 20),
+
+          // Age
+          CustomTextField(
+            controller: _vetAgeController,
+            label: 'Age',
+            hintText: 'Enter your age',
+            icon: Icons.calendar_today,
+            keyboardType: TextInputType.number,
+            value: '',
+          ),
+          const SizedBox(height: 20),
+
+          // Gender
+          GenderSelector(
+            selectedGender: _selectedGender,
+            onGenderSelected: (String gender) {
+              setState(() {
+                _selectedGender = gender.toLowerCase();
+              });
+            },
+          ),
+          const SizedBox(height: 20),
+
+          // Years of Experience
+          CustomTextField(
+            controller: _vetExperienceController,
+            label: 'Years of Experience',
+            hintText: 'Enter your years of veterinary experience',
+            icon: Icons.work,
+            keyboardType: TextInputType.number,
+            value: '',
+          ),
+          const SizedBox(height: 20),
+
+          // Region
+          CustomTextField(
+            controller: _vetRegionController,
+            label: 'Region',
+            hintText: 'Enter your region of practice',
+            icon: Icons.location_on,
+            value: '',
+          ),
+          const SizedBox(height: 30),
+
+          // ID Photo Upload using reusable component
+          PhotoUpload(
+            file: _idPhotoFile,
+            onFileSelected: (File? file) {
+              setState(() {
+                _idPhotoFile = file;
+              });
+            },
+            title: 'ID Photo',
+            description: 'Upload a clear photo of your government-issued ID',
+            primaryColor: primaryGreen,
+          ),
+          const SizedBox(height: 20),
+
+          // Face Selfie Upload using reusable component
+          PhotoUpload(
+            file: _selfieFile,
+            onFileSelected: (File? file) {
+              setState(() {
+                _selfieFile = file;
+              });
+            },
+            title: 'Face Selfie',
+            description: 'Upload a recent clear photo of yourself',
+            primaryColor: primaryGreen,
+          ),
+          const SizedBox(height: 20),
+
+          // Additional File Upload Section using reusable component
+          FileUpload(
+            uploadedFiles: _uploadedFiles,
+            onFilesSelected: _onFilesSelected,
+            onFileRemoved: _onFileRemoved,
+            title: 'Upload Additional Certifications (PDF/DOC/Images) If Any',
+            description: 'Upload your professional certificates and documents if any',
+            primaryColor: primaryGreen,
+          ),
+        ],
       ),
     );
   }
@@ -725,13 +550,20 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _buildSummaryItem('Role', _selectedUserType == 'farmer' ? 'Farmer' : 'Veterinary Doctor'),
+                  _buildSummaryItem('Role', isFarmer ? 'Farmer' : 'Veterinary Doctor'),
                   if (isFarmer) ...[
-                    _buildSummaryItem('Farm Name', _farmNameController.text),
-                    _buildSummaryItem('Age', _farmerAgeController.text),
+                    _buildSummaryItem('Chicken Number', _chickenNumberController.text),
+                    _buildSummaryItem('Experience', '${_farmerAgeController.text} years'),
                   ] else ...[
-                    _buildSummaryItem('Qualifications', _qualificationsController.text),
-                    _buildSummaryItem('Documents Uploaded', '${_uploadedFiles.length} files'),
+                    _buildSummaryItem('Highest Education', _selectedEducationLevel ?? 'Not provided'),
+                    _buildSummaryItem('Professional Summary', _vetProfileController.text),
+                    _buildSummaryItem('Age', _vetAgeController.text),
+                    _buildSummaryItem('Gender', _selectedGender?.toUpperCase() ?? ''),
+                    _buildSummaryItem('Region', _vetRegionController.text),
+                    _buildSummaryItem('Experience', '${_vetExperienceController.text} years'),
+                    _buildSummaryItem('ID Photo', _idPhotoFile != null ? 'Uploaded' : 'Not uploaded'),
+                    _buildSummaryItem('Selfie', _selfieFile != null ? 'Uploaded' : 'Not uploaded'),
+                    _buildSummaryItem('Additional Documents', '${_uploadedFiles.length} files'),
                   ],
                 ],
               ),
@@ -749,7 +581,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 120,
+            width: 140,
             child: Text(
               '$label:',
               style: const TextStyle(
@@ -760,8 +592,10 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
           ),
           Expanded(
             child: Text(
-              value,
-              style: const TextStyle(color: Colors.black54),
+              value.isEmpty ? 'Not provided' : value,
+              style: TextStyle(
+                color: value.isEmpty ? Colors.grey : Colors.black54,
+              ),
             ),
           ),
         ],
@@ -803,13 +637,15 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
           Expanded(
             flex: _currentPage > 0 ? 1 : 2,
             child: ElevatedButton(
-              onPressed: _canProceedToNext() ? () {
+              onPressed: _canProceedToNext()
+                  ? () {
                 if (_currentPage < 2) {
                   _goToNextPage();
                 } else {
                   _completeOnboarding();
                 }
-              } : null,
+              }
+                  : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryGreen,
                 foregroundColor: Colors.white,
@@ -820,9 +656,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
                 disabledBackgroundColor: Colors.grey.shade300,
               ),
               child: Text(
-                _currentPage == 2
-                    ? 'Get Started'
-                    : 'Continue',
+                _currentPage == 2 ? 'Get Started' : 'Continue',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,

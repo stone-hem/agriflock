@@ -1,4 +1,4 @@
-import 'package:agriflock360/lib/features/auth/onboarding_quiz_screen.dart';
+import 'package:agriflock360/lib/features/auth/quiz/onboarding_quiz_screen.dart';
 import 'package:agriflock360/lib/features/batch/active_batches_screen.dart';
 import 'package:agriflock360/lib/features/batch/add_batch_screen.dart';
 import 'package:agriflock360/lib/features/batch/archived_batches_screen.dart';
