@@ -18,6 +18,7 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _obscurePassword = true;
   bool _isLoading = false;
   bool _acceptedTerms = false;
+  bool _showTermsError = false;
 
   @override
   Widget build(BuildContext context) {
@@ -367,7 +368,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                         ],
                                       ),
                                     ),
-                                    if (!_acceptedTerms && _formKey.currentState?.validate() == true)
+                                    if (!_acceptedTerms && _showTermsError)
                                       Padding(
                                         padding: const EdgeInsets.only(top: 4),
                                         child: Text(
@@ -394,6 +395,8 @@ class _SignupScreenState extends State<SignupScreen> {
                             onPressed: _isLoading
                                 ? null
                                 : () {
+                              setState(() => _showTermsError = true);
+
                               if (_formKey.currentState!.validate()) {
                                 if (!_acceptedTerms) {
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -404,6 +407,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                   );
                                   return;
                                 }
+
                                 _signUp();
                               }
                             },

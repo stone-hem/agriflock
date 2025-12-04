@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:agriflock360/lib/features/auth/quiz/shared/custom_text_field.dart';
+import 'package:agriflock360/lib/features/auth/quiz/shared/gender_selector.dart';
+import 'package:agriflock360/lib/features/auth/quiz/shared/photo_upload.dart';
+import 'package:agriflock360/lib/features/auth/quiz/shared/file_upload.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:io';
 
 class CompleteProfileScreen extends StatefulWidget {
   const CompleteProfileScreen({super.key});
@@ -12,125 +18,100 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
+  // Color scheme - matching onboarding
+  static const Color primaryGreen = Color(0xFF2E7D32);
+  static const Color backgroundColor = Color(0xFFF8F9FA);
+
+  // Farmer Profile Data
+  final TextEditingController _fullNameController = TextEditingController();
+  final TextEditingController _idNumberController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _dobController = TextEditingController();
+  String? _selectedGender;
+  final TextEditingController _experienceController = TextEditingController();
+  final TextEditingController _poultryTypeController = TextEditingController();
+  final TextEditingController _houseCapacityController = TextEditingController();
+  final TextEditingController _currentChickensController = TextEditingController();
+  final TextEditingController _preferredAgrovetController = TextEditingController();
+  final TextEditingController _preferredFeedController = TextEditingController();
+  final TextEditingController _preferredChicksController = TextEditingController();
+  final TextEditingController _preferredOfftakerController = TextEditingController();
+  final TextEditingController _gpsController = TextEditingController();
+
+  // Photos
+  File? _farmerPhoto;
+  File? _idPhoto;
+  File? _selfiePhoto;
+
+  // Additional documents
+  final List<PlatformFile> _uploadedFiles = [];
+
   final List<ProfileStep> _profileSteps = [
     ProfileStep(
       title: 'Personal Information',
-      subtitle: 'Tell us more about yourself',
+      subtitle: 'Basic personal details and identification',
       icon: Icons.person_outline,
-      color: Colors.blue,
-      fields: [
-        ProfileField(
-          label: 'Full Name',
-          hint: 'Enter your full name',
-          type: FieldType.text,
-        ),
-        ProfileField(
-          label: 'Phone Number',
-          hint: 'Enter your phone number',
-          type: FieldType.phone,
-        ),
-        ProfileField(
-          label: 'Date of Birth',
-          hint: 'Select your date of birth',
-          type: FieldType.date,
-        ),
-      ],
+      color: primaryGreen,
+      stepNumber: 1,
     ),
     ProfileStep(
-      title: 'Farm Details',
-      subtitle: 'Information about your farming operation',
+      title: 'Farm Operations',
+      subtitle: 'Details about your poultry farming operations',
       icon: Icons.agriculture_outlined,
-      color: Colors.green,
-      fields: [
-        ProfileField(
-          label: 'Farm Name',
-          hint: 'Enter your farm name',
-          type: FieldType.text,
-        ),
-        ProfileField(
-          label: 'Farm Size',
-          hint: 'Enter farm size in acres',
-          type: FieldType.number,
-        ),
-        ProfileField(
-          label: 'Years of Experience',
-          hint: 'Years in poultry farming',
-          type: FieldType.number,
-        ),
-      ],
+      color: primaryGreen,
+      stepNumber: 2,
     ),
     ProfileStep(
-      title: 'Production Details',
-      subtitle: 'Your poultry production information',
-      icon: Icons.eco_outlined,
-      color: Colors.orange,
-      fields: [
-        ProfileField(
-          label: 'Primary Poultry Type',
-          hint: 'e.g., Broilers, Layers, etc.',
-          type: FieldType.text,
-        ),
-        ProfileField(
-          label: 'Average Flock Size',
-          hint: 'Number of birds per batch',
-          type: FieldType.number,
-        ),
-        ProfileField(
-          label: 'Annual Production',
-          hint: 'Total birds per year',
-          type: FieldType.number,
-        ),
-      ],
-    ),
-    ProfileStep(
-      title: 'Business Information',
-      subtitle: 'Your commercial farming details',
+      title: 'Business Preferences',
+      subtitle: 'Your preferred suppliers and partners',
       icon: Icons.business_center_outlined,
-      color: Colors.purple,
-      fields: [
-        ProfileField(
-          label: 'Business Name',
-          hint: 'Registered business name',
-          type: FieldType.text,
-        ),
-        ProfileField(
-          label: 'Business Registration',
-          hint: 'Registration number',
-          type: FieldType.text,
-        ),
-        ProfileField(
-          label: 'Target Market',
-          hint: 'e.g., Local, Export, etc.',
-          type: FieldType.text,
-        ),
-      ],
+      color: primaryGreen,
+      stepNumber: 3,
+    ),
+    ProfileStep(
+      title: 'Verification',
+      subtitle: 'Upload photos for verification',
+      icon: Icons.verified_user_outlined,
+      color: primaryGreen,
+      stepNumber: 4,
     ),
   ];
-
-  final List<Map<String, TextEditingController>> _controllers = [];
 
   @override
   void initState() {
     super.initState();
-    // Initialize controllers for all fields
-    for (var step in _profileSteps) {
-      Map<String, TextEditingController> stepControllers = {};
-      for (var field in step.fields) {
-        stepControllers[field.label] = TextEditingController();
+    // Simulate getting GPS coordinates (you would integrate with GPS service)
+    _gpsController.text = 'Fetching location...';
+    _fetchGPSLocation();
+  }
+
+  void _fetchGPSLocation() {
+    // Simulate GPS fetch - replace with actual GPS service
+    Future.delayed(const Duration(seconds: 1), () {
+      if (mounted) {
+        setState(() {
+          _gpsController.text = '-1.286389, 36.817223'; // Example Nairobi coordinates
+        });
       }
-      _controllers.add(stepControllers);
-    }
+    });
   }
 
   @override
   void dispose() {
     _pageController.dispose();
-    // Dispose all controllers
-    for (var stepControllers in _controllers) {
-      for (var controller in stepControllers.values) {
-        controller.dispose();
-      }
-    }
+    _fullNameController.dispose();
+    _idNumberController.dispose();
+    _phoneController.dispose();
+    _dobController.dispose();
+    _experienceController.dispose();
+    _poultryTypeController.dispose();
+    _houseCapacityController.dispose();
+    _currentChickensController.dispose();
+    _preferredAgrovetController.dispose();
+    _preferredFeedController.dispose();
+    _preferredChicksController.dispose();
+    _preferredOfftakerController.dispose();
+    _gpsController.dispose();
     super.dispose();
   }
 
@@ -154,72 +135,158 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     }
   }
 
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null && mounted) {
+      setState(() {
+        _dobController.text = "${picked.day}/${picked.month}/${picked.year}";
+      });
+    }
+  }
+
+  void _onFilesSelected(List<PlatformFile> files) {
+    setState(() {
+      _uploadedFiles.addAll(files);
+    });
+  }
+
+  void _onFileRemoved(int index) {
+    setState(() {
+      _uploadedFiles.removeAt(index);
+    });
+  }
+
+  bool _isCurrentStepValid() {
+    switch (_currentPage) {
+      case 0: // Personal Information
+         return true;
+        // return _fullNameController.text.isNotEmpty &&
+        //     _idNumberController.text.isNotEmpty &&
+        //     _phoneController.text.isNotEmpty &&
+        //     _dobController.text.isNotEmpty &&
+        //     _selectedGender != null &&
+        //     _experienceController.text.isNotEmpty &&
+        //     _poultryTypeController.text.isNotEmpty;
+
+      case 1: // Farm Operations
+        return true;
+        return _houseCapacityController.text.isNotEmpty &&
+            _currentChickensController.text.isNotEmpty;
+
+      case 2: // Business Preferences
+      // All fields optional, so always valid
+        return true;
+
+      case 3: // Verification
+        return true;
+        return _farmerPhoto != null && _idPhoto != null && _selfiePhoto != null;
+
+      default:
+        return false;
+    }
+  }
+
   void _completeProfile() {
-    // TODO: Save profile data
+    // TODO: Save profile data to backend
+    final profileData = {
+      'fullName': _fullNameController.text,
+      'idNumber': _idNumberController.text,
+      'phone': _phoneController.text,
+      'dob': _dobController.text,
+      'gender': _selectedGender,
+      'experienceYears': _experienceController.text,
+      'poultryType': _poultryTypeController.text,
+      'houseCapacity': _houseCapacityController.text,
+      'currentChickens': _currentChickensController.text,
+      'preferredAgrovet': _preferredAgrovetController.text,
+      'preferredFeedCompany': _preferredFeedController.text,
+      'preferredChicksCompany': _preferredChicksController.text,
+      'preferredOfftaker': _preferredOfftakerController.text,
+      'gpsCoordinates': _gpsController.text,
+    };
+
+    print('Profile data to save: $profileData');
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Profile completed successfully!'),
         backgroundColor: Colors.green,
       ),
     );
-    context.push('/complete-profile/congratulations');
+    context.go('/dashboard'); // Navigate to dashboard after completion
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('Complete Your Profile'),
-        centerTitle: false,
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.grey.shade700),
+          icon: const Icon(Icons.arrow_back, color: Colors.black54),
           onPressed: () => context.pop(),
         ),
+        title: Text(
+          _profileSteps[_currentPage].title,
+          style: const TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
+          ),
+        ),
+        centerTitle: true,
       ),
       body: Column(
         children: [
-          // Progress Indicator
+          // Progress indicator
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: Column(
+            height: 4,
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            child: LinearProgressIndicator(
+              value: (_currentPage + 1) / _profileSteps.length,
+              backgroundColor: Colors.grey.shade300,
+              valueColor: const AlwaysStoppedAnimation<Color>(primaryGreen),
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Page indicator
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Step Indicators
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: List.generate(_profileSteps.length, (index) {
-                    return Expanded(
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 2),
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: index <= _currentPage
-                              ? _profileSteps[index].color
-                              : Colors.grey.shade300,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-                const SizedBox(height: 12),
                 Text(
                   'Step ${_currentPage + 1} of ${_profileSteps.length}',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
+                  style: const TextStyle(
+                    color: Colors.black54,
+                    fontSize: 14,
+                  ),
+                ),
+                Text(
+                  _profileSteps[_currentPage].title,
+                  style: const TextStyle(
+                    color: primaryGreen,
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
           ),
+          const SizedBox(height: 20),
 
           // PageView
           Expanded(
             child: PageView.builder(
               controller: _pageController,
+              physics: const NeverScrollableScrollPhysics(),
               itemCount: _profileSteps.length,
               onPageChanged: (page) {
                 setState(() {
@@ -227,243 +294,508 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                 });
               },
               itemBuilder: (context, pageIndex) {
-                final step = _profileSteps[pageIndex];
-                return _buildStepPage(step, pageIndex);
+                return _buildStepPage(pageIndex);
               },
             ),
           ),
-
-          // Navigation Buttons
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withValues(alpha: 0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, -2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                if (_currentPage > 0)
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _previousPage,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.grey.shade700,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text('Back'),
-                    ),
-                  ),
-                if (_currentPage > 0) const SizedBox(width: 12),
-                Expanded(
-                  flex: _currentPage > 0 ? 1 : 2,
-                  child: ElevatedButton(
-                    onPressed: _nextPage,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.teal,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Text(
-                      _currentPage == _profileSteps.length - 1
-                          ? 'Complete Profile'
-                          : 'Continue',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
+      bottomNavigationBar: _buildBottomNavigation(),
     );
   }
 
-  Widget _buildStepPage(ProfileStep step, int pageIndex) {
+  Widget _buildStepPage(int pageIndex) {
+    switch (pageIndex) {
+      case 0:
+        return _buildPersonalInfoPage();
+      case 1:
+        return _buildFarmOperationsPage();
+      case 2:
+        return _buildBusinessPreferencesPage();
+      case 3:
+        return _buildVerificationPage();
+      default:
+        return Container();
+    }
+  }
+
+  Widget _buildPersonalInfoPage() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Step Header
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            margin: const EdgeInsets.only(bottom: 24),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [step.color.withValues(alpha: 0.1), step.color.withValues(alpha: 0.05)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Column(
-              children: [
-                Icon(
-                  step.icon,
-                  size: 48,
-                  color: step.color,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  step.title,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  step.subtitle,
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 16,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+          const Text(
+            'Personal Information',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
             ),
           ),
+          const SizedBox(height: 8),
+          const Text(
+            'Please provide your personal details for your profile',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.black54,
+            ),
+          ),
+          const SizedBox(height: 30),
 
-          // Form Fields
+          // Full Name
+          CustomTextField(
+            controller: _fullNameController,
+            label: 'Full Name *',
+            hintText: 'Enter your full name',
+            icon: Icons.person,
+            value: '',
+          ),
+          const SizedBox(height: 20),
+
+          // ID Number
+          CustomTextField(
+            controller: _idNumberController,
+            label: 'ID Number *',
+            hintText: 'Enter your national ID number',
+            icon: Icons.badge,
+            keyboardType: TextInputType.number,
+            value: '',
+          ),
+          const SizedBox(height: 20),
+
+          // Phone Number
+          CustomTextField(
+            controller: _phoneController,
+            label: 'Phone Number *',
+            hintText: 'Enter your phone number',
+            icon: Icons.phone,
+            keyboardType: TextInputType.phone,
+            value: '',
+          ),
+          const SizedBox(height: 20),
+
+          // Date of Birth
           Column(
-            children: step.fields.map((field) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      field.label,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildFieldInput(field, pageIndex),
-                  ],
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Date of Birth *',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
                 ),
-              );
-            }).toList(),
+              ),
+              const SizedBox(height: 8),
+              InkWell(
+                onTap: () => _selectDate(context),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.calendar_today, color: primaryGreen),
+                      const SizedBox(width: 12),
+                      Text(
+                        _dobController.text.isEmpty
+                            ? 'Select your date of birth'
+                            : _dobController.text,
+                        style: TextStyle(
+                          color: _dobController.text.isEmpty
+                              ? Colors.grey.shade500
+                              : Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // Gender
+          GenderSelector(
+            selectedGender: _selectedGender,
+            onGenderSelected: (String gender) {
+              setState(() {
+                _selectedGender = gender.toLowerCase();
+              });
+            },
+          ),
+          const SizedBox(height: 20),
+
+          // Years of Experience
+          CustomTextField(
+            controller: _experienceController,
+            label: 'Years of Experience *',
+            hintText: 'Enter years of poultry farming experience',
+            icon: Icons.work_history,
+            keyboardType: TextInputType.number,
+            value: '',
+          ),
+          const SizedBox(height: 20),
+
+          // Poultry Type
+          CustomTextField(
+            controller: _poultryTypeController,
+            label: 'Primary Poultry Type *',
+            hintText: 'e.g., Broilers, Layers, Indigenous, etc.',
+            icon: Icons.eco,
+            value: '',
           ),
         ],
       ),
     );
   }
 
-  Widget _buildFieldInput(ProfileField field, int pageIndex) {
-    final controller = _controllers[pageIndex][field.label]!;
-
-    switch (field.type) {
-      case FieldType.date:
-        return InkWell(
-          onTap: () => _selectDate(context, controller),
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(12),
+  Widget _buildFarmOperationsPage() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Farm Operations',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
             ),
-            child: Text(
-              controller.text.isEmpty ? field.hint : controller.text,
-              style: TextStyle(
-                color: controller.text.isEmpty ? Colors.grey.shade500 : Colors.black,
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Details about your current farming operations',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.black54,
+            ),
+          ),
+          const SizedBox(height: 30),
+
+          // Chicken House Capacity
+          CustomTextField(
+            controller: _houseCapacityController,
+            label: 'Chicken House Capacity *',
+            hintText: 'Maximum number of chickens your house can hold',
+            icon: Icons.home_work,
+            keyboardType: TextInputType.number,
+            value: '',
+          ),
+          const SizedBox(height: 20),
+
+          // Current Number of Chickens
+          CustomTextField(
+            controller: _currentChickensController,
+            label: 'Current Number of Chickens *',
+            hintText: 'Current number of chickens in your farm',
+            icon: Icons.numbers,
+            keyboardType: TextInputType.number,
+            value: '',
+          ),
+          const SizedBox(height: 20),
+
+          // GPS Coordinates (auto-filled)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Farm GPS Coordinates',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.grey.shade50,
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.location_on, color: primaryGreen),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        _gpsController.text,
+                        style: TextStyle(
+                          color: _gpsController.text == 'Fetching location...'
+                              ? Colors.grey.shade500
+                              : Colors.black87,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.refresh, color: primaryGreen),
+                      onPressed: _fetchGPSLocation,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Location will be automatically detected. Tap refresh to update.',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBusinessPreferencesPage() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Business Preferences',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Your preferred suppliers and business partners',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.black54,
+            ),
+          ),
+          const SizedBox(height: 30),
+
+          // Preferred Agrovet
+          CustomTextField(
+            controller: _preferredAgrovetController,
+            label: 'Preferred Agrovet',
+            hintText: 'Name of your preferred agrovet',
+            icon: Icons.local_pharmacy,
+            value: '',
+          ),
+          const SizedBox(height: 20),
+
+          // Preferred Feed Company
+          CustomTextField(
+            controller: _preferredFeedController,
+            label: 'Preferred Feed Company',
+            hintText: 'Name of your preferred feed supplier',
+            icon: Icons.restaurant,
+            value: '',
+          ),
+          const SizedBox(height: 20),
+
+          // Preferred Chicks Company
+          CustomTextField(
+            controller: _preferredChicksController,
+            label: 'Preferred Chicks Company',
+            hintText: 'Name of your preferred chicks supplier',
+            icon: Icons.egg,
+            value: '',
+          ),
+          const SizedBox(height: 20),
+
+          // Preferred Offtaker/Agent
+          CustomTextField(
+            controller: _preferredOfftakerController,
+            label: 'Preferred Offtaker/Agent',
+            hintText: 'Name of your preferred offtaker or agent',
+            icon: Icons.business,
+            value: '',
+          ),
+          const SizedBox(height: 20),
+
+          const Text(
+            'Note: These preferences will help us connect you with the right partners',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVerificationPage() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Verification Photos',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Upload photos for profile verification',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.black54,
+            ),
+          ),
+          const SizedBox(height: 30),
+
+          // Farmer Photo
+          PhotoUpload(
+            file: _farmerPhoto,
+            onFileSelected: (File? file) {
+              setState(() {
+                _farmerPhoto = file;
+              });
+            },
+            title: 'Farmer Photo *',
+            description: 'Upload a clear photo of yourself',
+            primaryColor: primaryGreen,
+          ),
+          const SizedBox(height: 20),
+
+          // ID Photo
+          PhotoUpload(
+            file: _idPhoto,
+            onFileSelected: (File? file) {
+              setState(() {
+                _idPhoto = file;
+              });
+            },
+            title: 'ID Photo *',
+            description: 'Upload a clear photo of your government-issued ID',
+            primaryColor: primaryGreen,
+          ),
+          const SizedBox(height: 20),
+
+          // Selfie Photo
+          PhotoUpload(
+            file: _selfiePhoto,
+            onFileSelected: (File? file) {
+              setState(() {
+                _selfiePhoto = file;
+              });
+            },
+            title: 'Face Selfie *',
+            description: 'Upload a recent clear selfie photo',
+            primaryColor: primaryGreen,
+          ),
+          const SizedBox(height: 20),
+
+          // Additional documents (optional)
+          FileUpload(
+            uploadedFiles: _uploadedFiles,
+            onFilesSelected: _onFilesSelected,
+            onFileRemoved: _onFileRemoved,
+            title: 'Additional Documents (Optional)',
+            description: 'Upload any additional farming certificates or documents',
+            primaryColor: primaryGreen,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomNavigation() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          if (_currentPage > 0)
+            Expanded(
+              child: OutlinedButton(
+                onPressed: _previousPage,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: primaryGreen,
+                  side: const BorderSide(color: primaryGreen),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('Back'),
+              ),
+            ),
+          if (_currentPage > 0) const SizedBox(width: 12),
+          Expanded(
+            flex: _currentPage > 0 ? 1 : 2,
+            child: ElevatedButton(
+              onPressed: _isCurrentStepValid()
+                  ? () {
+                if (_currentPage < _profileSteps.length - 1) {
+                  _nextPage();
+                } else {
+                  _completeProfile();
+                }
+              }
+                  : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryGreen,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                disabledBackgroundColor: Colors.grey.shade300,
+              ),
+              child: Text(
+                _currentPage == _profileSteps.length - 1
+                    ? 'Complete Profile'
+                    : 'Continue',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
-        );
-      case FieldType.number:
-        return TextFormField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            hintText: field.hint,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
-      default:
-        return TextFormField(
-          controller: controller,
-          decoration: InputDecoration(
-            hintText: field.hint,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
-    }
-  }
-
-  Future<void> _selectDate(BuildContext context, TextEditingController controller) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
+        ],
+      ),
     );
-    if (picked != null) {
-      controller.text = "${picked.day}/${picked.month}/${picked.year}";
-    }
   }
 }
 
-// Data Models
+// Data Model
 class ProfileStep {
   final String title;
   final String subtitle;
   final IconData icon;
   final Color color;
-  final List<ProfileField> fields;
+  final int stepNumber;
 
   ProfileStep({
     required this.title,
     required this.subtitle,
     required this.icon,
     required this.color,
-    required this.fields,
+    required this.stepNumber,
   });
-}
-
-class ProfileField {
-  final String label;
-  final String hint;
-  final FieldType type;
-
-  ProfileField({
-    required this.label,
-    required this.hint,
-    required this.type,
-  });
-}
-
-enum FieldType {
-  text,
-  number,
-  phone,
-  date,
-}
-
-// Extension to get color for current step
-extension StepColor on _CompleteProfileScreenState {
-  Color get stepColor => _profileSteps[_currentPage].color;
 }

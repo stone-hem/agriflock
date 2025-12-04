@@ -1,4 +1,5 @@
 import 'package:agriflock360/lib/features/farm/farms_home_screen.dart';
+import 'package:agriflock360/lib/house_quotation.dart';
 import 'package:flutter/material.dart';
 import 'package:agriflock360/lib/home_screen.dart';
 import 'package:agriflock360/lib/features/profile/profile_screen.dart';
@@ -17,6 +18,7 @@ class _MainDashboardState extends State<MainDashboard> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const FarmsHomeScreen(),
+    const PoultryHouseQuotationScreen(),
     const ReportsScreen(),
     const ProfileScreen(),
   ];
@@ -121,13 +123,42 @@ class _MainDashboardState extends State<MainDashboard> {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: _selectedIndex == 2
+                      ? Colors.blue.withOpacity(0.1)
+                      : Colors.transparent,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.format_quote_outlined,
+                  color: _selectedIndex == 2 ? Colors.orange : Colors.grey.shade600,
+                  size: 24,
+                ),
+              ),
+              selectedIcon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.format_quote,
+                  color: Colors.blue,
+                  size: 24,
+                ),
+              ),
+              label: 'Quotation',
+            ),
+            NavigationDestination(
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: _selectedIndex == 3
                       ? Colors.purple.withOpacity(0.1)
                       : Colors.transparent,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.bar_chart_outlined,
-                  color: _selectedIndex == 2 ? Colors.purple : Colors.grey.shade600,
+                  color: _selectedIndex == 3 ? Colors.purple : Colors.grey.shade600,
                   size: 24,
                 ),
               ),
@@ -149,14 +180,14 @@ class _MainDashboardState extends State<MainDashboard> {
               icon: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: _selectedIndex == 3
+                  color: _selectedIndex == 4
                       ? Colors.teal.withOpacity(0.1)
                       : Colors.transparent,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.person_outlined,
-                  color: _selectedIndex == 3 ? Colors.teal : Colors.grey.shade600,
+                  color: _selectedIndex == 4 ? Colors.teal : Colors.grey.shade600,
                   size: 24,
                 ),
               ),
