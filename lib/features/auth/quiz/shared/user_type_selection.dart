@@ -1,4 +1,4 @@
-import 'package:agriflock360/lib/features/auth/quiz/shared/role_card.dart';
+import 'package:agriflock360/features/auth/quiz/shared/role_card.dart';
 import 'package:flutter/material.dart';
 
 class UserTypeSelection extends StatelessWidget {
