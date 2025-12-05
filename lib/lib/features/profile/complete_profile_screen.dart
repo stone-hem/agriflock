@@ -39,9 +39,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   final TextEditingController _gpsController = TextEditingController();
 
   // Photos
-  File? _farmerPhoto;
   File? _idPhoto;
-  File? _selfiePhoto;
 
   // Additional documents
   final List<PlatformFile> _uploadedFiles = [];
@@ -184,7 +182,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
       case 3: // Verification
         return true;
-        return _farmerPhoto != null && _idPhoto != null && _selfiePhoto != null;
+        return _idPhoto != null;
 
       default:
         return false;
@@ -656,20 +654,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
               color: Colors.black54,
             ),
           ),
-          const SizedBox(height: 30),
 
-          // Farmer Photo
-          PhotoUpload(
-            file: _farmerPhoto,
-            onFileSelected: (File? file) {
-              setState(() {
-                _farmerPhoto = file;
-              });
-            },
-            title: 'Farmer Photo *',
-            description: 'Upload a clear photo of yourself',
-            primaryColor: primaryGreen,
-          ),
           const SizedBox(height: 20),
 
           // ID Photo
@@ -686,19 +671,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           ),
           const SizedBox(height: 20),
 
-          // Selfie Photo
-          PhotoUpload(
-            file: _selfiePhoto,
-            onFileSelected: (File? file) {
-              setState(() {
-                _selfiePhoto = file;
-              });
-            },
-            title: 'Face Selfie *',
-            description: 'Upload a recent clear selfie photo',
-            primaryColor: primaryGreen,
-          ),
-          const SizedBox(height: 20),
 
           // Additional documents (optional)
           FileUpload(
