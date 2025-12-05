@@ -2,8 +2,46 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class FarmsHomeScreen extends StatelessWidget {
+class FarmsHomeScreen extends StatefulWidget {
   const FarmsHomeScreen({super.key});
+
+  @override
+  State<FarmsHomeScreen> createState() => _FarmsHomeScreenState();
+}
+
+class _FarmsHomeScreenState extends State<FarmsHomeScreen> {
+  // Controller for scroll notifications
+  final ScrollController _scrollController = ScrollController();
+
+  // Track whether to show the FAB
+  bool _showFab = true;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Listen to scroll events to hide/show FAB
+    _scrollController.addListener(() {
+      // Hide FAB when user starts scrolling down
+      if (_scrollController.offset > 100 && _showFab) {
+        setState(() {
+          _showFab = false;
+        });
+      }
+      // Show FAB when user is at the top
+      else if (_scrollController.offset <= 100 && !_showFab) {
+        setState(() {
+          _showFab = true;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +86,7 @@ class FarmsHomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: _showFab ? FloatingActionButton(
         onPressed: () => context.push('/farms/add'),
         backgroundColor: Colors.green,
         foregroundColor: Colors.white,
@@ -56,38 +94,45 @@ class FarmsHomeScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
         ),
         child: const Icon(Icons.add),
-      ),
+      ) : null,
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Text(
-              'Select a Farm to continue',
-              style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Manage multiple farm locations and their Batches',
-              style: TextStyle(
-                color: Colors.grey.shade600,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 24),
+        child: CustomScrollView(
+          controller: _scrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            // Header section
+            SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header
+                  Text(
+                    'Select a Farm to continue',
+                    style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade800,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Manage multiple farm locations and their Batches',
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
 
-            // Stats Overview
-            _buildStatsOverview(),
-            const SizedBox(height: 24),
+                  // Stats Overview
+                  _buildStatsOverview(),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
 
             // Farms List
-            Expanded(
-              child: _buildFarmsList(),
-            ),
+            _buildFarmsList(),
           ],
         ),
       ),
@@ -158,11 +203,13 @@ class FarmsHomeScreen extends StatelessWidget {
       ),
     ];
 
-    return ListView.builder(
-      itemCount: farms.length,
-      itemBuilder: (context, index) {
-        return _FarmCard(farm: farms[index]);
-      },
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+            (context, index) {
+          return _FarmCard(farm: farms[index]);
+        },
+        childCount: farms.length,
+      ),
     );
   }
 }

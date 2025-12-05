@@ -49,7 +49,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
   File? _selfieFile;
 
   // Single green color scheme throughout
-  static const Color primaryGreen = Color(0xFF2E7D32);
+  static const Color primaryGreen = Colors.green;
   static const Color backgroundColor = Color(0xFFF8F9FA);
 
   final List<String> _pageTitles = [

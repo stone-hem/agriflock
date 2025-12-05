@@ -13,7 +13,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _currentPage = 0;
 
   // Single green color scheme throughout
-  static const Color primaryGreen = Color(0xFF2E7D32);
+  static const Color primaryGreen = Colors.green;
   static const Color lightGreen = Color(0xFF4CAF50);
 
   final List<OnboardingPage> _pages = [

@@ -45,7 +45,7 @@ class BatchDetailsScreen extends StatelessWidget {
                   ],
                 ),
                 child: TabBar(
-                  padding: const EdgeInsets.all(6),
+                  padding: const EdgeInsets.all(3),
                   dividerColor: Colors.transparent,
                   isScrollable: true,
                   dragStartBehavior: DragStartBehavior.start,
@@ -59,7 +59,7 @@ class BatchDetailsScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.green.withOpacity(0.3),
+                        color: Colors.green.withValues(alpha: 0.3),
                         blurRadius: 6,
                         offset: const Offset(0, 2),
                       ),
@@ -107,8 +107,8 @@ class BatchDetailsScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 18),
-          const SizedBox(width: 6),
+          Icon(icon, size: 16),
+          const SizedBox(width: 4),
           Text(label),
         ],
       ),

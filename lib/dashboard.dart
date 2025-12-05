@@ -38,7 +38,7 @@ class _MainDashboardState extends State<MainDashboard> {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 20,
               offset: const Offset(0, -2),
             ),
@@ -53,7 +53,7 @@ class _MainDashboardState extends State<MainDashboard> {
         child: NavigationBar(
           selectedIndex: _selectedIndex,
           onDestinationSelected: _onItemTapped,
-          indicatorColor: Colors.green.withOpacity(0.15),
+          indicatorColor: Colors.green.withValues(alpha: 0.15),
           backgroundColor: Colors.transparent,
           elevation: 0,
           height: 72,
@@ -65,7 +65,7 @@ class _MainDashboardState extends State<MainDashboard> {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: _selectedIndex == 0
-                      ? Colors.green.withOpacity(0.1)
+                      ? Colors.green.withValues(alpha: 0.1)
                       : Colors.transparent,
                   shape: BoxShape.circle,
                 ),
@@ -78,7 +78,7 @@ class _MainDashboardState extends State<MainDashboard> {
               selectedIcon: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.15),
+                  color: Colors.green.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -94,7 +94,7 @@ class _MainDashboardState extends State<MainDashboard> {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: _selectedIndex == 1
-                      ? Colors.blue.withOpacity(0.1)
+                      ? Colors.blue.withValues(alpha: 0.1)
                       : Colors.transparent,
                   shape: BoxShape.circle,
                 ),
@@ -107,7 +107,7 @@ class _MainDashboardState extends State<MainDashboard> {
               selectedIcon: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.15),
+                  color: Colors.blue.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -123,7 +123,7 @@ class _MainDashboardState extends State<MainDashboard> {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: _selectedIndex == 2
-                      ? Colors.blue.withOpacity(0.1)
+                      ? Colors.blue.withValues(alpha: 0.1)
                       : Colors.transparent,
                   shape: BoxShape.circle,
                 ),
@@ -136,7 +136,7 @@ class _MainDashboardState extends State<MainDashboard> {
               selectedIcon: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.15),
+                  color: Colors.orange.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -152,7 +152,7 @@ class _MainDashboardState extends State<MainDashboard> {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: _selectedIndex == 3
-                      ? Colors.purple.withOpacity(0.1)
+                      ? Colors.purple.withValues(alpha: 0.1)
                       : Colors.transparent,
                   shape: BoxShape.circle,
                 ),
@@ -165,7 +165,7 @@ class _MainDashboardState extends State<MainDashboard> {
               selectedIcon: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.purple.withOpacity(0.15),
+                  color: Colors.purple.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -181,7 +181,7 @@ class _MainDashboardState extends State<MainDashboard> {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: _selectedIndex == 4
-                      ? Colors.teal.withOpacity(0.1)
+                      ? Colors.teal.withValues(alpha: 0.1)
                       : Colors.transparent,
                   shape: BoxShape.circle,
                 ),
@@ -194,7 +194,7 @@ class _MainDashboardState extends State<MainDashboard> {
               selectedIcon: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.teal.withOpacity(0.15),
+                  color: Colors.teal.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(

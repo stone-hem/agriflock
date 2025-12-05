@@ -97,7 +97,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   _ProfileMenuItem(
                     icon: Icons.location_on_outlined,
-                    title: 'Telementary data',
+                    title: 'Brooder live data',
                     subtitle: 'See live brooder data',
                     color: Colors.brown,
                     onTap: () {
