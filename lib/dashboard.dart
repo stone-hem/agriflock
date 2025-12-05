@@ -1,9 +1,9 @@
 import 'package:agriflock360/lib/features/farm/farms_home_screen.dart';
-import 'package:agriflock360/lib/house_quotation.dart';
+import 'package:agriflock360/quotation_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:agriflock360/lib/home_screen.dart';
 import 'package:agriflock360/lib/features/profile/profile_screen.dart';
-import 'package:agriflock360/lib/reports_screen.dart';
+import 'package:agriflock360/reports_screen.dart';
 
 class MainDashboard extends StatefulWidget {
   const MainDashboard({super.key});

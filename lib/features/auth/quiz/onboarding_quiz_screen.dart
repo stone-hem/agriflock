@@ -26,6 +26,8 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
   // Farmer data
   final TextEditingController _chickenNumberController = TextEditingController();
   final TextEditingController _farmerAgeController = TextEditingController();
+  final TextEditingController _farmerRegionController = TextEditingController();
+
 
   // Vet data
   final TextEditingController _vetAgeController = TextEditingController();
@@ -39,6 +41,8 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
 
   // For uploaded files
   final List<PlatformFile> _uploadedFiles = [];
+  final List<PlatformFile> _uploadedCertificates = [];
+
 
   // For ID photo and selfie
   File? _idPhotoFile;
@@ -86,6 +90,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     _vetExperienceController.dispose();
     _vetRegionController.dispose();
     _vetProfileController.dispose();
+    _farmerRegionController.dispose();
     super.dispose();
   }
 
@@ -113,9 +118,21 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     });
   }
 
+  void _onCertificateFilesSelected(List<PlatformFile> files) {
+    setState(() {
+      _uploadedCertificates.addAll(files);
+    });
+  }
+
   void _onFileRemoved(int index) {
     setState(() {
       _uploadedFiles.removeAt(index);
+    });
+  }
+
+  void _onCertificateFileRemoved(int index) {
+    setState(() {
+      _uploadedCertificates.removeAt(index);
     });
   }
 
@@ -346,6 +363,18 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
             controller: _farmerAgeController,
             value: '',
           ),
+
+          const SizedBox(height: 20),
+
+          // Location
+          CustomTextField(
+            controller: _farmerRegionController,
+            label: 'Location',
+            hintText: 'Enter your location of your farm',
+            icon: Icons.location_on,
+            value: '',
+          ),
+          const SizedBox(height: 30),
         ],
       ),
     );
@@ -385,6 +414,17 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
             },
           ),
           const SizedBox(height: 30),
+          // Additional File Upload Section using reusable component
+          FileUpload(
+            uploadedFiles: _uploadedCertificates,
+            onFilesSelected: _onCertificateFilesSelected,
+            onFileRemoved: _onCertificateFileRemoved,
+            title: 'Upload Certifications (PDF/DOC/Images) for you qualification',
+            description: 'Upload your professional certificate(s)',
+            primaryColor: primaryGreen,
+          ),
+          const SizedBox(height: 30),
+
 
           // Professional Profile
           CustomTextField(
@@ -431,11 +471,11 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
           ),
           const SizedBox(height: 20),
 
-          // Region
+          // Location
           CustomTextField(
             controller: _vetRegionController,
-            label: 'Region',
-            hintText: 'Enter your region of practice',
+            label: 'Location',
+            hintText: 'Enter your location of practice',
             icon: Icons.location_on,
             value: '',
           ),

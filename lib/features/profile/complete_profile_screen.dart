@@ -28,14 +28,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _dobController = TextEditingController();
   String? _selectedGender;
-  final TextEditingController _experienceController = TextEditingController();
   final TextEditingController _poultryTypeController = TextEditingController();
   final TextEditingController _houseCapacityController = TextEditingController();
   final TextEditingController _currentChickensController = TextEditingController();
-  final TextEditingController _preferredAgrovetController = TextEditingController();
-  final TextEditingController _preferredFeedController = TextEditingController();
-  final TextEditingController _preferredChicksController = TextEditingController();
-  final TextEditingController _preferredOfftakerController = TextEditingController();
   final TextEditingController _gpsController = TextEditingController();
 
   // Photos
@@ -60,18 +55,11 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       stepNumber: 2,
     ),
     ProfileStep(
-      title: 'Business Preferences',
-      subtitle: 'Your preferred suppliers and partners',
-      icon: Icons.business_center_outlined,
-      color: primaryGreen,
-      stepNumber: 3,
-    ),
-    ProfileStep(
       title: 'Verification',
       subtitle: 'Upload photos for verification',
       icon: Icons.verified_user_outlined,
       color: primaryGreen,
-      stepNumber: 4,
+      stepNumber: 3,
     ),
   ];
 
@@ -101,14 +89,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     _idNumberController.dispose();
     _phoneController.dispose();
     _dobController.dispose();
-    _experienceController.dispose();
     _poultryTypeController.dispose();
     _houseCapacityController.dispose();
     _currentChickensController.dispose();
-    _preferredAgrovetController.dispose();
-    _preferredFeedController.dispose();
-    _preferredChicksController.dispose();
-    _preferredOfftakerController.dispose();
     _gpsController.dispose();
     super.dispose();
   }
@@ -162,27 +145,23 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   bool _isCurrentStepValid() {
     switch (_currentPage) {
       case 0: // Personal Information
-         return true;
-        // return _fullNameController.text.isNotEmpty &&
-        //     _idNumberController.text.isNotEmpty &&
-        //     _phoneController.text.isNotEmpty &&
-        //     _dobController.text.isNotEmpty &&
-        //     _selectedGender != null &&
-        //     _experienceController.text.isNotEmpty &&
-        //     _poultryTypeController.text.isNotEmpty;
+        return true;
+    // return _fullNameController.text.isNotEmpty &&
+    //     _idNumberController.text.isNotEmpty &&
+    //     _phoneController.text.isNotEmpty &&
+    //     _dobController.text.isNotEmpty &&
+    //     _selectedGender != null &&
+    //     _experienceController.text.isNotEmpty &&
+    //     _poultryTypeController.text.isNotEmpty;
 
       case 1: // Farm Operations
         return true;
-        return _houseCapacityController.text.isNotEmpty &&
-            _currentChickensController.text.isNotEmpty;
+    // return _houseCapacityController.text.isNotEmpty &&
+    //     _currentChickensController.text.isNotEmpty;
 
-      case 2: // Business Preferences
-      // All fields optional, so always valid
+      case 2: // Verification
         return true;
-
-      case 3: // Verification
-        return true;
-        return _idPhoto != null;
+    // return _idPhoto != null;
 
       default:
         return false;
@@ -197,14 +176,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       'phone': _phoneController.text,
       'dob': _dobController.text,
       'gender': _selectedGender,
-      'experienceYears': _experienceController.text,
       'poultryType': _poultryTypeController.text,
       'houseCapacity': _houseCapacityController.text,
       'currentChickens': _currentChickensController.text,
-      'preferredAgrovet': _preferredAgrovetController.text,
-      'preferredFeedCompany': _preferredFeedController.text,
-      'preferredChicksCompany': _preferredChicksController.text,
-      'preferredOfftaker': _preferredOfftakerController.text,
       'gpsCoordinates': _gpsController.text,
     };
 
@@ -309,8 +283,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       case 1:
         return _buildFarmOperationsPage();
       case 2:
-        return _buildBusinessPreferencesPage();
-      case 3:
         return _buildVerificationPage();
       default:
         return Container();
@@ -428,16 +400,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           ),
           const SizedBox(height: 20),
 
-          // Years of Experience
-          CustomTextField(
-            controller: _experienceController,
-            label: 'Years of Experience *',
-            hintText: 'Enter years of poultry farming experience',
-            icon: Icons.work_history,
-            keyboardType: TextInputType.number,
-            value: '',
-          ),
-          const SizedBox(height: 20),
 
           // Poultry Type
           CustomTextField(
@@ -555,83 +517,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     );
   }
 
-  Widget _buildBusinessPreferencesPage() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Business Preferences',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Your preferred suppliers and business partners',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.black54,
-            ),
-          ),
-          const SizedBox(height: 30),
-
-          // Preferred Agrovet
-          CustomTextField(
-            controller: _preferredAgrovetController,
-            label: 'Preferred Agrovet',
-            hintText: 'Name of your preferred agrovet',
-            icon: Icons.local_pharmacy,
-            value: '',
-          ),
-          const SizedBox(height: 20),
-
-          // Preferred Feed Company
-          CustomTextField(
-            controller: _preferredFeedController,
-            label: 'Preferred Feed Company',
-            hintText: 'Name of your preferred feed supplier',
-            icon: Icons.restaurant,
-            value: '',
-          ),
-          const SizedBox(height: 20),
-
-          // Preferred Chicks Company
-          CustomTextField(
-            controller: _preferredChicksController,
-            label: 'Preferred Chicks Company',
-            hintText: 'Name of your preferred chicks supplier',
-            icon: Icons.egg,
-            value: '',
-          ),
-          const SizedBox(height: 20),
-
-          // Preferred Offtaker/Agent
-          CustomTextField(
-            controller: _preferredOfftakerController,
-            label: 'Preferred Offtaker/Agent',
-            hintText: 'Name of your preferred offtaker or agent',
-            icon: Icons.business,
-            value: '',
-          ),
-          const SizedBox(height: 20),
-
-          const Text(
-            'Note: These preferences will help us connect you with the right partners',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildVerificationPage() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -654,7 +539,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
               color: Colors.black54,
             ),
           ),
-
           const SizedBox(height: 20),
 
           // ID Photo
@@ -670,7 +554,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
             primaryColor: primaryGreen,
           ),
           const SizedBox(height: 20),
-
 
           // Additional documents (optional)
           FileUpload(

@@ -19,10 +19,9 @@ class _EducationLevelSelectorState extends State<EducationLevelSelector> {
 
   // List of education levels
   final List<String> educationLevels = [
-    'Diploma',
+    'Certificate/Diploma',
     'Bachelors Degree',
-    'Masters Degree',
-    'Doctorate',
+    'Advanced Degree',
     'Other'
   ];
 
