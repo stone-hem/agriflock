@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class PoultryHouseQuotationScreen extends StatefulWidget {
   const PoultryHouseQuotationScreen({super.key});
@@ -257,16 +258,35 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
           SliverAppBar(
             backgroundColor: Colors.white,
             elevation: 1,
-            title: const Text(
-              'Poultry House Quotation',
-              style: TextStyle(
-                color: Colors.black87,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+            title: Row(
+              children: [
+                Image.asset(
+                  'assets/logos/Logo_0725.png',
+                  fit: BoxFit.cover,
+                  width: 40,
+                  height: 40,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.green,
+                      child: const Icon(
+                        Icons.image,
+                        size: 100,
+                        color: Colors.white54,
+                      ),
+                    );
+                  },
+                ),
+                const Text('Agriflock 360'),
+              ],
             ),
             centerTitle: false,
             floating: true,
+            actions: [
+              IconButton(
+                icon: Icon(Icons.notifications_outlined, color: Colors.grey.shade700),
+                onPressed: () => context.push('/notifications'),
+              ),
+            ],
           ),
           SliverPadding(
             padding: const EdgeInsets.all(16),
@@ -284,6 +304,14 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        const Text(
+                          'Poultry House Quotation',
+                          style: TextStyle(
+                            color: Colors.black87,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         Row(
                           children: [
                             Icon(Icons.home_work, color: primaryColor, size: 32),
