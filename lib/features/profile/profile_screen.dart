@@ -11,19 +11,46 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
+      appBar: AppBar(
+        title: Row(
+          children: [
+            Image.asset(
+              'assets/logos/Logo_0725.png',
+              fit: BoxFit.cover,
+              width: 40,
+              height: 40,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: Colors.green,
+                  child: const Icon(
+                    Icons.image,
+                    size: 100,
+                    color: Colors.white54,
+                  ),
+                );
+              },
+            ),
+            const Text('Agriflock 360'),
+          ],
+        ),
+        centerTitle: false,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.notifications_outlined, color: Colors.grey.shade700),
+            onPressed: () => context.push('/notifications'),
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         child: Column(
           children: [
             // Profile Header
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(24, 60, 24, 32),
+              padding: const EdgeInsets.fromLTRB(24, 15, 24, 32),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.green.shade600, Colors.green.shade400],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(32),
                   bottomRight: Radius.circular(32),
@@ -39,23 +66,23 @@ class ProfileScreen extends StatelessWidget {
                       backgroundImage: NetworkImage('https://i.pravatar.cc/300'),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 5),
                   const Text(
                     'John Doe',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: Colors.black,
                     ),
                   ),
                   Text(
                     'john.doe@farmmail.com',
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.9),
+                      color: Colors.black.withValues(alpha: 0.9),
                       fontSize: 16,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     decoration: BoxDecoration(
@@ -73,13 +100,12 @@ class ProfileScreen extends StatelessWidget {
                   ),
 
                   // Profile Completion Card
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 10),
                   _buildProfileCompletionCard(context),
                 ],
               ),
             ),
 
-            const SizedBox(height: 24),
 
             // Menu Items
             Padding(
@@ -167,7 +193,7 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _buildProfileCompletionCard(BuildContext context) {
     return Card(
-      elevation: 4,
+      elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
