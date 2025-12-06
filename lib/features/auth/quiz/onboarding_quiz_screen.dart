@@ -4,6 +4,7 @@ import 'package:agriflock360/features/auth/quiz/shared/file_upload.dart';
 import 'package:agriflock360/features/auth/quiz/shared/gender_selector.dart';
 import 'package:agriflock360/features/auth/quiz/shared/photo_upload.dart';
 import 'package:agriflock360/features/auth/quiz/shared/user_type_selection.dart';
+import 'package:agriflock360/features/auth/quiz/shared/location_picker_step.dart'; // Import the new component
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
@@ -23,16 +24,18 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
   // User type selection
   String? _selectedUserType;
 
+  // Location data (for both farmer and vet)
+  String? _selectedAddress;
+  double? _latitude;
+  double? _longitude;
+
   // Farmer data
   final TextEditingController _chickenNumberController = TextEditingController();
   final TextEditingController _farmerAgeController = TextEditingController();
-  final TextEditingController _farmerRegionController = TextEditingController();
-
 
   // Vet data
   final TextEditingController _vetAgeController = TextEditingController();
   final TextEditingController _vetExperienceController = TextEditingController();
-  final TextEditingController _vetRegionController = TextEditingController();
   final TextEditingController _vetProfileController = TextEditingController();
 
   // For vet gender and education level
@@ -42,7 +45,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
   // For uploaded files
   final List<PlatformFile> _uploadedFiles = [];
   final List<PlatformFile> _uploadedCertificates = [];
-
 
   // For ID photo and selfie
   File? _idPhotoFile;
@@ -54,11 +56,12 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
 
   final List<String> _pageTitles = [
     'Choose Your Role',
-    _getSecondPageTitle(''), // Will be updated dynamically
+    '', // Will be updated dynamically
+    'Select Location',
     'Congratulations!'
   ];
 
-  static String _getSecondPageTitle(String? userType) {
+  String _getDetailsPageTitle(String? userType) {
     if (userType == 'farmer') {
       return 'Farm Details';
     } else if (userType == 'vet') {
@@ -66,6 +69,8 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     }
     return 'Additional Information';
   }
+
+  int get _totalPages => 4; // Now we have 4 pages instead of 3
 
   @override
   void initState() {
@@ -75,7 +80,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         _currentPage = _pageController.page?.round() ?? 0;
         // Update page titles when page changes
         if (_currentPage == 1) {
-          _pageTitles[1] = _getSecondPageTitle(_selectedUserType);
+          _pageTitles[1] = _getDetailsPageTitle(_selectedUserType);
         }
       });
     });
@@ -88,14 +93,12 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     _farmerAgeController.dispose();
     _vetAgeController.dispose();
     _vetExperienceController.dispose();
-    _vetRegionController.dispose();
     _vetProfileController.dispose();
-    _farmerRegionController.dispose();
     super.dispose();
   }
 
   void _goToNextPage() {
-    if (_currentPage < 2) {
+    if (_currentPage < _totalPages - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
@@ -190,22 +193,16 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
       case 1:
         if (_selectedUserType == 'farmer') {
           return true;
-          // return _chickenNumberController.text.isNotEmpty &&
-          //     _farmerAgeController.text.isNotEmpty;
         } else if (_selectedUserType == 'vet') {
-
           return _vetAgeController.text.isNotEmpty;
-          // return _vetAgeController.text.isNotEmpty &&
-          //     _vetExperienceController.text.isNotEmpty &&
-          //     _vetRegionController.text.isNotEmpty &&
-          //     _vetProfileController.text.isNotEmpty &&
-          //     _selectedGender != null &&
-          //     _selectedEducationLevel != null &&
-          //     _idPhotoFile != null &&
-          //     _selfieFile != null;
         }
         return true;
       case 2:
+      // Location page - must have location selected
+        return _selectedAddress != null &&
+            _latitude != null &&
+            _longitude != null;
+      case 3:
         return true;
       default:
         return false;
@@ -246,7 +243,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
             height: 4,
             margin: const EdgeInsets.symmetric(horizontal: 20),
             child: LinearProgressIndicator(
-              value: (_currentPage + 1) / 3,
+              value: (_currentPage + 1) / _totalPages,
               backgroundColor: Colors.grey.shade300,
               valueColor: const AlwaysStoppedAnimation<Color>(primaryGreen),
             ),
@@ -260,7 +257,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Step ${_currentPage + 1} of 3',
+                  'Step ${_currentPage + 1} of $_totalPages',
                   style: const TextStyle(
                     color: Colors.black54,
                     fontSize: 14,
@@ -298,7 +295,22 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
                 // Page 2: Dynamic based on user type
                 _buildDetailsPage(),
 
-                // Page 3: Congratulations
+                // Page 3: Location Picker (NEW)
+                LocationPickerStep(
+                  selectedAddress: _selectedAddress,
+                  latitude: _latitude,
+                  longitude: _longitude,
+                  onLocationSelected: (String address, double lat, double lng) {
+                    setState(() {
+                      _selectedAddress = address;
+                      _latitude = lat;
+                      _longitude = lng;
+                    });
+                  },
+                  primaryColor: primaryGreen,
+                ),
+
+                // Page 4: Congratulations
                 _buildCongratulationsPage(),
               ],
             ),
@@ -364,16 +376,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
             value: '',
           ),
 
-          const SizedBox(height: 20),
-
-          // Location
-          CustomTextField(
-            controller: _farmerRegionController,
-            label: 'Location',
-            hintText: 'Enter your location of your farm',
-            icon: Icons.location_on,
-            value: '',
-          ),
           const SizedBox(height: 30),
         ],
       ),
@@ -425,7 +427,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
           ),
           const SizedBox(height: 30),
 
-
           // Professional Profile
           CustomTextField(
             controller: _vetProfileController,
@@ -467,16 +468,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
             hintText: 'Enter your years of veterinary experience',
             icon: Icons.work,
             keyboardType: TextInputType.number,
-            value: '',
-          ),
-          const SizedBox(height: 20),
-
-          // Location
-          CustomTextField(
-            controller: _vetRegionController,
-            label: 'Location',
-            hintText: 'Enter your location of practice',
-            icon: Icons.location_on,
             value: '',
           ),
           const SizedBox(height: 30),
@@ -591,6 +582,12 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
                   ),
                   const SizedBox(height: 16),
                   _buildSummaryItem('Role', isFarmer ? 'Farmer' : 'Veterinary Doctor'),
+                  _buildSummaryItem('Location', _selectedAddress ?? 'Not provided'),
+                  if (_latitude != null && _longitude != null)
+                    _buildSummaryItem(
+                      'Coordinates',
+                      'Lat: ${_latitude!.toStringAsFixed(4)}, Lng: ${_longitude!.toStringAsFixed(4)}',
+                    ),
                   if (isFarmer) ...[
                     _buildSummaryItem('Chicken Number', _chickenNumberController.text),
                     _buildSummaryItem('Experience', '${_farmerAgeController.text} years'),
@@ -599,7 +596,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
                     _buildSummaryItem('Professional Summary', _vetProfileController.text),
                     _buildSummaryItem('Age', _vetAgeController.text),
                     _buildSummaryItem('Gender', _selectedGender?.toUpperCase() ?? ''),
-                    _buildSummaryItem('Region', _vetRegionController.text),
                     _buildSummaryItem('Experience', '${_vetExperienceController.text} years'),
                     _buildSummaryItem('ID Photo', _idPhotoFile != null ? 'Uploaded' : 'Not uploaded'),
                     _buildSummaryItem('Selfie', _selfieFile != null ? 'Uploaded' : 'Not uploaded'),
@@ -679,7 +675,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
             child: ElevatedButton(
               onPressed: _canProceedToNext()
                   ? () {
-                if (_currentPage < 2) {
+                if (_currentPage < _totalPages - 1) {
                   _goToNextPage();
                 } else {
                   _completeOnboarding();
@@ -696,7 +692,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
                 disabledBackgroundColor: Colors.grey.shade300,
               ),
               child: Text(
-                _currentPage == 2 ? 'Get Started' : 'Continue',
+                _currentPage == _totalPages - 1 ? 'Get Started' : 'Continue',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,

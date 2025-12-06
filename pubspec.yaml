@@ -37,6 +37,7 @@ dependencies:
   go_router:
   file_picker:
   image_picker:
+  google_places_flutter: ^2.1.1
 
 dev_dependencies:
   flutter_test:
@@ -121,9 +122,9 @@ flutter_native_splash:
   #branding_dark: assets/logos/logo_512_x_512.png
 
   android_12:
-    image: assets/logos/logo_256_x_256.png
+    image: assets/logos/logo_512_x_512.png
     icon_background_color: "#ffffff"
-    image_dark: assets/logos/logo_256_x_256.png
+    image_dark: assets/logos/logo_512_x_512.png
     icon_background_color_dark: "#121212"
 
   web: false

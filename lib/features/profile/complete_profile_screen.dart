@@ -23,7 +23,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   static const Color backgroundColor = Color(0xFFF8F9FA);
 
   // Farmer Profile Data
-  final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _idNumberController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _dobController = TextEditingController();
@@ -31,7 +30,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   final TextEditingController _poultryTypeController = TextEditingController();
   final TextEditingController _houseCapacityController = TextEditingController();
   final TextEditingController _currentChickensController = TextEditingController();
-  final TextEditingController _gpsController = TextEditingController();
 
   // Photos
   File? _idPhoto;
@@ -66,33 +64,18 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   @override
   void initState() {
     super.initState();
-    // Simulate getting GPS coordinates (you would integrate with GPS service)
-    _gpsController.text = 'Fetching location...';
-    _fetchGPSLocation();
   }
 
-  void _fetchGPSLocation() {
-    // Simulate GPS fetch - replace with actual GPS service
-    Future.delayed(const Duration(seconds: 1), () {
-      if (mounted) {
-        setState(() {
-          _gpsController.text = '-1.286389, 36.817223'; // Example Nairobi coordinates
-        });
-      }
-    });
-  }
 
   @override
   void dispose() {
     _pageController.dispose();
-    _fullNameController.dispose();
     _idNumberController.dispose();
     _phoneController.dispose();
     _dobController.dispose();
     _poultryTypeController.dispose();
     _houseCapacityController.dispose();
     _currentChickensController.dispose();
-    _gpsController.dispose();
     super.dispose();
   }
 
@@ -171,7 +154,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   void _completeProfile() {
     // TODO: Save profile data to backend
     final profileData = {
-      'fullName': _fullNameController.text,
       'idNumber': _idNumberController.text,
       'phone': _phoneController.text,
       'dob': _dobController.text,
@@ -179,7 +161,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       'poultryType': _poultryTypeController.text,
       'houseCapacity': _houseCapacityController.text,
       'currentChickens': _currentChickensController.text,
-      'gpsCoordinates': _gpsController.text,
     };
 
     print('Profile data to save: $profileData');
@@ -313,15 +294,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           ),
           const SizedBox(height: 30),
 
-          // Full Name
-          CustomTextField(
-            controller: _fullNameController,
-            label: 'Full Name *',
-            hintText: 'Enter your full name',
-            icon: Icons.person,
-            value: '',
-          ),
-          const SizedBox(height: 20),
 
           // ID Number
           CustomTextField(
@@ -458,60 +430,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
             keyboardType: TextInputType.number,
             value: '',
           ),
-          const SizedBox(height: 20),
 
-          // GPS Coordinates (auto-filled)
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Farm GPS Coordinates',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(12),
-                  color: Colors.grey.shade50,
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.location_on, color: primaryGreen),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        _gpsController.text,
-                        style: TextStyle(
-                          color: _gpsController.text == 'Fetching location...'
-                              ? Colors.grey.shade500
-                              : Colors.black87,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.refresh, color: primaryGreen),
-                      onPressed: _fetchGPSLocation,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Location will be automatically detected. Tap refresh to update.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-            ],
-          ),
+
         ],
       ),
     );
@@ -576,7 +496,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
