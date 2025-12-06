@@ -312,6 +312,7 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
                             fontWeight: FontWeight.bold,
                           ),
                         ),
+                        const SizedBox(height: 12),
                         Row(
                           children: [
                             Icon(Icons.home_work, color: primaryColor, size: 32),
