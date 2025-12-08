@@ -26,7 +26,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     OnboardingPage(
       // Farmer feeding chickens (clear poultry focus)
-      imageUrl: 'assets/onboarding/two.png',
+      imageUrl: 'assets/onboarding/two.jpg',
       title: 'Optimize Feed & Care',
       description: 'Get personalized feeding schedules and health reminders to maximize your farm efficiency',
     ),
