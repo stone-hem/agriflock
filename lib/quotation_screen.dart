@@ -693,37 +693,17 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
         const SizedBox(height: 32),
 
         // Action Buttons
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  // TODO: Share quotation
-                },
-                icon: const Icon(Icons.share),
-                label: const Text('Share Quotation'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  side: BorderSide(color: primaryColor),
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  // TODO: Contact suppliers
-                },
-                icon: const Icon(Icons.phone),
-                label: const Text('Contact Suppliers'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-              ),
-            ),
-          ],
+        ElevatedButton.icon(
+          onPressed: () {
+            // TODO: Contact suppliers
+          },
+          icon: const Icon(Icons.phone),
+          label: const Text('Contact Suppliers'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: primaryColor,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+          ),
         ),
       ],
     );
