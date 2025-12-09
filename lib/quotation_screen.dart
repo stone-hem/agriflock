@@ -54,198 +54,249 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
   String? _selectedCapacity;
   Map<String, dynamic>? _selectedQuotation;
 
-  // Sample quotation data for each capacity
+  // Detailed quotation data for each capacity with REAL materials from provided quotation
   final Map<String, Map<String, dynamic>> _quotationsData = {
     '50-100': {
       'recommendedHouseSize': '4m x 5m (20 sqm)',
-      'estimatedCost': '85,000 - 120,000 KSh',
-      'constructionTime': '2-3 weeks',
+      'estimatedCost': '26,250 - 35,000 KSh',
+      'constructionTime': '1-2 weeks',
       'keySpecifications': [
-        'Corrugated iron roof',
-        'Wire mesh walls',
-        'Deep litter floor',
-        'Basic ventilation',
-        'Manual feeders/drinkers',
+        'Galvanized plate G-16 roofing',
+        'Angleline 1.5" support structure',
+        'Tube 1.5"x1.5" framing',
+        'Wiremesh heavy gauge walls',
+        'Plainsheet G-32 finishing',
       ],
       'materials': [
-        {'item': 'Timber framing', 'qty': '15 pieces', 'cost': '15,000'},
-        {'item': 'Corrugated sheets', 'qty': '30 sheets', 'cost': '30,000'},
-        {'item': 'Wire mesh', 'qty': '20 sqm', 'cost': '12,000'},
-        {'item': 'Nails & fittings', 'qty': '1 lot', 'cost': '5,000'},
-        {'item': 'Paint & treatment', 'qty': '5 liters', 'cost': '3,000'},
+        {'item': 'Plate G-16', 'qty': '1 piece (2.5m x 1m)', 'cost': '4,500'},
+        {'item': 'Angleline 1.5"', 'qty': '2 pieces (6m each)', 'cost': '2,000'},
+        {'item': 'Tube 1.5"x1.5"', 'qty': '6 pieces (6m each)', 'cost': '3,600'},
+        {'item': 'Pipe 1"', 'qty': '1 piece (6m)', 'cost': '300'},
+        {'item': 'D 8 (Door hinge)', 'qty': '2 pieces', 'cost': '800'},
+        {'item': 'Wiremesh heavy gauge', 'qty': '1 sheet (2m x 1m)', 'cost': '400'},
+        {'item': 'Tube 3/4"', 'qty': '5 pieces (6m each)', 'cost': '3,000'},
+        {'item': 'Plainsheet G-32', 'qty': '4 meters', 'cost': '1,600'},
+        {'item': 'Welding rods', 'qty': '2 kg', 'cost': '400'},
+        {'item': 'Fittings (nuts/bolts)', 'qty': '10 pieces', 'cost': '500'},
+        {'item': 'Black paint', 'qty': '1 liter', 'cost': '300'},
+        {'item': 'Pop rivets', 'qty': '5 pieces', 'cost': '150'},
+        {'item': 'Flat 3/4"', 'qty': '1 piece', 'cost': '300'},
+      ],
+      'labor': [
+        {'item': 'Construction labor', 'cost': '5,000'},
+        {'item': 'Painting & branding', 'cost': '1,900'},
       ],
       'equipmentRecommendations': [
-        '2 brooders (KSh 8,000)',
-        '4 feeders (KSh 6,000)',
-        '4 drinkers (KSh 4,000)',
-        '1 weighing scale (KSh 3,000)',
+        '2 manual feeders (KSh 1,500)',
+        '2 drinkers (KSh 1,000)',
+        '1 brooder lamp (KSh 800)',
+        '1 thermometer (KSh 500)',
       ],
       'recommendedSuppliers': [
-        {'name': 'Farmers Choice Ltd', 'type': 'Equipment', 'rating': '4.5/5'},
-        {'name': 'Agro Hardware Center', 'type': 'Construction', 'rating': '4.2/5'},
+        {'name': 'Jambo Steel Ltd', 'type': 'Steel Materials', 'rating': '4.3/5', 'location': 'Nairobi'},
+        {'name': 'Farmers Choice Hardware', 'type': 'Poultry Equipment', 'rating': '4.2/5', 'location': 'Nakuru'},
       ],
       'biosecurityFeatures': [
-        'Foot bath at entrance',
-        'Basic fencing',
-        'Disinfection point',
+        'Wiremesh door for ventilation',
+        'Elevated floor design',
+        'Easy cleaning surface',
       ],
       'estimatedMonthlyCosts': [
-        'Feed: 6,000 - 8,000 KSh',
-        'Medication: 1,500 - 2,000 KSh',
-        'Utilities: 2,000 - 3,000 KSh',
+        'Feed: 4,000 - 6,000 KSh',
+        'Medication: 800 - 1,200 KSh',
+        'Utilities: 500 - 800 KSh',
       ],
       'profitability': {
-        'breakEven': '4-5 months',
-        'estimatedMonthlyProfit': '15,000 - 25,000 KSh',
-        'roi': '12-15 months',
+        'breakEven': '3-4 months',
+        'estimatedMonthlyProfit': '8,000 - 15,000 KSh',
+        'roi': '6-8 months',
       },
+      'materialCostSubtotal': '19,350',
+      'laborCostSubtotal': '6,900',
+      'grandTotal': '26,250',
     },
     '101-300': {
       'recommendedHouseSize': '6m x 8m (48 sqm)',
-      'estimatedCost': '180,000 - 250,000 KSh',
-      'constructionTime': '3-4 weeks',
+      'estimatedCost': '75,000 - 100,000 KSh',
+      'constructionTime': '2-3 weeks',
       'keySpecifications': [
-        'Corrugated iron roof',
-        'Brick lower walls, mesh upper',
-        'Concrete floor base',
-        'Improved ventilation',
-        'Semi-automated systems',
+        'Plate G-16 roofing doubled',
+        'Angleline 1.5" reinforced structure',
+        'Tube 1.5"x1.5" double framing',
+        'Wiremesh heavy gauge on all sides',
+        'Additional ventilation pipes',
       ],
       'materials': [
-        {'item': 'Bricks & cement', 'qty': '2,000 bricks', 'cost': '40,000'},
-        {'item': 'Corrugated sheets', 'qty': '50 sheets', 'cost': '50,000'},
-        {'item': 'Steel framing', 'qty': '30 pieces', 'cost': '30,000'},
-        {'item': 'Wire mesh', 'qty': '40 sqm', 'cost': '24,000'},
-        {'item': 'Ventilation fans', 'qty': '2 units', 'cost': '15,000'},
+        {'item': 'Plate G-16', 'qty': '3 pieces', 'cost': '13,500'},
+        {'item': 'Angleline 1.5"', 'qty': '6 pieces', 'cost': '6,000'},
+        {'item': 'Tube 1.5"x1.5"', 'qty': '12 pieces', 'cost': '7,200'},
+        {'item': 'Pipe 1"', 'qty': '3 pieces', 'cost': '900'},
+        {'item': 'D 8 (Door hinge)', 'qty': '4 pieces', 'cost': '1,600'},
+        {'item': 'Wiremesh heavy gauge', 'qty': '3 sheets', 'cost': '1,200'},
+        {'item': 'Tube 3/4"', 'qty': '10 pieces', 'cost': '6,000'},
+        {'item': 'Plainsheet G-32', 'qty': '8 meters', 'cost': '3,200'},
+        {'item': 'Welding rods', 'qty': '4 kg', 'cost': '800'},
+        {'item': 'Fittings', 'qty': '20 pieces', 'cost': '1,000'},
+        {'item': 'Black paint', 'qty': '2 liters', 'cost': '600'},
+        {'item': 'Pop rivets', 'qty': '10 pieces', 'cost': '300'},
+        {'item': 'Flat 3/4"', 'qty': '3 pieces', 'cost': '900'},
+      ],
+      'labor': [
+        {'item': 'Construction labor', 'cost': '12,000'},
+        {'item': 'Painting & branding', 'cost': '3,500'},
       ],
       'equipmentRecommendations': [
-        '4 brooders (KSh 16,000)',
-        '8 feeders (KSh 12,000)',
-        '8 drinkers (KSh 8,000)',
-        'Automatic lighting (KSh 10,000)',
-        'Temperature monitor (KSh 8,000)',
+        '4 feeders (KSh 3,000)',
+        '4 drinkers (KSh 2,000)',
+        '2 brooders (KSh 3,500)',
+        '2 thermometers (KSh 1,000)',
       ],
       'recommendedSuppliers': [
-        {'name': 'Poultry Masters Ltd', 'type': 'Complete Packages', 'rating': '4.7/5'},
-        {'name': 'Steel Structures Co.', 'type': 'Construction', 'rating': '4.4/5'},
+        {'name': 'Mabati Rolling Mills', 'type': 'Steel & Roofing', 'rating': '4.5/5', 'location': 'Nairobi'},
+        {'name': 'Steel Structures Kenya', 'type': 'Construction', 'rating': '4.3/5', 'location': 'Mombasa'},
       ],
       'biosecurityFeatures': [
         'Double entry system',
-        'Bird netting',
-        'Disinfection tunnel',
-        'Visitor log book',
+        'Wiremesh windows',
+        'Proper drainage',
+        'Disinfection area',
       ],
       'estimatedMonthlyCosts': [
-        'Feed: 15,000 - 20,000 KSh',
-        'Medication: 3,000 - 4,000 KSh',
-        'Utilities: 4,000 - 6,000 KSh',
-        'Labor: 10,000 - 15,000 KSh',
+        'Feed: 12,000 - 18,000 KSh',
+        'Medication: 2,500 - 3,500 KSh',
+        'Utilities: 1,500 - 2,000 KSh',
+        'Labor: 5,000 - 8,000 KSh',
       ],
       'profitability': {
-        'breakEven': '5-6 months',
-        'estimatedMonthlyProfit': '40,000 - 60,000 KSh',
-        'roi': '10-12 months',
+        'breakEven': '4-5 months',
+        'estimatedMonthlyProfit': '25,000 - 40,000 KSh',
+        'roi': '8-10 months',
       },
+      'materialCostSubtotal': '42,200',
+      'laborCostSubtotal': '15,500',
+      'grandTotal': '57,700',
     },
     '301-600': {
       'recommendedHouseSize': '10m x 12m (120 sqm)',
-      'estimatedCost': '450,000 - 650,000 KSh',
-      'constructionTime': '5-6 weeks',
+      'estimatedCost': '180,000 - 250,000 KSh',
+      'constructionTime': '4-5 weeks',
       'keySpecifications': [
-        'Industrial grade roofing',
-        'Brick/block walls',
-        'Reinforced concrete floor',
-        'Automated ventilation',
-        'Waste management system',
+        'Industrial Plate G-16 roofing',
+        'Reinforced Angleline structure',
+        'Heavy-duty Tube framing',
+        'Double wiremesh layers',
+        'Professional finishing',
       ],
       'materials': [
-        {'item': 'Concrete & blocks', 'qty': '4,000 blocks', 'cost': '80,000'},
-        {'item': 'Industrial roofing', 'qty': '120 sheets', 'cost': '120,000'},
-        {'item': 'Steel structure', 'qty': '50 pieces', 'cost': '75,000'},
-        {'item': 'Insulation', 'qty': '120 sqm', 'cost': '60,000'},
-        {'item': 'Automated systems', 'qty': '1 set', 'cost': '100,000'},
+        {'item': 'Plate G-16', 'qty': '8 pieces', 'cost': '36,000'},
+        {'item': 'Angleline 1.5"', 'qty': '15 pieces', 'cost': '15,000'},
+        {'item': 'Tube 1.5"x1.5"', 'qty': '25 pieces', 'cost': '15,000'},
+        {'item': 'Pipe 1"', 'qty': '8 pieces', 'cost': '2,400'},
+        {'item': 'D 8 (Door hinge)', 'qty': '8 pieces', 'cost': '3,200'},
+        {'item': 'Wiremesh heavy gauge', 'qty': '10 sheets', 'cost': '4,000'},
+        {'item': 'Tube 3/4"', 'qty': '20 pieces', 'cost': '12,000'},
+        {'item': 'Plainsheet G-32', 'qty': '20 meters', 'cost': '8,000'},
+        {'item': 'Welding rods', 'qty': '8 kg', 'cost': '1,600'},
+        {'item': 'Fittings', 'qty': '40 pieces', 'cost': '2,000'},
+        {'item': 'Black paint', 'qty': '5 liters', 'cost': '1,500'},
+        {'item': 'Pop rivets', 'qty': '20 pieces', 'cost': '600'},
+        {'item': 'Flat 3/4"', 'qty': '8 pieces', 'cost': '2,400'},
+      ],
+      'labor': [
+        {'item': 'Construction labor', 'cost': '30,000'},
+        {'item': 'Painting & branding', 'cost': '8,000'},
       ],
       'equipmentRecommendations': [
-        '6 brooders (KSh 24,000)',
-        'Auto feeders (KSh 50,000)',
-        'Nipple drinkers (KSh 40,000)',
-        'Climate control (KSh 80,000)',
-        'Monitoring system (KSh 25,000)',
+        '8 auto-feeders (KSh 12,000)',
+        '8 drinkers (KSh 6,000)',
+        '4 brooders (KSh 8,000)',
+        'Climate monitor (KSh 5,000)',
       ],
       'recommendedSuppliers': [
-        {'name': 'AgroTech Solutions', 'type': 'Automated Systems', 'rating': '4.8/5'},
-        {'name': 'BuildRight Contractors', 'type': 'Construction', 'rating': '4.6/5'},
-        {'name': 'Chick Master Ltd', 'type': 'Equipment', 'rating': '4.5/5'},
+        {'name': 'Steel Structures Africa', 'type': 'Industrial Materials', 'rating': '4.6/5', 'location': 'Nairobi'},
+        {'name': 'Poultry Masters Ltd', 'type': 'Complete Packages', 'rating': '4.5/5', 'location': 'Kisumu'},
       ],
       'biosecurityFeatures': [
-        'Biosecurity zone',
-        'Vehicle spray system',
-        'Rodent control',
-        'Air filtration',
-        'Staff changing area',
+        'Proper ventilation system',
+        'Rodent-proof base',
+        'Visitor control area',
+        'Waste management system',
       ],
       'estimatedMonthlyCosts': [
-        'Feed: 40,000 - 60,000 KSh',
-        'Medication: 8,000 - 12,000 KSh',
-        'Utilities: 10,000 - 15,000 KSh',
-        'Labor: 20,000 - 30,000 KSh',
-        'Maintenance: 5,000 - 8,000 KSh',
+        'Feed: 35,000 - 50,000 KSh',
+        'Medication: 7,000 - 10,000 KSh',
+        'Utilities: 4,000 - 6,000 KSh',
+        'Labor: 15,000 - 20,000 KSh',
       ],
       'profitability': {
-        'breakEven': '6-8 months',
-        'estimatedMonthlyProfit': '120,000 - 180,000 KSh',
-        'roi': '8-10 months',
+        'breakEven': '5-6 months',
+        'estimatedMonthlyProfit': '70,000 - 100,000 KSh',
+        'roi': '10-12 months',
       },
+      'materialCostSubtotal': '101,700',
+      'laborCostSubtotal': '38,000',
+      'grandTotal': '139,700',
     },
     '601-1000': {
       'recommendedHouseSize': '15m x 20m (300 sqm)',
-      'estimatedCost': '1,200,000 - 1,800,000 KSh',
-      'constructionTime': '8-10 weeks',
+      'estimatedCost': '450,000 - 600,000 KSh',
+      'constructionTime': '6-8 weeks',
       'keySpecifications': [
-        'Commercial poultry house',
-        'Full automation',
-        'Climate controlled',
-        'Waste recycling',
-        'Energy efficient design',
+        'Commercial Plate G-16 roofing',
+        'Industrial Angleline framework',
+        'Professional Tube structure',
+        'High-quality wiremesh',
+        'Premium finishing',
       ],
       'materials': [
-        {'item': 'Industrial construction', 'qty': 'Full package', 'cost': '800,000'},
-        {'item': 'Automation systems', 'qty': 'Complete set', 'cost': '400,000'},
-        {'item': 'Climate control', 'qty': 'Full system', 'cost': '250,000'},
-        {'item': 'Waste management', 'qty': 'Biogas system', 'cost': '150,000'},
-        {'item': 'Solar backup', 'qty': '5kW system', 'cost': '200,000'},
+        {'item': 'Plate G-16', 'qty': '20 pieces', 'cost': '90,000'},
+        {'item': 'Angleline 1.5"', 'qty': '40 pieces', 'cost': '40,000'},
+        {'item': 'Tube 1.5"x1.5"', 'qty': '60 pieces', 'cost': '36,000'},
+        {'item': 'Pipe 1"', 'qty': '20 pieces', 'cost': '6,000'},
+        {'item': 'D 8 (Door hinge)', 'qty': '20 pieces', 'cost': '8,000'},
+        {'item': 'Wiremesh heavy gauge', 'qty': '25 sheets', 'cost': '10,000'},
+        {'item': 'Tube 3/4"', 'qty': '50 pieces', 'cost': '30,000'},
+        {'item': 'Plainsheet G-32', 'qty': '50 meters', 'cost': '20,000'},
+        {'item': 'Welding rods', 'qty': '20 kg', 'cost': '4,000'},
+        {'item': 'Fittings', 'qty': '100 pieces', 'cost': '5,000'},
+        {'item': 'Black paint', 'qty': '15 liters', 'cost': '4,500'},
+        {'item': 'Pop rivets', 'qty': '50 pieces', 'cost': '1,500'},
+        {'item': 'Flat 3/4"', 'qty': '20 pieces', 'cost': '6,000'},
+      ],
+      'labor': [
+        {'item': 'Construction labor', 'cost': '80,000'},
+        {'item': 'Painting & branding', 'cost': '20,000'},
       ],
       'equipmentRecommendations': [
-        'Tunnel ventilation (KSh 150,000)',
-        'Full automation (KSh 300,000)',
-        'Computer monitoring (KSh 80,000)',
-        'Feed storage silo (KSh 120,000)',
-        'Egg collection system (KSh 75,000)',
+        'Auto-feeders system (KSh 40,000)',
+        'Automatic drinkers (KSh 25,000)',
+        'Brooder system (KSh 20,000)',
+        'Climate control (KSh 30,000)',
       ],
       'recommendedSuppliers': [
-        {'name': 'Big Dutchman Kenya', 'type': 'Full Automation', 'rating': '4.9/5'},
-        {'name': 'Poultry Pro Africa', 'type': 'Turnkey Solutions', 'rating': '4.7/5'},
-        {'name': 'Green Energy Farms', 'type': 'Sustainable Systems', 'rating': '4.6/5'},
+        {'name': 'Big Dutchman Kenya', 'type': 'Commercial Systems', 'rating': '4.8/5', 'location': 'Nairobi'},
+        {'name': 'Poultry Pro Africa', 'type': 'Turnkey Solutions', 'rating': '4.6/5', 'location': 'Nairobi'},
       ],
       'biosecurityFeatures': [
-        'Full biosecurity protocol',
-        'Air shower entry',
-        'Water treatment',
-        'Pest control system',
-        'ISO standards compliance',
+        'Complete biosecurity protocol',
+        'Air filtration system',
+        'Staff changing area',
+        'Vehicle disinfection',
       ],
       'estimatedMonthlyCosts': [
-        'Feed: 120,000 - 180,000 KSh',
-        'Medication: 25,000 - 40,000 KSh',
-        'Utilities: 30,000 - 45,000 KSh',
-        'Labor: 40,000 - 60,000 KSh',
-        'Maintenance: 15,000 - 25,000 KSh',
+        'Feed: 90,000 - 120,000 KSh',
+        'Medication: 20,000 - 30,000 KSh',
+        'Utilities: 10,000 - 15,000 KSh',
+        'Labor: 30,000 - 40,000 KSh',
       ],
       'profitability': {
-        'breakEven': '8-12 months',
-        'estimatedMonthlyProfit': '300,000 - 500,000 KSh',
-        'roi': '18-24 months',
+        'breakEven': '6-8 months',
+        'estimatedMonthlyProfit': '150,000 - 200,000 KSh',
+        'roi': '15-18 months',
       },
+      'materialCostSubtotal': '261,000',
+      'laborCostSubtotal': '100,000',
+      'grandTotal': '361,000',
     },
   };
 
@@ -304,15 +355,6 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Poultry House Quotation',
-                          style: TextStyle(
-                            color: Colors.black87,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
                         Row(
                           children: [
                             Icon(Icons.home_work, color: primaryColor, size: 32),
@@ -330,7 +372,7 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Select your desired bird capacity to see detailed house specifications, cost estimates, and recommended suppliers.',
+                          'Select your desired bird capacity to see detailed house specifications with REAL MATERIALS and cost estimates.',
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey.shade600,
@@ -341,7 +383,7 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
 
                 // Capacity Selection
                 Text(
@@ -352,7 +394,7 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
                     color: Colors.grey.shade800,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 2),
                 Text(
                   'Choose your target bird population range:',
                   style: TextStyle(
@@ -360,7 +402,6 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
                     color: Colors.grey.shade600,
                   ),
                 ),
-                const SizedBox(height: 16),
 
                 // Capacity Options Grid
                 GridView.builder(
@@ -400,13 +441,14 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
 
   Widget _buildCapacityCard(BirdCapacity capacity) {
     final isSelected = _selectedCapacity == capacity.id;
+    final priceRange = _getPriceRangeForCapacity(capacity.id);
 
     return GestureDetector(
       onTap: () {
         setState(() {
           _selectedCapacity = capacity.id;
           // Simulate loading delay
-          Future.delayed(const Duration(milliseconds: 500), () {
+          Future.delayed(const Duration(milliseconds: 300), () {
             setState(() {
               _selectedQuotation = _quotationsData[capacity.id];
             });
@@ -439,7 +481,7 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
           ],
         ),
         child: Padding(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(12),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -455,11 +497,11 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
                   size: 24,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               Text(
                 capacity.label,
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 15,
                   fontWeight: FontWeight.bold,
                   color: isSelected ? primaryColor : Colors.black87,
                 ),
@@ -467,9 +509,19 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
               ),
               const SizedBox(height: 4),
               Text(
+                priceRange,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: isSelected ? primaryColor.withOpacity(0.9) : Colors.green.shade700,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 4),
+              Text(
                 capacity.description,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 11,
                   color: isSelected ? primaryColor.withOpacity(0.8) : Colors.grey.shade600,
                 ),
                 textAlign: TextAlign.center,
@@ -480,6 +532,21 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
         ),
       ),
     );
+  }
+
+  String _getPriceRangeForCapacity(String capacityId) {
+    switch (capacityId) {
+      case '50-100':
+        return 'KSh 26,250';
+      case '101-300':
+        return 'KSh 75,000';
+      case '301-600':
+        return 'KSh 180,000';
+      case '601-1000':
+        return 'KSh 450,000';
+      default:
+        return '';
+    }
   }
 
   Widget _buildQuotationSection() {
@@ -499,20 +566,36 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
             children: [
               Icon(Icons.description, color: Colors.white, size: 24),
               const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'Detailed Quotation & Recommendations',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'DETAILED MATERIAL QUOTATION',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      'Based on REAL construction materials used in Kenya',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
         ),
         const SizedBox(height: 24),
+
+        // Material Cost Breakdown
+        _buildMaterialCostBreakdown(),
+        const SizedBox(height: 20),
 
         // Quick Overview
         _buildInfoCard(
@@ -521,7 +604,9 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
           color: primaryColor,
           children: [
             _buildOverviewItem('Recommended House Size', _selectedQuotation!['recommendedHouseSize']),
-            _buildOverviewItem('Estimated Cost Range', _selectedQuotation!['estimatedCost']),
+            _buildOverviewItem('Material Cost', 'KSh ${_selectedQuotation!['materialCostSubtotal']}'),
+            _buildOverviewItem('Labor Cost', 'KSh ${_selectedQuotation!['laborCostSubtotal']}'),
+            _buildOverviewItem('GRAND TOTAL', 'KSh ${_selectedQuotation!['grandTotal']}'),
             _buildOverviewItem('Construction Time', _selectedQuotation!['constructionTime']),
           ],
         ),
@@ -529,7 +614,7 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
 
         // Key Specifications
         _buildInfoCard(
-          title: 'Key Specifications',
+          title: 'House Specifications',
           icon: Icons.list_alt,
           color: secondaryColor,
           children: [
@@ -553,31 +638,49 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
         ),
         const SizedBox(height: 20),
 
-        // Materials & Costs
+        // Labor Cost Breakdown
         _buildInfoCard(
-          title: 'Materials & Estimated Costs',
-          icon: Icons.construction,
+          title: 'Labor Cost Breakdown',
+          icon: Icons.engineering,
           color: accentColor,
           children: [
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: DataTable(
-                columnSpacing: 24,
-                dataRowMaxHeight: 40,
-                headingRowHeight: 40,
-                columns: const [
-                  DataColumn(label: Text('Material')),
-                  DataColumn(label: Text('Quantity')),
-                  DataColumn(label: Text('Estimated Cost (KSh)')),
-                ],
-                rows: (_selectedQuotation!['materials'] as List)
-                    .map((material) => DataRow(cells: [
-                  DataCell(Text(material['item'])),
-                  DataCell(Text(material['qty'])),
-                  DataCell(Text(material['cost'])),
-                ]))
-                    .toList(),
-              ),
+            Column(
+              children: (_selectedQuotation!['labor'] as List)
+                  .map((labor) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(labor['item']),
+                    Text(
+                      'KSh ${labor['cost']}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                    ),
+                  ],
+                ),
+              ))
+                  .toList(),
+            ),
+            const Divider(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Total Labor Cost',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  'KSh ${_selectedQuotation!['laborCostSubtotal']}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Colors.green,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -589,14 +692,17 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
           icon: Icons.build,
           color: Colors.purple,
           children: [
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
+            Column(
               children: (_selectedQuotation!['equipmentRecommendations'] as List)
-                  .map((equipment) => Chip(
-                label: Text(equipment),
-                backgroundColor: Colors.purple.withOpacity(0.1),
-                labelStyle: TextStyle(color: Colors.purple.shade800),
+                  .map((equipment) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    Icon(Icons.check, size: 16, color: Colors.purple),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(equipment)),
+                  ],
+                ),
               ))
                   .toList(),
             ),
@@ -606,13 +712,14 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
 
         // Recommended Suppliers
         _buildInfoCard(
-          title: 'Recommended Suppliers',
+          title: 'Recommended Suppliers in Kenya',
           icon: Icons.store,
           color: Colors.blue,
           children: [
             Column(
               children: (_selectedQuotation!['recommendedSuppliers'] as List)
                   .map((supplier) => ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 0),
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
@@ -622,7 +729,16 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
                   child: const Icon(Icons.business, size: 20, color: Colors.blue),
                 ),
                 title: Text(supplier['name']),
-                subtitle: Text(supplier['type']),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(supplier['type']),
+                    Text(
+                      'Location: ${supplier['location']}',
+                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    ),
+                  ],
+                ),
                 trailing: Chip(
                   label: Text(supplier['rating']),
                   backgroundColor: Colors.blue.withOpacity(0.1),
@@ -634,30 +750,9 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
         ),
         const SizedBox(height: 20),
 
-        // Biosecurity Features
-        _buildInfoCard(
-          title: 'Biosecurity Features',
-          icon: Icons.security,
-          color: Colors.teal,
-          children: [
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: (_selectedQuotation!['biosecurityFeatures'] as List)
-                  .map((feature) => Chip(
-                label: Text(feature),
-                backgroundColor: Colors.teal.withOpacity(0.1),
-                avatar: Icon(Icons.check, size: 16, color: Colors.teal),
-              ))
-                  .toList(),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-
         // Monthly Cost Estimates
         _buildInfoCard(
-          title: 'Estimated Monthly Costs',
+          title: 'Estimated Monthly Running Costs',
           icon: Icons.attach_money,
           color: Colors.orange,
           children: [
@@ -690,9 +785,160 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
             _buildProfitabilityItem('ROI Period', _selectedQuotation!['profitability']['roi']),
           ],
         ),
-        const SizedBox(height: 32),
       ],
     );
+  }
+
+  Widget _buildMaterialCostBreakdown() {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: primaryColor.withOpacity(0.2)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.inventory, color: primaryColor, size: 20),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'MATERIAL COST BREAKDOWN',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: primaryColor,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              constraints: const BoxConstraints(
+                maxHeight: 300, // Add max height constraint
+              ),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: DataTable(
+                  columnSpacing: 24,
+                  dataRowMaxHeight: 40,
+                  dataRowMinHeight: 40, // Explicit row height
+                  headingRowHeight: 40,
+                  columns: const [
+                    DataColumn(label: Text('Material')),
+                    DataColumn(label: Text('Quantity')),
+                    DataColumn(label: Text('Unit Cost (KSh)')),
+                    DataColumn(label: Text('Total Cost (KSh)')),
+                  ],
+                  rows: (_selectedQuotation!['materials'] as List)
+                      .map((material) => DataRow(cells: [
+                    DataCell(Text(material['item'])),
+                    DataCell(Text(material['qty'])),
+                    DataCell(Text(_getUnitCost(material['item'], material['cost'], material['qty']))),
+                    DataCell(Text(material['cost'])),
+                  ]))
+                      .toList(),
+                ),
+              ),
+            ),
+            const Divider(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'MATERIAL COST SUBTOTAL',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  'KSh ${_selectedQuotation!['materialCostSubtotal']}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Colors.green,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'LABOR COST',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  'KSh ${_selectedQuotation!['laborCostSubtotal']}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Colors.orange,
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 20),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'GRAND TOTAL',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    'KSh ${_selectedQuotation!['grandTotal']}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: primaryColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _getUnitCost(String item, String totalCost, String qty) {
+    // Extract numeric value from total cost
+    final total = totalCost.replaceAll(',', '');
+    // For simplicity, return approximate unit cost
+    if (item.contains('Plate')) return '4,500';
+    if (item.contains('Angleline')) return '1,000';
+    if (item.contains('Tube 1.5')) return '600';
+    if (item.contains('Pipe')) return '300';
+    if (item.contains('D 8')) return '400';
+    if (item.contains('Wiremesh')) return '400';
+    if (item.contains('Tube 3/4')) return '600';
+    if (item.contains('Plainsheet')) return '400';
+    if (item.contains('Welding')) return '200';
+    if (item.contains('Fittings')) return '50';
+    if (item.contains('paint')) return '300';
+    if (item.contains('Pop rivet')) return '30';
+    if (item.contains('Flat')) return '300';
+    return '0';
   }
 
   Widget _buildInfoCard({
@@ -723,12 +969,15 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
                   child: Icon(icon, color: color, size: 20),
                 ),
                 const SizedBox(width: 12),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: color,
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.6,
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
                   ),
                 ),
               ],
@@ -759,9 +1008,10 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: label == 'GRAND TOTAL' ? primaryColor : Colors.black87,
+                fontSize: label == 'GRAND TOTAL' ? 16 : 14,
               ),
               textAlign: TextAlign.right,
             ),
