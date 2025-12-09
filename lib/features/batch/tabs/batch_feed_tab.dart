@@ -2,10 +2,85 @@ import 'package:agriflock360/features/batch/shared/stat_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class BatchFeedTab extends StatelessWidget {
+class BatchFeedTab extends StatefulWidget {
   final Map<String, dynamic> batch;
 
   const BatchFeedTab({super.key, required this.batch});
+
+  @override
+  State<BatchFeedTab> createState() => _BatchFeedTabState();
+}
+
+class _BatchFeedTabState extends State<BatchFeedTab>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  bool _isFabVisible = true;
+  final Map<int, ScrollController> _scrollControllers = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+
+    // Initialize scroll controllers for each tab
+    for (int i = 0; i < _tabController.length; i++) {
+      _scrollControllers[i] = ScrollController();
+
+      _scrollControllers[i]!.addListener(() {
+        _handleScroll(_scrollControllers[i]!);
+      });
+    }
+
+    _tabController.addListener(_handleTabChange);
+  }
+
+  void _handleScroll(ScrollController controller) {
+    // Show FAB when at top, hide when scrolling down
+    if (controller.hasClients) {
+      if (controller.position.pixels > 0 && _isFabVisible) {
+        setState(() {
+          _isFabVisible = false;
+        });
+      } else if (controller.position.pixels <= 0 && !_isFabVisible) {
+        setState(() {
+          _isFabVisible = true;
+        });
+      }
+    }
+  }
+
+  void _handleTabChange() {
+    // When switching tabs, check if we should show FAB based on scroll position
+    final currentTab = _tabController.index;
+    final currentController = _scrollControllers[currentTab];
+
+    if (currentController != null && currentController.hasClients) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (currentController.position.pixels > 0 && _isFabVisible) {
+          setState(() {
+            _isFabVisible = false;
+          });
+        } else if (currentController.position.pixels <= 0 && !_isFabVisible) {
+          setState(() {
+            _isFabVisible = true;
+          });
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _tabController.removeListener(_handleTabChange);
+    _tabController.dispose();
+
+    // Dispose all scroll controllers
+    for (var controller in _scrollControllers.values) {
+      controller?.dispose();
+    }
+
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +107,8 @@ class BatchFeedTab extends StatelessWidget {
                   child: StatCard(
                     value: '150kg',
                     label: 'Weekly Total',
-                    color: Colors.blue.shade100, textColor: Colors.blue.shade800,
+                    color: Colors.blue.shade100,
+                    textColor: Colors.blue.shade800,
                   ),
                 ),
               ],
@@ -44,7 +120,8 @@ class BatchFeedTab extends StatelessWidget {
                   child: StatCard(
                     value: '2.3kg',
                     label: 'Avg per Bird',
-                    color: Colors.green.shade100, textColor: Colors.green.shade800,
+                    color: Colors.green.shade100,
+                    textColor: Colors.green.shade800,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -52,7 +129,8 @@ class BatchFeedTab extends StatelessWidget {
                   child: StatCard(
                     value: 'Good',
                     label: 'FCR',
-                    color: Colors.purple.shade100, textColor: Colors.purple.shade800,
+                    color: Colors.purple.shade100,
+                    textColor: Colors.purple.shade800,
                   ),
                 ),
               ],
@@ -61,49 +139,52 @@ class BatchFeedTab extends StatelessWidget {
 
             // Recent Feedings & Recommended Schedule Tabs
             Expanded(
-              child: DefaultTabController(
-                length: 2,
-                child: Column(
-                  children: [
-                    TabBar(
-                      isScrollable: true,
-                      tabAlignment: TabAlignment.start,
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.all(1),
-                      dividerColor: Colors.transparent,
-                      indicator: BoxDecoration(
-                        color: Colors.grey.shade200,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      indicatorSize: TabBarIndicatorSize.tab,
-                      labelColor: Colors.black,
-                      unselectedLabelColor: Colors.grey.shade600,
-                      labelStyle: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5,
-                      ),
-                      unselectedLabelStyle: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      splashFactory: NoSplash.splashFactory,
-                      overlayColor: WidgetStateProperty.all(Colors.transparent),
-                      tabs: [
-                        _buildTabWithIcon(Icons.history, 'Recent Feedings'),
-                        _buildTabWithIcon(Icons.schedule, 'Recommended Schedule'),
-                      ],
+              child: Column(
+                children: [
+                  TabBar(
+                    controller: _tabController,
+                    isScrollable: true,
+                    tabAlignment: TabAlignment.start,
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.all(1),
+                    dividerColor: Colors.transparent,
+                    indicator: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child: TabBarView(
-                        children: [
-                          // Recent Feedings Tab
-                          Column(
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    labelColor: Colors.black,
+                    unselectedLabelColor: Colors.grey.shade600,
+                    labelStyle: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
+                    ),
+                    unselectedLabelStyle: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    splashFactory: NoSplash.splashFactory,
+                    overlayColor: WidgetStateProperty.all(Colors.transparent),
+                    tabs: [
+                      _buildTabWithIcon(Icons.history, 'Recent Feedings'),
+                      _buildTabWithIcon(Icons.schedule, 'Recommended Schedule'),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        // Recent Feedings Tab
+                        _buildTabView(
+                          index: 0,
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Expanded(
                                 child: ListView(
+                                  controller: _scrollControllers[0],
                                   children: [
                                     _FeedingRecordItem(
                                       date: 'Today, 8:30 AM',
@@ -146,9 +227,13 @@ class BatchFeedTab extends StatelessWidget {
                               ),
                             ],
                           ),
+                        ),
 
-                          // Recommended Schedule Tab
-                          ListView(
+                        // Recommended Schedule Tab
+                        _buildTabView(
+                          index: 1,
+                          child: ListView(
+                            controller: _scrollControllers[1],
                             children: [
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 16),
@@ -157,11 +242,13 @@ class BatchFeedTab extends StatelessWidget {
                                   decoration: BoxDecoration(
                                     color: Colors.blue.shade50,
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: Colors.blue.shade200),
+                                    border:
+                                    Border.all(color: Colors.blue.shade200),
                                   ),
                                   child: Row(
                                     children: [
-                                      Icon(Icons.info_outline, color: Colors.blue.shade700, size: 20),
+                                      Icon(Icons.info_outline,
+                                          color: Colors.blue.shade700, size: 20),
                                       const SizedBox(width: 8),
                                       Expanded(
                                         child: Text(
@@ -214,21 +301,26 @@ class BatchFeedTab extends StatelessWidget {
                                 calcium: '3.5-4.0%',
                               ),
                               Padding(
-                                padding: const EdgeInsets.only(top: 16, bottom: 8),
+                                padding:
+                                const EdgeInsets.only(top: 16, bottom: 8),
                                 child: Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
                                     color: Colors.green.shade50,
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: Colors.green.shade200),
+                                    border:
+                                    Border.all(color: Colors.green.shade200),
                                   ),
                                   child: Row(
                                     children: [
-                                      Icon(Icons.lightbulb_outline, color: Colors.green.shade700, size: 20),
+                                      Icon(Icons.lightbulb_outline,
+                                          color: Colors.green.shade700,
+                                          size: 20),
                                       const SizedBox(width: 8),
                                       Expanded(
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                           children: [
                                             Text(
                                               'Feeding Tips',
@@ -255,24 +347,56 @@ class BatchFeedTab extends StatelessWidget {
                               ),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          context.push('/batches/feed');
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('Log Feeding'),
-        backgroundColor: Colors.orange,
+      floatingActionButton: AnimatedSlide(
+        duration: const Duration(milliseconds: 300),
+        offset: _isFabVisible ? Offset.zero : const Offset(0, 2),
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 300),
+          opacity: _isFabVisible ? 1 : 0,
+          child: FloatingActionButton.extended(
+            onPressed: () {
+              context.push('/batches/feed');
+            },
+            icon: const Icon(Icons.add),
+            label: const Text('Log Feeding'),
+            foregroundColor: Colors.white,
+            backgroundColor: Colors.orange,
+          ),
+        ),
       ),
+    );
+  }
+
+  Widget _buildTabView({required int index, required Widget child}) {
+    return NotificationListener<ScrollNotification>(
+      onNotification: (ScrollNotification notification) {
+        if (notification is ScrollUpdateNotification) {
+          // Hide FAB when scrolling down
+          if (notification.metrics.pixels > 0 && _isFabVisible) {
+            setState(() {
+              _isFabVisible = false;
+            });
+          }
+          // Show FAB when at top
+          else if (notification.metrics.pixels <= 0 && !_isFabVisible) {
+            setState(() {
+              _isFabVisible = true;
+            });
+          }
+        }
+        return false;
+      },
+      child: child,
     );
   }
 
@@ -289,7 +413,6 @@ class BatchFeedTab extends StatelessWidget {
     );
   }
 }
-
 
 class _FeedingRecordItem extends StatelessWidget {
   final String date;
@@ -319,7 +442,7 @@ class _FeedingRecordItem extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.orange.withValues(alpha: 0.1),
+              color: Colors.orange.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.restaurant, size: 18, color: Colors.orange),
@@ -359,7 +482,7 @@ class _FeedingRecordItem extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.1),
+                  color: Colors.green.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -414,10 +537,11 @@ class _RecommendedFeedingItem extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.1),
+                  color: Colors.orange.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.restaurant_menu, size: 18, color: Colors.orange),
+                child:
+                const Icon(Icons.restaurant_menu, size: 18, color: Colors.orange),
               ),
               const SizedBox(width: 12),
               Expanded(

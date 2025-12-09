@@ -2,10 +2,6 @@ import 'package:agriflock360/features/batch/shared/stat_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:agriflock360/features/batch/shared/stat_card.dart';
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-
 class BatchVaccinationsTab extends StatefulWidget {
   final Map<String, dynamic> batch;
 
@@ -412,6 +408,7 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
             },
             icon: const Icon(Icons.add),
             label: const Text('Record Vaccination'),
+            foregroundColor: Colors.white,
             backgroundColor: Colors.green,
           ),
         ),

@@ -110,6 +110,7 @@ class BatchProductsTab extends StatelessWidget {
         },
         backgroundColor: Colors.green,
         icon: const Icon(Icons.add),
+        foregroundColor: Colors.white,
         label: const Text('Record Product'),
       ),
     );
