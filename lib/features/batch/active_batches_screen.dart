@@ -40,7 +40,27 @@ class ActiveBatchesScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Active Batches'),
+        title: Row(
+          children: [
+            Image.asset(
+              'assets/logos/Logo_0725.png',
+              fit: BoxFit.cover,
+              width: 40,
+              height: 40,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: Colors.green,
+                  child: const Icon(
+                    Icons.image,
+                    size: 100,
+                    color: Colors.white54,
+                  ),
+                );
+              },
+            ),
+            const Text('Active Batches'),
+          ],
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),

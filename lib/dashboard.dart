@@ -94,25 +94,25 @@ class _MainDashboardState extends State<MainDashboard> {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: _selectedIndex == 1
-                      ? Colors.blue.withValues(alpha: 0.1)
+                      ? Colors.green.withValues(alpha: 0.1)
                       : Colors.transparent,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.agriculture_outlined,
-                  color: _selectedIndex == 1 ? Colors.blue : Colors.grey.shade600,
+                  color: _selectedIndex == 1 ? Colors.green : Colors.grey.shade600,
                   size: 24,
                 ),
               ),
               selectedIcon: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withValues(alpha: 0.15),
+                  color: Colors.green.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.agriculture,
-                  color: Colors.blue,
+                  color: Colors.green,
                   size: 24,
                 ),
               ),
@@ -123,25 +123,25 @@ class _MainDashboardState extends State<MainDashboard> {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: _selectedIndex == 2
-                      ? Colors.blue.withValues(alpha: 0.1)
+                      ? Colors.green.withValues(alpha: 0.1)
                       : Colors.transparent,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.format_quote_outlined,
-                  color: _selectedIndex == 2 ? Colors.orange : Colors.grey.shade600,
+                  color: _selectedIndex == 2 ? Colors.green : Colors.grey.shade600,
                   size: 24,
                 ),
               ),
               selectedIcon: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.15),
+                  color: Colors.green.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.format_quote,
-                  color: Colors.blue,
+                  color: Colors.green,
                   size: 24,
                 ),
               ),
@@ -152,25 +152,25 @@ class _MainDashboardState extends State<MainDashboard> {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: _selectedIndex == 3
-                      ? Colors.purple.withValues(alpha: 0.1)
+                      ? Colors.green.withValues(alpha: 0.1)
                       : Colors.transparent,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.bar_chart_outlined,
-                  color: _selectedIndex == 3 ? Colors.purple : Colors.grey.shade600,
+                  color: _selectedIndex == 3 ? Colors.green : Colors.grey.shade600,
                   size: 24,
                 ),
               ),
               selectedIcon: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.purple.withValues(alpha: 0.15),
+                  color: Colors.green.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.bar_chart,
-                  color: Colors.purple,
+                  color: Colors.green,
                   size: 24,
                 ),
               ),
@@ -181,25 +181,25 @@ class _MainDashboardState extends State<MainDashboard> {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: _selectedIndex == 4
-                      ? Colors.teal.withValues(alpha: 0.1)
+                      ? Colors.green.withValues(alpha: 0.1)
                       : Colors.transparent,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.person_outlined,
-                  color: _selectedIndex == 4 ? Colors.teal : Colors.grey.shade600,
+                  color: _selectedIndex == 4 ? Colors.green : Colors.grey.shade600,
                   size: 24,
                 ),
               ),
               selectedIcon: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.teal.withValues(alpha: 0.15),
+                  color: Colors.green.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.person,
-                  color: Colors.teal,
+                  color: Colors.green,
                   size: 24,
                 ),
               ),

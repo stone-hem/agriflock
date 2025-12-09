@@ -1,3 +1,4 @@
+import 'package:agriflock360/features/batch/shared/stat_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -15,11 +16,10 @@ class BatchVaccinationsTab extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Vaccination Summary
             Row(
               children: [
                 Expanded(
-                  child: _StatCard(
+                  child: StatCard(
                     value: '3',
                     label: 'Completed',
                     color: Colors.green.shade100, textColor: Colors.green.shade800,
@@ -27,7 +27,7 @@ class BatchVaccinationsTab extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _StatCard(
+                  child: StatCard(
                     value: '2',
                     label: 'Upcoming',
                     color: Colors.orange.shade100,
@@ -40,7 +40,7 @@ class BatchVaccinationsTab extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: _StatCard(
+                  child: StatCard(
                     value: '1',
                     label: 'Overdue',
                     color: Colors.red.shade100, textColor: Colors.red.shade800,
@@ -48,7 +48,7 @@ class BatchVaccinationsTab extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _StatCard(
+                  child: StatCard(
                     value: '95%',
                     label: 'Coverage',
                     color: Colors.blue.shade100, textColor: Colors.blue.shade800,
@@ -431,53 +431,6 @@ class BatchVaccinationsTab extends StatelessWidget {
     );
   }
 }
-
-class _StatCard extends StatelessWidget {
-  final String value;
-  final String label;
-  final Color color;
-  final Color textColor;
-
-  const _StatCard({
-    required this.value,
-    required this.label,
-    required this.color,
-    required this.textColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            value,
-            style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-              fontWeight: FontWeight.bold,
-              color: textColor,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: textColor.withValues(alpha: 0.8),
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 
 class _VaccinationItem extends StatelessWidget {
   final String vaccineName;

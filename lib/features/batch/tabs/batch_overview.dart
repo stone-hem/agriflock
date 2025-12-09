@@ -1,3 +1,4 @@
+import 'package:agriflock360/features/batch/shared/stat_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -89,7 +90,7 @@ class BatchOverview extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _StatCard(
+                child: StatCard(
                   value: '${batch['quantity']}',
                   label: 'Total Birds',
                   color: Colors.blue.shade100,
@@ -98,7 +99,7 @@ class BatchOverview extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _StatCard(
+                child: StatCard(
                   value: '${batch['age']}',
                   label: 'Days Old',
                   color: Colors.orange.shade100,
@@ -111,7 +112,7 @@ class BatchOverview extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _StatCard(
+                child: StatCard(
                   value: '${batch['mortality']}',
                   label: 'Mortality',
                   color: Colors.red.shade100,
@@ -120,7 +121,7 @@ class BatchOverview extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _StatCard(
+                child: StatCard(
                   value: '${(batch['quantity'] - batch['mortality'])}',
                   label: 'Live Birds',
                   color: Colors.green.shade100,
@@ -185,96 +186,6 @@ class BatchOverview extends StatelessWidget {
         const SizedBox(height: 16),
         ...children,
       ],
-    );
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  final String value;
-  final String label;
-  final Color color;
-  final Color textColor;
-  final IconData? icon; // Optional icon
-  final Color? iconColor; // Optional icon color
-  final double iconSize; // Icon size
-  final bool showIconOnTop; // Whether to show icon above or beside value
-  final MainAxisAlignment iconAlignment; // Icon alignment when beside value
-
-  const _StatCard({
-    required this.value,
-    required this.label,
-    required this.color,
-    required this.textColor,
-    this.icon,
-    this.iconColor,
-    this.iconSize = 24,
-    this.showIconOnTop = false,
-    this.iconAlignment = MainAxisAlignment.start,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (icon != null && showIconOnTop) ...[
-            Icon(
-              icon,
-              color: iconColor ?? textColor,
-              size: iconSize,
-            ),
-            const SizedBox(height: 8),
-          ],
-
-          // Value row with optional icon
-          Row(
-            mainAxisAlignment: iconAlignment,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              if (icon != null && !showIconOnTop) ...[
-                Icon(
-                  icon,
-                  color: iconColor ?? textColor,
-                  size: iconSize,
-                ),
-                const SizedBox(width: 8),
-              ],
-
-              Expanded(
-                child: Text(
-                  value,
-                  style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: textColor,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 4),
-
-          // Label
-          Text(
-            label,
-            style: TextStyle(
-              color: textColor.withOpacity(0.8),
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
     );
   }
 }

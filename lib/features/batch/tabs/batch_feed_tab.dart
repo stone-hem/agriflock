@@ -1,3 +1,4 @@
+import 'package:agriflock360/features/batch/shared/stat_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -19,7 +20,7 @@ class BatchFeedTab extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: _StatCard(
+                  child: StatCard(
                     value: '25kg',
                     label: 'Daily Consumption',
                     color: Colors.orange.shade100,
@@ -28,7 +29,7 @@ class BatchFeedTab extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _StatCard(
+                  child: StatCard(
                     value: '150kg',
                     label: 'Weekly Total',
                     color: Colors.blue.shade100, textColor: Colors.blue.shade800,
@@ -40,7 +41,7 @@ class BatchFeedTab extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: _StatCard(
+                  child: StatCard(
                     value: '2.3kg',
                     label: 'Avg per Bird',
                     color: Colors.green.shade100, textColor: Colors.green.shade800,
@@ -48,7 +49,7 @@ class BatchFeedTab extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _StatCard(
+                  child: StatCard(
                     value: 'Good',
                     label: 'FCR',
                     color: Colors.purple.shade100, textColor: Colors.purple.shade800,
@@ -289,52 +290,6 @@ class BatchFeedTab extends StatelessWidget {
   }
 }
 
-
-class _StatCard extends StatelessWidget {
-  final String value;
-  final String label;
-  final Color color;
-  final Color textColor;
-
-  const _StatCard({
-    required this.value,
-    required this.label,
-    required this.color,
-    required this.textColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            value,
-            style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-              fontWeight: FontWeight.bold,
-              color: textColor,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: textColor.withValues(alpha: 0.8),
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _FeedingRecordItem extends StatelessWidget {
   final String date;
