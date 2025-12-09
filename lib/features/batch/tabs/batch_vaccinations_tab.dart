@@ -19,20 +19,19 @@ class BatchVaccinationsTab extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: _VaccinationMetricCard(
+                  child: _StatCard(
                     value: '3',
                     label: 'Completed',
-                    color: Colors.green,
-                    icon: Icons.check_circle,
+                    color: Colors.green.shade100, textColor: Colors.green.shade800,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _VaccinationMetricCard(
+                  child: _StatCard(
                     value: '2',
                     label: 'Upcoming',
-                    color: Colors.orange,
-                    icon: Icons.schedule,
+                    color: Colors.orange.shade100,
+                    textColor: Colors.orange.shade800,
                   ),
                 ),
               ],
@@ -41,20 +40,18 @@ class BatchVaccinationsTab extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: _VaccinationMetricCard(
+                  child: _StatCard(
                     value: '1',
                     label: 'Overdue',
-                    color: Colors.red,
-                    icon: Icons.warning,
+                    color: Colors.red.shade100, textColor: Colors.red.shade800,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _VaccinationMetricCard(
+                  child: _StatCard(
                     value: '95%',
                     label: 'Coverage',
-                    color: Colors.blue,
-                    icon: Icons.health_and_safety,
+                    color: Colors.blue.shade100, textColor: Colors.blue.shade800,
                   ),
                 ),
               ],
@@ -67,59 +64,35 @@ class BatchVaccinationsTab extends StatelessWidget {
                 length: 3,
                 child: Column(
                   children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.1),
-                            blurRadius: 8,
-                            spreadRadius: 2,
-                          ),
-                        ],
+                    TabBar(
+                      isScrollable: true,
+                      tabAlignment: TabAlignment.start,
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.all(1),
+                      dividerColor: Colors.transparent,
+                      indicator: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: TabBar(
-                        isScrollable: true,
-                        tabAlignment: TabAlignment.start,
-                        physics: const BouncingScrollPhysics(),
-                        padding: const EdgeInsets.all(6),
-                        dividerColor: Colors.transparent,
-                        indicator: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF4CAF50), Color(0xFF2E7D32)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.green.withOpacity(0.3),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        indicatorSize: TabBarIndicatorSize.tab,
-                        labelColor: Colors.white,
-                        unselectedLabelColor: Colors.grey.shade600,
-                        labelStyle: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.5,
-                        ),
-                        unselectedLabelStyle: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        splashFactory: NoSplash.splashFactory,
-                        overlayColor: WidgetStateProperty.all(Colors.transparent),
-                        tabs: [
-                          _buildTabWithIcon(Icons.upcoming, 'Upcoming'),
-                          _buildTabWithIcon(Icons.history, 'History'),
-                          _buildTabWithIcon(Icons.schedule, 'Schedule'),
-                        ],
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      labelColor: Colors.black,
+                      unselectedLabelColor: Colors.grey.shade600,
+                      labelStyle: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
                       ),
+                      unselectedLabelStyle: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      splashFactory: NoSplash.splashFactory,
+                      overlayColor: WidgetStateProperty.all(Colors.transparent),
+                      tabs: [
+                        _buildTabWithIcon(Icons.upcoming, 'Upcoming'),
+                        _buildTabWithIcon(Icons.history, 'History'),
+                        _buildTabWithIcon(Icons.schedule, 'Schedule'),
+                      ],
                     ),
                     const SizedBox(height: 16),
                     Expanded(
@@ -447,80 +420,64 @@ class BatchVaccinationsTab extends StatelessWidget {
 
   Widget _buildTabWithIcon(IconData icon, String label) {
     return Tab(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 16),
-            const SizedBox(width: 6),
-            Text(label),
-          ],
-        ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 16),
+          const SizedBox(width: 4),
+          Text(label),
+        ],
       ),
     );
   }
 }
 
-class _VaccinationMetricCard extends StatelessWidget {
+class _StatCard extends StatelessWidget {
   final String value;
   final String label;
   final Color color;
-  final IconData icon;
+  final Color textColor;
 
-  const _VaccinationMetricCard({
+  const _StatCard({
     required this.value,
     required this.label,
     required this.color,
-    required this.icon,
+    required this.textColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.shade200),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(12),
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, size: 18, color: color),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            value,
+            style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+              fontWeight: FontWeight.bold,
+              color: textColor,
             ),
-            const SizedBox(height: 6),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-              ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: textColor.withValues(alpha: 0.8),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
             ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                color: Colors.grey.shade600,
-                fontSize: 10,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
+
 
 class _VaccinationItem extends StatelessWidget {
   final String vaccineName;

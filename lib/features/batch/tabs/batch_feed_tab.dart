@@ -19,20 +19,19 @@ class BatchFeedTab extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: _FeedMetricCard(
+                  child: _StatCard(
                     value: '25kg',
                     label: 'Daily Consumption',
-                    color: Colors.orange,
-                    icon: Icons.restaurant,
+                    color: Colors.orange.shade100,
+                    textColor: Colors.orange.shade800,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _FeedMetricCard(
+                  child: _StatCard(
                     value: '150kg',
                     label: 'Weekly Total',
-                    color: Colors.blue,
-                    icon: Icons.bar_chart,
+                    color: Colors.blue.shade100, textColor: Colors.blue.shade800,
                   ),
                 ),
               ],
@@ -41,20 +40,18 @@ class BatchFeedTab extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: _FeedMetricCard(
+                  child: _StatCard(
                     value: '2.3kg',
                     label: 'Avg per Bird',
-                    color: Colors.green,
-                    icon: Icons.scale,
+                    color: Colors.green.shade100, textColor: Colors.green.shade800,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _FeedMetricCard(
+                  child: _StatCard(
                     value: 'Good',
                     label: 'FCR',
-                    color: Colors.purple,
-                    icon: Icons.trending_up,
+                    color: Colors.purple.shade100, textColor: Colors.purple.shade800,
                   ),
                 ),
               ],
@@ -67,58 +64,34 @@ class BatchFeedTab extends StatelessWidget {
                 length: 2,
                 child: Column(
                   children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.1),
-                            blurRadius: 8,
-                            spreadRadius: 2,
-                          ),
-                        ],
+                    TabBar(
+                      isScrollable: true,
+                      tabAlignment: TabAlignment.start,
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.all(1),
+                      dividerColor: Colors.transparent,
+                      indicator: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: TabBar(
-                        isScrollable: true,
-                        physics: const BouncingScrollPhysics(),
-                        padding: const EdgeInsets.all(6),
-                        tabAlignment: .start,
-                        dividerColor: Colors.transparent,
-                        indicator: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFFF9800), Color(0xFFF57C00)], // Orange gradient for feed
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.orange.withOpacity(0.3),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        indicatorSize: TabBarIndicatorSize.tab,
-                        labelColor: Colors.white,
-                        unselectedLabelColor: Colors.grey.shade600,
-                        labelStyle: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.5,
-                        ),
-                        unselectedLabelStyle: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        splashFactory: NoSplash.splashFactory,
-                        overlayColor: WidgetStateProperty.all(Colors.transparent),
-                        tabs: [
-                          _buildTabWithIcon(Icons.history, 'Recent Feedings'),
-                          _buildTabWithIcon(Icons.schedule, 'Recommended Schedule'),
-                        ],
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      labelColor: Colors.black,
+                      unselectedLabelColor: Colors.grey.shade600,
+                      labelStyle: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
                       ),
+                      unselectedLabelStyle: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      splashFactory: NoSplash.splashFactory,
+                      overlayColor: WidgetStateProperty.all(Colors.transparent),
+                      tabs: [
+                        _buildTabWithIcon(Icons.history, 'Recent Feedings'),
+                        _buildTabWithIcon(Icons.schedule, 'Recommended Schedule'),
+                      ],
                     ),
                     const SizedBox(height: 16),
                     Expanded(
@@ -304,76 +277,60 @@ class BatchFeedTab extends StatelessWidget {
 
   Widget _buildTabWithIcon(IconData icon, String label) {
     return Tab(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 16),
-            const SizedBox(width: 6),
-            Text(label),
-          ],
-        ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 16),
+          const SizedBox(width: 4),
+          Text(label),
+        ],
       ),
     );
   }
 }
 
-class _FeedMetricCard extends StatelessWidget {
+
+class _StatCard extends StatelessWidget {
   final String value;
   final String label;
   final Color color;
-  final IconData icon;
+  final Color textColor;
 
-  const _FeedMetricCard({
+  const _StatCard({
     required this.value,
     required this.label,
     required this.color,
-    required this.icon,
+    required this.textColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.shade200),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(12),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, size: 18, color: color),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            value,
+            style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+              fontWeight: FontWeight.bold,
+              color: textColor,
             ),
-            const SizedBox(height: 6),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-              ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: textColor.withValues(alpha: 0.8),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
             ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                color: Colors.grey.shade600,
-                fontSize: 10,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

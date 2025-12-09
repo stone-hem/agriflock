@@ -13,15 +13,21 @@ class BatchDetailsScreen extends StatefulWidget {
   State<BatchDetailsScreen> createState() => _BatchDetailsScreenState();
 }
 
-class _BatchDetailsScreenState extends State<BatchDetailsScreen> {
-  int _selectedIndex = 0;
+class _BatchDetailsScreenState extends State<BatchDetailsScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
 
-  final List<_TabInfo> _tabs = [
-    _TabInfo(icon: Icons.dashboard, label: 'Overview'),
-    _TabInfo(icon: Icons.fastfood, label: 'Feed'),
-    _TabInfo(icon: Icons.medical_services, label: 'Vaccinations'),
-    _TabInfo(icon: Icons.inventory, label: 'Products'),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 4, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,34 +49,54 @@ class _BatchDetailsScreenState extends State<BatchDetailsScreen> {
           preferredSize: const Size.fromHeight(60),
           child: Container(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: List.generate(_tabs.length, (index) {
-                  final tab = _tabs[index];
-                  final isSelected = _selectedIndex == index;
-
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: _ChipTab(
-                      icon: tab.icon,
-                      label: tab.label,
-                      isSelected: isSelected,
-                      onTap: () {
-                        setState(() {
-                          _selectedIndex = index;
-                        });
-                      },
-                    ),
-                  );
-                }),
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            child: TabBar(
+              controller: _tabController,
+              isScrollable: true,
+              tabAlignment: TabAlignment.start,
+              indicatorSize: TabBarIndicatorSize.tab,
+              indicator: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF4CAF50), Color(0xFF2E7D32)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.green.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.grey.shade700,
+              labelStyle: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.3,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.3,
+              ),
+              dividerColor: Colors.transparent,
+              splashFactory: NoSplash.splashFactory,
+              overlayColor: WidgetStateProperty.all(Colors.transparent),
+              tabs: [
+                _buildTabWithIcon(Icons.dashboard, 'Overview'),
+                _buildTabWithIcon(Icons.fastfood, 'Feed'),
+                _buildTabWithIcon(Icons.medical_services, 'Vaccinations'),
+                _buildTabWithIcon(Icons.inventory, 'Products'),
+              ],
             ),
           ),
         ),
       ),
-      body: IndexedStack(
-        index: _selectedIndex,
+      body: TabBarView(
+        controller: _tabController,
         children: [
           BatchOverview(batch: widget.batch),
           BatchFeedTab(batch: widget.batch),
@@ -80,86 +106,18 @@ class _BatchDetailsScreenState extends State<BatchDetailsScreen> {
       ),
     );
   }
-}
 
-class _TabInfo {
-  final IconData icon;
-  final String label;
-
-  _TabInfo({required this.icon, required this.label});
-}
-
-class _ChipTab extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _ChipTab({
-    required this.icon,
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          gradient: isSelected
-              ? const LinearGradient(
-            colors: [Color(0xFF4CAF50), Color(0xFF2E7D32)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          )
-              : null,
-          color: isSelected ? null : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? Colors.transparent : Colors.grey.shade300,
-            width: 1,
-          ),
-          boxShadow: isSelected
-              ? [
-            BoxShadow(
-              color: Colors.green.withValues(alpha: 0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ]
-              : [
-            BoxShadow(
-              color: Colors.grey.withValues(alpha: 0.1),
-              blurRadius: 4,
-              offset: const Offset(0, 1),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 18,
-              color: isSelected ? Colors.white : Colors.grey.shade700,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? Colors.white : Colors.grey.shade700,
-                letterSpacing: 0.3,
-              ),
-            ),
-          ],
-        ),
+  Widget _buildTabWithIcon(IconData icon, String label) {
+    return Tab(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 18),
+          const SizedBox(width: 4),
+          Text(label),
+        ],
       ),
     );
   }
+
 }

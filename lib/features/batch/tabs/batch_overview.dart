@@ -89,20 +89,20 @@ class BatchOverview extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _MetricCard(
+                child: _StatCard(
                   value: '${batch['quantity']}',
                   label: 'Total Birds',
-                  color: Colors.blue,
-                  icon: Icons.agriculture,
+                  color: Colors.blue.shade100,
+                  icon: Icons.agriculture, textColor: Colors.blue.shade800,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _MetricCard(
+                child: _StatCard(
                   value: '${batch['age']}',
                   label: 'Days Old',
-                  color: Colors.orange,
-                  icon: Icons.calendar_today,
+                  color: Colors.orange.shade100,
+                  icon: Icons.calendar_today, textColor: Colors.orange.shade800,
                 ),
               ),
             ],
@@ -111,20 +111,20 @@ class BatchOverview extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _MetricCard(
+                child: _StatCard(
                   value: '${batch['mortality']}',
                   label: 'Mortality',
-                  color: Colors.red,
-                  icon: Icons.flag,
+                  color: Colors.red.shade100,
+                  icon: Icons.flag, textColor: Colors.red.shade800,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _MetricCard(
+                child: _StatCard(
                   value: '${(batch['quantity'] - batch['mortality'])}',
                   label: 'Live Birds',
-                  color: Colors.green,
-                  icon: Icons.verified_user,
+                  color: Colors.green.shade100,
+                  icon: Icons.verified_user, textColor: Colors.green.shade800,
                 ),
               ),
             ],
@@ -189,55 +189,96 @@ class BatchOverview extends StatelessWidget {
   }
 }
 
-class _MetricCard extends StatelessWidget {
+class _StatCard extends StatelessWidget {
   final String value;
   final String label;
   final Color color;
-  final IconData icon;
+  final Color textColor;
+  final IconData? icon; // Optional icon
+  final Color? iconColor; // Optional icon color
+  final double iconSize; // Icon size
+  final bool showIconOnTop; // Whether to show icon above or beside value
+  final MainAxisAlignment iconAlignment; // Icon alignment when beside value
 
-  const _MetricCard({
+  const _StatCard({
     required this.value,
     required this.label,
     required this.color,
-    required this.icon,
+    required this.textColor,
+    this.icon,
+    this.iconColor,
+    this.iconSize = 24,
+    this.showIconOnTop = false,
+    this.iconAlignment = MainAxisAlignment.start,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.shade200),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(12),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, size: 20, color: color),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (icon != null && showIconOnTop) ...[
+            Icon(
+              icon,
+              color: iconColor ?? textColor,
+              size: iconSize,
             ),
-            const SizedBox(height: 12),
-            Text(
-              value,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-            ),
+            const SizedBox(height: 8),
           ],
-        ),
+
+          // Value row with optional icon
+          Row(
+            mainAxisAlignment: iconAlignment,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (icon != null && !showIconOnTop) ...[
+                Icon(
+                  icon,
+                  color: iconColor ?? textColor,
+                  size: iconSize,
+                ),
+                const SizedBox(width: 8),
+              ],
+
+              Expanded(
+                child: Text(
+                  value,
+                  style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 4),
+
+          // Label
+          Text(
+            label,
+            style: TextStyle(
+              color: textColor.withOpacity(0.8),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }
 }
+
 
 class _ActivityItem extends StatelessWidget {
   final IconData icon;

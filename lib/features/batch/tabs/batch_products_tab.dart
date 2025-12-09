@@ -48,20 +48,20 @@ class BatchProductsTab extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: _MetricCard(
+                  child: _StatCard(
                     value: '$totalEggs',
                     label: 'Total Eggs',
-                    color: Colors.orange,
-                    icon: Icons.egg,
+                    color: Colors.orange.shade100,
+                    icon: Icons.egg, textColor: Colors.orange.shade800,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _MetricCard(
+                  child: _StatCard(
                     value: '$avgDailyEggs',
                     label: 'Avg Daily Eggs',
-                    color: Colors.amber.shade700,
-                    icon: Icons.trending_up,
+                    color: Colors.amber.shade100,
+                    icon: Icons.trending_up, textColor: Colors.amber.shade800,
                   ),
                 ),
               ],
@@ -70,11 +70,11 @@ class BatchProductsTab extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: _MetricCard(
+                  child: _StatCard(
                     value: '$totalMeatSold',
                     label: 'Birds Sold',
-                    color: Colors.red.shade600,
-                    icon: Icons.kebab_dining,
+                    color: Colors.red.shade100,
+                    icon: Icons.kebab_dining, textColor: Colors.red.shade800,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -83,7 +83,7 @@ class BatchProductsTab extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 20),
 
             // Recent Collections
             _buildSection(
@@ -141,6 +141,97 @@ class BatchProductsTab extends StatelessWidget {
     );
   }
 }
+
+class _StatCard extends StatelessWidget {
+  final String value;
+  final String label;
+  final Color color;
+  final Color textColor;
+  final IconData? icon; // Optional icon
+  final Color? iconColor; // Optional icon color
+  final double iconSize; // Icon size
+  final bool showIconOnTop; // Whether to show icon above or beside value
+  final MainAxisAlignment iconAlignment; // Icon alignment when beside value
+
+  const _StatCard({
+    required this.value,
+    required this.label,
+    required this.color,
+    required this.textColor,
+    this.icon,
+    this.iconColor,
+    this.iconSize = 24,
+    this.showIconOnTop = false,
+    this.iconAlignment = MainAxisAlignment.start,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (icon != null && showIconOnTop) ...[
+            Icon(
+              icon,
+              color: iconColor ?? textColor,
+              size: iconSize,
+            ),
+            const SizedBox(height: 8),
+          ],
+
+          // Value row with optional icon
+          Row(
+            mainAxisAlignment: iconAlignment,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (icon != null && !showIconOnTop) ...[
+                Icon(
+                  icon,
+                  color: iconColor ?? textColor,
+                  size: iconSize,
+                ),
+                const SizedBox(width: 8),
+              ],
+
+              Expanded(
+                child: Text(
+                  value,
+                  style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 4),
+
+          // Label
+          Text(
+            label,
+            style: TextStyle(
+              color: textColor.withOpacity(0.8),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 
 // Reusable widgets (same as in BatchDetailsScreen)
 class _MetricCard extends StatelessWidget {
