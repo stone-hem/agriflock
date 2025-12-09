@@ -3,41 +3,69 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'dart:convert';
 
 class AuthService {
-  // Create GoogleSignIn instance with configuration
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: ['email', 'profile'],
-  );
+  // Use GoogleSignIn.instance for singleton access
+  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
 
   // Your API base URL
   static const String baseUrl = 'YOUR_API_BASE_URL'; // e.g., 'https://api.agriflock360.com'
 
+  // Initialize Google Sign In
+  Future<void> initializeGoogleSignIn() async {
+    try {
+      await _googleSignIn.initialize(
+        // clientId: 'YOUR_CLIENT_ID', // For web apps
+        // serverClientId: 'YOUR_SERVER_CLIENT_ID', // For server auth code
+      );
+
+      // Listen to authentication events
+      _googleSignIn.authenticationEvents.listen((event) {
+        print('Google Sign In Event: $event');
+      });
+    } catch (e) {
+      print('Error initializing Google Sign In: $e');
+    }
+  }
+
   /// Sign in with Google and authenticate with your backend
   Future<Map<String, dynamic>> signInWithGoogle() async {
     try {
-      // Step 1: Sign in with Google
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      // Step 1: Initialize if not already done
+      // if (!_googleSignIn.isInitialized) {
+        await initializeGoogleSignIn();
+      // }
 
-      if (googleUser == null) {
-        throw Exception('Google sign in cancelled by user');
+      // Step 2: Check if we can authenticate
+      if (!_googleSignIn.supportsAuthenticate()) {
+        throw Exception('Google Sign In not supported on this platform');
       }
 
-      // Step 2: Get authentication tokens (in v7.2.0, you need to get auth tokens separately)
-      // First, sign in to get the account
-      await _googleSignIn.disconnect(); // Clear any previous session
-      await _googleSignIn.signInSilently(); // Try silent sign in first
+      // Step 3: Authenticate with Google
+      final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
 
-      // Get the authentication object
-      final GoogleSignInAuthentication? googleAuth = await googleUser.authentication;
+      // Step 4: Get authorization for scopes
+      final scopes = ['email', 'profile'];
+      final GoogleSignInClientAuthorization authorization = await googleUser
+          .authorizationClient
+          .authorizeScopes(scopes);
 
-      if (googleAuth == null || googleAuth.idToken == null) {
-        throw Exception('Failed to get authentication tokens');
+      // Step 5: Get authentication tokens from authorization headers
+      final Map<String, String>? authHeaders = await googleUser
+          .authorizationClient
+          .authorizationHeaders(scopes);
+
+      if (authHeaders == null) {
+        throw Exception('Failed to get authorization headers');
       }
 
-      // Step 3: Prepare data to send to your backend
+      // Extract tokens from headers (simplified - actual implementation may vary)
+      final idToken = _extractIdTokenFromHeaders(authHeaders);
+      final accessToken = _extractAccessTokenFromHeaders(authHeaders);
+
+      // Step 6: Prepare data to send to your backend
       final Map<String, dynamic> requestData = {
         'provider': 'google',
-        'id_token': googleAuth.idToken,
-        'access_token': googleAuth.accessToken, // Note: This might be null on some platforms
+        'id_token': idToken,
+        'access_token': accessToken,
         'email': googleUser.email,
         'display_name': googleUser.displayName,
         'photo_url': googleUser.photoUrl,
@@ -46,7 +74,7 @@ class AuthService {
       print('Google Sign In Data to send to API:');
       print(jsonEncode(requestData));
 
-      // Step 4: Send to your backend API
+      // Step 7: Send to your backend API
       final response = await _authenticateWithBackend(requestData);
 
       return response;
@@ -56,44 +84,48 @@ class AuthService {
     }
   }
 
-  /// Alternative approach using signIn method directly
-  Future<Map<String, dynamic>> signInWithGoogleAlt() async {
+  /// Alternative simplified sign in method
+  Future<Map<String, dynamic>> signInWithGoogleSimple() async {
     try {
-      // Initialize GoogleSignIn
-      await _googleSignIn.disconnect(); // Clear any existing session
+      // Initialize Google Sign In
+      await initializeGoogleSignIn();
 
-      // Sign in
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      // Authenticate
+      final GoogleSignInAccount? googleUser = await _googleSignIn.authenticate();
 
       if (googleUser == null) {
         throw Exception('Google sign in cancelled by user');
       }
 
-      // Get the current user after sign in
-      final currentUser = _googleSignIn.currentUser;
-      if (currentUser == null) {
-        throw Exception('Failed to get current user');
-      }
+      // Get authorization for basic scopes
+      final scopes = ['email', 'profile'];
+      final authorization = await googleUser
+          .authorizationClient
+          .authorizeScopes(scopes);
 
-      // Get authentication
-      final auth = await currentUser.authentication;
-
-      final Map<String, dynamic> requestData = {
+      // Get user info
+      final userInfo = {
         'provider': 'google',
-        'id_token': auth.idToken,
-        'access_token': auth.accessToken,
-        'email': currentUser.email,
-        'display_name': currentUser.displayName,
-        'photo_url': currentUser.photoUrl,
+        'email': googleUser.email,
+        'display_name': googleUser.displayName,
+        'photo_url': googleUser.photoUrl,
+        'id': googleUser.id,
       };
 
-      print('Google Sign In Data to send to API:');
-      print(jsonEncode(requestData));
+      // Get server auth code if available (for server-side verification)
+      final serverAuth = await googleUser.authorizationClient.authorizeServer(scopes);
+      if (serverAuth != null) {
+        userInfo['server_auth_code'] = serverAuth.serverAuthCode;
+      }
 
-      return await _authenticateWithBackend(requestData);
+      print('Google User Info: $userInfo');
+
+      // Authenticate with backend
+      final response = await _authenticateWithBackend(userInfo);
+      return response;
     } catch (e) {
-      print('Error signing in with Google: $e');
-      throw Exception('Google sign in failed: $e');
+      print('Google Sign In Error: $e');
+      rethrow;
     }
   }
 
@@ -186,25 +218,43 @@ class AuthService {
   Future<void> signOut() async {
     try {
       await _googleSignIn.disconnect();
-      // Clear any stored tokens from secure storage
+      print('Successfully signed out from Google');
     } catch (e) {
       print('Error signing out: $e');
+      rethrow;
     }
   }
 
   /// Check if user is signed in
-  Future<bool> isSignedIn() async {
-    try {
-      // Try to sign in silently to check if user is already authenticated
-      final GoogleSignInAccount? account = await _googleSignIn.signInSilently();
-      return account != null;
-    } catch (e) {
-      return false;
-    }
-  }
+  // Future<bool> isSignedIn() async {
+  //   try {
+  //     // Get current user
+  //     final currentUser = _googleSignIn.currentUser;
+  //     return currentUser != null;
+  //   } catch (e) {
+  //     return false;
+  //   }
+  // }
 
   /// Get current user if signed in
-  Future<GoogleSignInAccount?> getCurrentUser() async {
-    return _googleSignIn.currentUser;
+  // Future<GoogleSignInAccount?> getCurrentUser() async {
+  //   return _googleSignIn.currentUser;
+  // }
+
+  /// Helper method to extract ID token from authorization headers
+  String? _extractIdTokenFromHeaders(Map<String, String> headers) {
+    // This is a simplified example. You may need to parse the actual headers
+    // based on how Google returns them in your specific setup.
+    final authHeader = headers['Authorization'];
+    if (authHeader != null && authHeader.startsWith('Bearer ')) {
+      return authHeader.substring(7);
+    }
+    return null;
+  }
+
+  /// Helper method to extract access token from authorization headers
+  String? _extractAccessTokenFromHeaders(Map<String, String> headers) {
+    // This is a simplified example. The actual extraction may vary.
+    return headers['X-Access-Token'];
   }
 }
