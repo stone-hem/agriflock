@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/services/auth_service.dart';
 import 'package:agriflock360/features/auth/shared/auth_text_field.dart';
 import 'package:agriflock360/features/auth/shared/country_phone_input.dart';
 import 'package:agriflock360/features/auth/shared/country_service.dart';
@@ -17,6 +18,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _authService = AuthService(); // Add this
 
   Country? _selectedCountry;
   List<Country> _countries = [];
@@ -529,15 +531,48 @@ class _SignupScreenState extends State<SignupScreen> {
       _isLoading = true;
     });
 
-    // Simulate Google Sign In
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      // Call the auth service
+      final response = await _authService.signInWithGoogle();
 
-    setState(() {
-      _isLoading = false;
-    });
+      if (response['success'] == true) {
+        // Extract user data and token
+        final userData = response['data'];
+        final token = userData['access_token'];
+        final user = userData['user'];
 
-    // TODO: Implement actual Google Sign In
-    context.go('/onboarding-quiz');
+        // TODO: Store token securely (use flutter_secure_storage)
+        // await secureStorage.write(key: 'access_token', value: token);
+
+        // Show success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Welcome ${user['full_name']}!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // Navigate to dashboard or onboarding
+          context.go('/onboarding-quiz');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Google sign in failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   void _signInWithApple() async {
@@ -545,15 +580,48 @@ class _SignupScreenState extends State<SignupScreen> {
       _isLoading = true;
     });
 
-    // Simulate Apple Sign In
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      // Call the auth service
+      final response = await _authService.signInWithApple();
 
-    setState(() {
-      _isLoading = false;
-    });
+      if (response['success'] == true) {
+        // Extract user data and token
+        final userData = response['data'];
+        final token = userData['access_token'];
+        final user = userData['user'];
 
-    // TODO: Implement actual Apple Sign In
-    context.go('/onboarding-quiz');
+        // TODO: Store token securely (use flutter_secure_storage)
+        // await secureStorage.write(key: 'access_token', value: token);
+
+        // Show success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Welcome ${user['full_name']}!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // Navigate to dashboard or onboarding
+          context.go('/onboarding-quiz');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Apple sign in failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   void _showTermsDialog(BuildContext context) {

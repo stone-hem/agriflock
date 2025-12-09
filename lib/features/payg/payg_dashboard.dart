@@ -243,14 +243,18 @@ class PAYGDashboard extends StatelessWidget {
               title: 'View Invoice',
               subtitle: 'Download receipts',
               color: Colors.orange,
-              onTap: () {},
+              onTap: () {
+                context.push('/invoice');
+              },
             ),
             _ActionTile(
               icon: Icons.help_outline,
               title: 'Get Support',
               subtitle: 'Contact help desk',
               color: Colors.purple,
-              onTap: () {},
+              onTap: () {
+                context.go('/help');
+              },
             ),
           ],
         ),

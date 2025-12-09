@@ -75,14 +75,7 @@ class _FarmsHomeScreenState extends State<FarmsHomeScreen> {
         actions: [
           IconButton(
             icon: Icon(Icons.notifications_outlined, color: Colors.grey.shade700),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('2 low stock alerts'),
-                  backgroundColor: Colors.green,
-                ),
-              );
-            },
+            onPressed: () => context.push('/notifications'),
           ),
         ],
       ),

@@ -24,10 +24,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
   // Farmer Profile Data
   final TextEditingController _idNumberController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _dobController = TextEditingController();
   String? _selectedGender;
-  final TextEditingController _poultryTypeController = TextEditingController();
+  String? _selectedPoultryType; // Changed from TextEditingController
   final TextEditingController _houseCapacityController = TextEditingController();
   final TextEditingController _currentChickensController = TextEditingController();
 
@@ -36,6 +35,19 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
   // Additional documents
   final List<PlatformFile> _uploadedFiles = [];
+
+  // Poultry type options
+  final List<String> _poultryTypes = [
+    'Broilers',
+    'Layers',
+    'Indigenous',
+    'Dual Purpose',
+    'Quails',
+    'Turkey',
+    'Ducks',
+    'Geese',
+    'Other'
+  ];
 
   final List<ProfileStep> _profileSteps = [
     ProfileStep(
@@ -66,14 +78,11 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     super.initState();
   }
 
-
   @override
   void dispose() {
     _pageController.dispose();
     _idNumberController.dispose();
-    _phoneController.dispose();
     _dobController.dispose();
-    _poultryTypeController.dispose();
     _houseCapacityController.dispose();
     _currentChickensController.dispose();
     super.dispose();
@@ -134,12 +143,12 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     //     _phoneController.text.isNotEmpty &&
     //     _dobController.text.isNotEmpty &&
     //     _selectedGender != null &&
-    //     _experienceController.text.isNotEmpty &&
-    //     _poultryTypeController.text.isNotEmpty;
+    //     _experienceController.text.isNotEmpty;
 
       case 1: // Farm Operations
         return true;
-    // return _houseCapacityController.text.isNotEmpty &&
+    // return _selectedPoultryType != null &&
+    //     _houseCapacityController.text.isNotEmpty &&
     //     _currentChickensController.text.isNotEmpty;
 
       case 2: // Verification
@@ -155,10 +164,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     // TODO: Save profile data to backend
     final profileData = {
       'idNumber': _idNumberController.text,
-      'phone': _phoneController.text,
       'dob': _dobController.text,
       'gender': _selectedGender,
-      'poultryType': _poultryTypeController.text,
+      'poultryType': _selectedPoultryType,
       'houseCapacity': _houseCapacityController.text,
       'currentChickens': _currentChickensController.text,
     };
@@ -294,7 +302,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           ),
           const SizedBox(height: 30),
 
-
           // ID Number
           CustomTextField(
             controller: _idNumberController,
@@ -302,17 +309,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
             hintText: 'Enter your national ID number',
             icon: Icons.badge,
             keyboardType: TextInputType.number,
-            value: '',
-          ),
-          const SizedBox(height: 20),
-
-          // Phone Number
-          CustomTextField(
-            controller: _phoneController,
-            label: 'Phone Number *',
-            hintText: 'Enter your phone number',
-            icon: Icons.phone,
-            keyboardType: TextInputType.phone,
             value: '',
           ),
           const SizedBox(height: 20),
@@ -370,17 +366,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
               });
             },
           ),
-          const SizedBox(height: 20),
-
-
-          // Poultry Type
-          CustomTextField(
-            controller: _poultryTypeController,
-            label: 'Primary Poultry Type *',
-            hintText: 'e.g., Broilers, Layers, Indigenous, etc.',
-            icon: Icons.eco,
-            value: '',
-          ),
         ],
       ),
     );
@@ -410,6 +395,66 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           ),
           const SizedBox(height: 30),
 
+          // Primary Poultry Type (Dropdown)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Primary Poultry Type *',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedPoultryType,
+                    hint: const Text('Select poultry type'),
+                    isExpanded: true,
+                    icon: Icon(Icons.arrow_drop_down, color: primaryGreen),
+                    style: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 16,
+                    ),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _selectedPoultryType = newValue;
+                      });
+                    },
+                    items: _poultryTypes.map((String type) {
+                      return DropdownMenuItem<String>(
+                        value: type,
+                        child: Text(type),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              if (_selectedPoultryType == 'Other')
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: CustomTextField(
+                    controller: TextEditingController(),
+                    label: 'Specify other poultry type',
+                    hintText: 'Enter your specific poultry type',
+                    icon: Icons.edit,
+                    value: '',
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
           // Chicken House Capacity
           CustomTextField(
             controller: _houseCapacityController,
@@ -430,8 +475,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
             keyboardType: TextInputType.number,
             value: '',
           ),
-
-
         ],
       ),
     );
@@ -496,7 +539,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),

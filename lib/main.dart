@@ -26,6 +26,7 @@ import 'package:agriflock360/features/more/recent_activity_screen.dart';
 import 'package:agriflock360/features/payg/payg_dashboard.dart';
 import 'package:agriflock360/features/payg/payment_history_screen.dart';
 import 'package:agriflock360/features/payg/payment_screen.dart';
+import 'package:agriflock360/features/payg/view_invoice.dart';
 import 'package:agriflock360/features/profile/about_screen.dart';
 import 'package:agriflock360/features/profile/complete_profile_screen.dart';
 import 'package:agriflock360/features/profile/congratulations_screen.dart';
@@ -158,6 +159,10 @@ final GoRouter _router = GoRouter(
     GoRoute(
       path: '/payg/history',
       builder: (context, state) => const PaymentHistoryScreen(),
+    ),
+    GoRoute(
+      path: '/invoice',
+      builder: (context, state) => const ViewInvoiceScreen(),
     ),
     GoRoute(
       path: '/settings',

@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/services/auth_service.dart';
 import 'package:agriflock360/features/auth/shared/auth_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -13,7 +14,9 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _identifierController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _authService = AuthService(); // Add this
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   @override
   Widget build(BuildContext context) {
@@ -122,11 +125,18 @@ class _LoginScreenState extends State<LoginScreen> {
                           labelText: 'Password',
                           hintText: 'Enter your password',
                           icon: Icons.lock_outline,
-                          obscureText: true,
+                          obscureText: _obscurePassword,
                           suffixIcon: IconButton(
-                            icon: const Icon(Icons.visibility),
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                              color: Colors.grey.shade600,
+                            ),
                             onPressed: () {
-                              // Toggle password visibility
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
                             },
                           ),
                           validator: (value) {
@@ -145,7 +155,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: TextButton(
                             onPressed: () {
                               context.push('/forgot-password');
-                              // TODO: Implement forgot password
                             },
                             style: TextButton.styleFrom(
                               foregroundColor: Colors.green.shade600,
@@ -359,15 +368,48 @@ class _LoginScreenState extends State<LoginScreen> {
       _isLoading = true;
     });
 
-    // Simulate Google Sign In
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      // Call the auth service
+      final response = await _authService.signInWithGoogle();
 
-    setState(() {
-      _isLoading = false;
-    });
+      if (response['success'] == true) {
+        // Extract user data and token
+        final userData = response['data'];
+        final token = userData['access_token'];
+        final user = userData['user'];
 
-    // TODO: Implement actual Google Sign In
-    context.go('/dashboard');
+        // TODO: Store token securely (use flutter_secure_storage)
+        // await secureStorage.write(key: 'access_token', value: token);
+
+        // Show success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Welcome back ${user['full_name']}!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // Navigate to dashboard
+          context.go('/dashboard');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Google sign in failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   void _signInWithApple() async {
@@ -375,15 +417,48 @@ class _LoginScreenState extends State<LoginScreen> {
       _isLoading = true;
     });
 
-    // Simulate Google Sign In
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      // Call the auth service
+      final response = await _authService.signInWithApple();
 
-    setState(() {
-      _isLoading = false;
-    });
+      if (response['success'] == true) {
+        // Extract user data and token
+        final userData = response['data'];
+        final token = userData['access_token'];
+        final user = userData['user'];
 
-    // TODO: Implement actual Google Sign In
-    context.go('/dashboard');
+        // TODO: Store token securely (use flutter_secure_storage)
+        // await secureStorage.write(key: 'access_token', value: token);
+
+        // Show success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Welcome back ${user['full_name']}!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // Navigate to dashboard
+          context.go('/dashboard');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Apple sign in failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
