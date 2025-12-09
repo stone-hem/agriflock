@@ -21,7 +21,7 @@ class AuthTextField extends StatelessWidget {
   final void Function(String)? onFieldSubmitted;
 
   const AuthTextField({
-    Key? key,
+    super.key,
     required this.controller,
     required this.labelText,
     required this.hintText,
@@ -40,7 +40,7 @@ class AuthTextField extends StatelessWidget {
     this.textInputAction,
     this.onChanged,
     this.onFieldSubmitted,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +63,7 @@ class AuthTextField extends StatelessWidget {
         prefixIcon: Container(
           margin: const EdgeInsets.only(right: 12),
           decoration: BoxDecoration(
-            color: backgroundColor ?? Colors.green.withOpacity(0.1),
+            color: backgroundColor ?? Colors.green.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(

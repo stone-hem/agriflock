@@ -113,7 +113,7 @@ class BatchVaccinationsTab extends StatelessWidget {
                           fontWeight: FontWeight.w500,
                         ),
                         splashFactory: NoSplash.splashFactory,
-                        overlayColor: MaterialStateProperty.all(Colors.transparent),
+                        overlayColor: WidgetStateProperty.all(Colors.transparent),
                         tabs: [
                           _buildTabWithIcon(Icons.upcoming, 'Upcoming'),
                           _buildTabWithIcon(Icons.history, 'History'),

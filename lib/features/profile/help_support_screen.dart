@@ -386,6 +386,15 @@ class _FAQItemState extends State<_FAQItem> {
             fontSize: 14,
           ),
         ),
+        onExpansionChanged: (expanded) {
+          setState(() {
+            _isExpanded = expanded;
+          });
+        },
+        trailing: Icon(
+          _isExpanded ? Icons.expand_less : Icons.expand_more,
+          color: Colors.grey.shade600,
+        ),
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -398,15 +407,6 @@ class _FAQItemState extends State<_FAQItem> {
             ),
           ),
         ],
-        onExpansionChanged: (expanded) {
-          setState(() {
-            _isExpanded = expanded;
-          });
-        },
-        trailing: Icon(
-          _isExpanded ? Icons.expand_less : Icons.expand_more,
-          color: Colors.grey.shade600,
-        ),
       ),
     );
   }

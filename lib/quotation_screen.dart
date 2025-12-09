@@ -563,7 +563,7 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
               scrollDirection: Axis.horizontal,
               child: DataTable(
                 columnSpacing: 24,
-                dataRowHeight: 40,
+                dataRowMaxHeight: 40,
                 headingRowHeight: 40,
                 columns: const [
                   DataColumn(label: Text('Material')),

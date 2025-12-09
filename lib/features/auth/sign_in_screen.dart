@@ -13,7 +13,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _identifierController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
   bool _isLoading = false;
 
   @override
