@@ -2,10 +2,91 @@ import 'package:agriflock360/features/batch/shared/stat_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class BatchVaccinationsTab extends StatelessWidget {
+import 'package:agriflock360/features/batch/shared/stat_card.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+class BatchVaccinationsTab extends StatefulWidget {
   final Map<String, dynamic> batch;
 
   const BatchVaccinationsTab({super.key, required this.batch});
+
+  @override
+  State<BatchVaccinationsTab> createState() => _BatchVaccinationsTabState();
+}
+
+class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  bool _isFabVisible = true;
+  final Map<int, ScrollController> _scrollControllers = {};
+  final Map<int, bool> _isScrolling = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+
+    // Initialize scroll controllers for each tab
+    for (int i = 0; i < _tabController.length; i++) {
+      _scrollControllers[i] = ScrollController();
+      _isScrolling[i] = false;
+
+      _scrollControllers[i]!.addListener(() {
+        _handleScroll(_scrollControllers[i]!, i);
+      });
+    }
+
+    _tabController.addListener(_handleTabChange);
+  }
+
+  void _handleScroll(ScrollController controller, int tabIndex) {
+    // Show FAB when at top, hide when scrolling down
+    if (controller.hasClients) {
+      if (controller.position.pixels > 0 && _isFabVisible) {
+        setState(() {
+          _isFabVisible = false;
+        });
+      } else if (controller.position.pixels <= 0 && !_isFabVisible) {
+        setState(() {
+          _isFabVisible = true;
+        });
+      }
+    }
+  }
+
+  void _handleTabChange() {
+    // When switching tabs, check if we should show FAB based on scroll position
+    final currentTab = _tabController.index;
+    final currentController = _scrollControllers[currentTab];
+
+    if (currentController != null && currentController.hasClients) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (currentController.position.pixels > 0 && _isFabVisible) {
+          setState(() {
+            _isFabVisible = false;
+          });
+        } else if (currentController.position.pixels <= 0 && !_isFabVisible) {
+          setState(() {
+            _isFabVisible = true;
+          });
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _tabController.removeListener(_handleTabChange);
+    _tabController.dispose();
+
+    // Dispose all scroll controllers
+    for (var controller in _scrollControllers.values) {
+      controller?.dispose();
+    }
+
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +103,8 @@ class BatchVaccinationsTab extends StatelessWidget {
                   child: StatCard(
                     value: '3',
                     label: 'Completed',
-                    color: Colors.green.shade100, textColor: Colors.green.shade800,
+                    color: Colors.green.shade100,
+                    textColor: Colors.green.shade800,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -43,7 +125,8 @@ class BatchVaccinationsTab extends StatelessWidget {
                   child: StatCard(
                     value: '1',
                     label: 'Overdue',
-                    color: Colors.red.shade100, textColor: Colors.red.shade800,
+                    color: Colors.red.shade100,
+                    textColor: Colors.red.shade800,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -51,7 +134,8 @@ class BatchVaccinationsTab extends StatelessWidget {
                   child: StatCard(
                     value: '95%',
                     label: 'Coverage',
-                    color: Colors.blue.shade100, textColor: Colors.blue.shade800,
+                    color: Colors.blue.shade100,
+                    textColor: Colors.blue.shade800,
                   ),
                 ),
               ],
@@ -60,46 +144,50 @@ class BatchVaccinationsTab extends StatelessWidget {
 
             // Upcoming & Recent Vaccinations & Recommended Schedule
             Expanded(
-              child: DefaultTabController(
-                length: 3,
-                child: Column(
-                  children: [
-                    TabBar(
-                      isScrollable: true,
-                      tabAlignment: TabAlignment.start,
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.all(1),
-                      dividerColor: Colors.transparent,
-                      indicator: BoxDecoration(
-                        color: Colors.grey.shade200,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      indicatorSize: TabBarIndicatorSize.tab,
-                      labelColor: Colors.black,
-                      unselectedLabelColor: Colors.grey.shade600,
-                      labelStyle: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5,
-                      ),
-                      unselectedLabelStyle: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      splashFactory: NoSplash.splashFactory,
-                      overlayColor: WidgetStateProperty.all(Colors.transparent),
-                      tabs: [
-                        _buildTabWithIcon(Icons.upcoming, 'Upcoming'),
-                        _buildTabWithIcon(Icons.history, 'History'),
-                        _buildTabWithIcon(Icons.schedule, 'Schedule'),
-                      ],
+              child: Column(
+                children: [
+                  TabBar(
+                    controller: _tabController,
+                    isScrollable: true,
+                    tabAlignment: TabAlignment.start,
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.all(1),
+                    dividerColor: Colors.transparent,
+                    indicator: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child: TabBarView(
-                        children: [
-                          // Upcoming Tab
-                          ListView(
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    labelColor: Colors.black,
+                    unselectedLabelColor: Colors.grey.shade600,
+                    labelStyle: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
+                    ),
+                    unselectedLabelStyle: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    splashFactory: NoSplash.splashFactory,
+                    overlayColor:
+                    WidgetStateProperty.all(Colors.transparent),
+                    tabs: [
+                      _buildTabWithIcon(Icons.upcoming, 'Upcoming'),
+                      _buildTabWithIcon(Icons.history, 'History'),
+                      _buildTabWithIcon(Icons.schedule, 'Schedule'),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        // Upcoming Tab
+                        _buildTabView(
+                          index: 0,
+                          child: ListView(
+                            controller: _scrollControllers[0],
                             children: [
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 12),
@@ -122,7 +210,10 @@ class BatchVaccinationsTab extends StatelessWidget {
                                 dosage: '0.5ml per bird',
                                 administered: false,
                                 onCancel: () {
-                                  _showCancelDialog(context, 'Newcastle Disease', 'Dec 15, 2023');
+                                  _showCancelDialog(
+                                      context,
+                                      'Newcastle Disease',
+                                      'Dec 15, 2023');
                                 },
                               ),
                               _VaccinationItem(
@@ -133,7 +224,10 @@ class BatchVaccinationsTab extends StatelessWidget {
                                 dosage: '0.3ml per bird',
                                 administered: false,
                                 onCancel: () {
-                                  _showCancelDialog(context, 'Infectious Bronchitis', 'Dec 20, 2023');
+                                  _showCancelDialog(
+                                      context,
+                                      'Infectious Bronchitis',
+                                      'Dec 20, 2023');
                                 },
                               ),
                               _VaccinationItem(
@@ -144,13 +238,18 @@ class BatchVaccinationsTab extends StatelessWidget {
                                 dosage: 'Wing-stab method',
                                 administered: false,
                                 onCancel: () {
-                                  _showCancelDialog(context, 'Fowl Pox', 'Dec 5, 2023');
+                                  _showCancelDialog(
+                                      context, 'Fowl Pox', 'Dec 5, 2023');
                                 },
                               ),
                             ],
                           ),
-                          // History Tab
-                          ListView(
+                        ),
+                        // History Tab
+                        _buildTabView(
+                          index: 1,
+                          child: ListView(
+                            controller: _scrollControllers[1],
                             children: [
                               _VaccinationItem(
                                 vaccineName: 'Marek\'s Disease',
@@ -181,8 +280,12 @@ class BatchVaccinationsTab extends StatelessWidget {
                               ),
                             ],
                           ),
-                          // Recommended Schedule Tab
-                          ListView(
+                        ),
+                        // Recommended Schedule Tab
+                        _buildTabView(
+                          index: 2,
+                          child: ListView(
+                            controller: _scrollControllers[2],
                             children: [
                               Container(
                                 margin: const EdgeInsets.only(bottom: 16),
@@ -213,7 +316,8 @@ class BatchVaccinationsTab extends StatelessWidget {
                                   ),
                                   child: Row(
                                     children: [
-                                      Icon(Icons.info_outline, color: Colors.blue.shade700, size: 20),
+                                      Icon(Icons.info_outline,
+                                          color: Colors.blue.shade700, size: 20),
                                       const SizedBox(width: 8),
                                       Expanded(
                                         child: Text(
@@ -286,24 +390,55 @@ class BatchVaccinationsTab extends StatelessWidget {
                               ),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          context.push('/batches/vaccination');
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('Record Vaccination'),
-        backgroundColor: Colors.green,
+      floatingActionButton: AnimatedSlide(
+        duration: const Duration(milliseconds: 300),
+        offset: _isFabVisible ? Offset.zero : const Offset(0, 2),
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 300),
+          opacity: _isFabVisible ? 1 : 0,
+          child: FloatingActionButton.extended(
+            onPressed: () {
+              context.push('/batches/vaccination');
+            },
+            icon: const Icon(Icons.add),
+            label: const Text('Record Vaccination'),
+            backgroundColor: Colors.green,
+          ),
+        ),
       ),
+    );
+  }
+
+  Widget _buildTabView({required int index, required Widget child}) {
+    return NotificationListener<ScrollNotification>(
+      onNotification: (ScrollNotification notification) {
+        if (notification is ScrollUpdateNotification) {
+          // Hide FAB when scrolling down
+          if (notification.metrics.pixels > 0 && _isFabVisible) {
+            setState(() {
+              _isFabVisible = false;
+            });
+          }
+          // Show FAB when at top
+          else if (notification.metrics.pixels <= 0 && !_isFabVisible) {
+            setState(() {
+              _isFabVisible = true;
+            });
+          }
+        }
+        return false;
+      },
+      child: child,
     );
   }
 
@@ -312,7 +447,8 @@ class BatchVaccinationsTab extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Cancel $vaccineName'),
-        content: Text('This vaccination is scheduled for $date. What would you like to do?'),
+        content: Text(
+            'This vaccination is scheduled for $date. What would you like to do?'),
         actions: [
           TextButton(
             onPressed: () {
@@ -339,7 +475,8 @@ class BatchVaccinationsTab extends StatelessWidget {
     );
   }
 
-  void _showRescheduleDialog(BuildContext context, String vaccineName, String date) {
+  void _showRescheduleDialog(
+      BuildContext context, String vaccineName, String date) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -391,7 +528,8 @@ class BatchVaccinationsTab extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Confirm Cancellation'),
-        content: Text('Are you sure you want to cancel $vaccineName vaccination? This action cannot be undone.'),
+        content: Text(
+            'Are you sure you want to cancel $vaccineName vaccination? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
