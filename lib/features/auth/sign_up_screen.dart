@@ -1,3 +1,6 @@
+import 'package:agriflock360/features/auth/shared/auth_text_field.dart';
+import 'package:agriflock360/features/auth/shared/country_phone_input.dart';
+import 'package:agriflock360/features/auth/shared/country_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -15,10 +18,35 @@ class _SignupScreenState extends State<SignupScreen> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  Country? _selectedCountry;
+  List<Country> _countries = [];
+  bool _isLoadingCountry = true;
+
   bool _obscurePassword = true;
   bool _isLoading = false;
   bool _acceptedTerms = false;
   bool _showTermsError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCountries();
+  }
+
+  Future<void> _loadCountries() async {
+    try {
+      final countries = await CountriesService.loadCountries();
+      setState(() {
+        _countries = countries;
+        _isLoadingCountry = false;
+      });
+    } catch (e) {
+      print('Error loading countries: $e');
+      setState(() {
+        _isLoadingCountry = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,10 +110,7 @@ class _SignupScreenState extends State<SignupScreen> {
               Center(
                 child: Text(
                   'Join thousands of farmers managing their poultry',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -104,39 +129,12 @@ class _SignupScreenState extends State<SignupScreen> {
                     key: _formKey,
                     child: Column(
                       children: [
-                        // Full Name
-                        TextFormField(
+                        // Full Name using AuthTextField
+                        AuthTextField(
                           controller: _fullNameController,
-                          decoration: InputDecoration(
-                            labelText: 'Full Name',
-                            hintText: 'Enter your full name',
-                            prefixIcon: Container(
-                              margin: const EdgeInsets.only(right: 12),
-                              decoration: BoxDecoration(
-                                color: Colors.green.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(
-                                Icons.person_outline,
-                                color: Colors.green.shade600,
-                              ),
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Colors.green.shade600,
-                                width: 2,
-                              ),
-                            ),
-                          ),
+                          labelText: 'Full Name',
+                          hintText: 'Enter your full name',
+                          icon: Icons.person_outline,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Please enter your full name';
@@ -146,39 +144,12 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Email
-                        TextFormField(
+                        // Email using AuthTextField
+                        AuthTextField(
                           controller: _emailController,
-                          decoration: InputDecoration(
-                            labelText: 'Email Address',
-                            hintText: 'Enter your email',
-                            prefixIcon: Container(
-                              margin: const EdgeInsets.only(right: 12),
-                              decoration: BoxDecoration(
-                                color: Colors.green.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(
-                                Icons.email_outlined,
-                                color: Colors.green.shade600,
-                              ),
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Colors.green.shade600,
-                                width: 2,
-                              ),
-                            ),
-                          ),
+                          labelText: 'Email Address',
+                          hintText: 'Enter your email',
+                          icon: Icons.email_outlined,
                           keyboardType: TextInputType.emailAddress,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -192,95 +163,44 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Phone Number
-                        TextFormField(
+                        // Country Phone Input
+                        CountryPhoneInput(
                           controller: _phoneController,
-                          decoration: InputDecoration(
-                            labelText: 'Phone Number',
-                            hintText: 'Enter your phone number',
-                            prefixIcon: Container(
-                              margin: const EdgeInsets.only(right: 12),
-                              decoration: BoxDecoration(
-                                color: Colors.green.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(
-                                Icons.phone_outlined,
-                                color: Colors.green.shade600,
-                              ),
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Colors.green.shade600,
-                                width: 2,
-                              ),
-                            ),
+                          countries: _countries,
+                          labelText: 'Phone Number',
+                          hintText: 'Enter your phone number',
+                          initialCountry: _countries.firstWhere(
+                                (c) => c.code == 'US',
+                            orElse: () => _countries.first,
                           ),
-                          keyboardType: TextInputType.phone,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please enter your phone number';
-                            }
-                            return null;
+                          onCountryChanged: (country) {
+                            setState(() {
+                              _selectedCountry = country;
+                            });
+                            print('Selected country: ${country.toJson()}');
                           },
                         ),
                         const SizedBox(height: 16),
 
-                        // Password
-                        TextFormField(
+                        // Password using AuthTextField with suffix icon
+                        AuthTextField(
                           controller: _passwordController,
+                          labelText: 'Password',
+                          hintText: 'Create a strong password',
+                          icon: Icons.lock_outline,
                           obscureText: _obscurePassword,
-                          decoration: InputDecoration(
-                            labelText: 'Password',
-                            hintText: 'Create a strong password',
-                            prefixIcon: Container(
-                              margin: const EdgeInsets.only(right: 12),
-                              decoration: BoxDecoration(
-                                color: Colors.green.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(
-                                Icons.lock_outline,
-                                color: Colors.green.shade600,
-                              ),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                              color: Colors.grey.shade600,
                             ),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_outlined
-                                    : Icons.visibility_off_outlined,
-                                color: Colors.grey.shade600,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscurePassword = !_obscurePassword;
-                                });
-                              },
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Colors.green.shade600,
-                                width: 2,
-                              ),
-                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -316,7 +236,8 @@ class _SignupScreenState extends State<SignupScreen> {
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(4),
                                   ),
-                                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -333,7 +254,9 @@ class _SignupScreenState extends State<SignupScreen> {
                                           height: 1.4,
                                         ),
                                         children: [
-                                          const TextSpan(text: 'I agree to the '),
+                                          const TextSpan(
+                                            text: 'I agree to the ',
+                                          ),
                                           WidgetSpan(
                                             child: GestureDetector(
                                               onTap: () {
@@ -344,7 +267,8 @@ class _SignupScreenState extends State<SignupScreen> {
                                                 style: TextStyle(
                                                   color: Colors.green.shade600,
                                                   fontWeight: FontWeight.w600,
-                                                  decoration: TextDecoration.underline,
+                                                  decoration:
+                                                  TextDecoration.underline,
                                                 ),
                                               ),
                                             ),
@@ -360,7 +284,8 @@ class _SignupScreenState extends State<SignupScreen> {
                                                 style: TextStyle(
                                                   color: Colors.green.shade600,
                                                   fontWeight: FontWeight.w600,
-                                                  decoration: TextDecoration.underline,
+                                                  decoration:
+                                                  TextDecoration.underline,
                                                 ),
                                               ),
                                             ),
@@ -399,9 +324,13 @@ class _SignupScreenState extends State<SignupScreen> {
 
                               if (_formKey.currentState!.validate()) {
                                 if (!_acceptedTerms) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
+                                  ScaffoldMessenger.of(
+                                    context,
+                                  ).showSnackBar(
                                     SnackBar(
-                                      content: const Text('Please accept the terms and conditions'),
+                                      content: const Text(
+                                        'Please accept the terms and conditions',
+                                      ),
                                       backgroundColor: Colors.red,
                                     ),
                                   );
@@ -418,7 +347,9 @@ class _SignupScreenState extends State<SignupScreen> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              disabledBackgroundColor: Colors.green.withOpacity(0.5),
+                              disabledBackgroundColor: Colors.green.withOpacity(
+                                0.5,
+                              ),
                             ),
                             child: _isLoading
                                 ? const SizedBox(
@@ -426,7 +357,9 @@ class _SignupScreenState extends State<SignupScreen> {
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
                               ),
                             )
                                 : const Text(
@@ -448,9 +381,7 @@ class _SignupScreenState extends State<SignupScreen> {
               // Divider
               Row(
                 children: [
-                  Expanded(
-                    child: Divider(color: Colors.grey.shade300),
-                  ),
+                  Expanded(child: Divider(color: Colors.grey.shade300)),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
@@ -461,9 +392,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                     ),
                   ),
-                  Expanded(
-                    child: Divider(color: Colors.grey.shade300),
-                  ),
+                  Expanded(child: Divider(color: Colors.grey.shade300)),
                 ],
               ),
               const SizedBox(height: 24),
@@ -492,7 +421,8 @@ class _SignupScreenState extends State<SignupScreen> {
                               decoration: const BoxDecoration(
                                 image: DecorationImage(
                                   image: NetworkImage(
-                                      'https://www.google.com/favicon.ico'),
+                                    'https://www.google.com/favicon.ico',
+                                  ),
                                   fit: BoxFit.contain,
                                 ),
                               ),
@@ -526,7 +456,11 @@ class _SignupScreenState extends State<SignupScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.apple, size: 20, color: Colors.grey.shade800),
+                            Icon(
+                              Icons.apple,
+                              size: 20,
+                              color: Colors.grey.shade800,
+                            ),
                             const SizedBox(width: 8),
                             const Text(
                               'Apple',
@@ -550,10 +484,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 children: [
                   Text(
                     'Already have an account? ',
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 15,
-                    ),
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 15),
                   ),
                   TextButton(
                     onPressed: _isLoading ? null : () => context.go('/login'),
