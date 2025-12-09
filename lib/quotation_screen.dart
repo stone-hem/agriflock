@@ -691,20 +691,6 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
           ],
         ),
         const SizedBox(height: 32),
-
-        // Action Buttons
-        ElevatedButton.icon(
-          onPressed: () {
-            // TODO: Contact suppliers
-          },
-          icon: const Icon(Icons.phone),
-          label: const Text('Contact Suppliers'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: primaryColor,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-          ),
-        ),
       ],
     );
   }
