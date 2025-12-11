@@ -14,7 +14,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _identifierController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _authService = AuthService(); // Add this
+  final _authService = AuthService();
   bool _isLoading = false;
   bool _obscurePassword = true;
 
@@ -116,7 +116,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             return null;
                           },
                         ),
-
                         const SizedBox(height: 20),
 
                         // Password Field
@@ -146,7 +145,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             return null;
                           },
                         ),
-
                         const SizedBox(height: 16),
 
                         // Forgot Password
@@ -188,7 +186,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              disabledBackgroundColor: Colors.green.withOpacity(0.5),
+                              disabledBackgroundColor:
+                              Colors.green.withOpacity(0.5),
                             ),
                             child: _isLoading
                                 ? const SizedBox(
@@ -196,7 +195,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor:
+                                AlwaysStoppedAnimation<Color>(
+                                    Colors.white),
                               ),
                             )
                                 : const Text(
@@ -238,7 +239,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Social Sign Up Buttons
+              // Social Sign In Buttons
               Row(
                 children: [
                   Expanded(
@@ -296,7 +297,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.apple, size: 20, color: Colors.grey.shade800),
+                            Icon(Icons.apple,
+                                size: 20, color: Colors.grey.shade800),
                             const SizedBox(width: 8),
                             const Text(
                               'Apple',
@@ -359,7 +361,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _isLoading = false;
     });
 
-    // TODO: Implement actual Firebase authentication
+    // TODO: Implement actual authentication with backend
     context.go('/dashboard');
   }
 
@@ -369,19 +371,15 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      // Call the auth service
       final response = await _authService.signInWithGoogle();
 
       if (response['success'] == true) {
-        // Extract user data and token
         final userData = response['data'];
-        final token = userData['access_token'];
         final user = userData['user'];
 
         // TODO: Store token securely (use flutter_secure_storage)
-        // await secureStorage.write(key: 'access_token', value: token);
+        // await secureStorage.write(key: 'access_token', value: userData['access_token']);
 
-        // Show success message
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -390,7 +388,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           );
 
-          // Navigate to dashboard
           context.go('/dashboard');
         }
       }
@@ -398,7 +395,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Google sign in failed: $e'),
+            content: Text('Google sign in failed: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -418,19 +415,15 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      // Call the auth service
       final response = await _authService.signInWithApple();
 
       if (response['success'] == true) {
-        // Extract user data and token
         final userData = response['data'];
-        final token = userData['access_token'];
         final user = userData['user'];
 
-        // TODO: Store token securely (use flutter_secure_storage)
-        // await secureStorage.write(key: 'access_token', value: token);
+        // TODO: Store token securely
+        // await secureStorage.write(key: 'access_token', value: userData['access_token']);
 
-        // Show success message
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -439,7 +432,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           );
 
-          // Navigate to dashboard
           context.go('/dashboard');
         }
       }
@@ -447,7 +439,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Apple sign in failed: $e'),
+            content: Text('Apple sign in failed: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );

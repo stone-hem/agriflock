@@ -18,12 +18,11 @@ class _SignupScreenState extends State<SignupScreen> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _authService = AuthService(); // Add this
+  final _authService = AuthService();
 
   Country? _selectedCountry;
   List<Country> _countries = [];
   bool _isLoadingCountry = true;
-
   bool _obscurePassword = true;
   bool _isLoading = false;
   bool _acceptedTerms = false;
@@ -131,7 +130,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     key: _formKey,
                     child: Column(
                       children: [
-                        // Full Name using AuthTextField
+                        // Full Name
                         AuthTextField(
                           controller: _fullNameController,
                           labelText: 'Full Name',
@@ -146,7 +145,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Email using AuthTextField
+                        // Email
                         AuthTextField(
                           controller: _emailController,
                           labelText: 'Email Address',
@@ -179,12 +178,11 @@ class _SignupScreenState extends State<SignupScreen> {
                             setState(() {
                               _selectedCountry = country;
                             });
-                            print('Selected country: ${country.toJson()}');
                           },
                         ),
                         const SizedBox(height: 16),
 
-                        // Password using AuthTextField with suffix icon
+                        // Password
                         AuthTextField(
                           controller: _passwordController,
                           labelText: 'Password',
@@ -223,7 +221,6 @@ class _SignupScreenState extends State<SignupScreen> {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Checkbox
                               SizedBox(
                                 width: 24,
                                 height: 24,
@@ -243,7 +240,6 @@ class _SignupScreenState extends State<SignupScreen> {
                                 ),
                               ),
                               const SizedBox(width: 12),
-                              // Terms Text with Link
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -326,11 +322,10 @@ class _SignupScreenState extends State<SignupScreen> {
 
                               if (_formKey.currentState!.validate()) {
                                 if (!_acceptedTerms) {
-                                  ScaffoldMessenger.of(
-                                    context,
-                                  ).showSnackBar(
-                                    SnackBar(
-                                      content: const Text(
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
                                         'Please accept the terms and conditions',
                                       ),
                                       backgroundColor: Colors.red,
@@ -338,7 +333,6 @@ class _SignupScreenState extends State<SignupScreen> {
                                   );
                                   return;
                                 }
-
                                 _signUp();
                               }
                             },
@@ -349,9 +343,8 @@ class _SignupScreenState extends State<SignupScreen> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              disabledBackgroundColor: Colors.green.withOpacity(
-                                0.5,
-                              ),
+                              disabledBackgroundColor:
+                              Colors.green.withOpacity(0.5),
                             ),
                             child: _isLoading
                                 ? const SizedBox(
@@ -532,19 +525,15 @@ class _SignupScreenState extends State<SignupScreen> {
     });
 
     try {
-      // Call the auth service
       final response = await _authService.signInWithGoogle();
 
       if (response['success'] == true) {
-        // Extract user data and token
         final userData = response['data'];
-        final token = userData['access_token'];
         final user = userData['user'];
 
         // TODO: Store token securely (use flutter_secure_storage)
-        // await secureStorage.write(key: 'access_token', value: token);
+        // await secureStorage.write(key: 'access_token', value: userData['access_token']);
 
-        // Show success message
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -561,7 +550,7 @@ class _SignupScreenState extends State<SignupScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Google sign in failed: $e'),
+            content: Text('Google sign in failed: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -581,19 +570,15 @@ class _SignupScreenState extends State<SignupScreen> {
     });
 
     try {
-      // Call the auth service
       final response = await _authService.signInWithApple();
 
       if (response['success'] == true) {
-        // Extract user data and token
         final userData = response['data'];
-        final token = userData['access_token'];
         final user = userData['user'];
 
-        // TODO: Store token securely (use flutter_secure_storage)
-        // await secureStorage.write(key: 'access_token', value: token);
+        // TODO: Store token securely
+        // await secureStorage.write(key: 'access_token', value: userData['access_token']);
 
-        // Show success message
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -602,7 +587,6 @@ class _SignupScreenState extends State<SignupScreen> {
             ),
           );
 
-          // Navigate to dashboard or onboarding
           context.go('/onboarding-quiz');
         }
       }
@@ -610,7 +594,7 @@ class _SignupScreenState extends State<SignupScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Apple sign in failed: $e'),
+            content: Text('Apple sign in failed: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -632,8 +616,7 @@ class _SignupScreenState extends State<SignupScreen> {
         content: const SingleChildScrollView(
           child: Text(
             'Terms and conditions content will be displayed here. '
-                'This is a placeholder for the actual terms and conditions document. '
-                'You can replace this with your actual terms and conditions text or link to a web page.',
+                'This is a placeholder for the actual terms and conditions document.',
             style: TextStyle(fontSize: 14),
           ),
         ),
@@ -655,8 +638,7 @@ class _SignupScreenState extends State<SignupScreen> {
         content: const SingleChildScrollView(
           child: Text(
             'Privacy policy content will be displayed here. '
-                'This is a placeholder for the actual privacy policy document. '
-                'You can replace this with your actual privacy policy text or link to a web page.',
+                'This is a placeholder for the actual privacy policy document.',
             style: TextStyle(fontSize: 14),
           ),
         ),
