@@ -67,51 +67,54 @@ class _BatchDetailsScreenState extends State<BatchDetailsScreen>
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(60),
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            child: TabBar(
-              controller: _tabController,
-              isScrollable: true,
-              tabAlignment: TabAlignment.start,
-              indicatorSize: TabBarIndicatorSize.tab,
-              indicator: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF4CAF50), Color(0xFF2E7D32)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.green.withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                child: TabBar(
+                  controller: _tabController,
+                  isScrollable: true,
+                  tabAlignment: TabAlignment.start,
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  indicator: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4CAF50), Color(0xFF2E7D32)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.green.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                ],
+                  labelColor: Colors.white,
+                  unselectedLabelColor: Colors.grey.shade700,
+                  labelStyle: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.3,
+                  ),
+                  unselectedLabelStyle: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.3,
+                  ),
+                  dividerColor: Colors.transparent,
+                  splashFactory: NoSplash.splashFactory,
+                  overlayColor: WidgetStateProperty.all(Colors.transparent),
+                  tabs: [
+                    _buildTabWithIcon(Icons.dashboard, 'Overview'),
+                    _buildTabWithIcon(Icons.fastfood, 'Feed'),
+                    _buildTabWithIcon(Icons.medical_services, 'Vaccinations'),
+                    _buildTabWithIcon(Icons.inventory, 'Products'),
+                  ],
+                ),
               ),
-              labelColor: Colors.white,
-              unselectedLabelColor: Colors.grey.shade700,
-              labelStyle: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.3,
-              ),
-              unselectedLabelStyle: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                letterSpacing: 0.3,
-              ),
-              dividerColor: Colors.transparent,
-              splashFactory: NoSplash.splashFactory,
-              overlayColor: WidgetStateProperty.all(Colors.transparent),
-              tabs: [
-                _buildTabWithIcon(Icons.dashboard, 'Overview'),
-                _buildTabWithIcon(Icons.fastfood, 'Feed'),
-                _buildTabWithIcon(Icons.medical_services, 'Vaccinations'),
-                _buildTabWithIcon(Icons.inventory, 'Products'),
-              ],
-            ),
+            ],
           ),
         ),
       ),

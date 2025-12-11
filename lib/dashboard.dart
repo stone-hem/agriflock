@@ -18,7 +18,7 @@ class _MainDashboardState extends State<MainDashboard> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const FarmsHomeScreen(),
-    const PoultryHouseQuotationScreen(),
+    const QuotationScreen(),
     const ReportsScreen(),
     const ProfileScreen(),
   ];
