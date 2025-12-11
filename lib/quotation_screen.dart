@@ -70,13 +70,12 @@ class _QuotationScreenState extends State<QuotationScreen>
             fontWeight: FontWeight.w600,
             fontSize: 14,
           ),
+          dividerColor: Colors.transparent,
           tabs: const [
             Tab(
-              icon: Icon(Icons.home_work_outlined),
               text: 'House Quotation',
             ),
             Tab(
-              icon: Icon(Icons.assessment_outlined),
               text: 'Production Estimate',
             ),
           ],
