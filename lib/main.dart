@@ -56,7 +56,7 @@ void main() async {
   // Replace with your actual client IDs
   await authService.initializeGoogleSignIn(
     clientId: DefaultFirebaseOptions.currentPlatform.iosClientId, // For iOS/Web
-    serverClientId: '966300580112-mlu13btg98kc7mu5f3anb1ff4rce7dts.apps.googleusercontent.com', // For Android and server-side auth
+    serverClientId: '966300580112-mu5f3anb1ff4rce7dts.apps.googleusercontent.com', // For Android and server-side auth
   );
 
   runApp(MyApp());

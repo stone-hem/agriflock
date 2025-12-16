@@ -21,7 +21,7 @@ class _MainDashboardState extends State<MainDashboard> {
   int _selectedIndex = 0;
 
   // Flag for testing RBAC - change to 'vet' to load vet screens
-  final String _role = 'vet'; // Or set to 'vet' for testing
+  final String _role = 'farmer'; // Or set to 'vet' for testing
 
   late List<NavConfig> _navConfigs;
 
