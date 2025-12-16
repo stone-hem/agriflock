@@ -58,6 +58,63 @@ class HomeScreen extends StatelessWidget {
             _buildQuickActions(context),
             const SizedBox(height: 32),
 
+            //graph
+            Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: Colors.grey.shade200),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Performance Overview',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      height: 200,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.bar_chart, size: 48, color: Colors.grey.shade400),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Production Trends',
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 14,
+                              ),
+                            ),
+                            Text(
+                              'Chart will be integrated here',
+                              style: TextStyle(
+                                color: Colors.grey.shade500,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
             // Recent Activity
             _buildRecentActivity(context),
           ],
@@ -110,34 +167,68 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildStatsOverview() {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: _StatCard(
-            value: '1,240',
-            label: 'Total Birds',
-            color: Colors.blue.shade100,
-            textColor: Colors.blue.shade800,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: _StatCard(
+                value: '1,240',
+                label: 'Total Birds',
+                color: Colors.blue.shade100,
+                textColor: Colors.blue.shade800,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _StatCard(
+                value: '89',
+                label: 'Eggs Today',
+                color: Colors.orange.shade100,
+                textColor: Colors.orange.shade800,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _StatCard(
+                value: '3',
+                label: 'Active Batches',
+                color: Colors.green.shade100,
+                textColor: Colors.green.shade800,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _StatCard(
-            value: '89',
-            label: 'Eggs Today',
-            color: Colors.orange.shade100,
-            textColor: Colors.orange.shade800,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _StatCard(
-            value: '3',
-            label: 'Active Batches',
-            color: Colors.green.shade100,
-            textColor: Colors.green.shade800,
-          ),
-        ),
+        Row(
+          children: [
+            Expanded(
+              child: _StatCard(
+                value: '2.1%',
+                label: 'Mortality Rate',
+                color: Colors.blue.shade100,
+                textColor: Colors.blue.shade800,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _StatCard(
+                value: '1.73',
+                label: 'Feed Efficiency (FCR)',
+                color: Colors.orange.shade100,
+                textColor: Colors.orange.shade800,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _StatCard(
+                value: '3 kg',
+                label: 'Avg Weight',
+                color: Colors.green.shade100,
+                textColor: Colors.green.shade800,
+              ),
+            ),
+          ],
+        )
       ],
     );
   }

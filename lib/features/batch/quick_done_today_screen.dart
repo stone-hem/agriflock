@@ -1,25 +1,25 @@
-import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class ScheduleVaccinationScreen extends StatefulWidget {
-  const ScheduleVaccinationScreen({super.key});
+class QuickDoneTodayScreen extends StatefulWidget {
+  const QuickDoneTodayScreen({super.key});
 
   @override
-  State<ScheduleVaccinationScreen> createState() => _ScheduleVaccinationScreenState();
+  State<QuickDoneTodayScreen> createState() => _QuickDoneTodayScreenState();
 }
 
-class _ScheduleVaccinationScreenState extends State<ScheduleVaccinationScreen> {
+class _QuickDoneTodayScreenState extends State<QuickDoneTodayScreen> {
   final _formKey = GlobalKey<FormState>();
   final _vaccineNameController = TextEditingController();
-  final _ageInDaysController = TextEditingController();
+  final _dosageController = TextEditingController();
+  final _birdsVaccinatedController = TextEditingController();
+  final _costController = TextEditingController();
   final _notesController = TextEditingController();
 
   String? _selectedVaccineType;
   String? _selectedAdministration;
-  DateTime? _scheduledDate;
-  TimeOfDay? _scheduledTime;
-  bool _enableReminder = true;
+  DateTime _completionDate = DateTime.now();
+  TimeOfDay _completionTime = TimeOfDay.now();
 
   final List<String> _vaccineTypes = [
     'Newcastle Disease',
@@ -64,7 +64,7 @@ class _ScheduleVaccinationScreenState extends State<ScheduleVaccinationScreen> {
               },
             ),
             const SizedBox(width: 12),
-            const Text('Schedule Vaccination'),
+            const Text('Quick Record'),
           ],
         ),
         centerTitle: false,
@@ -76,9 +76,9 @@ class _ScheduleVaccinationScreenState extends State<ScheduleVaccinationScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: _scheduleVaccination,
+            onPressed: _submitRecord,
             child: const Text(
-              'Schedule',
+              'Save',
               style: TextStyle(
                 color: Colors.green,
                 fontWeight: FontWeight.bold,
@@ -94,32 +94,32 @@ class _ScheduleVaccinationScreenState extends State<ScheduleVaccinationScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Batch Info Card
+              // Info Card
               Card(
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(color: Colors.orange.shade200),
+                  side: BorderSide(color: Colors.green.shade200),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      Icon(Icons.medical_services_outlined, color: Colors.orange.shade600),
+                      Icon(Icons.flash_on, color: Colors.green.shade600),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Batch: 123',
-                              style: const TextStyle(
+                            const Text(
+                              'Quick Record',
+                              style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
                               ),
                             ),
                             Text(
-                              'Schedule New Vaccination',
+                              'Record a vaccination that was completed today',
                               style: TextStyle(
                                 color: Colors.grey.shade600,
                                 fontSize: 14,
@@ -134,6 +134,38 @@ class _ScheduleVaccinationScreenState extends State<ScheduleVaccinationScreen> {
               ),
               const SizedBox(height: 24),
 
+              // Batch Selection
+              Text(
+                'Batch',
+                style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade800,
+                ),
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                decoration: InputDecoration(
+                  hintText: 'Select batch',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                items: ['Batch 123', 'Batch 456', 'Batch 789'].map((String batch) {
+                  return DropdownMenuItem<String>(
+                    value: batch,
+                    child: Text(batch),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {},
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please select a batch';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+
               // Vaccine Name
               Text(
                 'Vaccine Name',
@@ -143,17 +175,20 @@ class _ScheduleVaccinationScreenState extends State<ScheduleVaccinationScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              ReusableInput(
+              TextFormField(
                 controller: _vaccineNameController,
+                decoration: InputDecoration(
+                  hintText: 'e.g., Newcastle Disease Vaccine',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter vaccine name';
                   }
                   return null;
                 },
-                labelText: 'Name',
-                hintText: 'e.g., Newcastle Disease Vaccine',
-                icon: null,
               ),
               const SizedBox(height: 20),
 
@@ -231,23 +266,53 @@ class _ScheduleVaccinationScreenState extends State<ScheduleVaccinationScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Age in Days
+              // Dosage
               Text(
-                'Recommended Age (days)',
+                'Dosage',
                 style: Theme.of(context).textTheme.titleMedium!.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.grey.shade800,
                 ),
               ),
               const SizedBox(height: 8),
-              ReusableInput(
-                controller: _ageInDaysController,
-                keyboardType: TextInputType.number,
-                labelText: 'Age (days)',
-                hintText: 'Recommended age in days',
+              TextFormField(
+                controller: _dosageController,
+                decoration: InputDecoration(
+                  hintText: 'e.g., 1ml per bird',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter recommended age';
+                    return 'Please enter dosage';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+
+              // Number of Birds Vaccinated
+              Text(
+                'Number of Birds Vaccinated',
+                style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade800,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _birdsVaccinatedController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  hintText: 'e.g., 450',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter number of birds';
                   }
                   if (int.tryParse(value) == null) {
                     return 'Please enter a valid number';
@@ -257,9 +322,9 @@ class _ScheduleVaccinationScreenState extends State<ScheduleVaccinationScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Scheduled Date
+              // Completion Date
               Text(
-                'Scheduled Date',
+                'Completion Date',
                 style: Theme.of(context).textTheme.titleMedium!.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.grey.shade800,
@@ -267,7 +332,7 @@ class _ScheduleVaccinationScreenState extends State<ScheduleVaccinationScreen> {
               ),
               const SizedBox(height: 8),
               InkWell(
-                onTap: _selectDate,
+                onTap: _selectCompletionDate,
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
@@ -280,14 +345,8 @@ class _ScheduleVaccinationScreenState extends State<ScheduleVaccinationScreen> {
                       Icon(Icons.calendar_today, color: Colors.grey.shade600),
                       const SizedBox(width: 12),
                       Text(
-                        _scheduledDate == null
-                            ? 'Select scheduled date'
-                            : '${_scheduledDate!.day}/${_scheduledDate!.month}/${_scheduledDate!.year}',
-                        style: TextStyle(
-                          color: _scheduledDate == null
-                              ? Colors.grey.shade600
-                              : Colors.grey.shade800,
-                        ),
+                        '${_completionDate.day}/${_completionDate.month}/${_completionDate.year}',
+                        style: TextStyle(color: Colors.grey.shade800),
                       ),
                     ],
                   ),
@@ -295,9 +354,9 @@ class _ScheduleVaccinationScreenState extends State<ScheduleVaccinationScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Scheduled Time
+              // Completion Time
               Text(
-                'Scheduled Time',
+                'Completion Time',
                 style: Theme.of(context).textTheme.titleMedium!.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.grey.shade800,
@@ -305,7 +364,7 @@ class _ScheduleVaccinationScreenState extends State<ScheduleVaccinationScreen> {
               ),
               const SizedBox(height: 8),
               InkWell(
-                onTap: _selectTime,
+                onTap: _selectCompletionTime,
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
@@ -318,16 +377,31 @@ class _ScheduleVaccinationScreenState extends State<ScheduleVaccinationScreen> {
                       Icon(Icons.access_time, color: Colors.grey.shade600),
                       const SizedBox(width: 12),
                       Text(
-                        _scheduledTime == null
-                            ? 'Select scheduled time'
-                            : _scheduledTime!.format(context),
-                        style: TextStyle(
-                          color: _scheduledTime == null
-                              ? Colors.grey.shade600
-                              : Colors.grey.shade800,
-                        ),
+                        _completionTime.format(context),
+                        style: TextStyle(color: Colors.grey.shade800),
                       ),
                     ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Cost (Optional)
+              Text(
+                'Total Cost (₵) - Optional',
+                style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade800,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _costController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  hintText: 'e.g., 150.00',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
               ),
@@ -342,15 +416,19 @@ class _ScheduleVaccinationScreenState extends State<ScheduleVaccinationScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              ReusableInput(
+              TextFormField(
                 controller: _notesController,
                 maxLines: 3,
-                hintText: 'Additional notes or instructions',
-                labelText: 'Notes',
+                decoration: InputDecoration(
+                  hintText: 'Batch number, reactions, observations...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
 
-              // Reminder Settings
+              // Info Card
               Card(
                 elevation: 0,
                 shape: RoundedRectangleBorder(
@@ -359,79 +437,31 @@ class _ScheduleVaccinationScreenState extends State<ScheduleVaccinationScreen> {
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Column(
+                  child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Icon(Icons.notifications_active, color: Colors.blue.shade600),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'Reminder Settings',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                      Icon(Icons.info_outline, color: Colors.blue.shade700),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Quick Record',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue.shade900,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      SwitchListTile(
-                        title: const Text('Enable Reminder'),
-                        subtitle: const Text('Get notified before vaccination'),
-                        value: _enableReminder,
-                        onChanged: (value) {
-                          setState(() {
-                            _enableReminder = value;
-                          });
-                        },
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                      if (_enableReminder) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          'You will receive a reminder 24 hours before the scheduled vaccination time.',
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Information Card
-              Card(
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(color: Colors.grey.shade200),
-                ),
-                child: const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Vaccination Scheduling',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Scheduled vaccinations help you:\n'
-                            '• Maintain bird health and immunity\n'
-                            '• Prevent disease outbreaks\n'
-                            '• Track vaccination history\n'
-                            '• Ensure proper timing between vaccines',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 14,
+                            const SizedBox(height: 4),
+                            Text(
+                              'This will create a completed vaccination record. If there is a vaccination protocol, the next dose will be automatically scheduled.',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.blue.shade800,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -445,53 +475,43 @@ class _ScheduleVaccinationScreenState extends State<ScheduleVaccinationScreen> {
     );
   }
 
-  Future<void> _selectDate() async {
+  Future<void> _selectCompletionDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now().add(const Duration(days: 1)),
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2030),
+      initialDate: _completionDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
     );
-    if (picked != null && picked != _scheduledDate) {
+    if (picked != null) {
       setState(() {
-        _scheduledDate = picked;
+        _completionDate = picked;
       });
     }
   }
 
-  Future<void> _selectTime() async {
+  Future<void> _selectCompletionTime() async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay.now(),
+      initialTime: _completionTime,
     );
-    if (picked != null && picked != _scheduledTime) {
+    if (picked != null) {
       setState(() {
-        _scheduledTime = picked;
+        _completionTime = picked;
       });
     }
   }
 
-  void _scheduleVaccination() {
+  void _submitRecord() {
     if (_formKey.currentState!.validate()) {
-      if (_scheduledDate == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select a scheduled date'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Vaccination scheduled for Batch 123'),
-              Text('Date: ${_scheduledDate!.day}/${_scheduledDate!.month}/${_scheduledDate!.year}'),
-              if (_scheduledTime != null) Text('Time: ${_scheduledTime!.format(context)}'),
+              const Text('Vaccination recorded successfully'),
+              Text('${_birdsVaccinatedController.text} birds vaccinated'),
+              const Text('Status: Completed'),
             ],
           ),
           backgroundColor: Colors.green,
@@ -504,7 +524,9 @@ class _ScheduleVaccinationScreenState extends State<ScheduleVaccinationScreen> {
   @override
   void dispose() {
     _vaccineNameController.dispose();
-    _ageInDaysController.dispose();
+    _dosageController.dispose();
+    _birdsVaccinatedController.dispose();
+    _costController.dispose();
     _notesController.dispose();
     super.dispose();
   }

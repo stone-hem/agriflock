@@ -34,6 +34,7 @@ import 'package:agriflock360/features/profile/congratulations_screen.dart';
 import 'package:agriflock360/features/profile/help_support_screen.dart';
 import 'package:agriflock360/features/profile/settings_screen.dart';
 import 'package:agriflock360/features/profile/telemetry_data_screen.dart';
+import 'package:agriflock360/vet_order_details_screen.dart' hide VetOfficer;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -226,6 +227,13 @@ final GoRouter _router = GoRouter(
       path: '/complete-profile',
       builder: (context, state) => const CompleteProfileScreen(),
     ),
-    GoRoute(path: '/complete-profile/congratulations', builder: (context, state) => const CongratulationsScreen())
+    GoRoute(path: '/complete-profile/congratulations', builder: (context, state) => const CongratulationsScreen()),
+
+    GoRoute(
+      path: '/vet-order-details',
+      builder: (context, state) {
+        return VetOrderDetailsScreen();
+      },
+    ),
   ],
 );

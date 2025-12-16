@@ -7,8 +7,8 @@ import 'package:agriflock360/features/vet/vet_profile_screen.dart';
 import 'package:agriflock360/features/vet/vet_schedules_screen.dart';
 import 'package:agriflock360/home_screen.dart';
 import 'package:agriflock360/quotation_screen.dart';
+import 'package:agriflock360/vet_order_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:agriflock360/reports_screen.dart';
 
 class MainDashboard extends StatefulWidget {
   const MainDashboard({super.key});
@@ -76,10 +76,10 @@ class _MainDashboardState extends State<MainDashboard> {
           screen: QuotationScreen(),
         ),
         NavConfig(
-          icon: Icons.bar_chart_outlined,
-          selectedIcon: Icons.bar_chart,
-          label: 'Reports',
-          screen: ReportsScreen(),
+          icon: Icons.person_2_outlined,
+          selectedIcon: Icons.person,
+          label: 'Vets',
+          screen: VetOrderScreen(),
         ),
         NavConfig(
           icon: Icons.person_outlined,
