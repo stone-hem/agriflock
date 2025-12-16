@@ -10,12 +10,15 @@ import 'package:agriflock360/features/auth/sign_up_screen.dart';
 import 'package:agriflock360/features/auth/welcome_screen.dart';
 import 'package:agriflock360/features/batch/active_batches_screen.dart';
 import 'package:agriflock360/features/batch/add_batch_screen.dart';
+import 'package:agriflock360/features/batch/adopt_schedule_screen.dart';
 import 'package:agriflock360/features/batch/archived_batches_screen.dart';
 import 'package:agriflock360/features/batch/batch_details_screen.dart';
 import 'package:agriflock360/features/batch/log_feeding_screen.dart';
+import 'package:agriflock360/features/batch/quick_done_today_screen.dart';
 import 'package:agriflock360/features/batch/record_product_screen.dart';
 import 'package:agriflock360/features/batch/record_vaccination_screen.dart';
 import 'package:agriflock360/features/batch/schedule_vaccination_screen.dart';
+import 'package:agriflock360/features/batch/update_vaccination_status_screen.dart';
 import 'package:agriflock360/features/farm/add_farm_screen.dart';
 import 'package:agriflock360/features/farm/add_inventory_item_screen.dart';
 import 'package:agriflock360/features/farm/batch_screen.dart';
@@ -156,10 +159,28 @@ final GoRouter _router = GoRouter(
           path: 'feed',
           builder: (context, state) => const LogFeedingScreen(),
         ),
+
         GoRoute(
-          path: 'vaccination',
-          builder: (context, state) => const RecordVaccinationScreen(),
+          path: '/quick-done',
+          builder: (context, state) {
+            return QuickDoneTodayScreen();
+          },
         ),
+
+        GoRoute(
+          path: '/adopt-schedule',
+          builder: (context, state) {
+            return AdoptScheduleScreen();
+          },
+        ),
+
+        GoRoute(
+          path: '/update-status',
+          builder: (context, state) {
+            return UpdateVaccinationStatusScreen(vaccineName: 'Gumboro', scheduledDate: '2025-2-1');
+          },
+        ),
+
         GoRoute(
           path: 'schedule',
           builder: (context, state) => const ScheduleVaccinationScreen(),

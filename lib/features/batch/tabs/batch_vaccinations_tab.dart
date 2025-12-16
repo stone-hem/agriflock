@@ -230,12 +230,7 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
                                 dosage: '0.5ml per bird',
                                 isOverdue: false,
                                 onUpdateStatus: () {
-                                  _showUpdateStatusScreen(
-                                    context,
-                                    'Newcastle Disease',
-                                    'Today, 10:00 AM',
-                                    false,
-                                  );
+                                  context.push('/batches/update-status');
                                 },
                               ),
 
@@ -257,12 +252,7 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
                                 dosage: 'Wing-stab method',
                                 isOverdue: true,
                                 onUpdateStatus: () {
-                                  _showUpdateStatusScreen(
-                                    context,
-                                    'Fowl Pox',
-                                    'Dec 5, 2023',
-                                    true,
-                                  );
+                                  context.push('/batches/update-status');
                                 },
                               ),
 
@@ -284,12 +274,7 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
                                 dosage: '0.3ml per bird',
                                 isOverdue: false,
                                 onUpdateStatus: () {
-                                  _showUpdateStatusScreen(
-                                    context,
-                                    'Infectious Bronchitis',
-                                    'Dec 20, 2023',
-                                    false,
-                                  );
+                                  context.push('/batches/update-status');
                                 },
                               ),
                             ],
@@ -557,21 +542,6 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
     );
   }
 
-  void _showUpdateStatusScreen(
-      BuildContext context,
-      String vaccineName,
-      String scheduledDate,
-      bool isOverdue,
-      ) {
-    // Navigate to update status screen
-    // context.push('/batches/update-status', extra: {...});
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Opening update status for $vaccineName'),
-        backgroundColor: Colors.blue,
-      ),
-    );
-  }
 
   Widget _buildTabWithIcon(IconData icon, String label) {
     return Tab(
