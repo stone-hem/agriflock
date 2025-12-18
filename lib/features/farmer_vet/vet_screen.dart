@@ -708,11 +708,14 @@ class _MainVetScreenState extends State<MainVetScreen>
                 children: [
                   Icon(Icons.calendar_today, size: 16, color: Colors.grey.shade600),
                   const SizedBox(width: 8),
-                  Text(
-                    order.scheduledDate.toIso8601String(),
-                    style: TextStyle(
-                      color: Colors.grey.shade700,
-                      fontSize: 14,
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.4,
+                    child: Text(
+                      order.scheduledDate.toLocal().toString(),
+                      style: TextStyle(
+                        color: Colors.grey.shade700,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),

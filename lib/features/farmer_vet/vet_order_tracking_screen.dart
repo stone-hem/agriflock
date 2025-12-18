@@ -301,7 +301,7 @@ class _VetOrderTrackingScreenState extends State<VetOrderTrackingScreen> {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                widget.order.estimatedArrivalTime.toIso8601String(),
+                'Today at 10 Pm',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Colors.blue,
@@ -316,6 +316,11 @@ class _VetOrderTrackingScreenState extends State<VetOrderTrackingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Get screen height to calculate map height
+    final screenHeight = MediaQuery.of(context).size.height;
+    final appBarHeight = kToolbarHeight + MediaQuery.of(context).padding.top;
+    final mapHeight = (screenHeight - appBarHeight) * 0.45; // 45% of remaining screen
+
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
@@ -330,8 +335,9 @@ class _VetOrderTrackingScreenState extends State<VetOrderTrackingScreen> {
       ),
       body: Column(
         children: [
-          // Map Section
-          Expanded(
+          // Map Section with fixed height
+          SizedBox(
+            height: mapHeight,
             child: GoogleMap(
               onMapCreated: _onMapCreated,
               initialCameraPosition: CameraPosition(
@@ -348,108 +354,127 @@ class _VetOrderTrackingScreenState extends State<VetOrderTrackingScreen> {
             ),
           ),
 
-          // Order Info Section
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, -2),
-                ),
-              ],
-            ),
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  // Vet Info
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        backgroundColor: Colors.blue.shade100,
-                        child: const Icon(Icons.pets, color: Colors.blue),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.order.vetName,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            Text(
-                              widget.order.serviceType,
-                              style: TextStyle(
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.call, color: Colors.green.shade600),
-                        onPressed: () {
-                          // TODO: Implement call functionality
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Arrival Info
-                  _buildArrivalInfo(),
-                  const SizedBox(height: 16),
-
-                  // Order Status
-                  _buildOrderStatusCard(),
-                  const SizedBox(height: 16),
-
-                  // Action Buttons
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () {
-                            // TODO: Implement message functionality
-                          },
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            side: BorderSide(color: Colors.grey.shade400),
-                          ),
-                          icon: const Icon(Icons.message),
-                          label: const Text('Message Vet'),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            // TODO: Implement refresh location
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          icon: const Icon(Icons.refresh),
-                          label: const Text('Refresh Location'),
-                        ),
-                      ),
-                    ],
+          // Scrollable Order Info Section
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, -2),
                   ),
                 ],
+              ),
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    // Drag handle indicator
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+
+                    // Vet Info
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: Colors.blue.shade100,
+                          child: const Icon(Icons.pets, color: Colors.blue),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.order.vetName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              Text(
+                                widget.order.serviceType,
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.call, color: Colors.green.shade600),
+                          onPressed: () {
+                            // TODO: Implement call functionality
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Arrival Info
+                    _buildArrivalInfo(),
+                    const SizedBox(height: 16),
+
+                    // Order Status
+                    _buildOrderStatusCard(),
+                    const SizedBox(height: 16),
+
+                    // Action Buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              // TODO: Implement message functionality
+                            },
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              side: BorderSide(color: Colors.grey.shade400),
+                            ),
+                            icon: const Icon(Icons.message),
+                            label: const Text('Message Vet'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              // TODO: Implement refresh location
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Refresh Location'),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // Bottom padding for better scrolling experience
+                    const SizedBox(height: 16),
+                  ],
+                ),
               ),
             ),
           ),
