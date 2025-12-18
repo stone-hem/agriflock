@@ -79,7 +79,7 @@ class _MainDashboardState extends State<MainDashboard> {
           icon: Icons.people_outline,
           selectedIcon: Icons.people,
           label: 'Vets',
-          screen: VetScreen(),
+          screen: MainVetScreen(),
         ),
         NavConfig(
           icon: Icons.person_outlined,

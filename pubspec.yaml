@@ -46,6 +46,7 @@ dependencies:
   flutter_secure_storage: ^10.0.0-beta.4
   fluttertoast:
   shared_preferences:
+  google_maps_flutter:
 
 dev_dependencies:
   flutter_test:

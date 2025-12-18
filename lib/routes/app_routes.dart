@@ -1,5 +1,7 @@
 import 'package:agriflock360/features/farmer_vet/models/vet_officer.dart';
+import 'package:agriflock360/features/farmer_vet/models/vet_order.dart';
 import 'package:agriflock360/features/farmer_vet/vet_details_screen.dart';
+import 'package:agriflock360/features/farmer_vet/vet_order_tracking_screen.dart';
 import 'package:agriflock360/features/farmer_vet/vet_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -337,7 +339,16 @@ class AppRoutes {
         ),
         GoRoute(
           path: '/vets',
-          builder: (context, state) => const VetScreen(),
+          builder: (context, state) => const MainVetScreen(),
+        ),
+
+
+        GoRoute(
+          path: '/vet-order-tracking',
+          builder: (context, state) {
+            final order = state.extra as VetOrder;
+            return VetOrderTrackingScreen(order: order);
+          },
         ),
 
         GoRoute(

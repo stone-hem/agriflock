@@ -1,5 +1,4 @@
-// models/vet_officer.dart
-import 'package:flutter/material.dart';
+import 'dart:ui';
 
 class VetOfficer {
   final String id;
@@ -12,6 +11,8 @@ class VetOfficer {
   final String email;
   final String clinic;
   final String address;
+  final double? latitude;
+  final double? longitude;
   final bool isAvailable;
   final String consultationFee;
   final bool emergencyService;
@@ -30,6 +31,8 @@ class VetOfficer {
     required this.email,
     required this.clinic,
     required this.address,
+    this.latitude,
+    this.longitude,
     required this.isAvailable,
     required this.consultationFee,
     required this.emergencyService,
