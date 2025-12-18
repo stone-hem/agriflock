@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/utils/shared_prefs.dart';
 import 'package:agriflock360/features/auth/quiz/shared/custom_text_field.dart';
 import 'package:agriflock360/features/auth/quiz/shared/education_level_selector.dart';
 import 'package:agriflock360/features/auth/quiz/shared/file_upload.dart';
@@ -139,12 +140,13 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     });
   }
 
-  void _completeOnboarding() {
+  Future<void> _completeOnboarding() async {
     if (_selectedUserType == 'farmer') {
       context.go('/login');
     } else if (_selectedUserType == 'vet') {
       _showVerificationMessage();
     }
+    await SharedPrefs.setBool('hasCompletedOnboarding', true);
   }
 
   void _showVerificationMessage() {

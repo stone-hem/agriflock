@@ -2,9 +2,7 @@ import 'package:agriflock360/features/batch/shared/stat_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:agriflock360/features/batch/shared/stat_card.dart';
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+
 
 class BatchVaccinationsTab extends StatefulWidget {
   final Map<String, dynamic> batch;
@@ -179,39 +177,6 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
                           child: ListView(
                             controller: _scrollControllers[0],
                             children: [
-                              // Quick actions
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 16),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: OutlinedButton.icon(
-                                        onPressed: () {
-                                          context.push('/batches/schedule');
-                                        },
-                                        icon: const Icon(Icons.add_circle_outline, size: 18),
-                                        label: const Text('Schedule'),
-                                        style: OutlinedButton.styleFrom(
-                                          foregroundColor: Colors.green,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: FilledButton.icon(
-                                        onPressed: () {
-                                          context.push('/batches/quick-done');
-                                        },
-                                        icon: const Icon(Icons.flash_on, size: 18),
-                                        label: const Text('Quick Done'),
-                                        style: FilledButton.styleFrom(
-                                          backgroundColor: Colors.green,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
 
                               // Due Today Section
                               Text(
@@ -442,10 +407,10 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
           opacity: _isFabVisible ? 1 : 0,
           child: FloatingActionButton.extended(
             onPressed: () {
-              _showQuickActions(context);
+              context.push('/batches/quick-done');
             },
             icon: const Icon(Icons.add),
-            label: const Text('New'),
+            label: const Text('Quick done'),
             foregroundColor: Colors.white,
             backgroundColor: Colors.green,
           ),
@@ -474,73 +439,6 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
     );
   }
 
-  void _showQuickActions(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'Vaccination Actions',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 24),
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade100,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.flash_on, color: Colors.green),
-                ),
-                title: const Text('Quick Done Today'),
-                subtitle: const Text('Record completed vaccination'),
-                onTap: () {
-                  Navigator.pop(context);
-                  context.push('/batches/quick-done');
-                },
-              ),
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.shade100,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.schedule, color: Colors.orange),
-                ),
-                title: const Text('Schedule Vaccination'),
-                subtitle: const Text('Plan future vaccination'),
-                onTap: () {
-                  Navigator.pop(context);
-                  context.push('/batches/schedule');
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
 
   Widget _buildTabWithIcon(IconData icon, String label) {

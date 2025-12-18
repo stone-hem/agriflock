@@ -262,11 +262,11 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
                     children: [
                       TextButton(
                         onPressed: _selectAll,
-                        child: const Text('Select All'),
+                        child: const Text('All'),
                       ),
                       TextButton(
                         onPressed: _deselectAll,
-                        child: const Text('Deselect All'),
+                        child: const Text('Deselect'),
                       ),
                     ],
                   ),

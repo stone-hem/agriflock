@@ -1,7 +1,15 @@
+import 'dart:convert';
+
+import 'package:agriflock360/core/model/user_model.dart';
 import 'package:agriflock360/core/services/auth_service.dart';
+import 'package:agriflock360/core/utils/api_error_handler.dart';
+import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/features/auth/shared/auth_text_field.dart';
+import 'package:agriflock360/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../main.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,8 +20,8 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _identifierController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _identifierController = TextEditingController(text: 'farmer@agriflock360.org');
+  final _passwordController = TextEditingController(text: 'Password123!');
   final _authService = AuthService();
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -29,24 +37,6 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Back Button
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => context.go('/welcome'),
-                  color: Colors.grey.shade700,
-                ),
-              ),
               const SizedBox(height: 40),
               Center(
                 child: Image.asset(
@@ -350,19 +340,55 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _login() async {
-    setState(() {
-      _isLoading = true;
-    });
+    final email = _identifierController.text.trim();
+    final password = _passwordController.text;
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
+    if (email.isEmpty) {
+      ToastUtil.showError("Please enter your email");
+      return;
+    }
+    if (password.isEmpty) {
+      ToastUtil.showError("Please enter your password");
+      return;
+    }
 
-    setState(() {
-      _isLoading = false;
-    });
+    setState(() => _isLoading = true);
 
-    // TODO: Implement actual authentication with backend
-    context.go('/dashboard');
+    try {
+      final response = await apiClient.post(
+        '/auth/login',
+        body: {
+          'email': email,
+          'password': password,
+        },
+      );
+
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final loginResponse = LoginResponse.fromJson(data);
+
+        // Save login data securely
+        await secureStorage.saveLoginData(
+          token: loginResponse.accessToken,
+          refreshToken: loginResponse.refreshToken,
+          userData: loginResponse.user.toJson(),
+          // If your API returns expires_in in seconds
+          expiresInSeconds: loginResponse.expiresIn ?? 3600,
+        );
+
+        if (mounted) {
+          ToastUtil.showSuccess("Login successful!");
+          context.go(AppRoutes.dashboard);
+        }
+      } else {
+        ApiErrorHandler.handle(response);
+      }
+    } catch (e) {
+      ApiErrorHandler.handle(e);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   void _signInWithGoogle() async {

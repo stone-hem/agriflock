@@ -1,4 +1,3 @@
-// lib/vet/payments/vet_payments_screen.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -54,9 +53,6 @@ class VetPaymentsScreen extends StatelessWidget {
             _buildPaymentOverview(),
             const SizedBox(height: 32),
 
-            // Quick Actions
-            _buildQuickActions(),
-            const SizedBox(height: 32),
 
             // Recent Transactions
             _buildRecentTransactions(context),
@@ -182,55 +178,6 @@ class VetPaymentsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickActions() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Quick Actions',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey.shade800,
-          ),
-        ),
-        const SizedBox(height: 16),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          children: [
-            _PaymentActionTile(
-              icon: Icons.request_quote,
-              title: 'Generate Invoice',
-              color: Colors.blue,
-              onTap: () {},
-            ),
-            _PaymentActionTile(
-              icon: Icons.history,
-              title: 'Payment History',
-              color: Colors.green,
-              onTap: () {},
-            ),
-            _PaymentActionTile(
-              icon: Icons.account_balance_wallet,
-              title: 'Withdraw Funds',
-              color: Colors.orange,
-              onTap: () {},
-            ),
-            _PaymentActionTile(
-              icon: Icons.analytics,
-              title: 'Earnings Report',
-              color: Colors.purple,
-              onTap: () {},
-            ),
-          ],
-        ),
-      ],
-    );
-  }
 
   Widget _buildRecentTransactions(BuildContext context) {
     return Column(

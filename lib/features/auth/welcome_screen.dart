@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/utils/shared_prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -45,10 +46,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
-  void _signInWithGoogle() {
-    // TODO: Implement Google Sign-In logic
-    print('Sign in with Google tapped');
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -143,7 +140,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     Column(
                       children: [
                         ElevatedButton(
-                          onPressed: () => context.go('/signup'),
+                          onPressed: () async {
+                            context.go('/signup');
+                            await SharedPrefs.setBool('hasSeenWelcome', true);
+                            },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
                             foregroundColor: primaryGreen,
@@ -168,7 +168,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
 
                         TextButton(
-                          onPressed: () => context.go('/login'),
+                          onPressed: () async {
+                            context.go('/login');
+                            await SharedPrefs.setBool('hasSeenWelcome', true);
+                            },
                           style: TextButton.styleFrom(
                             foregroundColor: Colors.white,
                             minimumSize: const Size(double.infinity, 48),

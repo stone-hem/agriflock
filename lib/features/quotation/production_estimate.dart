@@ -1,3 +1,4 @@
+import 'package:agriflock360/features/quotation/widgets/market_disclaimer.dart';
 import 'package:flutter/material.dart';
 
 class ProductionEstimateScreen extends StatefulWidget {
@@ -249,6 +250,8 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
                   ),
                   const SizedBox(height: 40),
                 ],
+
+                MarketDisclaimerWidget()
               ]),
             ),
           ),

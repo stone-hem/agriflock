@@ -1,3 +1,4 @@
+import 'package:agriflock360/features/quotation/widgets/market_disclaimer.dart';
 import 'package:flutter/material.dart';
 
 // Data Models
@@ -769,6 +770,8 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
             _buildProfitabilityItem('ROI Period', _selectedQuotation!['profitability']['roi']),
           ],
         ),
+
+        MarketDisclaimerWidget()
       ],
     );
   }

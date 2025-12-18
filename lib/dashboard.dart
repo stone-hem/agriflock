@@ -7,7 +7,7 @@ import 'package:agriflock360/features/vet/vet_profile_screen.dart';
 import 'package:agriflock360/features/vet/vet_schedules_screen.dart';
 import 'package:agriflock360/home_screen.dart';
 import 'package:agriflock360/quotation_screen.dart';
-import 'package:agriflock360/vet_order_screen.dart';
+import 'package:agriflock360/features/farmer_vet/vet_screen.dart';
 import 'package:flutter/material.dart';
 
 class MainDashboard extends StatefulWidget {
@@ -76,10 +76,10 @@ class _MainDashboardState extends State<MainDashboard> {
           screen: QuotationScreen(),
         ),
         NavConfig(
-          icon: Icons.person_2_outlined,
-          selectedIcon: Icons.person,
+          icon: Icons.people_outline,
+          selectedIcon: Icons.people,
           label: 'Vets',
-          screen: VetOrderScreen(),
+          screen: VetScreen(),
         ),
         NavConfig(
           icon: Icons.person_outlined,

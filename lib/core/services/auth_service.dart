@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'dart:convert';
@@ -7,6 +8,7 @@ import 'dart:async';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final SecureStorage _secureStorage = SecureStorage();
 
   static const String baseUrl = "YOUR_API_URL";
 
@@ -271,6 +273,7 @@ class AuthService {
       rethrow;
     }
   }
+
 
   /// Sign out from Firebase and Google
   Future<void> signOut() async {

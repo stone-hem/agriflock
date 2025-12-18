@@ -48,15 +48,15 @@ class HomeScreen extends StatelessWidget {
           children: [
             // Welcome Section
             _buildWelcomeSection(context),
-            const SizedBox(height: 32),
+            const SizedBox(height: 20),
 
             // Stats Overview
             _buildStatsOverview(),
-            const SizedBox(height: 32),
+            const SizedBox(height: 20),
 
             // Quick Actions
             _buildQuickActions(context),
-            const SizedBox(height: 32),
+            const SizedBox(height: 20),
 
             //graph
             Card(
@@ -222,7 +222,7 @@ class HomeScreen extends StatelessWidget {
             Expanded(
               child: _StatCard(
                 value: '3 kg',
-                label: 'Avg Weight',
+                label: 'Average Weight',
                 color: Colors.green.shade100,
                 textColor: Colors.green.shade800,
               ),

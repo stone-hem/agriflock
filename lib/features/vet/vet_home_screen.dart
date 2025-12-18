@@ -1,4 +1,3 @@
-// lib/vet/home/vet_home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -54,10 +53,6 @@ class VetHomeScreen extends StatelessWidget {
             _buildScheduleOverview(),
             const SizedBox(height: 32),
 
-            // Quick Actions for Vet
-            _buildQuickActions(context),
-            const SizedBox(height: 32),
-
             // Upcoming Appointments
             _buildUpcomingAppointments(context),
           ],
@@ -86,14 +81,6 @@ class VetHomeScreen extends StatelessWidget {
             style: Theme.of(context).textTheme.titleLarge!.copyWith(
               color: Colors.grey.shade700,
               fontWeight: FontWeight.w400,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            'Your veterinary dashboard',
-            style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Colors.blue.shade800,
             ),
           ),
           const SizedBox(height: 4),
@@ -142,58 +129,6 @@ class VetHomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickActions(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Quick Actions',
-          style: Theme.of(context).textTheme.titleLarge!.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.grey.shade800,
-          ),
-        ),
-        const SizedBox(height: 16),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          children: [
-            _ActionTile(
-              icon: Icons.calendar_today,
-              title: 'Schedule',
-              subtitle: 'View and manage appointments',
-              color: Colors.blue,
-              onTap: () => context.push('/vet/schedule'),
-            ),
-            _ActionTile(
-              icon: Icons.assignment,
-              title: 'Medical Reports',
-              subtitle: 'Create and view reports',
-              color: Colors.green,
-              onTap: () => context.push('/vet/reports'),
-            ),
-            _ActionTile(
-              icon: Icons.local_hospital,
-              title: 'Farmers',
-              subtitle: 'View assigned farmers',
-              color: Colors.orange,
-              onTap: () => context.push('/vet/farmers'),
-            ),
-            _ActionTile(
-              icon: Icons.bar_chart,
-              title: 'Analytics',
-              subtitle: 'Health trends & insights',
-              color: Colors.purple,
-              onTap: () => context.push('/vet/analytics'),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
 
   Widget _buildUpcomingAppointments(BuildContext context) {
     return Column(
@@ -291,68 +226,6 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-class _ActionTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _ActionTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade200, width: 1),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, size: 20, color: color),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _AppointmentItem extends StatelessWidget {
   final String farmerName;
