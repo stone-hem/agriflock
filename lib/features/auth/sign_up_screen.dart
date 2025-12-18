@@ -18,7 +18,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _authService = AuthService();
+  // final _authService = AuthService();
 
   Country? _selectedCountry;
   List<Country> _countries = [];
@@ -525,27 +525,30 @@ class _SignupScreenState extends State<SignupScreen> {
     });
 
     try {
-      final response = await _authService.signInWithGoogle();
+      // final response = await _authService.signInWithGoogle();
+      //
+      // if (response['success'] == true) {
+      //   final userData = response['data'];
+      //   final user = userData['user'];
+      //
+      //   // TODO: Store token securely (use flutter_secure_storage)
+      //   // await secureStorage.write(key: 'access_token', value: userData['access_token']);
+      //
+      //   if (mounted) {
+      //     ScaffoldMessenger.of(context).showSnackBar(
+      //       SnackBar(
+      //         content: Text('Welcome ${user['full_name']}!'),
+      //         backgroundColor: Colors.green,
+      //       ),
+      //     );
+      //
+      //     // Navigate to dashboard or onboarding
+      //     context.go('/onboarding-quiz');
+      //   }
+      // }
 
-      if (response['success'] == true) {
-        final userData = response['data'];
-        final user = userData['user'];
+      context.go('/onboarding-quiz');
 
-        // TODO: Store token securely (use flutter_secure_storage)
-        // await secureStorage.write(key: 'access_token', value: userData['access_token']);
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Welcome ${user['full_name']}!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-
-          // Navigate to dashboard or onboarding
-          context.go('/onboarding-quiz');
-        }
-      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -570,26 +573,28 @@ class _SignupScreenState extends State<SignupScreen> {
     });
 
     try {
-      final response = await _authService.signInWithApple();
+      // final response = await _authService.signInWithApple();
+      //
+      // if (response['success'] == true) {
+      //   final userData = response['data'];
+      //   final user = userData['user'];
+      //
+      //   // TODO: Store token securely
+      //   // await secureStorage.write(key: 'access_token', value: userData['access_token']);
+      //
+      //   if (mounted) {
+      //     ScaffoldMessenger.of(context).showSnackBar(
+      //       SnackBar(
+      //         content: Text('Welcome ${user['full_name']}!'),
+      //         backgroundColor: Colors.green,
+      //       ),
+      //     );
+      //
+      //     context.go('/onboarding-quiz');
+      //   }
+      // }
+      context.go('/onboarding-quiz');
 
-      if (response['success'] == true) {
-        final userData = response['data'];
-        final user = userData['user'];
-
-        // TODO: Store token securely
-        // await secureStorage.write(key: 'access_token', value: userData['access_token']);
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Welcome ${user['full_name']}!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-
-          context.go('/onboarding-quiz');
-        }
-      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

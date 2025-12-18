@@ -22,7 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _identifierController = TextEditingController(text: 'farmer@agriflock360.org');
   final _passwordController = TextEditingController(text: 'Password123!');
-  final _authService = AuthService();
+  // final _authService = AuthService();
   bool _isLoading = false;
   bool _obscurePassword = true;
 
@@ -397,26 +397,30 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final response = await _authService.signInWithGoogle();
+      // final response = await _authService.signInWithGoogle();
+      //
+      // if (response['success'] == true) {
+      //   final userData = response['data'];
+      //   final user = userData['user'];
+      //
+      //   // TODO: Store token securely (use flutter_secure_storage)
+      //   // await secureStorage.write(key: 'access_token', value: userData['access_token']);
+      //
+      //   if (mounted) {
+      //     ScaffoldMessenger.of(context).showSnackBar(
+      //       SnackBar(
+      //         content: Text('Welcome back ${user['full_name']}!'),
+      //         backgroundColor: Colors.green,
+      //       ),
+      //     );
+      //
+      //     context.go('/dashboard');
+      //   }
 
-      if (response['success'] == true) {
-        final userData = response['data'];
-        final user = userData['user'];
 
-        // TODO: Store token securely (use flutter_secure_storage)
-        // await secureStorage.write(key: 'access_token', value: userData['access_token']);
+      // }
+      context.go('/dashboard');
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Welcome back ${user['full_name']}!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-
-          context.go('/dashboard');
-        }
-      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -441,26 +445,28 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final response = await _authService.signInWithApple();
+      // final response = await _authService.signInWithApple();
+      //
+      // if (response['success'] == true) {
+      //   final userData = response['data'];
+      //   final user = userData['user'];
+      //
+      //   // TODO: Store token securely
+      //   // await secureStorage.write(key: 'access_token', value: userData['access_token']);
+      //
+      //   if (mounted) {
+      //     ScaffoldMessenger.of(context).showSnackBar(
+      //       SnackBar(
+      //         content: Text('Welcome back ${user['full_name']}!'),
+      //         backgroundColor: Colors.green,
+      //       ),
+      //     );
+      //
+      //     context.go('/dashboard');
+      //   }
+      // }
+      context.go('/dashboard');
 
-      if (response['success'] == true) {
-        final userData = response['data'];
-        final user = userData['user'];
-
-        // TODO: Store token securely
-        // await secureStorage.write(key: 'access_token', value: userData['access_token']);
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Welcome back ${user['full_name']}!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-
-          context.go('/dashboard');
-        }
-      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
