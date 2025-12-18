@@ -39,8 +39,8 @@ dependencies:
   image_picker:
   google_places_flutter: ^2.1.1
   google_sign_in:
-  firebase_core: ^4.2.1
-  firebase_auth: ^6.1.2
+  # firebase_core: ^4.2.1
+  # firebase_auth: ^6.1.2
   sign_in_with_apple: ^8.0.0-spm.1
   http:
   flutter_secure_storage: ^10.0.0-beta.4
