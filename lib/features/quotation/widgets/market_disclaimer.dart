@@ -24,16 +24,13 @@ class MarketDisclaimerWidget extends StatelessWidget {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
+              color: Colors.red,
             ),
           ),
           SizedBox(height: 8),
           Text(
-            "The quoted prices are based on prevailing market rates at the time of preparation. "
-                "A market fluctuation margin of up to 15% has been included to accommodate possible "
-                "variations in housing construction costs, production inputs, materials, labor, "
-                "transportation, and other related expenses.\n\n"
-                "Final costs may vary depending on actual market conditions at the time of execution. "
-                "Any significant variation beyond this margin will be communicated prior to implementation. "
+            "The quoted prices are based on prevailing market rates at the time of preparation. \n\n"
+                "Final costs may vary(About 15%) depending on actual market conditions at the time of execution. "
                 "This quotation is indicative and does not represent a fixed-price commitment.",
             style: TextStyle(
               fontSize: 12,

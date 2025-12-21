@@ -88,7 +88,7 @@ class User {
     return User(
       id: json['id'],
       email: json['email'],
-      name: json['name'],
+      name: json['name'] ?? "Not Provided",
       phoneNumber: json['phone_number'],
       is2faEnabled: json['is_2fa_enabled'],
       emailVerificationExpiresAt: json['email_verification_expires_at'],

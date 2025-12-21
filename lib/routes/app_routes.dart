@@ -28,7 +28,6 @@ import 'package:agriflock360/features/batch/update_vaccination_status_screen.dar
 import 'package:agriflock360/features/farm/add_farm_screen.dart';
 import 'package:agriflock360/features/farm/add_inventory_item_screen.dart';
 import 'package:agriflock360/features/farm/batch_screen.dart';
-import 'package:agriflock360/features/farm/create_farm_screen.dart';
 import 'package:agriflock360/features/farm/farms_home_screen.dart';
 import 'package:agriflock360/features/farm/inventory_screen.dart';
 import 'package:agriflock360/features/more/notifications_screen.dart';
@@ -208,14 +207,6 @@ class AppRoutes {
         GoRoute(
           path: resetPassword,
           builder: (context, state) => const ResetPasswordScreen(),
-        ),
-        GoRoute(
-          path: createFarm,
-          builder: (context, state) => const CreateFarmScreen(),
-        ),
-        GoRoute(
-          path: selectFarmType,
-          builder: (context, state) => const SelectFarmTypeScreen(),
         ),
         GoRoute(
           path: deviceSetup,

@@ -1,11 +1,82 @@
+import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class VetProfileScreen extends StatelessWidget {
+class VetProfileScreen extends StatefulWidget {
   const VetProfileScreen({super.key});
 
-  // Mock profile completion data - in real app, this would come from user data
-  final double profileCompletion = 65.0; // 65% complete
+  @override
+  State<VetProfileScreen> createState() => _VetProfileScreenState();
+}
+
+class _VetProfileScreenState extends State<VetProfileScreen> {
+  final SecureStorage _secureStorage = SecureStorage();
+
+  // User data variables
+  String _userName = 'Loading...';
+  String _userEmail = 'Loading...';
+  String? _userAvatar;
+  String _userRole = 'Loading...';
+  String? _userPhone;
+  bool _isPremium = false;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      // Get user data from secure storage
+      final userData = await _secureStorage.getUserData();
+
+      if (userData != null && mounted) {
+        setState(() {
+          // Extract user information
+          _userName = userData['name'] ?? 'Not Provided';
+          _userEmail = userData['email'] ?? 'Not Provided';
+          _userAvatar = userData['avatar'];
+          _userPhone = userData['phone_number'];
+
+          // Extract role information
+          final role = userData['role'];
+          if (role != null && role is Map<String, dynamic>) {
+            _userRole = role['name'] ?? 'User';
+          } else {
+            _userRole = 'User';
+          }
+
+          // Check if user is premium (you can adjust this logic based on your criteria)
+          _isPremium = userData['status'] == 'active' &&
+              (userData['agreed_to_terms'] == true);
+
+          _isLoading = false;
+        });
+      } else {
+        // If no user data found, use default values
+        if (mounted) {
+          setState(() {
+            _userName = 'Guest User';
+            _userEmail = 'guest@example.com';
+            _userRole = 'Guest';
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      print('Error loading user data: $e');
+      if (mounted) {
+        setState(() {
+          _userName = 'Error Loading';
+          _userEmail = 'Error Loading';
+          _userRole = 'Error';
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,57 +129,107 @@ class VetProfileScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 50,
                     backgroundColor: Colors.white,
-                    child: CircleAvatar(
+                    child: _isLoading
+                        ? const CircularProgressIndicator()
+                        : CircleAvatar(
                       radius: 46,
-                      backgroundImage: NetworkImage('https://i.pravatar.cc/300'),
+                      backgroundImage: _userAvatar != null
+                          ? NetworkImage(_userAvatar!)
+                          : const NetworkImage('https://i.pravatar.cc/300'),
                     ),
                   ),
                   const SizedBox(height: 5),
-                  const Text(
-                    'John Doe',
-                    style: TextStyle(
+                  Text(
+                    _userName,
+                    style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: Colors.black,
                     ),
+                    textAlign: TextAlign.center,
                   ),
                   Text(
-                    'john.doe@farmmail.com',
+                    _userEmail,
                     style: TextStyle(
-                      color: Colors.black.withValues(alpha: 0.9),
+                      color: Colors.black.withOpacity(0.7),
                       fontSize: 16,
                     ),
+                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 10),
+
+                  // Display phone number if available
+                  if (_userPhone != null && _userPhone!.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      _userPhone!,
+                      style: TextStyle(
+                        color: Colors.black.withOpacity(0.6),
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+
+                  // Display role
+                  const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.amber.withValues(alpha: 0.2),
+                      color: Colors.blue.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.amber.shade300),
+                      border: Border.all(color: Colors.blue.shade300),
                     ),
                     child: Text(
-                      'Premium Member',
+                      _userRole,
                       style: TextStyle(
-                        color: Colors.amber.shade800,
+                        color: Colors.blue.shade800,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
 
+                  // Display premium badge if applicable
+                  if (_isPremium) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.amber.shade300),
+                      ),
+                      child: Text(
+                        'Premium Member',
+                        style: TextStyle(
+                          color: Colors.amber.shade800,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
-
 
             // Menu Items
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 children: [
+                  // Personal Information Section
+                  _ProfileMenuItem(
+                    icon: Icons.person_outline,
+                    title: 'Personal Information',
+                    subtitle: 'View and edit your profile details',
+                    color: Colors.blue,
+                    onTap: () {
+                      // You can add navigation to edit profile screen here
+                      _showUserDetails(context);
+                    },
+                  ),
+
                   _ProfileMenuItem(
                     icon: Icons.settings_outlined,
                     title: 'Settings',
@@ -143,7 +264,9 @@ class VetProfileScreen extends StatelessWidget {
                     width: double.infinity,
                     height: 56,
                     child: OutlinedButton.icon(
-                      onPressed: () {
+                      onPressed: () async {
+                        // Clear secure storage before logging out
+                        await _secureStorage.clearAll();
                         context.go('/login');
                       },
                       icon: const Icon(Icons.logout),
@@ -170,6 +293,61 @@ class VetProfileScreen extends StatelessWidget {
     );
   }
 
+  void _showUserDetails(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('User Details'),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildDetailRow('Name', _userName),
+              _buildDetailRow('Email', _userEmail),
+              if (_userPhone != null) _buildDetailRow('Phone', _userPhone!),
+              _buildDetailRow('Role', _userRole),
+              _buildDetailRow('Status', _isPremium ? 'Premium Member' : 'Standard Member'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade700,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 16,
+              color: Colors.black87,
+            ),
+          ),
+          const Divider(height: 20),
+        ],
+      ),
+    );
+  }
 }
 
 class _ProfileMenuItem extends StatelessWidget {
@@ -201,7 +379,7 @@ class _ProfileMenuItem extends StatelessWidget {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
+            color: color.withOpacity(0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: color, size: 20),

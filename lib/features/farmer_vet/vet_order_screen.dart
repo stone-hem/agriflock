@@ -3,6 +3,8 @@ import 'package:agriflock360/features/farmer_vet/models/vet_officer.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'models/order_screen.dart';
+
 class VetOrderScreen extends StatefulWidget {
   final VetOfficer vet;
 
@@ -15,7 +17,6 @@ class VetOrderScreen extends StatefulWidget {
 class _VetOrderScreenState extends State<VetOrderScreen> {
   final _formKey = GlobalKey<FormState>();
   final _reasonController = TextEditingController();
-  final _notesController = TextEditingController();
 
   // Selection states
   String? _selectedHouse;
@@ -116,7 +117,8 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
   // Calculate total cost
   double get _consultationFee {
     // Extract numeric value from string like "\$75"
-    final feeString = widget.vet.consultationFee.replaceAll(RegExp(r'[^0-9.]'), '');
+    final feeString = widget.vet.consultationFee.replaceAll(
+        RegExp(r'[^0-9.]'), '');
     return double.tryParse(feeString) ?? 0.0;
   }
 
@@ -128,7 +130,8 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
 
   double get _mileageFee {
     // Parse distance from string like "2.5 km"
-    final distanceString = widget.vet.distance.replaceAll(RegExp(r'[^0-9.]'), '');
+    final distanceString = widget.vet.distance.replaceAll(
+        RegExp(r'[^0-9.]'), '');
     final distance = double.tryParse(distanceString) ?? 0.0;
 
     double fee = distance * _mileageRatePerKm;
@@ -227,6 +230,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
                               ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                             Text(
                               widget.vet.specialization,
@@ -234,6 +238,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                                 color: Colors.grey.shade600,
                                 fontSize: 14,
                               ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 4),
                             Row(
@@ -244,11 +249,14 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                                   size: 12,
                                 ),
                                 const SizedBox(width: 4),
-                                Text(
-                                  widget.vet.clinic,
-                                  style: TextStyle(
-                                    color: Colors.grey.shade600,
-                                    fontSize: 12,
+                                Expanded(
+                                  child: Text(
+                                    widget.vet.clinic,
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 12,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                               ],
@@ -305,7 +313,11 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               // House Selection
               Text(
                 'Select House',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                style: Theme
+                    .of(context)
+                    .textTheme
+                    .titleMedium!
+                    .copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.grey.shade800,
                 ),
@@ -320,19 +332,24 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                   ),
                   filled: true,
                   fillColor: Colors.grey.shade50,
-                  prefixIcon: Icon(Icons.home_work, color: Colors.grey.shade600),
+                  prefixIcon: Icon(
+                      Icons.home_work, color: Colors.grey.shade600),
                 ),
+                isExpanded: true,
                 items: _farmHouses.map((FarmHouse house) {
                   return DropdownMenuItem<String>(
                     value: house.id,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           house.name,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
+                            fontSize: 14,
                           ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                         Text(
                           house.location,
@@ -340,13 +357,17 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                             fontSize: 12,
                             color: Colors.grey.shade600,
                           ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                         Text(
-                          '${house.batches.length} ${house.batches.length == 1 ? 'batch' : 'batches'} available',
+                          '${house.batches.length} ${house.batches.length == 1
+                              ? 'batch'
+                              : 'batches'} available',
                           style: TextStyle(
                             fontSize: 11,
                             color: Colors.green.shade700,
                           ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
@@ -371,7 +392,11 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               if (_selectedHouse != null) ...[
                 Text(
                   'Select Batch',
-                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                  style: Theme
+                      .of(context)
+                      .textTheme
+                      .titleMedium!
+                      .copyWith(
                     fontWeight: FontWeight.bold,
                     color: Colors.grey.shade800,
                   ),
@@ -388,21 +413,26 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                     fillColor: Colors.grey.shade50,
                     prefixIcon: Icon(Icons.egg, color: Colors.grey.shade600),
                   ),
+                  isExpanded: true,
                   items: _availableBatches.map((FarmBatch batch) {
                     return DropdownMenuItem<String>(
                       value: batch.id,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
                             batch.name,
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
+                              fontSize: 14,
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                           Row(
                             children: [
-                              Icon(Icons.pets, size: 12, color: Colors.grey.shade600),
+                              Icon(Icons.pets, size: 12,
+                                  color: Colors.grey.shade600),
                               const SizedBox(width: 4),
                               Text(
                                 '${batch.birdCount} birds',
@@ -412,7 +442,8 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                                 ),
                               ),
                               const SizedBox(width: 12),
-                              Icon(Icons.calendar_today, size: 12, color: Colors.grey.shade600),
+                              Icon(Icons.calendar_today, size: 12,
+                                  color: Colors.grey.shade600),
                               const SizedBox(width: 4),
                               Text(
                                 '${batch.ageWeeks} weeks',
@@ -430,6 +461,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                               color: _getHealthStatusColor(batch.healthStatus),
                               fontWeight: FontWeight.w500,
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
@@ -453,7 +485,11 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               // Service Type with pricing
               Text(
                 'Service Type',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                style: Theme
+                    .of(context)
+                    .textTheme
+                    .titleMedium!
+                    .copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.grey.shade800,
                 ),
@@ -469,13 +505,20 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                   filled: true,
                   fillColor: Colors.grey.shade50,
                 ),
+                isExpanded: true,
                 items: _servicePrices.entries.map((entry) {
                   return DropdownMenuItem<String>(
                     value: entry.key,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(entry.key),
+                        Flexible(
+                          child: Text(
+                            entry.key,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
                         Text(
                           'KES ${entry.value.toStringAsFixed(0)}',
                           style: TextStyle(
@@ -504,7 +547,11 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               // Priority with surcharge info
               Text(
                 'Priority Level',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                style: Theme
+                    .of(context)
+                    .textTheme
+                    .titleMedium!
+                    .copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.grey.shade800,
                 ),
@@ -520,6 +567,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                   filled: true,
                   fillColor: Colors.grey.shade50,
                 ),
+                isExpanded: true,
                 items: _priorities.map((String priority) {
                   String surchargeInfo = '';
                   Color? color;
@@ -550,11 +598,14 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                         const SizedBox(width: 12),
                         Text(priority),
                         const SizedBox(width: 8),
-                        Text(
-                          surchargeInfo,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade600,
+                        Flexible(
+                          child: Text(
+                            surchargeInfo,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
@@ -605,9 +656,9 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                         _buildCostItem('Consultation Fee:', _consultationFee),
                         _buildCostItem('Service Fee:', _serviceFee),
                         _buildCostItem(
-                          'Mileage Fee (${widget.vet.distance} @ KES $_mileageRatePerKm/km):',
+                          'Mileage Fee (${widget.vet.distance}):',
                           _mileageFee,
-                          description: 'Minimum charge: KES $_minimumMileageFee',
+                          description: 'KES $_mileageRatePerKm/km, Min: KES $_minimumMileageFee',
                         ),
                         if (_prioritySurcharge > 0)
                           _buildCostItem(
@@ -619,17 +670,20 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
-                              'Total Estimated Cost:',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                            const Flexible(
+                              child: Text(
+                                'Total Estimated Cost:',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             Text(
                               'KES ${_totalCost.toStringAsFixed(0)}',
                               style: const TextStyle(
-                                fontSize: 24,
+                                fontSize: 20,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.green,
                               ),
@@ -655,7 +709,11 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               // Preferred Date
               Text(
                 'Preferred Date',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                style: Theme
+                    .of(context)
+                    .textTheme
+                    .titleMedium!
+                    .copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.grey.shade800,
                 ),
@@ -678,7 +736,8 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                       Text(
                         _selectedDate == null
                             ? 'Select preferred date'
-                            : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
+                            : '${_selectedDate!.day}/${_selectedDate!
+                            .month}/${_selectedDate!.year}',
                         style: TextStyle(
                           color: _selectedDate == null
                               ? Colors.grey.shade600
@@ -694,7 +753,11 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               // Preferred Time
               Text(
                 'Preferred Time',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                style: Theme
+                    .of(context)
+                    .textTheme
+                    .titleMedium!
+                    .copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.grey.shade800,
                 ),
@@ -733,7 +796,11 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               // Reason for Visit
               Text(
                 'Reason for Visit',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                style: Theme
+                    .of(context)
+                    .textTheme
+                    .titleMedium!
+                    .copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.grey.shade800,
                 ),
@@ -756,17 +823,14 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               // Additional Notes
               Text(
                 'Additional Notes (Optional)',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                style: Theme
+                    .of(context)
+                    .textTheme
+                    .titleMedium!
+                    .copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.grey.shade800,
                 ),
-              ),
-              const SizedBox(height: 8),
-              ReusableInput(
-                controller: _notesController,
-                labelText: 'Notes',
-                hintText: 'Any additional information the vet should know...',
-                maxLines: 4,
               ),
               const SizedBox(height: 32),
 
@@ -803,7 +867,8 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                       const SizedBox(height: 8),
                       Text(
                         'By submitting this order, you agree to:\n'
-                            '• Consultation fee of ${widget.vet.consultationFee}\n'
+                            '• Consultation fee of ${widget.vet
+                            .consultationFee}\n'
                             '• Service fee based on selected service type\n'
                             '• Mileage charges as per Kenya standard rates\n'
                             '• Priority surcharges where applicable\n'
@@ -870,12 +935,19 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      _buildProcessStep(1, 'Submit Request', 'You fill out this form'),
-                      _buildProcessStep(2, 'Vet Review', 'Dr. ${widget.vet.name.split(' ').last} reviews your request'),
-                      _buildProcessStep(3, 'Vet Accepts/Declines', 'Vet responds within 24 hours'),
-                      _buildProcessStep(4, 'Schedule Visit', 'Date and time confirmed'),
-                      _buildProcessStep(5, 'Service Delivered', 'Vet visits your farm'),
-                      _buildProcessStep(6, 'Payment', 'Pay after service completion'),
+                      _buildProcessStep(
+                          1, 'Submit Request', 'You fill out this form'),
+                      _buildProcessStep(2, 'Vet Review', 'Dr. ${widget.vet.name
+                          .split(' ')
+                          .last} reviews your request'),
+                      _buildProcessStep(3, 'Vet Accepts/Declines',
+                          'Vet responds within 24 hours'),
+                      _buildProcessStep(
+                          4, 'Schedule Visit', 'Date and time confirmed'),
+                      _buildProcessStep(
+                          5, 'Service Delivered', 'Vet visits your farm'),
+                      _buildProcessStep(
+                          6, 'Payment', 'Pay after service completion'),
                     ],
                   ),
                 ),
@@ -888,11 +960,12 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
     );
   }
 
-  Widget _buildCostItem(String label, double amount, {String? description, bool isSurcharge = false}) {
+  Widget _buildCostItem(String label, double amount,
+      {String? description, bool isSurcharge = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: Column(
@@ -901,7 +974,8 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                 Text(
                   label,
                   style: TextStyle(
-                    color: isSurcharge ? Colors.orange.shade700 : Colors.grey.shade700,
+                    color: isSurcharge ? Colors.orange.shade700 : Colors.grey
+                        .shade700,
                     fontSize: 14,
                   ),
                 ),
@@ -916,12 +990,14 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               ],
             ),
           ),
+          const SizedBox(width: 8),
           Text(
             'KES ${amount.toStringAsFixed(0)}',
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: isSurcharge ? Colors.orange.shade700 : Colors.green.shade700,
+              color: isSurcharge ? Colors.orange.shade700 : Colors.green
+                  .shade700,
             ),
           ),
         ],
@@ -1034,7 +1110,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
         date: _selectedDate!,
         time: _selectedTime!,
         reason: _reasonController.text,
-        notes: _notesController.text,
         consultationFee: _consultationFee,
         serviceFee: _serviceFee,
         mileageFee: _mileageFee,
@@ -1071,74 +1146,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
   @override
   void dispose() {
     _reasonController.dispose();
-    _notesController.dispose();
     super.dispose();
   }
-}
 
-// Supporting data models
-class FarmHouse {
-  final String id;
-  final String name;
-  final String location;
-  final List<FarmBatch> batches;
-
-  FarmHouse({
-    required this.id,
-    required this.name,
-    required this.location,
-    required this.batches,
-  });
-}
-
-class FarmBatch {
-  final String id;
-  final String name;
-  final int birdCount;
-  final int ageWeeks;
-  final String birdType;
-  final String healthStatus;
-
-  FarmBatch({
-    required this.id,
-    required this.name,
-    required this.birdCount,
-    required this.ageWeeks,
-    required this.birdType,
-    required this.healthStatus,
-  });
-}
-
-class OrderSummary {
-  final VetOfficer vet;
-  final FarmHouse house;
-  final FarmBatch batch;
-  final String serviceType;
-  final String priority;
-  final DateTime date;
-  final TimeOfDay time;
-  final String reason;
-  final String notes;
-  final double consultationFee;
-  final double serviceFee;
-  final double mileageFee;
-  final double prioritySurcharge;
-  final double totalCost;
-
-  OrderSummary({
-    required this.vet,
-    required this.house,
-    required this.batch,
-    required this.serviceType,
-    required this.priority,
-    required this.date,
-    required this.time,
-    required this.reason,
-    required this.notes,
-    required this.consultationFee,
-    required this.serviceFee,
-    required this.mileageFee,
-    required this.prioritySurcharge,
-    required this.totalCost,
-  });
 }

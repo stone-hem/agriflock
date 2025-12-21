@@ -1,14 +1,103 @@
-import 'package:agriflock360/core/network/api_client.dart';
+import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../main.dart';
 
-class ProfileScreen extends StatelessWidget {
+
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
-  // Mock profile completion data - in real app, this would come from user data
-  final double profileCompletion = 65.0; // 65% complete
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final SecureStorage _secureStorage = SecureStorage();
+
+  // User data variables
+  String _userName = 'Loading...';
+  String _userEmail = 'Loading...';
+  String? _userAvatar;
+  String _userRole = 'Loading...';
+  String? _userPhone;
+  bool _isPremium = false;
+  bool _isLoading = true;
+  double _profileCompletion = 65.0; // Default value, can be calculated from user data
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      // Get user data from secure storage
+      final userData = await _secureStorage.getUserData();
+
+      if (userData != null && mounted) {
+        setState(() {
+          // Extract user information
+          _userName = userData['name'] ?? 'Not Provided';
+          _userEmail = userData['email'] ?? 'Not Provided';
+          _userAvatar = userData['avatar'];
+          _userPhone = userData['phone_number'];
+
+          // Extract role information
+          final role = userData['role'];
+          if (role != null && role is Map<String, dynamic>) {
+            _userRole = role['name'] ?? 'Farmer';
+          } else {
+            _userRole = 'Farmer';
+          }
+
+          // Check if user is premium (you can adjust this logic based on your criteria)
+          _isPremium = userData['status'] == 'active' &&
+              (userData['agreed_to_terms'] == true);
+
+          // Calculate profile completion based on available data
+          _profileCompletion = _calculateProfileCompletion(userData);
+
+          _isLoading = false;
+        });
+      } else {
+        // If no user data found, use default values
+        if (mounted) {
+          setState(() {
+            _userName = 'Guest Farmer';
+            _userEmail = 'guest@example.com';
+            _userRole = 'Farmer';
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      print('Error loading user data: $e');
+      if (mounted) {
+        setState(() {
+          _userName = 'Error Loading';
+          _userEmail = 'Error Loading';
+          _userRole = 'Farmer';
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  double _calculateProfileCompletion(Map<String, dynamic> userData) {
+    // Calculate completion percentage based on available user data
+    int completedFields = 0;
+    int totalFields = 5; // Adjust based on your required fields
+
+    if (userData['name'] != null && userData['name'].toString().isNotEmpty) completedFields++;
+    if (userData['email'] != null && userData['email'].toString().isNotEmpty) completedFields++;
+    if (userData['phone_number'] != null && userData['phone_number'].toString().isNotEmpty) completedFields++;
+    if (userData['avatar'] != null && userData['avatar'].toString().isNotEmpty) completedFields++;
+    if (userData['agreed_to_terms'] == true) completedFields++;
+
+    return (completedFields / totalFields) * 100;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,46 +150,86 @@ class ProfileScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 50,
                     backgroundColor: Colors.white,
-                    child: CircleAvatar(
+                    child: _isLoading
+                        ? const CircularProgressIndicator()
+                        : CircleAvatar(
                       radius: 46,
-                      backgroundImage: NetworkImage('https://i.pravatar.cc/300'),
+                      backgroundImage: _userAvatar != null
+                          ? NetworkImage(_userAvatar!)
+                          : const NetworkImage('https://i.pravatar.cc/300'),
                     ),
                   ),
                   const SizedBox(height: 5),
-                  const Text(
-                    'John Doe',
-                    style: TextStyle(
+                  Text(
+                    _userName,
+                    style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: Colors.black,
                     ),
+                    textAlign: TextAlign.center,
                   ),
                   Text(
-                    'john.doe@farmmail.com',
+                    _userEmail,
                     style: TextStyle(
-                      color: Colors.black.withValues(alpha: 0.9),
+                      color: Colors.black.withOpacity(0.7),
                       fontSize: 16,
                     ),
+                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 10),
+
+                  // Display phone number if available
+                  if (_userPhone != null && _userPhone!.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      _userPhone!,
+                      style: TextStyle(
+                        color: Colors.black.withOpacity(0.6),
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+
+                  // Display role
+                  const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.amber.withValues(alpha: 0.2),
+                      color: Colors.blue.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.amber.shade300),
+                      border: Border.all(color: Colors.blue.shade300),
                     ),
                     child: Text(
-                      'Premium Member',
+                      _userRole,
                       style: TextStyle(
-                        color: Colors.amber.shade800,
+                        color: Colors.blue.shade800,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
+
+                  // Display premium badge if applicable
+                  if (_isPremium) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.amber.shade300),
+                      ),
+                      child: Text(
+                        'Premium Member',
+                        style: TextStyle(
+                          color: Colors.amber.shade800,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
 
                   // Profile Completion Card
                   const SizedBox(height: 10),
@@ -179,7 +308,11 @@ class ProfileScreen extends StatelessWidget {
                                 child: const Text('Cancel'),
                               ),
                               TextButton(
-                                onPressed: () => Navigator.pop(context, true),
+                                onPressed: () async {
+                                  // Clear secure storage before logging out
+                                  await _secureStorage.clearAll();
+                                  Navigator.pop(context, true);
+                                },
                                 child: const Text('Log out'),
                               ),
                             ],
@@ -188,9 +321,9 @@ class ProfileScreen extends StatelessWidget {
 
                         if (confirm == true) {
                           await apiClient.logout();
+                          context.go('/login');
                         }
                       },
-
                       icon: const Icon(Icons.logout),
                       label: const Text(
                         'Log Out',
@@ -242,11 +375,11 @@ class ProfileScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${profileCompletion.toInt()}% Complete',
-                        style: const TextStyle(
+                        '${_profileCompletion.toInt()}% Complete',
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.green,
+                          color: _profileCompletion >= 100 ? Colors.green : Colors.orange,
                         ),
                       ),
                     ],
@@ -259,16 +392,16 @@ class ProfileScreen extends StatelessWidget {
                       width: 60,
                       height: 60,
                       child: CircularProgressIndicator(
-                        value: profileCompletion / 100,
+                        value: _profileCompletion / 100,
                         strokeWidth: 6,
                         backgroundColor: Colors.grey.shade300,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          profileCompletion >= 100 ? Colors.green : Colors.orange,
+                          _profileCompletion >= 100 ? Colors.green : Colors.orange,
                         ),
                       ),
                     ),
                     Text(
-                      '${profileCompletion.toInt()}%',
+                      '${_profileCompletion.toInt()}%',
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -283,10 +416,10 @@ class ProfileScreen extends StatelessWidget {
 
             // Progress Bar
             LinearProgressIndicator(
-              value: profileCompletion / 100,
+              value: _profileCompletion / 100,
               backgroundColor: Colors.grey.shade300,
               valueColor: AlwaysStoppedAnimation<Color>(
-                profileCompletion >= 100 ? Colors.green : Colors.orange,
+                _profileCompletion >= 100 ? Colors.green : Colors.orange,
               ),
               borderRadius: BorderRadius.circular(10),
               minHeight: 8,
@@ -298,25 +431,25 @@ class ProfileScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.orange.shade50,
+                color: _profileCompletion < 100 ? Colors.orange.shade50 : Colors.green.shade50,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.orange.shade100),
+                border: Border.all(color: _profileCompletion < 100 ? Colors.orange.shade100 : Colors.green.shade100),
               ),
               child: Row(
                 children: [
                   Icon(
-                    Icons.info_outline,
-                    color: Colors.orange.shade600,
+                    _profileCompletion < 100 ? Icons.info_outline : Icons.check_circle_outline,
+                    color: _profileCompletion < 100 ? Colors.orange.shade600 : Colors.green.shade600,
                     size: 20,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      profileCompletion < 100
+                      _profileCompletion < 100
                           ? 'Complete your profile to unlock all features'
                           : 'Your profile is complete! All features unlocked.',
                       style: TextStyle(
-                        color: Colors.orange.shade800,
+                        color: _profileCompletion < 100 ? Colors.orange.shade800 : Colors.green.shade800,
                         fontSize: 12,
                       ),
                     ),
@@ -328,7 +461,7 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 12),
 
             // Complete Profile Button
-            if (profileCompletion < 100)
+            if (_profileCompletion < 100)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -387,7 +520,7 @@ class _ProfileMenuItem extends StatelessWidget {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
+            color: color.withOpacity(0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: color, size: 20),

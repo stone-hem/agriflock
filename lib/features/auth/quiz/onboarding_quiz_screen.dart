@@ -5,7 +5,7 @@ import 'package:agriflock360/features/auth/quiz/shared/file_upload.dart';
 import 'package:agriflock360/features/auth/quiz/shared/gender_selector.dart';
 import 'package:agriflock360/features/auth/quiz/shared/photo_upload.dart';
 import 'package:agriflock360/features/auth/quiz/shared/user_type_selection.dart';
-import 'package:agriflock360/features/auth/quiz/shared/location_picker_step.dart'; // Import the new component
+import 'package:agriflock360/core/widgets/location_picker_step.dart'; // Import the new component
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';

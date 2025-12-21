@@ -134,21 +134,12 @@ class VetHomeScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Today\'s Appointments',
-              style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
-              ),
-            ),
-            TextButton(
-                onPressed: () => context.push('/vet/appointments'),
-                child: const Text('View all')
-            )
-          ],
+        Text(
+          'Today\'s Appointments',
+          style: Theme.of(context).textTheme.titleLarge!.copyWith(
+            fontWeight: FontWeight.bold,
+            color: Colors.grey.shade800,
+          ),
         ),
         const SizedBox(height: 16),
         _AppointmentItem(

@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:agriflock360/features/farm/farms_home_screen.dart';
 import 'package:agriflock360/features/profile/profile_screen.dart';
 import 'package:agriflock360/features/shared/nav_destination_item.dart';
@@ -19,16 +20,52 @@ class MainDashboard extends StatefulWidget {
 
 class _MainDashboardState extends State<MainDashboard> {
   int _selectedIndex = 0;
-
-  // Flag for testing RBAC - change to 'vet' to load vet screens
-  final String _role = 'farmer'; // Or set to 'vet' for testing
-
+  String? _userRole;
+  bool _isLoading = true;
   late List<NavConfig> _navConfigs;
+  final SecureStorage _secureStorage = SecureStorage();
 
   @override
   void initState() {
     super.initState();
-    if (_role == 'vet') {
+    _loadUserRole();
+  }
+
+  Future<void> _loadUserRole() async {
+    try {
+      // Get user data from secure storage
+      final userData = await _secureStorage.getUserData();
+
+      if (userData != null && userData['role'] != null) {
+        final role = userData['role'] as Map<String, dynamic>;
+        final roleName = role['name'] as String;
+
+        setState(() {
+          _userRole = roleName.toLowerCase();
+          _initializeNavConfigs();
+          _isLoading = false;
+        });
+      } else {
+        // Fallback: If no role found, default to farmer or handle error
+        setState(() {
+          _userRole = 'farmer';
+          _initializeNavConfigs();
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      // Handle error - default to farmer or show error screen
+      print('Error loading user role: $e');
+      setState(() {
+        _userRole = 'farmer';
+        _initializeNavConfigs();
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _initializeNavConfigs() {
+    if (_userRole == 'extension_officer') {
       _navConfigs = [
         NavConfig(
           icon: Icons.home_outlined,
@@ -56,6 +93,7 @@ class _MainDashboardState extends State<MainDashboard> {
         ),
       ];
     } else {
+      // Default to farmer navigation
       _navConfigs = [
         NavConfig(
           icon: Icons.home_outlined,
@@ -99,6 +137,17 @@ class _MainDashboardState extends State<MainDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    // Show loading indicator while fetching role
+    if (_isLoading) {
+      return Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(
+            color: Colors.green,
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       body: _navConfigs[_selectedIndex].screen,
       bottomNavigationBar: Container(
