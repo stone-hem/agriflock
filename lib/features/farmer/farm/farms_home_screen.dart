@@ -1,4 +1,5 @@
 // lib/farms/farms_home_screen.dart
+import 'package:agriflock360/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -372,6 +373,16 @@ class _FarmCard extends StatelessWidget {
                     ),
                   ),
                   const PopupMenuItem<String>(
+                    value: 'inventory',
+                    child: Row(
+                      children: [
+                        Icon(Icons.inventory, size: 20),
+                        SizedBox(width: 8),
+                        Text('View Farm Inventory'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem<String>(
                     value: 'view_batches',
                     child: Row(
                       children: [
@@ -400,6 +411,10 @@ class _FarmCard extends StatelessWidget {
             backgroundColor: Colors.blue,
           ),
         );
+        break;
+      case 'inventory':
+      // TODO: Implement inventory farm
+        context.push(AppRoutes.farmsInventory);
         break;
       case 'view_batches':
         context.push('/batches');
