@@ -147,7 +147,7 @@ class _VetSchedulesScreenState extends State<VetSchedulesScreen> with SingleTick
           acceptedDate: 'Dec 20, 2023',
           scheduledDate: 'Dec 22, 2023',
           scheduledTime: '10:00 AM',
-          onComplete: () => _showCompleteDialog(context, 'David Wilson'),
+          onComplete: () => context.push('/vet/payment/service'),
           onCancel: () => _showCancelDialog(context, 'David Wilson'),
         ),
         _InProgressRequestCard(
@@ -158,7 +158,7 @@ class _VetSchedulesScreenState extends State<VetSchedulesScreen> with SingleTick
           acceptedDate: 'Dec 19, 2023',
           scheduledDate: 'Dec 23, 2023',
           scheduledTime: '2:30 PM',
-          onComplete: () => _showCompleteDialog(context, 'Sarah Miller'),
+          onComplete: () => context.push('/vet/payment/service'),
           onCancel: () => _showCancelDialog(context, 'Sarah Miller'),
         ),
         _InProgressRequestCard(
@@ -169,7 +169,7 @@ class _VetSchedulesScreenState extends State<VetSchedulesScreen> with SingleTick
           acceptedDate: 'Dec 18, 2023',
           scheduledDate: 'Dec 24, 2023',
           scheduledTime: '11:00 AM',
-          onComplete: () => _showCompleteDialog(context, 'James Brown'),
+          onComplete: () => context.push('/vet/payment/service'),
           onCancel: () => _showCancelDialog(context, 'James Brown'),
         ),
       ],
@@ -363,56 +363,6 @@ class _VetSchedulesScreenState extends State<VetSchedulesScreen> with SingleTick
     );
   }
 
-  void _showCompleteDialog(BuildContext context, String farmerName) {
-    final notesController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Complete Visit'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Mark visit for $farmerName as completed?',
-              style: TextStyle(color: Colors.grey.shade700),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: notesController,
-              decoration: const InputDecoration(
-                labelText: 'Visit Notes',
-                hintText: 'Add summary of the visit',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 4,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // Handle complete logic here
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Visit marked as completed')),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Complete'),
-          ),
-        ],
-      ),
-    );
-  }
 
   void _showCancelDialog(BuildContext context, String farmerName) {
     final reasonController = TextEditingController();

@@ -119,7 +119,7 @@ class _VetServicePaymentScreenState extends State<VetServicePaymentScreen> {
 
   Widget _buildServiceInfoCard() {
     return Card(
-      elevation: 2,
+      elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
@@ -246,7 +246,7 @@ class _VetServicePaymentScreenState extends State<VetServicePaymentScreen> {
 
   Widget _buildFeeBreakdown() {
     return Card(
-      elevation: 2,
+      elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
@@ -399,7 +399,7 @@ class _VetServicePaymentScreenState extends State<VetServicePaymentScreen> {
 
   Widget _buildMpesaPaymentForm() {
     return Card(
-      elevation: 2,
+      elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
@@ -459,7 +459,7 @@ class _VetServicePaymentScreenState extends State<VetServicePaymentScreen> {
 
   Widget _buildBankVerificationForm() {
     return Card(
-      elevation: 2,
+      elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
@@ -532,7 +532,7 @@ class _VetServicePaymentScreenState extends State<VetServicePaymentScreen> {
 
   Widget _buildAlreadyPaidSection() {
     return Card(
-      elevation: 2,
+      elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
@@ -598,7 +598,7 @@ class _VetServicePaymentScreenState extends State<VetServicePaymentScreen> {
 
   Widget _buildPaymentVerifiedSection() {
     return Card(
-      elevation: 2,
+      elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),

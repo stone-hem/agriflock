@@ -248,7 +248,7 @@ class _VetPaymentsHistoryScreenState extends State<VetPaymentsHistoryScreen> {
           Padding(
             padding: const EdgeInsets.all(16),
             child: Card(
-              elevation: 2,
+              elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -347,7 +347,7 @@ class _TransactionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      elevation: 1,
+      elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
@@ -476,171 +476,190 @@ class TransactionDetailsModal extends StatelessWidget {
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header with close button
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Transaction Details',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade800,
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Amount and Status
-                    Card(
-                      color: transaction['isCredit'] ? Colors.green.shade50 : Colors.orange.shade50,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
+                        // Header with close button
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              '${transaction['isCredit'] ? '+' : '-'}\$${transaction['amount'].toStringAsFixed(2)}',
+                              'Transaction Details',
                               style: TextStyle(
-                                fontSize: 32,
+                                fontSize: 20,
                                 fontWeight: FontWeight.bold,
-                                color: transaction['isCredit'] ? Colors.green.shade800 : Colors.orange.shade800,
+                                color: Colors.grey.shade800,
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Amount and Status
+                        Card(
+                          color: transaction['isCredit']
+                              ? Colors.green.shade50
+                              : Colors.orange.shade50,
+                          elevation: 0,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              children: [
+                                Text(
+                                  '${transaction['isCredit'] ? '+' : '-'}\$${transaction['amount'].toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.bold,
+                                    color: transaction['isCredit']
+                                        ? Colors.green.shade800
+                                        : Colors.orange.shade800,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: transaction['status'] == 'Completed'
+                                        ? Colors.green.shade100
+                                        : Colors.orange.shade100,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    transaction['status'],
+                                    style: TextStyle(
+                                      color: transaction['status'] == 'Completed'
+                                          ? Colors.green.shade800
+                                          : Colors.orange.shade800,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Details Grid
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _DetailRow(
+                              icon: Icons.person,
+                              label: 'Farmer',
+                              value:
+                              '${transaction['farmerName']} (ID: ${transaction['farmerId']})',
+                            ),
+                            _DetailRow(
+                              icon: Icons.medical_services,
+                              label: 'Service',
+                              value: transaction['service'],
+                            ),
+                            _DetailRow(
+                              icon: Icons.category,
+                              label: 'Service Type',
+                              value: transaction['serviceType'],
+                            ),
+                            _DetailRow(
+                              icon: Icons.pets,
+                              label: 'Animals',
+                              value: transaction['animals'],
+                            ),
+                            _DetailRow(
+                              icon: Icons.location_on,
+                              label: 'Location',
+                              value: transaction['location'],
+                            ),
+                            _DetailRow(
+                              icon: Icons.access_time,
+                              label: 'Visit Duration',
+                              value: transaction['duration'],
+                            ),
+                            _DetailRow(
+                              icon: Icons.date_range,
+                              label: 'Date & Time',
+                              value:
+                              '${transaction['date']} at ${transaction['time']}',
+                            ),
+                            _DetailRow(
+                              icon: Icons.payment,
+                              label: 'Payment Method',
+                              value: transaction['paymentMethod'],
+                            ),
+                            _DetailRow(
+                              icon: Icons.receipt,
+                              label: 'Invoice Number',
+                              value: transaction['invoiceNumber'],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Notes',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey.shade700,
                               ),
                             ),
                             const SizedBox(height: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: transaction['status'] == 'Completed'
-                                    ? Colors.green.shade100
-                                    : Colors.orange.shade100,
-                                borderRadius: BorderRadius.circular(20),
+                            Text(
+                              transaction['notes'],
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
                               ),
-                              child: Text(
-                                transaction['status'],
-                                style: TextStyle(
-                                  color: transaction['status'] == 'Completed' ? Colors.green.shade800 : Colors.orange.shade800,
-                                  fontWeight: FontWeight.w500,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 30),
+
+                        // Action Buttons
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                onPressed: () {
+                                  // Share functionality
+                                  _shareTransaction(context);
+                                },
+                                icon: const Icon(Icons.share),
+                                label: const Text('Share'),
+                                style: OutlinedButton.styleFrom(
+                                  padding:
+                                  const EdgeInsets.symmetric(vertical: 12),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  // View invoice functionality
+                                  _viewInvoice(context);
+                                },
+                                icon: const Icon(Icons.receipt_long),
+                                label: const Text('View Invoice'),
+                                style: ElevatedButton.styleFrom(
+                                  padding:
+                                  const EdgeInsets.symmetric(vertical: 12),
+                                  backgroundColor: Colors.green.shade600,
                                 ),
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Details Grid
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _DetailRow(
-                          icon: Icons.person,
-                          label: 'Farmer',
-                          value: '${transaction['farmerName']} (ID: ${transaction['farmerId']})',
-                        ),
-                        _DetailRow(
-                          icon: Icons.medical_services,
-                          label: 'Service',
-                          value: transaction['service'],
-                        ),
-                        _DetailRow(
-                          icon: Icons.category,
-                          label: 'Service Type',
-                          value: transaction['serviceType'],
-                        ),
-                        _DetailRow(
-                          icon: Icons.pets,
-                          label: 'Animals',
-                          value: transaction['animals'],
-                        ),
-                        _DetailRow(
-                          icon: Icons.location_on,
-                          label: 'Location',
-                          value: transaction['location'],
-                        ),
-                        _DetailRow(
-                          icon: Icons.access_time,
-                          label: 'Visit Duration',
-                          value: transaction['duration'],
-                        ),
-                        _DetailRow(
-                          icon: Icons.date_range,
-                          label: 'Date & Time',
-                          value: '${transaction['date']} at ${transaction['time']}',
-                        ),
-                        _DetailRow(
-                          icon: Icons.payment,
-                          label: 'Payment Method',
-                          value: transaction['paymentMethod'],
-                        ),
-                        _DetailRow(
-                          icon: Icons.receipt,
-                          label: 'Invoice Number',
-                          value: transaction['invoiceNumber'],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Notes',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey.shade700,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          transaction['notes'],
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
+                        // Add extra padding at the bottom for better scrolling
+                        const SizedBox(height: 20),
                       ],
                     ),
-                    const SizedBox(height: 20),
-
-                    // Action Buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () {
-                              // Share functionality
-                              _shareTransaction(context);
-                            },
-                            icon: const Icon(Icons.share),
-                            label: const Text('Share'),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              // View invoice functionality
-                              _viewInvoice(context);
-                            },
-                            icon: const Icon(Icons.receipt_long),
-                            label: const Text('View Invoice'),
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              backgroundColor: Colors.green.shade600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ],
@@ -670,7 +689,6 @@ class TransactionDetailsModal extends StatelessWidget {
     );
   }
 }
-
 class _DetailRow extends StatelessWidget {
   final IconData icon;
   final String label;
