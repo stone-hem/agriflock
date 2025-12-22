@@ -1,4 +1,4 @@
-// lib/batches/add_batch_screen.dart
+import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -17,10 +17,25 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
   final _currentWeightController = TextEditingController();
   final _expectedWeightController = TextEditingController();
 
+  // New controllers for house
+  final _newHouseNameController = TextEditingController();
+  final _newHouseCapacityController = TextEditingController();
+
   String? _selectedBreed;
   String? _selectedType;
   String? _selectedFeedingTime;
+  String? _selectedHouse;
   DateTime? _startDate;
+
+  // New state variables for house
+  bool _isAddingNewHouse = false;
+  List<String> _existingHouses = [
+    'House A - Broiler Section',
+    'House B - Layer Section',
+    'House C - Breeding Section',
+    'House D - Free Range',
+    'House E - Quarantine'
+  ];
 
   final List<String> _breeds = [
     'Broiler',
@@ -133,20 +148,151 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              TextFormField(
+              ReusableInput(
                 controller: _nameController,
-                decoration: InputDecoration(
-                  hintText: 'e.g., Spring Broiler Batch 2024',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter batch name';
                   }
                   return null;
                 },
+                labelText: 'Name',
+                hintText: 'e.g., Spring Broiler Batch 2024',
+              ),
+              const SizedBox(height: 20),
+
+              // House Selection
+              Text(
+                'House Assignment',
+                style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade800,
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: Colors.grey.shade300),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            _isAddingNewHouse ? 'Add New House' : 'Select Existing House',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade800,
+                            ),
+                          ),
+                          Switch(
+                            value: _isAddingNewHouse,
+                            onChanged: (value) {
+                              setState(() {
+                                _isAddingNewHouse = value;
+                                if (!value) {
+                                  // Clear new house form when switching back
+                                  _newHouseNameController.clear();
+                                  _newHouseCapacityController.clear();
+                                }
+                              });
+                            },
+                            activeColor: Colors.green,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      if (!_isAddingNewHouse) ...[
+                        // Existing House Selection
+                        DropdownButtonFormField<String>(
+                          value: _selectedHouse,
+                          decoration: InputDecoration(
+                            hintText: 'Select an existing house',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          items: [
+                            const DropdownMenuItem<String>(
+                              value: null,
+                              child: Text('Select house...'),
+                            ),
+                            ..._existingHouses.map((String house) {
+                              return DropdownMenuItem<String>(
+                                value: house,
+                                child: Text(house),
+                              );
+                            }).toList(),
+                          ],
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              _selectedHouse = newValue;
+                            });
+                          },
+                          validator: (value) {
+                            if (!_isAddingNewHouse && (value == null || value.isEmpty)) {
+                              return 'Please select a house';
+                            }
+                            return null;
+                          },
+                        ),
+                      ] else ...[
+                        // New House Form
+                        Column(
+                          children: [
+                            ReusableInput(
+                              controller: _newHouseNameController,
+                              labelText: 'House Name',
+                              hintText: 'e.g., House F - New Section',
+                              validator: (value) {
+                                if (_isAddingNewHouse && (value == null || value.isEmpty)) {
+                                  return 'Please enter house name';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            ReusableInput(
+                              controller: _newHouseCapacityController,
+                              labelText: 'Capacity (birds)',
+                              hintText: 'e.g., 5000',
+                              keyboardType: TextInputType.number,
+                              validator: (value) {
+                                if (_isAddingNewHouse && (value == null || value.isEmpty)) {
+                                  return 'Please enter capacity';
+                                }
+                                if (_isAddingNewHouse && int.tryParse(value!) == null) {
+                                  return 'Please enter a valid number';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 8),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: ElevatedButton.icon(
+                                onPressed: _addNewHouse,
+                                icon: const Icon(Icons.add, size: 18),
+                                label: const Text('Add House'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  foregroundColor: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               ),
               const SizedBox(height: 20),
 
@@ -160,7 +306,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _selectedBreed,
+                initialValue: _selectedBreed,
                 decoration: InputDecoration(
                   hintText: 'Select breed',
                   border: OutlineInputBorder(
@@ -197,7 +343,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _selectedType,
+                initialValue: _selectedType,
                 decoration: InputDecoration(
                   hintText: 'Select type',
                   border: OutlineInputBorder(
@@ -271,15 +417,9 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              TextFormField(
+              ReusableInput(
                 controller: _ageController,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  hintText: 'e.g., 21',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter age in days';
@@ -289,6 +429,8 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                   }
                   return null;
                 },
+                labelText: 'Age',
+                hintText: 'e.g., 21',
               ),
               const SizedBox(height: 20),
 
@@ -301,15 +443,9 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              TextFormField(
+              ReusableInput(
                 controller: _birdsAliveController,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  hintText: 'e.g., 1000',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter number of birds alive';
@@ -319,6 +455,8 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                   }
                   return null;
                 },
+                labelText: 'Birds Alive',
+                hintText: 'e.g., 1000',
               ),
               const SizedBox(height: 20),
 
@@ -331,15 +469,9 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              TextFormField(
+              ReusableInput(
                 controller: _currentWeightController,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  hintText: 'e.g., 1.5',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter current weight';
@@ -349,6 +481,8 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                   }
                   return null;
                 },
+                labelText: 'weight',
+                hintText: 'e.g., 1.5',
               ),
               const SizedBox(height: 20),
 
@@ -361,15 +495,9 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              TextFormField(
+              ReusableInput(
                 controller: _expectedWeightController,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  hintText: 'e.g., 2.5',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter expected weight';
@@ -379,6 +507,8 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                   }
                   return null;
                 },
+                labelText: 'Weight',
+                hintText: 'e.g., 2.5',
               ),
               const SizedBox(height: 20),
 
@@ -392,7 +522,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _selectedFeedingTime,
+                initialValue: _selectedFeedingTime,
                 decoration: InputDecoration(
                   hintText: 'Select feeding time',
                   border: OutlineInputBorder(
@@ -525,12 +655,49 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
     }
   }
 
+  void _addNewHouse() {
+    if (_newHouseNameController.text.isNotEmpty &&
+        _newHouseCapacityController.text.isNotEmpty) {
+      final newHouseName = '${_newHouseNameController.text} (Capacity: ${_newHouseCapacityController.text})';
+
+      setState(() {
+        _existingHouses.add(newHouseName);
+        _selectedHouse = newHouseName;
+        _isAddingNewHouse = false;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('New house "$newHouseName" added successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      });
+    }
+  }
+
   void _saveBatch() {
     if (_formKey.currentState!.validate()) {
-      // TODO: Implement save batch logic
+      // Get house information
+      String houseInfo = '';
+      if (_isAddingNewHouse) {
+        houseInfo = 'New House: ${_newHouseNameController.text} (Capacity: ${_newHouseCapacityController.text})';
+      } else {
+        houseInfo = 'Existing House: $_selectedHouse';
+      }
+
+      // TODO: Implement save batch logic with house information
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Batch "${_nameController.text}" created successfully!'),
+          content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Batch "${_nameController.text}" created successfully!'),
+              Text(
+                houseInfo,
+                style: const TextStyle(fontSize: 12),
+              ),
+            ],
+          ),
           backgroundColor: Colors.green,
         ),
       );
@@ -545,6 +712,8 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
     _birdsAliveController.dispose();
     _currentWeightController.dispose();
     _expectedWeightController.dispose();
+    _newHouseNameController.dispose();
+    _newHouseCapacityController.dispose();
     super.dispose();
   }
 }

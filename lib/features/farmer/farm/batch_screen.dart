@@ -11,6 +11,7 @@ class BatchesScreen extends StatefulWidget {
 
 class _BatchesScreenState extends State<BatchesScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final Map<String, bool> _expandedHouses = {};
 
   @override
   void initState() {
@@ -101,18 +102,18 @@ class _BatchesScreenState extends State<BatchesScreen> with SingleTickerProvider
                     onTap: () => context.push('/batches/add'),
                   ),
                   _ActionCard(
-                    icon: Icons.inventory,
-                    title: 'Farm inventory',
-                    subtitle: 'Manage farm inventory',
+                    icon: Icons.warehouse,
+                    title: 'Add New House',
+                    subtitle: 'Create new house',
                     color: Colors.teal,
-                    onTap: () => context.push('/farms/inventory'),
+                    onTap: () => _showAddHouseDialog(context),
                   ),
                 ],
               ),
 
               const SizedBox(height: 12),
 
-              // Tabs for Active/Archived batches
+              // Houses Section
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -128,60 +129,115 @@ class _BatchesScreenState extends State<BatchesScreen> with SingleTickerProvider
                 ),
                 child: Column(
                   children: [
-                    // Tab Bar with better styling
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      margin: const EdgeInsets.all(12),
-                      child: TabBar(
-                        controller: _tabController,
-                        isScrollable: true,
-                        tabAlignment: TabAlignment.start,
-                        physics: const BouncingScrollPhysics(),
-                        padding: const EdgeInsets.all(1),
-                        dividerColor: Colors.transparent,
-                        indicator: BoxDecoration(
-                          color: Colors.grey.shade200,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        indicatorSize: TabBarIndicatorSize.tab,
-                        labelColor: Colors.black,
-                        unselectedLabelColor: Colors.grey.shade600,
-                        labelStyle: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.5,
-                        ),
-                        unselectedLabelStyle: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        splashFactory: NoSplash.splashFactory,
-                        overlayColor: WidgetStateProperty.all(Colors.transparent),
-                        tabs: [
-                          _buildTabWithIcon(Icons.visibility, 'Active Batches'),
-                          _buildTabWithIcon(Icons.archive, 'Archived Batches')
-                        ],
-                      ),
-                    ),
-
-                    // Tab Content
-                    SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.5,
-                      child: TabBarView(
-                        controller: _tabController,
+                    // Houses Header
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // Active Batches Tab
-                          _buildActiveBatches(context),
-
-                          // Archived Batches Tab
-                          _buildArchivedBatches(context),
+                          Text(
+                            'Houses & Batches',
+                            style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade800,
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              Icon(Icons.warehouse, color: Colors.green.shade700, size: 20),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${_getAllBatches().length} Active',
+                                style: TextStyle(
+                                  color: Colors.green.shade700,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
+
+                    // Houses List
+                    _buildHousesList(),
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),
-              const SizedBox(height: 40),
+
+              const SizedBox(height: 24),
+
+              // Tabs for All Batches View
+              // Container(
+              //   decoration: BoxDecoration(
+              //     color: Colors.white,
+              //     borderRadius: BorderRadius.circular(16),
+              //     border: Border.all(color: Colors.grey.shade200),
+              //     boxShadow: [
+              //       BoxShadow(
+              //         color: Colors.grey.shade100,
+              //         blurRadius: 10,
+              //         offset: const Offset(0, 4),
+              //       ),
+              //     ],
+              //   ),
+              //   child: Column(
+              //     children: [
+              //       // Tab Bar with better styling
+              //       Container(
+              //         padding: const EdgeInsets.all(4),
+              //         margin: const EdgeInsets.all(12),
+              //         child: TabBar(
+              //           controller: _tabController,
+              //           isScrollable: true,
+              //           tabAlignment: TabAlignment.start,
+              //           physics: const BouncingScrollPhysics(),
+              //           padding: const EdgeInsets.all(1),
+              //           dividerColor: Colors.transparent,
+              //           indicator: BoxDecoration(
+              //             color: Colors.grey.shade200,
+              //             borderRadius: BorderRadius.circular(12),
+              //           ),
+              //           indicatorSize: TabBarIndicatorSize.tab,
+              //           labelColor: Colors.black,
+              //           unselectedLabelColor: Colors.grey.shade600,
+              //           labelStyle: const TextStyle(
+              //             fontSize: 13,
+              //             fontWeight: FontWeight.w600,
+              //             letterSpacing: 0.5,
+              //           ),
+              //           unselectedLabelStyle: const TextStyle(
+              //             fontSize: 13,
+              //             fontWeight: FontWeight.w500,
+              //           ),
+              //           splashFactory: NoSplash.splashFactory,
+              //           overlayColor: WidgetStateProperty.all(Colors.transparent),
+              //           tabs: [
+              //             _buildTabWithIcon(Icons.visibility, 'All Batches'),
+              //             _buildTabWithIcon(Icons.archive, 'Archived Batches')
+              //           ],
+              //         ),
+              //       ),
+              //
+              //       // Tab Content
+              //       SizedBox(
+              //         height: MediaQuery.of(context).size.height * 0.5,
+              //         child: TabBarView(
+              //           controller: _tabController,
+              //           children: [
+              //             // All Batches Tab (All batches from all houses)
+              //             _buildAllBatchesTab(context),
+              //
+              //             // Archived Batches Tab
+              //             _buildArchivedBatchesTab(context),
+              //           ],
+              //         ),
+              //       ),
+              //     ],
+              //   ),
+              // ),
+              // const SizedBox(height: 40),
             ],
           ),
         ),
@@ -202,107 +258,161 @@ class _BatchesScreenState extends State<BatchesScreen> with SingleTickerProvider
     );
   }
 
-
-  Widget _buildActiveBatches(BuildContext context) {
-    final activeBatches = [
+  Widget _buildHousesList() {
+    final houses = [
       {
         'id': '1',
-        'name': 'Spring Batch 2024',
-        'breed': 'Broiler',
-        'quantity': 500,
-        'startDate': '2024-03-15',
-        'age': 45,
-        'mortality': 12,
+        'name': 'House A - Broiler Section',
+        'capacity': 5000,
+        'currentBirds': 1500,
+        'utilization': 30,
+        'batches': [
+          {
+            'id': '1',
+            'name': 'Spring Batch 2024',
+            'breed': 'Broiler',
+            'quantity': 500,
+            'startDate': '2024-03-15',
+            'age': 45,
+            'mortality': 12,
+          },
+          {
+            'id': '2',
+            'name': 'Summer Batch 2024',
+            'breed': 'Broiler',
+            'quantity': 600,
+            'startDate': '2024-05-10',
+            'age': 25,
+            'mortality': 5,
+          },
+        ]
       },
       {
         'id': '2',
-        'name': 'Layer Flock A',
-        'breed': 'Hybrid Layer',
-        'quantity': 300,
-        'startDate': '2024-01-10',
-        'age': 120,
-        'mortality': 8,
+        'name': 'House B - Layer Section',
+        'capacity': 3000,
+        'currentBirds': 1200,
+        'utilization': 40,
+        'batches': [
+          {
+            'id': '3',
+            'name': 'Layer Flock A',
+            'breed': 'Hybrid Layer',
+            'quantity': 300,
+            'startDate': '2024-01-10',
+            'age': 120,
+            'mortality': 8,
+          },
+          {
+            'id': '4',
+            'name': 'Layer Flock B',
+            'breed': 'Hybrid Layer',
+            'quantity': 900,
+            'startDate': '2024-02-15',
+            'age': 90,
+            'mortality': 15,
+          },
+        ]
       },
       {
         'id': '3',
-        'name': 'Free Range Batch',
-        'breed': 'Heritage',
-        'quantity': 150,
-        'startDate': '2024-04-01',
-        'age': 30,
-        'mortality': 3,
+        'name': 'House C - Free Range',
+        'capacity': 1000,
+        'currentBirds': 150,
+        'utilization': 15,
+        'batches': [
+          {
+            'id': '5',
+            'name': 'Free Range Batch',
+            'breed': 'Heritage',
+            'quantity': 150,
+            'startDate': '2024-04-01',
+            'age': 30,
+            'mortality': 3,
+          },
+        ]
       },
       {
         'id': '4',
-        'name': 'Summer Batch 2024',
-        'breed': 'Broiler',
-        'quantity': 600,
-        'startDate': '2024-05-10',
-        'age': 25,
-        'mortality': 5,
+        'name': 'House D - Empty',
+        'capacity': 4000,
+        'currentBirds': 0,
+        'utilization': 0,
+        'batches': []
       },
     ];
 
-    if (activeBatches.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.group,
-              size: 64,
-              color: Colors.grey.shade300,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No Active Flocks',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.grey.shade600,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Start your first batch to get started',
-              style: TextStyle(
-                color: Colors.grey.shade500,
-              ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () => context.push('/batches/add'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 14,
-                ),
-                elevation: 2,
-              ),
-              icon: const Icon(Icons.add, size: 20),
-              label: const Text('Add New Batch'),
-            ),
-          ],
-        ),
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: houses.length,
+      itemBuilder: (context, index) {
+        final house = houses[index];
+        return _HouseCard(
+          house: house,
+          isExpanded: _expandedHouses[house['id']] ?? false,
+          onExpand: () {
+            setState(() {
+              _expandedHouses[house['id'] as String] = !(_expandedHouses[house['id']] ?? false);
+            });
+          },
+        );
+      },
+    );
+  }
+
+  List<Map<String, dynamic>> _getAllBatches() {
+    final houses = [
+      {
+        'batches': [
+          {'id': '1', 'name': 'Spring Batch 2024', 'breed': 'Broiler', 'quantity': 500, 'age': 45},
+          {'id': '2', 'name': 'Summer Batch 2024', 'breed': 'Broiler', 'quantity': 600, 'age': 25},
+        ]
+      },
+      {
+        'batches': [
+          {'id': '3', 'name': 'Layer Flock A', 'breed': 'Hybrid Layer', 'quantity': 300, 'age': 120},
+          {'id': '4', 'name': 'Layer Flock B', 'breed': 'Hybrid Layer', 'quantity': 900, 'age': 90},
+        ]
+      },
+      {
+        'batches': [
+          {'id': '5', 'name': 'Free Range Batch', 'breed': 'Heritage', 'quantity': 150, 'age': 30},
+        ]
+      },
+    ];
+
+    final List<Map<String, dynamic>> allBatches = [];
+    for (var house in houses) {
+      allBatches.addAll(List<Map<String, dynamic>>.from(house['batches']!));
+    }
+    return allBatches;
+  }
+
+  Widget _buildAllBatchesTab(BuildContext context) {
+    final allBatches = _getAllBatches();
+
+    if (allBatches.isEmpty) {
+      return _buildEmptyState(
+        icon: Icons.group,
+        title: 'No Active Batches',
+        subtitle: 'Start your first batch to get started',
+        buttonText: 'Add New Batch',
+        onPressed: () => context.push('/batches/add'),
       );
     }
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: activeBatches.length,
+      itemCount: allBatches.length,
       itemBuilder: (context, index) {
-        final batch = activeBatches[index];
+        final batch = allBatches[index];
         return _ActiveBatchCard(batch: batch);
       },
     );
   }
 
-  Widget _buildArchivedBatches(BuildContext context) {
+  Widget _buildArchivedBatchesTab(BuildContext context) {
     final archivedBatches = [
       {
         'id': '1',
@@ -325,33 +435,12 @@ class _BatchesScreenState extends State<BatchesScreen> with SingleTickerProvider
     ];
 
     if (archivedBatches.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.archive,
-              size: 64,
-              color: Colors.grey.shade300,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No Archived Batches',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.grey.shade600,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Archived batches will appear here',
-              style: TextStyle(
-                color: Colors.grey.shade500,
-              ),
-            ),
-          ],
-        ),
+      return _buildEmptyState(
+        icon: Icons.archive,
+        title: 'No Archived Batches',
+        subtitle: 'Archived batches will appear here',
+        buttonText: null,
+        onPressed: null,
       );
     }
 
@@ -362,6 +451,118 @@ class _BatchesScreenState extends State<BatchesScreen> with SingleTickerProvider
         final flock = archivedBatches[index];
         return _ArchivedBatchCard(flock: flock);
       },
+    );
+  }
+
+  Widget _buildEmptyState({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required String? buttonText,
+    required VoidCallback? onPressed,
+  }) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            size: 64,
+            color: Colors.grey.shade300,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 18,
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            subtitle,
+            style: TextStyle(
+              color: Colors.grey.shade500,
+            ),
+          ),
+          if (buttonText != null && onPressed != null) ...[
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: onPressed,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 14,
+                ),
+                elevation: 2,
+              ),
+              icon: const Icon(Icons.add, size: 20),
+              label: Text(buttonText),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _showAddHouseDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Add New House'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              decoration: InputDecoration(
+                labelText: 'House Name',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              decoration: InputDecoration(
+                labelText: 'Capacity',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                suffixText: 'birds',
+              ),
+              keyboardType: TextInputType.number,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // TODO: Implement add house functionality
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('New house added successfully'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+            ),
+            child: const Text('Add House'),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -444,6 +645,271 @@ class _ActionCard extends StatelessWidget {
   }
 }
 
+class _HouseCard extends StatelessWidget {
+  final Map<String, dynamic> house;
+  final bool isExpanded;
+  final VoidCallback onExpand;
+
+  const _HouseCard({
+    required this.house,
+    required this.isExpanded,
+    required this.onExpand,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final batches = List<Map<String, dynamic>>.from(house['batches'] ?? []);
+    final capacity = house['capacity'] ?? 0;
+    final currentBirds = house['currentBirds'] ?? 0;
+    final utilization = house['utilization'] ?? 0;
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        children: [
+          // House Header
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: utilization > 0 ? Colors.green.shade50 : Colors.grey.shade100,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                utilization > 0 ? Icons.warehouse : Icons.warehouse_outlined,
+                color: utilization > 0 ? Colors.green : Colors.grey,
+              ),
+            ),
+            title: Text(
+              house['name'],
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 4),
+                Text(
+                  'Capacity: $capacity birds • Current: $currentBirds birds',
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                LinearProgressIndicator(
+                  value: utilization / 100,
+                  backgroundColor: Colors.grey.shade200,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    utilization > 80 ? Colors.red :
+                    utilization > 50 ? Colors.orange : Colors.green,
+                  ),
+                  minHeight: 6,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${utilization}% utilized',
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${batches.length} batch${batches.length == 1 ? '' : 'es'}',
+                    style: TextStyle(
+                      color: Colors.green.shade800,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(
+                    isExpanded ? Icons.expand_less : Icons.expand_more,
+                    color: Colors.grey.shade600,
+                  ),
+                  onPressed: onExpand,
+                ),
+              ],
+            ),
+          ),
+
+          // Expandable Content
+          if (isExpanded) ...[
+            Divider(color: Colors.grey.shade200, height: 1),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  if (batches.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.group_off,
+                            size: 48,
+                            color: Colors.grey.shade300,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'No batches in this house',
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          OutlinedButton.icon(
+                            onPressed: () => context.push('/batches/add'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.green,
+                              side: BorderSide(color: Colors.green.shade300),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            icon: const Icon(Icons.add, size: 18),
+                            label: const Text('Add Batch to this House'),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    ...batches.map((batch) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _MiniBatchCard(batch: batch),
+                    )).toList(),
+
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => context.push('/batches/add', extra: {'houseId': house['id']}),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.green,
+                            side: BorderSide(color: Colors.green.shade300),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          icon: const Icon(Icons.add, size: 18),
+                          label: const Text('Add Batch'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            // TODO: Navigate to house details
+                          },
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.blue,
+                            side: BorderSide(color: Colors.blue.shade300),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          icon: const Icon(Icons.visibility, size: 18),
+                          label: const Text('View Details'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _MiniBatchCard extends StatelessWidget {
+  final Map<String, dynamic> batch;
+
+  const _MiniBatchCard({required this.batch});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey.shade100),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.green.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.pets,
+                color: Colors.green.shade700,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    batch['name'],
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                  Text(
+                    '${batch['breed']} • ${batch['quantity']} birds • ${batch['age']} days',
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              icon: Icon(Icons.chevron_right, color: Colors.grey.shade400),
+              onPressed: () => context.push('/batches/details', extra: batch),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _ActiveBatchCard extends StatelessWidget {
   final Map<String, dynamic> batch;
 
@@ -507,7 +973,7 @@ class _ActiveBatchCard extends StatelessWidget {
                 ),
                 _BatchStat(
                   icon: Icons.flag,
-                  value: '${batch['mortality']}',
+                  value: '${batch['mortality'] ?? '0'}',
                   label: 'Mortality',
                   color: Colors.red,
                 ),
@@ -519,7 +985,7 @@ class _ActiveBatchCard extends StatelessWidget {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () {
-                      context.push('/batches/details');
+                      context.push('/batches/details', extra: batch);
                     },
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.green,
