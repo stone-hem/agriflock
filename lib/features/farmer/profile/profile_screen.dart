@@ -1,8 +1,8 @@
 import 'package:agriflock360/core/utils/secure_storage.dart';
+import 'package:agriflock360/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../main.dart';
 
 
 class ProfileScreen extends StatefulWidget {

@@ -1,4 +1,4 @@
-import 'package:agriflock360/features/batch/shared/stat_card.dart';
+import 'package:agriflock360/features/farmer/batch/shared/stat_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 

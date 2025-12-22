@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/constants/app_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
@@ -73,7 +74,7 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
           // Google Places Autocomplete TextField
           GooglePlaceAutoCompleteTextField(
             textEditingController: _controller,
-            googleAPIKey: "AIzaSyBYdGT-tRDRGuhcaKNaiqZyAACJe3wwwhU",
+            googleAPIKey: AppConstants.googleApiKey,
             inputDecoration: InputDecoration(
               hintText: 'Search for your location',
               labelText: 'Location',
@@ -206,13 +207,6 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  // Text(
-                  //   'Lat: ${_latitude!.toStringAsFixed(6)}, Lng: ${_longitude!.toStringAsFixed(6)}',
-                  //   style: const TextStyle(
-                  //     fontSize: 12,
-                  //     color: Colors.black54,
-                  //   ),
-                  // ),
                 ],
               ),
             ),

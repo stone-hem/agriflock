@@ -1,16 +1,42 @@
-import 'package:agriflock360/features/farmer_vet/models/vet_officer.dart';
-import 'package:agriflock360/features/farmer_vet/models/vet_order.dart';
-import 'package:agriflock360/features/farmer_vet/vet_details_screen.dart';
-import 'package:agriflock360/features/farmer_vet/vet_order_tracking_screen.dart';
-import 'package:agriflock360/features/farmer_vet/vet_screen.dart';
+import 'package:agriflock360/features/farmer/batch/add_batch_screen.dart';
+import 'package:agriflock360/features/farmer/batch/adopt_schedule_screen.dart';
+import 'package:agriflock360/features/farmer/batch/batch_details_screen.dart';
+import 'package:agriflock360/features/farmer/batch/log_feeding_screen.dart';
+import 'package:agriflock360/features/farmer/batch/quick_done_today_screen.dart';
+import 'package:agriflock360/features/farmer/batch/record_product_screen.dart';
+import 'package:agriflock360/features/farmer/batch/update_vaccination_status_screen.dart';
+import 'package:agriflock360/features/farmer/farm/add_farm_screen.dart';
+import 'package:agriflock360/features/farmer/farm/add_inventory_item_screen.dart';
+import 'package:agriflock360/features/farmer/farm/batch_screen.dart';
+import 'package:agriflock360/features/farmer/farm/farms_home_screen.dart';
+import 'package:agriflock360/features/farmer/farm/inventory_screen.dart';
+import 'package:agriflock360/features/farmer/more/notifications_screen.dart';
+import 'package:agriflock360/features/farmer/more/recent_activity_screen.dart';
+import 'package:agriflock360/features/farmer/payg/payg_dashboard.dart';
+import 'package:agriflock360/features/farmer/payg/payment_history_screen.dart';
+import 'package:agriflock360/features/farmer/payg/payment_screen.dart';
+import 'package:agriflock360/features/farmer/payg/view_invoice.dart';
+import 'package:agriflock360/features/farmer/profile/about_screen.dart';
+import 'package:agriflock360/features/farmer/profile/complete_profile_screen.dart';
+import 'package:agriflock360/features/farmer/profile/congratulations_screen.dart';
+import 'package:agriflock360/features/farmer/profile/help_support_screen.dart';
+import 'package:agriflock360/features/farmer/profile/settings_screen.dart';
+import 'package:agriflock360/features/farmer/profile/telemetry_data_screen.dart';
+import 'package:agriflock360/features/farmer/vet/models/vet_officer.dart';
+import 'package:agriflock360/features/farmer/vet/models/vet_order.dart';
+import 'package:agriflock360/features/farmer/vet/vet_details_screen.dart';
+import 'package:agriflock360/features/farmer/vet/vet_order_screen.dart';
+import 'package:agriflock360/features/farmer/vet/vet_order_tracking_screen.dart';
+import 'package:agriflock360/features/farmer/vet/vet_screen.dart';
+import 'package:agriflock360/features/vet/payments/vet_payments_history_screen.dart';
+import 'package:agriflock360/features/vet/payments/vet_service_payments_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../core/utils/secure_storage.dart';
-import '../core/utils/shared_prefs.dart';
+import 'core/utils/secure_storage.dart';
+import 'core/utils/shared_prefs.dart';
 
-
-import 'package:agriflock360/dashboard.dart';
-import 'package:agriflock360/device_screen.dart';
+import 'package:agriflock360/features/shared/dashboard.dart';
+import 'package:agriflock360/features/farmer/device_screen.dart';
 import 'package:agriflock360/features/auth/forgot_password_screen.dart';
 import 'package:agriflock360/features/auth/otp_screen.dart';
 import 'package:agriflock360/features/auth/quiz/onboarding_quiz_screen.dart';
@@ -18,31 +44,6 @@ import 'package:agriflock360/features/auth/reset_password_screen.dart';
 import 'package:agriflock360/features/auth/sign_in_screen.dart';
 import 'package:agriflock360/features/auth/sign_up_screen.dart';
 import 'package:agriflock360/features/auth/welcome_screen.dart';
-import 'package:agriflock360/features/batch/add_batch_screen.dart';
-import 'package:agriflock360/features/batch/adopt_schedule_screen.dart';
-import 'package:agriflock360/features/batch/batch_details_screen.dart';
-import 'package:agriflock360/features/batch/log_feeding_screen.dart';
-import 'package:agriflock360/features/batch/quick_done_today_screen.dart';
-import 'package:agriflock360/features/batch/record_product_screen.dart';
-import 'package:agriflock360/features/batch/update_vaccination_status_screen.dart';
-import 'package:agriflock360/features/farm/add_farm_screen.dart';
-import 'package:agriflock360/features/farm/add_inventory_item_screen.dart';
-import 'package:agriflock360/features/farm/batch_screen.dart';
-import 'package:agriflock360/features/farm/farms_home_screen.dart';
-import 'package:agriflock360/features/farm/inventory_screen.dart';
-import 'package:agriflock360/features/more/notifications_screen.dart';
-import 'package:agriflock360/features/more/recent_activity_screen.dart';
-import 'package:agriflock360/features/payg/payg_dashboard.dart';
-import 'package:agriflock360/features/payg/payment_history_screen.dart';
-import 'package:agriflock360/features/payg/payment_screen.dart';
-import 'package:agriflock360/features/payg/view_invoice.dart';
-import 'package:agriflock360/features/profile/about_screen.dart';
-import 'package:agriflock360/features/profile/complete_profile_screen.dart';
-import 'package:agriflock360/features/profile/congratulations_screen.dart';
-import 'package:agriflock360/features/profile/help_support_screen.dart';
-import 'package:agriflock360/features/profile/settings_screen.dart';
-import 'package:agriflock360/features/profile/telemetry_data_screen.dart';
-import 'package:agriflock360/features/farmer_vet/vet_order_screen.dart';
 
 class AppRoutes {
   // Route paths
@@ -111,7 +112,7 @@ class AppRoutes {
     activity,
     notifications,
     vetOrderDetails,
-    completeProfile
+    completeProfile,
   ];
 
   // Define auth-related routes
@@ -140,14 +141,19 @@ class AppRoutes {
       initialLocation: _getInitialLocation(),
       redirect: (context, state) async {
         final isLoggedIn = await secureStorage.isLoggedIn();
-        final hasCompletedOnboarding = SharedPrefs.getBool('hasCompletedOnboarding') ?? false;
+        final hasCompletedOnboarding =
+            SharedPrefs.getBool('hasCompletedOnboarding') ?? false;
         final hasSeenWelcome = SharedPrefs.getBool('hasSeenWelcome') ?? false;
         final currentPath = state.matchedLocation;
 
         // Check route types
-        final isProtectedRoute = _protectedRoutes.any((route) => currentPath.startsWith(route));
+        final isProtectedRoute = _protectedRoutes.any(
+          (route) => currentPath.startsWith(route),
+        );
         final isAuthRoute = _authRoutes.contains(currentPath);
-        final isOnboardingRoute = _onboardingRoutes.any((route) => currentPath.startsWith(route));
+        final isOnboardingRoute = _onboardingRoutes.any(
+          (route) => currentPath.startsWith(route),
+        );
 
         // First time user - show welcome screen
         if (!hasSeenWelcome && currentPath != welcome) {
@@ -159,11 +165,12 @@ class AppRoutes {
           return login;
         }
 
-
-
         // If logged in and trying to access auth pages
         // redirect to dashboard
-        if (isLoggedIn  && (currentPath == login || currentPath == signup || currentPath == welcome)) {
+        if (isLoggedIn &&
+            (currentPath == login ||
+                currentPath == signup ||
+                currentPath == welcome)) {
           return dashboard;
         }
 
@@ -181,10 +188,7 @@ class AppRoutes {
           path: welcome,
           builder: (context, state) => const OnboardingScreen(),
         ),
-        GoRoute(
-          path: login,
-          builder: (context, state) => const LoginScreen(),
-        ),
+        GoRoute(path: login, builder: (context, state) => const LoginScreen()),
         GoRoute(
           path: signup,
           builder: (context, state) => const SignupScreen(),
@@ -200,8 +204,8 @@ class AppRoutes {
               );
             }
             final decodedToken = Uri.decodeComponent(temptToken);
-            return  OnboardingQuestionsScreen(token:decodedToken);
-            },
+            return OnboardingQuestionsScreen(token: decodedToken);
+          },
         ),
         GoRoute(
           path: otpVerifyEmailOrPhone,
@@ -223,7 +227,7 @@ class AppRoutes {
           builder: (context, state) => const ForgotPasswordScreen(),
         ),
         GoRoute(
-          path:resetPassword,
+          path: resetPassword,
           builder: (context, state) {
             final email = state.uri.queryParameters['email'];
             final token = state.uri.queryParameters['token'];
@@ -290,10 +294,7 @@ class AppRoutes {
             ),
           ],
         ),
-        GoRoute(
-          path: payg,
-          builder: (context, state) => const PAYGDashboard(),
-        ),
+        GoRoute(path: payg, builder: (context, state) => const PAYGDashboard()),
         GoRoute(
           path: paygPayment,
           builder: (context, state) => const PAYGPaymentScreen(),
@@ -314,10 +315,7 @@ class AppRoutes {
           path: help,
           builder: (context, state) => const HelpSupportScreen(),
         ),
-        GoRoute(
-          path: about,
-          builder: (context, state) => const AboutScreen(),
-        ),
+        GoRoute(path: about, builder: (context, state) => const AboutScreen()),
         GoRoute(
           path: telemetry,
           builder: (context, state) => const TelemetryDataScreen(),
@@ -336,7 +334,8 @@ class AppRoutes {
         ),
         GoRoute(
           path: farmsInventoryAdd,
-          builder: (context, state) => const AddInventoryItemScreen(farmId: "233"),
+          builder: (context, state) =>
+              const AddInventoryItemScreen(farmId: "233"),
         ),
         GoRoute(
           path: activity,
@@ -358,7 +357,6 @@ class AppRoutes {
           path: '/vets',
           builder: (context, state) => const MainVetScreen(),
         ),
-
 
         GoRoute(
           path: '/vet-order-tracking',
@@ -382,6 +380,32 @@ class AppRoutes {
             final vet = state.extra as VetOfficer;
             return VetOrderScreen(vet: vet);
           },
+        ),
+
+        //vet
+        GoRoute(
+          path: '/vet/payments/history',
+          builder: (context, state) => const VetPaymentsHistoryScreen(),
+        ),
+        GoRoute(
+          path: '/vet/payment/service',
+          builder: (context, state) => const VetServicePaymentScreen(
+            serviceDetails: {
+              'farmerName': 'John Peterson',
+              'farmName': 'Green Valley Farm',
+              'serviceType': 'Regular Checkup',
+              'animals': '15 Dairy Cows',
+              'serviceDate': 'Dec 15, 2023',
+              'invoiceNumber': 'INV-2023-001',
+              'totalAmount': 4500.00,
+              'paidAmount': 0.00,
+              'feeBreakdown': [
+                {'type': 'Consultation Fee', 'amount': 2000.00},
+                {'type': 'Vaccination Fee', 'amount': 1500.00},
+                {'type': 'Mileage Fee', 'amount': 1000.00},
+              ],
+            },
+          ),
         ),
       ],
     );

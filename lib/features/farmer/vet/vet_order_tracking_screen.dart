@@ -1,6 +1,6 @@
+import 'package:agriflock360/features/farmer/vet/models/vet_order.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:agriflock360/features/farmer_vet/models/vet_order.dart';
 
 class VetOrderTrackingScreen extends StatefulWidget {
   final VetOrder order;

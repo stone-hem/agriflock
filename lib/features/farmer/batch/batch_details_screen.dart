@@ -1,7 +1,7 @@
-import 'package:agriflock360/features/batch/tabs/batch_feed_tab.dart';
-import 'package:agriflock360/features/batch/tabs/batch_overview.dart';
-import 'package:agriflock360/features/batch/tabs/batch_products_tab.dart';
-import 'package:agriflock360/features/batch/tabs/batch_vaccinations_tab.dart';
+import 'package:agriflock360/features/farmer/batch/tabs/batch_feed_tab.dart';
+import 'package:agriflock360/features/farmer/batch/tabs/batch_overview.dart';
+import 'package:agriflock360/features/farmer/batch/tabs/batch_products_tab.dart';
+import 'package:agriflock360/features/farmer/batch/tabs/batch_vaccinations_tab.dart';
 import 'package:flutter/material.dart';
 
 class BatchDetailsScreen extends StatefulWidget {

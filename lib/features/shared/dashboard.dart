@@ -1,14 +1,14 @@
 import 'package:agriflock360/core/utils/secure_storage.dart';
-import 'package:agriflock360/features/farm/farms_home_screen.dart';
-import 'package:agriflock360/features/profile/profile_screen.dart';
+import 'package:agriflock360/features/farmer/farm/farms_home_screen.dart';
+import 'package:agriflock360/features/farmer/profile/profile_screen.dart';
+import 'package:agriflock360/features/farmer/vet/vet_screen.dart';
 import 'package:agriflock360/features/shared/nav_destination_item.dart';
 import 'package:agriflock360/features/vet/vet_home_screen.dart';
 import 'package:agriflock360/features/vet/vet_payments_screen.dart';
 import 'package:agriflock360/features/vet/vet_profile_screen.dart';
 import 'package:agriflock360/features/vet/vet_schedules_screen.dart';
-import 'package:agriflock360/home_screen.dart';
-import 'package:agriflock360/quotation_screen.dart';
-import 'package:agriflock360/features/farmer_vet/vet_screen.dart';
+import 'package:agriflock360/features/farmer/home_screen.dart';
+import 'package:agriflock360/features/farmer/quotation/quotation_screen.dart';
 import 'package:flutter/material.dart';
 
 class MainDashboard extends StatefulWidget {

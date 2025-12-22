@@ -2,7 +2,7 @@ import 'package:agriflock360/core/network/api_client.dart';
 import 'package:agriflock360/core/services/auth_service.dart';
 import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:agriflock360/core/utils/shared_prefs.dart';
-import 'package:agriflock360/routes/app_routes.dart';
+import 'package:agriflock360/app_routes.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 

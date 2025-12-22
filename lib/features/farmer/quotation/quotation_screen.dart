@@ -1,5 +1,5 @@
-import 'package:agriflock360/features/quotation/poultry_house_quotation.dart';
-import 'package:agriflock360/features/quotation/production_estimate.dart';
+import 'package:agriflock360/features/farmer/quotation/poultry_house_quotation.dart';
+import 'package:agriflock360/features/farmer/quotation/production_estimate.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 

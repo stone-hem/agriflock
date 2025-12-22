@@ -1,6 +1,4 @@
-
-// Supporting data models
-import 'package:agriflock360/features/farmer_vet/models/vet_officer.dart';
+import 'package:agriflock360/features/farmer/vet/models/vet_officer.dart';
 import 'package:flutter/material.dart';
 
 class FarmHouse {

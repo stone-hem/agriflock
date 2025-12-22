@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 // Add the import for ApiClient
-import '../../main.dart';
+import 'package:agriflock360/main.dart';
 
 class AddFarmScreen extends StatefulWidget {
   const AddFarmScreen({super.key});
