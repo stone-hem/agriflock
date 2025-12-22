@@ -20,9 +20,11 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _identifierController = TextEditingController(text: 'farmer@agriflock360.org');
+  final _identifierController = TextEditingController(
+    text: 'farmer@agriflock360.org',
+  );
   final _passwordController = TextEditingController(text: 'Password123!');
-  // final _authService = AuthService();
+  final _authService = AuthService();
   bool _isLoading = false;
   bool _obscurePassword = true;
 
@@ -71,10 +73,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Center(
                 child: Text(
                   'Sign in to continue to your farm dashboard',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -149,9 +148,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             child: const Text(
                               'Forgot Password?',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: TextStyle(fontWeight: FontWeight.w600),
                             ),
                           ),
                         ),
@@ -165,10 +162,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             onPressed: _isLoading
                                 ? null
                                 : () {
-                              if (_formKey.currentState!.validate()) {
-                                _login();
-                              }
-                            },
+                                    if (_formKey.currentState!.validate()) {
+                                      _login();
+                                    }
+                                  },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.green,
                               foregroundColor: Colors.white,
@@ -176,27 +173,28 @@ class _LoginScreenState extends State<LoginScreen> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              disabledBackgroundColor:
-                              Colors.green.withOpacity(0.5),
+                              disabledBackgroundColor: Colors.green.withOpacity(
+                                0.5,
+                              ),
                             ),
                             child: _isLoading
                                 ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                AlwaysStoppedAnimation<Color>(
-                                    Colors.white),
-                              ),
-                            )
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                    ),
+                                  )
                                 : const Text(
-                              'Sign In',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                                    'Sign In',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                           ),
                         ),
                       ],
@@ -209,9 +207,7 @@ class _LoginScreenState extends State<LoginScreen> {
               // Divider
               Row(
                 children: [
-                  Expanded(
-                    child: Divider(color: Colors.grey.shade300),
-                  ),
+                  Expanded(child: Divider(color: Colors.grey.shade300)),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
@@ -222,9 +218,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
-                  Expanded(
-                    child: Divider(color: Colors.grey.shade300),
-                  ),
+                  Expanded(child: Divider(color: Colors.grey.shade300)),
                 ],
               ),
               const SizedBox(height: 24),
@@ -253,7 +247,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               decoration: const BoxDecoration(
                                 image: DecorationImage(
                                   image: NetworkImage(
-                                      'https://www.google.com/favicon.ico'),
+                                    'https://www.google.com/favicon.ico',
+                                  ),
                                   fit: BoxFit.contain,
                                 ),
                               ),
@@ -287,8 +282,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.apple,
-                                size: 20, color: Colors.grey.shade800),
+                            Icon(
+                              Icons.apple,
+                              size: 20,
+                              color: Colors.grey.shade800,
+                            ),
                             const SizedBox(width: 8),
                             const Text(
                               'Apple',
@@ -312,10 +310,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   Text(
                     "Don't have an account? ",
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 15,
-                    ),
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 15),
                   ),
                   TextButton(
                     onPressed: _isLoading ? null : () => context.go('/signup'),
@@ -357,12 +352,8 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final response = await apiClient.post(
         '/auth/login',
-        body: {
-          'email': email,
-          'password': password,
-        },
+        body: {'email': email, 'password': password},
       );
-
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -373,7 +364,6 @@ class _LoginScreenState extends State<LoginScreen> {
           token: loginResponse.accessToken,
           refreshToken: loginResponse.refreshToken,
           userData: loginResponse.user.toJson(),
-          // If your API returns expires_in in seconds
           expiresInSeconds: loginResponse.expiresIn ?? 3600,
         );
 
@@ -382,6 +372,32 @@ class _LoginScreenState extends State<LoginScreen> {
           context.go(AppRoutes.dashboard);
         }
       } else {
+        // Check for specific error cases
+        final errorData = jsonDecode(response.body);
+        final message = errorData['message'];
+
+        if (message is Map<String, dynamic>) {
+          final status = message['status'] as String?;
+          final tempToken = message['tempToken'] as String?;
+
+          if (status == 'user_onboarding') {
+            // Handle user onboarding - redirect to onboarding quiz
+            if (mounted) {
+              context.push(
+                '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(tempToken ?? '')}',
+              );
+            }
+            return;
+          } else if (status == 'account_inactive') {
+            // Handle inactive account - redirect to email verification
+            if (mounted) {
+              context.push('${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(email)}');
+            }
+            return;
+          }
+        }
+
+        // Handle other errors with the generic error handler
         ApiErrorHandler.handle(response);
       }
     } catch (e) {
@@ -397,30 +413,26 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      // final response = await _authService.signInWithGoogle();
-      //
-      // if (response['success'] == true) {
-      //   final userData = response['data'];
-      //   final user = userData['user'];
-      //
-      //   // TODO: Store token securely (use flutter_secure_storage)
-      //   // await secureStorage.write(key: 'access_token', value: userData['access_token']);
-      //
-      //   if (mounted) {
-      //     ScaffoldMessenger.of(context).showSnackBar(
-      //       SnackBar(
-      //         content: Text('Welcome back ${user['full_name']}!'),
-      //         backgroundColor: Colors.green,
-      //       ),
-      //     );
-      //
-      //     context.go('/dashboard');
-      //   }
+      final response = await _authService.signInWithGoogle();
 
+      if (response['success'] == true) {
+        final userData = response['data'];
+        final user = userData['user'];
 
-      // }
-      context.go('/dashboard');
+        // TODO: Store token securely (use flutter_secure_storage)
+        // await secureStorage.write(key: 'access_token', value: userData['access_token']);
 
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Welcome back ${user['full_name']}!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          context.go('/dashboard');
+        }
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -445,28 +457,26 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      // final response = await _authService.signInWithApple();
-      //
-      // if (response['success'] == true) {
-      //   final userData = response['data'];
-      //   final user = userData['user'];
-      //
-      //   // TODO: Store token securely
-      //   // await secureStorage.write(key: 'access_token', value: userData['access_token']);
-      //
-      //   if (mounted) {
-      //     ScaffoldMessenger.of(context).showSnackBar(
-      //       SnackBar(
-      //         content: Text('Welcome back ${user['full_name']}!'),
-      //         backgroundColor: Colors.green,
-      //       ),
-      //     );
-      //
-      //     context.go('/dashboard');
-      //   }
-      // }
-      context.go('/dashboard');
+      final response = await _authService.signInWithApple();
 
+      if (response['success'] == true) {
+        final userData = response['data'];
+        final user = userData['user'];
+
+        // TODO: Store token securely
+        // await secureStorage.write(key: 'access_token', value: userData['access_token']);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Welcome back ${user['full_name']}!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          context.go('/dashboard');
+        }
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

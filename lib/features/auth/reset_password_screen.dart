@@ -1,8 +1,20 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:agriflock360/core/utils/api_error_handler.dart';
+import 'package:agriflock360/core/utils/toast_util.dart';
+
+import '../../main.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
-  const ResetPasswordScreen({super.key});
+  final String? email;
+  final String? token;
+
+  const ResetPasswordScreen({
+    super.key,
+    this.email,
+    this.token,
+  });
 
   @override
   State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
@@ -16,6 +28,55 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   bool _obscureNewPassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
+  late String _email;
+  late String _token;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Try to get email and token from constructor
+    if (widget.email != null && widget.email!.isNotEmpty) {
+      _email = widget.email!;
+    } else {
+      _email = '';
+    }
+
+    if (widget.token != null && widget.token!.isNotEmpty) {
+      _token = widget.token!;
+    } else {
+      _token = '';
+    }
+
+    // If not provided via constructor, try to get from route parameters
+    if (_email.isEmpty || _token.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _extractFromRoute();
+      });
+    }
+  }
+
+  void _extractFromRoute() {
+    try {
+      final uri = Uri.parse(GoRouterState.of(context).uri.toString());
+      final emailParam = uri.queryParameters['email'];
+      final tokenParam = uri.queryParameters['token'];
+
+      if (emailParam != null && _email.isEmpty) {
+        setState(() {
+          _email = Uri.decodeComponent(emailParam);
+        });
+      }
+
+      if (tokenParam != null && _token.isEmpty) {
+        setState(() {
+          _token = Uri.decodeComponent(tokenParam);
+        });
+      }
+    } catch (e) {
+      print('Error extracting route parameters: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,26 +88,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Back Button
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => context.go('/forgot-password'),
-                  color: Colors.grey.shade700,
-                ),
-              ),
-              const SizedBox(height: 40),
               Center(
                 child: Image.asset(
                   'assets/logos/Logo_0725.png',
@@ -86,7 +127,38 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   textAlign: TextAlign.center,
                 ),
               ),
-              const SizedBox(height: 40),
+
+              // Show email if available
+              if (_email.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.green.shade100),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.email_outlined, color: Colors.green.shade700, size: 16),
+                        const SizedBox(width: 8),
+                        Text(
+                          _email,
+                          style: TextStyle(
+                            color: Colors.green.shade700,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 24),
 
               // Form Card
               Card(
@@ -106,7 +178,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                           controller: _otpController,
                           decoration: InputDecoration(
                             labelText: 'OTP Code',
-                            hintText: 'Enter OTP code',
+                            hintText: 'Enter 5-digit OTP code',
                             prefixIcon: Container(
                               margin: const EdgeInsets.only(right: 12),
                               decoration: BoxDecoration(
@@ -134,17 +206,22 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                               ),
                             ),
                           ),
+                          keyboardType: TextInputType.number,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Please enter OTP code';
                             }
-                            if (value.isEmpty || value.length !=5) {
-                              return 'OTP code must be 5 characters';
+                            if (value.length != 5) {
+                              return 'OTP code must be 5 digits';
+                            }
+                            if (!RegExp(r'^\d+$').hasMatch(value)) {
+                              return 'OTP must contain only numbers';
                             }
                             return null;
                           },
                         ),
                         const SizedBox(height: 20),
+
                         // New Password Field
                         TextFormField(
                           controller: _newPasswordController,
@@ -199,6 +276,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                             if (value.length < 6) {
                               return 'Password must be at least 6 characters';
                             }
+                            // Add more validation if needed
                             return null;
                           },
                         ),
@@ -315,36 +393,61 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   }
 
   void _resetPassword() async {
+    // Validate that we have token and email
+    if (_token.isEmpty) {
+      ToastUtil.showError('Reset token is missing. Please request a new reset link.');
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final response = await apiClient.post(
+        '/auth/reset-password',
+        body: {
+          'token': _token,
+          'password': _newPasswordController.text,
+          'otp': _otpController.text, // Add OTP if your API needs it
+        },
+      );
 
-    setState(() {
-      _isLoading = false;
-    });
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
 
-    // Show success message and navigate to login
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Password reset successfully'),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+        if (data['success'] == true) {
+          ToastUtil.showSuccess(data['message'] ?? 'Password reset successfully!');
 
-    // Navigate to login after success
-    Future.delayed(const Duration(seconds: 2), () {
-      context.go('/login');
-    });
+          // Navigate to login after success
+          Future.delayed(const Duration(seconds: 1), () {
+            if (mounted) {
+              context.go('/login');
+            }
+          });
+        } else {
+          final errorMessage = data['message'] ?? 'Failed to reset password';
+          ToastUtil.showError(errorMessage);
+        }
+      } else {
+        ApiErrorHandler.handle(response);
+      }
+    } catch (e) {
+      ApiErrorHandler.handle(e);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
   void dispose() {
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
+    _otpController.dispose();
     super.dispose();
   }
 }

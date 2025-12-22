@@ -50,7 +50,7 @@ class AppRoutes {
   static const String login = '/login';
   static const String signup = '/signup';
   static const String onboardingQuiz = '/onboarding-quiz';
-  static const String otpVerify = '/otp-verify';
+  static const String otpVerifyEmailOrPhone = '/verify-email-or-phone';
   static const String forgotPassword = '/forgot-password';
   static const String resetPassword = '/reset-password';
   static const String createFarm = '/create-farm';
@@ -120,7 +120,7 @@ class AppRoutes {
     login,
     signup,
     onboardingQuiz,
-    otpVerify,
+    otpVerifyEmailOrPhone,
     forgotPassword,
     resetPassword,
   ];
@@ -159,14 +159,11 @@ class AppRoutes {
           return login;
         }
 
-        // If logged in but hasn't completed onboarding, redirect to onboarding flow
-        if (isLoggedIn && !hasCompletedOnboarding && !isOnboardingRoute && !isAuthRoute) {
-          return onboardingQuiz;
-        }
 
-        // If logged in, completed onboarding, and trying to access auth pages
+
+        // If logged in and trying to access auth pages
         // redirect to dashboard
-        if (isLoggedIn && hasCompletedOnboarding && (currentPath == login || currentPath == signup || currentPath == welcome)) {
+        if (isLoggedIn  && (currentPath == login || currentPath == signup || currentPath == welcome)) {
           return dashboard;
         }
 
@@ -194,19 +191,48 @@ class AppRoutes {
         ),
         GoRoute(
           path: onboardingQuiz,
-          builder: (context, state) => const OnboardingQuestionsScreen(),
+          builder: (context, state) {
+            final temptToken = state.uri.queryParameters['tempToken'];
+
+            if (temptToken == null || temptToken.isEmpty) {
+              return const Scaffold(
+                body: Center(child: Text('Temp Token parameter is missing')),
+              );
+            }
+            final decodedToken = Uri.decodeComponent(temptToken);
+            return  OnboardingQuestionsScreen(token:decodedToken);
+            },
         ),
         GoRoute(
-          path: otpVerify,
-          builder: (context, state) => const OTPVerifyScreen(),
+          path: otpVerifyEmailOrPhone,
+          builder: (context, state) {
+            final email = state.uri.queryParameters['email'];
+
+            if (email == null || email.isEmpty) {
+              return const Scaffold(
+                body: Center(child: Text('Email parameter is missing')),
+              );
+            }
+            final decodedEmail = Uri.decodeComponent(email);
+
+            return OTPVerifyScreen(email: decodedEmail);
+          },
         ),
         GoRoute(
           path: forgotPassword,
           builder: (context, state) => const ForgotPasswordScreen(),
         ),
         GoRoute(
-          path: resetPassword,
-          builder: (context, state) => const ResetPasswordScreen(),
+          path:resetPassword,
+          builder: (context, state) {
+            final email = state.uri.queryParameters['email'];
+            final token = state.uri.queryParameters['token'];
+
+            return ResetPasswordScreen(
+              email: email != null ? Uri.decodeComponent(email) : null,
+              token: token != null ? Uri.decodeComponent(token) : null,
+            );
+          },
         ),
         GoRoute(
           path: deviceSetup,

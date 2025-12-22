@@ -56,7 +56,7 @@ class ApiClient {
         return false;
       }
 
-      final uri = Uri.parse('${AppConstants.baseUrl}/auth/refresh'); // Adjust endpoint
+      final uri = Uri.parse('${AppConstants.baseUrl}/auth/refresh');
       final response = await http.post(
         uri,
         headers: {
@@ -327,6 +327,79 @@ class ApiClient {
           if (fields != null) {
             retryRequest.fields.addAll(fields);
           }
+          return await retryRequest.send();
+        } else {
+          await _handleUnauthorized();
+        }
+      }
+
+      return streamedResponse;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // NEW: General multipart POST request with multiple files support
+  Future<http.StreamedResponse> postMultipart(
+      String endpoint, {
+        Map<String, String>? fields,
+        Map<String, String>? headers,
+        List<http.MultipartFile>? files,
+      }) async {
+    try {
+      await _ensureValidToken();
+
+      final uri = Uri.parse('${AppConstants.baseUrl}$endpoint');
+      final request = http.MultipartRequest('POST', uri);
+
+      // Get auth headers (remove Content-Type as it will be set automatically for multipart)
+      final token = await storage.getToken();
+      final authHeaders = {
+        'Accept': 'application/json',
+        ...?headers,
+      };
+
+      if (token != null) {
+        authHeaders['Authorization'] = 'Bearer $token';
+      }
+
+      request.headers.addAll(authHeaders);
+
+      // Add fields
+      if (fields != null) {
+        request.fields.addAll(fields);
+      }
+
+      // Add files
+      if (files != null) {
+        request.files.addAll(files);
+      }
+
+      final streamedResponse = await request.send();
+
+      if (streamedResponse.statusCode == 401) {
+        final refreshed = await _refreshToken();
+
+        if (refreshed) {
+          // Retry with new token
+          final retryRequest = http.MultipartRequest('POST', uri);
+          final newToken = await storage.getToken();
+          final retryHeaders = {
+            'Accept': 'application/json',
+            ...?headers,
+          };
+          if (newToken != null) {
+            retryHeaders['Authorization'] = 'Bearer $newToken';
+          }
+          retryRequest.headers.addAll(retryHeaders);
+
+          if (fields != null) {
+            retryRequest.fields.addAll(fields);
+          }
+          if (files != null) {
+            retryRequest.files.addAll(files);
+          }
+
           return await retryRequest.send();
         } else {
           await _handleUnauthorized();

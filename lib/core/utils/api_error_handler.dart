@@ -18,7 +18,6 @@ class ApiErrorHandler {
         LogUtil.error(error.toString());
       }
 
-
       // If it's an HTTP response
       if (error is http.Response) {
         final statusCode = error.statusCode;
@@ -38,7 +37,25 @@ class ApiErrorHandler {
             ToastUtil.showError("Validation error occurred");
           }
         } else if (statusCode == 401) {
-          ToastUtil.showError(body['message'] ?? "Unauthorized. Please login.");
+          // Handle nested 401 error format
+          if (body['message'] != null) {
+            // Check if message is a nested object (as in your error format)
+            if (body['message'] is Map<String, dynamic>) {
+              final nestedMessage = body['message'] as Map<String, dynamic>;
+              if (nestedMessage['message'] != null) {
+                ToastUtil.showError(nestedMessage['message'].toString());
+              } else if (nestedMessage['error'] != null) {
+                ToastUtil.showError(nestedMessage['error'].toString());
+              } else {
+                ToastUtil.showError("Unauthorized. Please login.");
+              }
+            } else {
+              // Message is a string
+              ToastUtil.showError(body['message'].toString());
+            }
+          } else {
+            ToastUtil.showError("Unauthorized. Please login.");
+          }
         } else if (statusCode == 404) {
           ToastUtil.showError(body['message'] ?? "Resource not found");
         } else if (statusCode >= 500) {

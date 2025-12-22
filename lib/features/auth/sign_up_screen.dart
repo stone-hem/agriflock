@@ -1,9 +1,15 @@
+import 'dart:convert';
+
 import 'package:agriflock360/core/services/auth_service.dart';
+import 'package:agriflock360/core/utils/api_error_handler.dart';
+import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/features/auth/shared/auth_text_field.dart';
 import 'package:agriflock360/features/auth/shared/country_phone_input.dart';
 import 'package:agriflock360/features/auth/shared/country_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../main.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -18,7 +24,6 @@ class _SignupScreenState extends State<SignupScreen> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
-  // final _authService = AuthService();
 
   Country? _selectedCountry;
   List<Country> _countries = [];
@@ -79,6 +84,8 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
               ),
               const SizedBox(height: 40),
+
+              // Logo
               Center(
                 child: Image.asset(
                   'assets/logos/Logo_0725.png',
@@ -97,6 +104,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   },
                 ),
               ),
+
               // Header
               Center(
                 child: Text(
@@ -156,7 +164,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             if (value == null || value.isEmpty) {
                               return 'Please enter your email';
                             }
-                            if (!value.contains('@')) {
+                            if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
                               return 'Please enter a valid email';
                             }
                             return null;
@@ -172,7 +180,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           hintText: 'Enter your phone number',
                           initialCountry: _countries.firstWhere(
                                 (c) => c.code == 'US',
-                            orElse: () => _countries.first,
+                            orElse: () => _countries.isNotEmpty ? _countries.first : Country(code: 'US', name: 'United States', dialCode: '+1', emoji: '', unicode: '', image: ''),
                           ),
                           onCountryChanged: (country) {
                             setState(() {
@@ -206,9 +214,12 @@ class _SignupScreenState extends State<SignupScreen> {
                             if (value == null || value.isEmpty) {
                               return 'Please enter a password';
                             }
-                            if (value.length < 6) {
-                              return 'Password must be at least 6 characters';
+                            if (value.length < 8) {
+                              return 'Password must be at least 8 characters';
                             }
+                            // if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)').hasMatch(value)) {
+                            //   return 'Password must include uppercase, lowercase, and numbers';
+                            // }
                             return null;
                           },
                         ),
@@ -229,6 +240,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                   onChanged: (bool? value) {
                                     setState(() {
                                       _acceptedTerms = value ?? false;
+                                      _showTermsError = false;
                                     });
                                   },
                                   activeColor: Colors.green,
@@ -322,15 +334,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
                               if (_formKey.currentState!.validate()) {
                                 if (!_acceptedTerms) {
-                                  ScaffoldMessenger.of(context)
-                                      .showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Please accept the terms and conditions',
-                                      ),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
+                                  ToastUtil.showError('Please accept the terms and conditions');
                                   return;
                                 }
                                 _signUp();
@@ -399,7 +403,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     child: SizedBox(
                       height: 56,
                       child: OutlinedButton(
-                        onPressed: _isLoading ? null : _signInWithGoogle,
+                        onPressed: _isLoading ? null : _signUpWithGoogle,
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.grey.shade700,
                           side: BorderSide(color: Colors.grey.shade300),
@@ -440,7 +444,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     child: SizedBox(
                       height: 56,
                       child: OutlinedButton(
-                        onPressed: _isLoading ? null : _signInWithApple,
+                        onPressed: _isLoading ? null : _signUpWithApple,
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.grey.shade700,
                           side: BorderSide(color: Colors.grey.shade300),
@@ -504,112 +508,131 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   void _signUp() async {
-    setState(() {
-      _isLoading = true;
-    });
+    final fullName = _fullNameController.text.trim();
+    final email = _emailController.text.trim();
+    final phone = _phoneController.text.trim();
+    final password = _passwordController.text;
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
+    // Validate required fields
+    if (fullName.isEmpty) {
+      ToastUtil.showError("Please enter your full name");
+      return;
+    }
+    if (email.isEmpty) {
+      ToastUtil.showError("Please enter your email");
+      return;
+    }
+    if (phone.isEmpty) {
+      ToastUtil.showError("Please enter your phone number");
+      return;
+    }
+    if (password.isEmpty) {
+      ToastUtil.showError("Please enter your password");
+      return;
+    }
+    if (!_acceptedTerms) {
+      ToastUtil.showError("Please accept the terms and conditions");
+      return;
+    }
 
-    setState(() {
-      _isLoading = false;
-    });
-
-    // Navigate to OTP verification
-    context.go('/otp-verify');
-  }
-
-  void _signInWithGoogle() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      // final response = await _authService.signInWithGoogle();
-      //
-      // if (response['success'] == true) {
-      //   final userData = response['data'];
-      //   final user = userData['user'];
-      //
-      //   // TODO: Store token securely (use flutter_secure_storage)
-      //   // await secureStorage.write(key: 'access_token', value: userData['access_token']);
-      //
-      //   if (mounted) {
-      //     ScaffoldMessenger.of(context).showSnackBar(
-      //       SnackBar(
-      //         content: Text('Welcome ${user['full_name']}!'),
-      //         backgroundColor: Colors.green,
-      //       ),
-      //     );
-      //
-      //     // Navigate to dashboard or onboarding
-      //     context.go('/onboarding-quiz');
-      //   }
-      // }
+      // Prepare the complete phone number with country code
+      final countryCode = _selectedCountry?.dialCode ?? '+1';
+      final completePhoneNumber = phone.startsWith('+') ? phone : '$countryCode$phone';
 
-      context.go('/onboarding-quiz');
+      final response = await apiClient.post(
+        '/auth/register',
+        body: {
+          'name': fullName,
+          'email': email,
+          'password': password,
+          // 'country_code': _selectedCountry?.code ?? 'US',
+          'phone_number': completePhoneNumber,
+          'agreed_to_terms': true
+        },
+      );
 
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+
+        // Check if registration was successful
+        if (data['success'] == true || response.statusCode == 201) {
+
+          if (mounted) {
+            ToastUtil.showSuccess("Account created successfully! Please verify your account.");
+
+            // Navigate to verification screen
+            // Pass email as query parameter for verification
+            context.go('/verify-email-or-phone?email=${Uri.encodeComponent(email)}');
+          }
+        } else {
+          final errorMessage = data['message'] ?? 'Registration failed';
+          ToastUtil.showError(errorMessage);
+        }
+      } else {
+        ApiErrorHandler.handle(response);
+      }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Google sign in failed: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      ApiErrorHandler.handle(e);
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _signInWithApple() async {
-    setState(() {
-      _isLoading = true;
-    });
+  void _signUpWithGoogle() async {
+    setState(() => _isLoading = true);
 
     try {
-      // final response = await _authService.signInWithApple();
-      //
-      // if (response['success'] == true) {
-      //   final userData = response['data'];
-      //   final user = userData['user'];
-      //
-      //   // TODO: Store token securely
-      //   // await secureStorage.write(key: 'access_token', value: userData['access_token']);
-      //
-      //   if (mounted) {
-      //     ScaffoldMessenger.of(context).showSnackBar(
-      //       SnackBar(
-      //         content: Text('Welcome ${user['full_name']}!'),
-      //         backgroundColor: Colors.green,
-      //       ),
-      //     );
-      //
-      //     context.go('/onboarding-quiz');
-      //   }
-      // }
-      context.go('/onboarding-quiz');
+      final response = await AuthService().signInWithGoogle();
 
+      if (response['success'] == true) {
+        final userData = response['data'];
+
+        // For social signup, check if user needs to complete profile
+        // or if they're already registered
+        if (userData['is_new_user'] == true) {
+          // New social user - redirect to complete profile or verification
+          context.go('/complete-profile');
+        } else {
+          // Existing user - log them in
+          if (mounted) {
+            ToastUtil.showSuccess("Welcome back!");
+            context.go('/dashboard');
+          }
+        }
+      }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Apple sign in failed: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      ApiErrorHandler.handle(e);
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _signUpWithApple() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await AuthService().signInWithApple();
+
+      if (response['success'] == true) {
+        final userData = response['data'];
+
+        // Similar logic as Google signup
+        if (userData['is_new_user'] == true) {
+          context.go('/complete-profile');
+        } else {
+          if (mounted) {
+            ToastUtil.showSuccess("Welcome back!");
+            context.go('/dashboard');
+          }
+        }
       }
+    } catch (e) {
+      ApiErrorHandler.handle(e);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -618,11 +641,17 @@ class _SignupScreenState extends State<SignupScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Terms and Conditions'),
-        content: const SingleChildScrollView(
+        content: SingleChildScrollView(
           child: Text(
-            'Terms and conditions content will be displayed here. '
-                'This is a placeholder for the actual terms and conditions document.',
-            style: TextStyle(fontSize: 14),
+            'By creating an account with AgriFlock360, you agree to:\n\n'
+                '1. Provide accurate and complete information\n'
+                '2. Maintain the security of your account credentials\n'
+                '3. Accept responsibility for all activities under your account\n'
+                '4. Use the service only for lawful purposes\n'
+                '5. Not engage in any fraudulent activities\n\n'
+                'We reserve the right to modify these terms at any time. '
+                'Continued use of the service constitutes acceptance of modified terms.',
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
           ),
         ),
         actions: [
@@ -640,11 +669,17 @@ class _SignupScreenState extends State<SignupScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Privacy Policy'),
-        content: const SingleChildScrollView(
+        content: SingleChildScrollView(
           child: Text(
-            'Privacy policy content will be displayed here. '
-                'This is a placeholder for the actual privacy policy document.',
-            style: TextStyle(fontSize: 14),
+            'Your privacy is important to us. This Privacy Policy explains:\n\n'
+                '• What personal data we collect\n'
+                '• How we use your data\n'
+                '• How we protect your information\n'
+                '• Your rights regarding your data\n'
+                '• How to contact us about privacy concerns\n\n'
+                'We collect information you provide directly, including name, email, '
+                'phone number, and farm data. We use this to provide and improve our services.',
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
           ),
         ),
         actions: [

@@ -1,5 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:agriflock360/core/utils/api_error_handler.dart';
+import 'package:agriflock360/core/utils/toast_util.dart';
+
+import '../../main.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -75,7 +80,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               const SizedBox(height: 8),
               Center(
                 child: Text(
-                  'Enter your email to receive a password reset link',
+                  'Enter your email to receive a password reset OTP',
                   style: TextStyle(
                     fontSize: 16,
                     color: Colors.grey.shade600,
@@ -136,7 +141,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             if (value == null || value.isEmpty) {
                               return 'Please enter your email';
                             }
-                            if (!value.contains('@')) {
+                            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                                .hasMatch(value)) {
                               return 'Please enter a valid email';
                             }
                             return null;
@@ -175,7 +181,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               ),
                             )
                                 : const Text(
-                              'Send Reset Link',
+                              'Send Reset OTP',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -206,7 +212,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'We will send a password reset link to your email address. '
+                          'We will send a password reset OTP to your email address. '
                               'Check your inbox and spam folder.',
                           style: TextStyle(
                             color: Colors.blue.shade800,
@@ -230,15 +236,45 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       _isLoading = true;
     });
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final response = await apiClient.post(
+        '/auth/forgot-password',
+        body: {
+          'email': _emailController.text.trim(),
+        },
+      );
 
-    setState(() {
-      _isLoading = false;
-    });
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
 
-    // Navigate to reset password screen
-    context.push('/reset-password');
+        if (data['success'] == true) {
+          // Store the reset token from response
+          final resetToken = data['resetToken'] ?? data['token'];
+
+          ToastUtil.showSuccess(data['message'] ?? 'Reset OTP sent successfully!');
+
+          // Navigate to reset password screen with email and token
+          if (mounted) {
+            context.push(
+              '/reset-password?email=${Uri.encodeComponent(_emailController.text.trim())}&token=${Uri.encodeComponent(resetToken)}',
+            );
+          }
+        } else {
+          final errorMessage = data['message'] ?? 'Failed to send reset OTP';
+          ToastUtil.showError(errorMessage);
+        }
+      } else {
+        ApiErrorHandler.handle(response);
+      }
+    } catch (e) {
+      ApiErrorHandler.handle(e);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override

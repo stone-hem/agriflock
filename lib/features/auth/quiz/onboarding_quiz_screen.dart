@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:agriflock360/core/utils/shared_prefs.dart';
 import 'package:agriflock360/features/auth/quiz/shared/custom_text_field.dart';
 import 'package:agriflock360/features/auth/quiz/shared/education_level_selector.dart';
@@ -5,14 +6,21 @@ import 'package:agriflock360/features/auth/quiz/shared/file_upload.dart';
 import 'package:agriflock360/features/auth/quiz/shared/gender_selector.dart';
 import 'package:agriflock360/features/auth/quiz/shared/photo_upload.dart';
 import 'package:agriflock360/features/auth/quiz/shared/user_type_selection.dart';
-import 'package:agriflock360/core/widgets/location_picker_step.dart'; // Import the new component
+import 'package:agriflock360/core/widgets/location_picker_step.dart';
+import 'package:agriflock360/core/utils/api_error_handler.dart';
+import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:http/http.dart' as http;
 import 'dart:io';
 
+import '../../../main.dart';
+
+
 class OnboardingQuestionsScreen extends StatefulWidget {
-  const OnboardingQuestionsScreen({super.key});
+  final String token;
+  const OnboardingQuestionsScreen({super.key,required this.token});
 
   @override
   State<OnboardingQuestionsScreen> createState() => _OnboardingQuestionsScreenState();
@@ -21,6 +29,7 @@ class OnboardingQuestionsScreen extends StatefulWidget {
 class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  bool _isSubmitting = false;
 
   // User type selection
   String? _selectedUserType;
@@ -57,7 +66,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
 
   final List<String> _pageTitles = [
     'Choose Your Role',
-    '', // Will be updated dynamically
+    '',
     'Select Location',
     'Congratulations!'
   ];
@@ -71,7 +80,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     return 'Additional Information';
   }
 
-  int get _totalPages => 4; // Now we have 4 pages instead of 3
+  int get _totalPages => 4;
 
   @override
   void initState() {
@@ -79,7 +88,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     _pageController.addListener(() {
       setState(() {
         _currentPage = _pageController.page?.round() ?? 0;
-        // Update page titles when page changes
         if (_currentPage == 1) {
           _pageTitles[1] = _getDetailsPageTitle(_selectedUserType);
         }
@@ -140,13 +148,204 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     });
   }
 
+  Future<void> _submitFarmerOnboarding() async {
+    setState(() => _isSubmitting = true);
+
+    try {
+      final response = await apiClient.post(
+        '/auth/farmer-register',
+        body: {
+          'location': {
+            'address': _selectedAddress,
+            'latitude': _latitude,
+            'longitude': _longitude,
+          },
+          'years_of_experience': int.tryParse(_farmerAgeController.text) ?? 0,
+          'current_number_of_chickens': int.tryParse(_chickenNumberController.text) ?? 0,
+        },
+          headers: {'tempToken':widget.token}
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+
+        if (data['success'] == true || data['status'] == 'success') {
+          await SharedPrefs.setBool('hasCompletedOnboarding', true);
+          ToastUtil.showSuccess("Farm profile created successfully!");
+
+          if (mounted) {
+            _goToNextPage(); // Go to congratulations page
+          }
+        } else {
+          final errorMessage = data['message'] ?? 'Failed to create farm profile';
+          ToastUtil.showError(errorMessage);
+        }
+      } else {
+        ApiErrorHandler.handle(response);
+      }
+    } catch (e) {
+      ApiErrorHandler.handle(e);
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  Future<void> _submitVetOnboarding() async {
+    setState(() => _isSubmitting = true);
+
+    try {
+      // Prepare fields
+      final fields = <String, String>{
+        'location': jsonEncode({
+          'address': _selectedAddress,
+          'latitude': _latitude,
+          'longitude': _longitude,
+        }),
+        'age': _vetAgeController.text,
+        'gender': _selectedGender ?? '',
+        'years_of_experience': _vetExperienceController.text,
+        'professional_summary': _vetProfileController.text,
+        'education_level': _selectedEducationLevel ?? '',
+      };
+
+      // Prepare files
+      final files = <http.MultipartFile>[];
+
+      // Add ID photo
+      if (_idPhotoFile != null) {
+        files.add(await http.MultipartFile.fromPath(
+          'id_photo',
+          _idPhotoFile!.path,
+        ));
+      }
+
+      // Add selfie
+      if (_selfieFile != null) {
+        files.add(await http.MultipartFile.fromPath(
+          'selfie',
+          _selfieFile!.path,
+        ));
+      }
+
+      // Add certificates (main qualification certificates)
+      for (var i = 0; i < _uploadedCertificates.length; i++) {
+        final file = _uploadedCertificates[i];
+        if (file.path != null) {
+          files.add(await http.MultipartFile.fromPath(
+            'certificates[]', // Using array notation for multiple files
+            file.path!,
+          ));
+        }
+      }
+
+      // Add additional documents
+      for (var i = 0; i < _uploadedFiles.length; i++) {
+        final file = _uploadedFiles[i];
+        if (file.path != null) {
+          files.add(await http.MultipartFile.fromPath(
+            'additional_documents[]', // Using array notation for multiple files
+            file.path!,
+          ));
+        }
+      }
+
+      // Submit multipart request
+      final streamedResponse = await apiClient.postMultipart(
+        '/auth/extension-officer',
+        fields: fields,
+        files: files,
+        headers: {'tempToken':widget.token}
+      );
+
+      // Convert StreamedResponse to Response to read body
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+
+        if (data['success'] == true || data['status'] == 'success') {
+          await SharedPrefs.setBool('hasCompletedOnboarding', true);
+          ToastUtil.showSuccess("Veterinary profile submitted successfully!");
+
+          if (mounted) {
+            _goToNextPage(); // Go to congratulations page
+          }
+        } else {
+          final errorMessage = data['message'] ?? 'Failed to submit veterinary profile';
+          ToastUtil.showError(errorMessage);
+        }
+      } else {
+        ApiErrorHandler.handle(response);
+      }
+    } catch (e) {
+      ApiErrorHandler.handle(e);
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
   Future<void> _completeOnboarding() async {
+    // Validate based on user type
+    if (_selectedUserType == 'farmer') {
+      if (_selectedAddress == null || _latitude == null || _longitude == null) {
+        ToastUtil.showError("Please select a location");
+        return;
+      }
+      if (_chickenNumberController.text.isEmpty) {
+        ToastUtil.showError("Please enter the number of chickens");
+        return;
+      }
+      if (_farmerAgeController.text.isEmpty) {
+        ToastUtil.showError("Please enter your years of experience");
+        return;
+      }
+
+      await _submitFarmerOnboarding();
+    } else if (_selectedUserType == 'vet') {
+      // Validate vet fields
+      if (_selectedAddress == null || _latitude == null || _longitude == null) {
+        ToastUtil.showError("Please select a location");
+        return;
+      }
+      if (_vetAgeController.text.isEmpty) {
+        ToastUtil.showError("Please enter your age");
+        return;
+      }
+      if (_selectedGender == null) {
+        ToastUtil.showError("Please select your gender");
+        return;
+      }
+      if (_vetExperienceController.text.isEmpty) {
+        ToastUtil.showError("Please enter your years of experience");
+        return;
+      }
+      if (_selectedEducationLevel == null) {
+        ToastUtil.showError("Please select your education level");
+        return;
+      }
+      if (_idPhotoFile == null) {
+        ToastUtil.showError("Please upload your ID photo");
+        return;
+      }
+      if (_selfieFile == null) {
+        ToastUtil.showError("Please upload your selfie");
+        return;
+      }
+      if (_uploadedCertificates.isEmpty) {
+        ToastUtil.showError("Please upload at least one qualification certificate");
+        return;
+      }
+
+      await _submitVetOnboarding();
+    }
+  }
+
+  void _finalizeOnboarding() {
     if (_selectedUserType == 'farmer') {
       context.go('/login');
     } else if (_selectedUserType == 'vet') {
       _showVerificationMessage();
     }
-    await SharedPrefs.setBool('hasCompletedOnboarding', true);
   }
 
   void _showVerificationMessage() {
@@ -200,7 +399,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         }
         return true;
       case 2:
-      // Location page - must have location selected
         return _selectedAddress != null &&
             _latitude != null &&
             _longitude != null;
@@ -220,7 +418,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black54),
-          onPressed: () {
+          onPressed: _isSubmitting ? null : () {
             if (_currentPage > 0) {
               _goToPreviousPage();
             } else {
@@ -297,7 +495,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
                 // Page 2: Dynamic based on user type
                 _buildDetailsPage(),
 
-                // Page 3: Location Picker (NEW)
+                // Page 3: Location Picker
                 LocationPickerStep(
                   selectedAddress: _selectedAddress,
                   latitude: _latitude,
@@ -418,12 +616,13 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
             },
           ),
           const SizedBox(height: 30),
-          // Additional File Upload Section using reusable component
+
+          // Qualification Certificates Upload
           FileUpload(
             uploadedFiles: _uploadedCertificates,
             onFilesSelected: _onCertificateFilesSelected,
             onFileRemoved: _onCertificateFileRemoved,
-            title: 'Upload Certifications (PDF/DOC/Images) for you qualification',
+            title: 'Upload Qualifications (PDF/DOC/Images) *Required',
             description: 'Upload your professional certificate(s)',
             primaryColor: primaryGreen,
           ),
@@ -444,7 +643,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
           // Age
           CustomTextField(
             controller: _vetAgeController,
-            label: 'Age',
+            label: 'Age *Required',
             hintText: 'Enter your age',
             icon: Icons.calendar_today,
             keyboardType: TextInputType.number,
@@ -466,7 +665,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
           // Years of Experience
           CustomTextField(
             controller: _vetExperienceController,
-            label: 'Years of Experience',
+            label: 'Years of Experience *Required',
             hintText: 'Enter your years of veterinary experience',
             icon: Icons.work,
             keyboardType: TextInputType.number,
@@ -474,7 +673,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
           ),
           const SizedBox(height: 30),
 
-          // ID Photo Upload using reusable component
+          // ID Photo Upload
           PhotoUpload(
             file: _idPhotoFile,
             onFileSelected: (File? file) {
@@ -482,13 +681,13 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
                 _idPhotoFile = file;
               });
             },
-            title: 'ID Photo',
+            title: 'ID Photo *Required',
             description: 'Upload a clear photo of your government-issued ID',
             primaryColor: primaryGreen,
           ),
           const SizedBox(height: 20),
 
-          // Face Selfie Upload using reusable component
+          // Face Selfie Upload
           PhotoUpload(
             file: _selfieFile,
             onFileSelected: (File? file) {
@@ -496,19 +695,19 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
                 _selfieFile = file;
               });
             },
-            title: 'Face Selfie',
+            title: 'Face Selfie *Required',
             description: 'Upload a recent clear photo of yourself',
             primaryColor: primaryGreen,
           ),
           const SizedBox(height: 20),
 
-          // Additional File Upload Section using reusable component
+          // Additional File Upload Section
           FileUpload(
             uploadedFiles: _uploadedFiles,
             onFilesSelected: _onFilesSelected,
             onFileRemoved: _onFileRemoved,
-            title: 'Upload Additional Certifications (PDF/DOC/Images) If Any',
-            description: 'Upload your professional certificates and documents if any',
+            title: 'Upload Additional Certifications (Optional)',
+            description: 'Upload additional professional certificates if any',
             primaryColor: primaryGreen,
           ),
         ],
@@ -531,14 +730,14 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
               color: primaryGreen.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(
+            child: const Icon(
               Icons.check_circle,
               size: 60,
               color: primaryGreen,
             ),
           ),
           const SizedBox(height: 32),
-          Text(
+          const Text(
             'Congratulations!',
             style: TextStyle(
               fontSize: 32,
@@ -574,7 +773,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Account Summary',
                     style: TextStyle(
                       fontSize: 18,
@@ -601,6 +800,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
                     _buildSummaryItem('Experience', '${_vetExperienceController.text} years'),
                     _buildSummaryItem('ID Photo', _idPhotoFile != null ? 'Uploaded' : 'Not uploaded'),
                     _buildSummaryItem('Selfie', _selfieFile != null ? 'Uploaded' : 'Not uploaded'),
+                    _buildSummaryItem('Qualification Certificates', '${_uploadedCertificates.length} files'),
                     _buildSummaryItem('Additional Documents', '${_uploadedFiles.length} files'),
                   ],
                 ],
@@ -656,10 +856,10 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
       ),
       child: Row(
         children: [
-          if (_currentPage > 0)
+          if (_currentPage > 0 && _currentPage < _totalPages - 1)
             Expanded(
               child: OutlinedButton(
-                onPressed: _goToPreviousPage,
+                onPressed: _isSubmitting ? null : _goToPreviousPage,
                 style: OutlinedButton.styleFrom(
                   foregroundColor: primaryGreen,
                   side: const BorderSide(color: primaryGreen),
@@ -671,16 +871,20 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
                 child: const Text('Back'),
               ),
             ),
-          if (_currentPage > 0) const SizedBox(width: 12),
+          if (_currentPage > 0 && _currentPage < _totalPages - 1) const SizedBox(width: 12),
           Expanded(
-            flex: _currentPage > 0 ? 1 : 2,
+            flex: _currentPage > 0 && _currentPage < _totalPages - 1 ? 1 : 2,
             child: ElevatedButton(
-              onPressed: _canProceedToNext()
+              onPressed: (_canProceedToNext() && !_isSubmitting)
                   ? () {
-                if (_currentPage < _totalPages - 1) {
+                if (_currentPage < _totalPages - 2) {
                   _goToNextPage();
-                } else {
+                } else if (_currentPage == _totalPages - 2) {
+                  // Last data page - submit to API
                   _completeOnboarding();
+                } else if (_currentPage == _totalPages - 1) {
+                  // Congratulations page - finalize
+                  _finalizeOnboarding();
                 }
               }
                   : null,
@@ -693,8 +897,21 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
                 ),
                 disabledBackgroundColor: Colors.grey.shade300,
               ),
-              child: Text(
-                _currentPage == _totalPages - 1 ? 'Get Started' : 'Continue',
+              child: _isSubmitting
+                  ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+                  : Text(
+                _currentPage == _totalPages - 2
+                    ? 'Submit'
+                    : _currentPage == _totalPages - 1
+                    ? 'Get Started'
+                    : 'Continue',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
