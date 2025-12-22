@@ -1,7 +1,7 @@
 import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:agriflock360/features/farmer/farm/farms_home_screen.dart';
 import 'package:agriflock360/features/farmer/profile/profile_screen.dart';
-import 'package:agriflock360/features/farmer/vet/vet_screen.dart';
+import 'package:agriflock360/features/farmer/vet/main_vet_screen.dart';
 import 'package:agriflock360/features/shared/nav_destination_item.dart';
 import 'package:agriflock360/features/vet/vet_home_screen.dart';
 import 'package:agriflock360/features/vet/vet_payments_screen.dart';

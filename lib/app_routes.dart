@@ -27,7 +27,7 @@ import 'package:agriflock360/features/farmer/vet/models/vet_order.dart';
 import 'package:agriflock360/features/farmer/vet/vet_details_screen.dart';
 import 'package:agriflock360/features/farmer/vet/vet_order_screen.dart';
 import 'package:agriflock360/features/farmer/vet/vet_order_tracking_screen.dart';
-import 'package:agriflock360/features/farmer/vet/vet_screen.dart';
+import 'package:agriflock360/features/farmer/vet/main_vet_screen.dart';
 import 'package:agriflock360/features/vet/payments/vet_payments_history_screen.dart';
 import 'package:agriflock360/features/vet/payments/vet_service_payments_screen.dart';
 import 'package:flutter/material.dart';
