@@ -59,4 +59,5 @@ class DefaultFirebaseOptions {
     projectId: 'agriflock-360-cb236',
     storageBucket: 'agriflock-360-cb236.firebasestorage.app',
   );
+
 }
