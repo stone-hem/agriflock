@@ -452,7 +452,7 @@ class _HouseCard extends StatelessWidget {
           // House Header
           ListTile(
             leading: Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 color: utilization > 0
                     ? Colors.green.shade50
@@ -482,6 +482,22 @@ class _HouseCard extends StatelessWidget {
                     fontSize: 12,
                   ),
                 ),
+                Container(
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${batches.length} batch${batches.length == 1 ? '' : 'es'}',
+                    style: TextStyle(
+                      color: Colors.green.shade800,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 4),
                 LinearProgressIndicator(
                   value: utilization / 100,
@@ -498,7 +514,7 @@ class _HouseCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${utilization}% utilized',
+                  '$utilization% utilized',
                   style: TextStyle(
                     color: Colors.grey.shade600,
                     fontSize: 11,
@@ -509,22 +525,7 @@ class _HouseCard extends StatelessWidget {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    '${batches.length} batch${batches.length == 1 ? '' : 'es'}',
-                    style: TextStyle(
-                      color: Colors.green.shade800,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
+
                 IconButton(
                   icon: Icon(
                     isExpanded ? Icons.expand_less : Icons.expand_more,
