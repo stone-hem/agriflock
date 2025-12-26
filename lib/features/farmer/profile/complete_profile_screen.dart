@@ -1,7 +1,7 @@
 import 'package:agriflock360/features/auth/quiz/shared/custom_text_field.dart';
-import 'package:agriflock360/features/auth/quiz/shared/file_upload.dart';
+import 'package:agriflock360/core/widgets/file_upload.dart';
 import 'package:agriflock360/features/auth/quiz/shared/gender_selector.dart';
-import 'package:agriflock360/features/auth/quiz/shared/photo_upload.dart';
+import 'package:agriflock360/core/widgets/photo_upload.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';

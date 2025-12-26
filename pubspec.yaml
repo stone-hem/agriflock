@@ -47,6 +47,7 @@ dependencies:
   fluttertoast:
   shared_preferences:
   google_maps_flutter:
+  flutter_riverpod:
 
 dev_dependencies:
   flutter_test:

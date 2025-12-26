@@ -1,4 +1,3 @@
-// lib/flocks/batch_screen.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -167,77 +166,10 @@ class _BatchesScreenState extends State<BatchesScreen> with SingleTickerProvider
               ),
 
               const SizedBox(height: 24),
+              Text('Archived Batches'),
+              _buildArchivedBatchesTab(context),
 
-              // Tabs for All Batches View
-              // Container(
-              //   decoration: BoxDecoration(
-              //     color: Colors.white,
-              //     borderRadius: BorderRadius.circular(16),
-              //     border: Border.all(color: Colors.grey.shade200),
-              //     boxShadow: [
-              //       BoxShadow(
-              //         color: Colors.grey.shade100,
-              //         blurRadius: 10,
-              //         offset: const Offset(0, 4),
-              //       ),
-              //     ],
-              //   ),
-              //   child: Column(
-              //     children: [
-              //       // Tab Bar with better styling
-              //       Container(
-              //         padding: const EdgeInsets.all(4),
-              //         margin: const EdgeInsets.all(12),
-              //         child: TabBar(
-              //           controller: _tabController,
-              //           isScrollable: true,
-              //           tabAlignment: TabAlignment.start,
-              //           physics: const BouncingScrollPhysics(),
-              //           padding: const EdgeInsets.all(1),
-              //           dividerColor: Colors.transparent,
-              //           indicator: BoxDecoration(
-              //             color: Colors.grey.shade200,
-              //             borderRadius: BorderRadius.circular(12),
-              //           ),
-              //           indicatorSize: TabBarIndicatorSize.tab,
-              //           labelColor: Colors.black,
-              //           unselectedLabelColor: Colors.grey.shade600,
-              //           labelStyle: const TextStyle(
-              //             fontSize: 13,
-              //             fontWeight: FontWeight.w600,
-              //             letterSpacing: 0.5,
-              //           ),
-              //           unselectedLabelStyle: const TextStyle(
-              //             fontSize: 13,
-              //             fontWeight: FontWeight.w500,
-              //           ),
-              //           splashFactory: NoSplash.splashFactory,
-              //           overlayColor: WidgetStateProperty.all(Colors.transparent),
-              //           tabs: [
-              //             _buildTabWithIcon(Icons.visibility, 'All Batches'),
-              //             _buildTabWithIcon(Icons.archive, 'Archived Batches')
-              //           ],
-              //         ),
-              //       ),
-              //
-              //       // Tab Content
-              //       SizedBox(
-              //         height: MediaQuery.of(context).size.height * 0.5,
-              //         child: TabBarView(
-              //           controller: _tabController,
-              //           children: [
-              //             // All Batches Tab (All batches from all houses)
-              //             _buildAllBatchesTab(context),
-              //
-              //             // Archived Batches Tab
-              //             _buildArchivedBatchesTab(context),
-              //           ],
-              //         ),
-              //       ),
-              //     ],
-              //   ),
-              // ),
-              // const SizedBox(height: 40),
+              const SizedBox(height: 40),
             ],
           ),
         ),
@@ -245,18 +177,6 @@ class _BatchesScreenState extends State<BatchesScreen> with SingleTickerProvider
     );
   }
 
-  Widget _buildTabWithIcon(IconData icon, String label) {
-    return Tab(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 16),
-          const SizedBox(width: 4),
-          Text(label),
-        ],
-      ),
-    );
-  }
 
   Widget _buildHousesList() {
     final houses = [
@@ -387,29 +307,6 @@ class _BatchesScreenState extends State<BatchesScreen> with SingleTickerProvider
       allBatches.addAll(List<Map<String, dynamic>>.from(house['batches']!));
     }
     return allBatches;
-  }
-
-  Widget _buildAllBatchesTab(BuildContext context) {
-    final allBatches = _getAllBatches();
-
-    if (allBatches.isEmpty) {
-      return _buildEmptyState(
-        icon: Icons.group,
-        title: 'No Active Batches',
-        subtitle: 'Start your first batch to get started',
-        buttonText: 'Add New Batch',
-        onPressed: () => context.push('/batches/add'),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: allBatches.length,
-      itemBuilder: (context, index) {
-        final batch = allBatches[index];
-        return _ActiveBatchCard(batch: batch);
-      },
-    );
   }
 
   Widget _buildArchivedBatchesTab(BuildContext context) {

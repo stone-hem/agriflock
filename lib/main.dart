@@ -23,23 +23,16 @@ void main() async {
 
   // Initialize SecureStorage and ApiClient
   secureStorage = SecureStorage();
-  apiClient = ApiClient(
-    storage: secureStorage,
-    navigatorKey: navigatorKey,
+  apiClient = ApiClient(storage: secureStorage, navigatorKey: navigatorKey);
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Initialize Google Sign-In only for Android
+  await authService.initializeGoogleSignIn(
+    clientId: DefaultFirebaseOptions.currentPlatform.iosClientId,
+    serverClientId:
+        '966300580112-mu5f3anb1ff4rce7dts.apps.googleusercontent.com',
   );
-
-  // Initialize Firebase only for Android
-  if (Platform.isAndroid) {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-
-    // Initialize Google Sign-In only for Android
-    await authService.initializeGoogleSignIn(
-      clientId: DefaultFirebaseOptions.currentPlatform.iosClientId,
-      serverClientId: '966300580112-mu5f3anb1ff4rce7dts.apps.googleusercontent.com',
-    );
-  }
 
   runApp(MyApp());
 }

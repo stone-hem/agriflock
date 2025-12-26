@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:agriflock360/core/model/user_model.dart';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
+import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/features/auth/shared/auth_text_field.dart';
 import 'package:agriflock360/app_routes.dart';
@@ -353,6 +354,8 @@ class _LoginScreenState extends State<LoginScreen> {
         '/auth/login',
         body: {'email': email, 'password': password},
       );
+
+      LogUtil.info(response.body);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);

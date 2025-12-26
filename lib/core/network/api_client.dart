@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:agriflock360/app_routes.dart';
+import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -155,6 +156,8 @@ class ApiClient {
       final uri = Uri.parse('${AppConstants.baseUrl}$endpoint')
           .replace(queryParameters: queryParameters);
 
+      LogUtil.info(uri.toString());
+      LogUtil.info(headers.toString());
       final response = await http.get(
         uri,
         headers: await _getHeaders(extraHeaders: headers),
@@ -167,6 +170,7 @@ class ApiClient {
         );
       });
     } catch (e) {
+      LogUtil.error(e.toString());
       rethrow;
     }
   }
@@ -182,6 +186,10 @@ class ApiClient {
 
       final uri = Uri.parse('${AppConstants.baseUrl}$endpoint');
 
+      LogUtil.info(uri.toString());
+      LogUtil.info(headers.toString());
+      LogUtil.info(body.toString());
+
       final response = await http.post(
         uri,
         headers: await _getHeaders(extraHeaders: headers),
@@ -196,6 +204,7 @@ class ApiClient {
         );
       });
     } catch (e) {
+      LogUtil.error(e.toString());
       rethrow;
     }
   }

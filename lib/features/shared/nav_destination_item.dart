@@ -48,7 +48,7 @@ class NavDestinationItem extends StatelessWidget {
   }
 }
 
-// Navigation configuration model
+// Navigation configuration models
 class NavConfig {
   final IconData icon;
   final IconData selectedIcon;

@@ -1,5 +1,5 @@
 import 'package:agriflock360/core/utils/secure_storage.dart';
-import 'package:agriflock360/features/farmer/farm/farms_home_screen.dart';
+import 'package:agriflock360/features/farmer/farm/view/farms_home_screen.dart';
 import 'package:agriflock360/features/farmer/profile/profile_screen.dart';
 import 'package:agriflock360/features/farmer/vet/main_vet_screen.dart';
 import 'package:agriflock360/features/shared/nav_destination_item.dart';
@@ -36,6 +36,9 @@ class _MainDashboardState extends State<MainDashboard> {
       // Get user data from secure storage
       final userData = await _secureStorage.getUserData();
 
+      // Check if widget is still mounted before calling setState
+      if (!mounted) return;
+
       if (userData != null && userData['role'] != null) {
         final role = userData['role'] as Map<String, dynamic>;
         final roleName = role['name'] as String;
@@ -56,6 +59,10 @@ class _MainDashboardState extends State<MainDashboard> {
     } catch (e) {
       // Handle error - default to farmer or show error screen
       print('Error loading user role: $e');
+
+      // Check if widget is still mounted before calling setState
+      if (!mounted) return;
+
       setState(() {
         _userRole = 'farmer';
         _initializeNavConfigs();
@@ -71,25 +78,25 @@ class _MainDashboardState extends State<MainDashboard> {
           icon: Icons.home_outlined,
           selectedIcon: Icons.home,
           label: 'Home',
-          screen: VetHomeScreen(),
+          screen: const VetHomeScreen(),
         ),
         NavConfig(
           icon: Icons.schedule_outlined,
           selectedIcon: Icons.schedule,
           label: 'Schedules',
-          screen: VetSchedulesScreen(),
+          screen: const VetSchedulesScreen(),
         ),
         NavConfig(
           icon: Icons.payment_outlined,
           selectedIcon: Icons.payment,
           label: 'Payments',
-          screen: VetPaymentsScreen(),
+          screen: const VetPaymentsScreen(),
         ),
         NavConfig(
           icon: Icons.person_outlined,
           selectedIcon: Icons.person,
           label: 'Profile',
-          screen: VetProfileScreen(),
+          screen: const VetProfileScreen(),
         ),
       ];
     } else {
@@ -99,31 +106,31 @@ class _MainDashboardState extends State<MainDashboard> {
           icon: Icons.home_outlined,
           selectedIcon: Icons.home,
           label: 'Home',
-          screen: HomeScreen(),
+          screen: const HomeScreen(),
         ),
         NavConfig(
           icon: Icons.agriculture_outlined,
           selectedIcon: Icons.agriculture,
           label: 'Farms',
-          screen: FarmsHomeScreen(),
+          screen: const FarmsHomeScreen(),
         ),
         NavConfig(
           icon: Icons.format_quote_outlined,
           selectedIcon: Icons.format_quote,
           label: 'Quotation',
-          screen: QuotationScreen(),
+          screen: const QuotationScreen(),
         ),
         NavConfig(
           icon: Icons.people_outline,
           selectedIcon: Icons.people,
           label: 'Vets',
-          screen: MainVetScreen(),
+          screen: const MainVetScreen(),
         ),
         NavConfig(
           icon: Icons.person_outlined,
           selectedIcon: Icons.person,
           label: 'Profile',
-          screen: ProfileScreen(),
+          screen: const ProfileScreen(),
         ),
       ];
     }
@@ -139,7 +146,7 @@ class _MainDashboardState extends State<MainDashboard> {
   Widget build(BuildContext context) {
     // Show loading indicator while fetching role
     if (_isLoading) {
-      return Scaffold(
+      return const Scaffold(
         body: Center(
           child: CircularProgressIndicator(
             color: Colors.green,

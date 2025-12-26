@@ -9,7 +9,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.mglobal.agriflock360.ios</string>
+	<string>com.mglobal.agriflock360</string>
 	<key>PROJECT_ID</key>
 	<string>agriflock-360-cb236</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:966300580112:ios:c6b95f64fa1c71de304d95</string>
+	<string>1:966300580112:ios:95f91eccf4389d3e304d95</string>
 </dict>
 </plist>

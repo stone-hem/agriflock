@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'package:agriflock360/core/utils/shared_prefs.dart';
 import 'package:agriflock360/features/auth/quiz/shared/custom_text_field.dart';
 import 'package:agriflock360/features/auth/quiz/shared/education_level_selector.dart';
-import 'package:agriflock360/features/auth/quiz/shared/file_upload.dart';
+import 'package:agriflock360/core/widgets/file_upload.dart';
 import 'package:agriflock360/features/auth/quiz/shared/gender_selector.dart';
-import 'package:agriflock360/features/auth/quiz/shared/photo_upload.dart';
+import 'package:agriflock360/core/widgets/photo_upload.dart';
 import 'package:agriflock360/features/auth/quiz/shared/user_type_selection.dart';
 import 'package:agriflock360/core/widgets/location_picker_step.dart';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
@@ -16,6 +16,7 @@ import 'package:http/http.dart' as http;
 import 'dart:io';
 
 import '../../../main.dart';
+
 
 
 class OnboardingQuestionsScreen extends StatefulWidget {
@@ -163,7 +164,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
           'years_of_experience': int.tryParse(_farmerAgeController.text) ?? 0,
           'current_number_of_chickens': int.tryParse(_chickenNumberController.text) ?? 0,
         },
-          headers: {'tempToken':widget.token}
+          headers: {'Authorization': 'Bearer ${widget.token}'}
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -254,7 +255,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         '/auth/extension-officer',
         fields: fields,
         files: files,
-        headers: {'tempToken':widget.token}
+          headers: {'Authorization': 'Bearer ${widget.token}'}
       );
 
       // Convert StreamedResponse to Response to read body

@@ -26,15 +26,9 @@ class DefaultFirebaseOptions {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for windows - '
@@ -58,6 +52,24 @@ class DefaultFirebaseOptions {
     messagingSenderId: '966300580112',
     projectId: 'agriflock-360-cb236',
     storageBucket: 'agriflock-360-cb236.firebasestorage.app',
+  );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyBp_g1jSDl7MMBXoVqEb0CD038jsbPl08U',
+    appId: '1:966300580112:ios:95f91eccf4389d3e304d95',
+    messagingSenderId: '966300580112',
+    projectId: 'agriflock-360-cb236',
+    storageBucket: 'agriflock-360-cb236.firebasestorage.app',
+    iosBundleId: 'com.mglobal.agriflock360',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyBp_g1jSDl7MMBXoVqEb0CD038jsbPl08U',
+    appId: '1:966300580112:ios:95f91eccf4389d3e304d95',
+    messagingSenderId: '966300580112',
+    projectId: 'agriflock-360-cb236',
+    storageBucket: 'agriflock-360-cb236.firebasestorage.app',
+    iosBundleId: 'com.mglobal.agriflock360',
   );
 
 }
