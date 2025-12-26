@@ -566,7 +566,7 @@ class _FarmCard extends StatelessWidget {
         side: BorderSide(color: Colors.grey.shade200),
       ),
       child: InkWell(
-        onTap: () => context.push('/batches'),
+        onTap: () => context.push('/batches', extra: farm),
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -700,7 +700,7 @@ class _FarmCard extends StatelessWidget {
         context.push(AppRoutes.farmsInventory);
         break;
       case 'view_batches':
-        context.push('/batches');
+        context.push(AppRoutes.batches, extra: farm);
         break;
       case 'delete':
         _showDeleteDialog(context);

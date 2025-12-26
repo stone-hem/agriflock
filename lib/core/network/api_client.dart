@@ -188,7 +188,7 @@ class ApiClient {
 
       LogUtil.info(uri.toString());
       LogUtil.info(headers.toString());
-      LogUtil.info(body.toString());
+      print(body);
 
       final response = await http.post(
         uri,

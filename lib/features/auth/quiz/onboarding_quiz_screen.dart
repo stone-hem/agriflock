@@ -1,5 +1,5 @@
-import 'dart:convert';
 import 'package:agriflock360/core/utils/shared_prefs.dart';
+import 'package:agriflock360/features/auth/quiz/repo/onboarding_repository.dart';
 import 'package:agriflock360/features/auth/quiz/shared/custom_text_field.dart';
 import 'package:agriflock360/features/auth/quiz/shared/education_level_selector.dart';
 import 'package:agriflock360/core/widgets/file_upload.dart';
@@ -9,19 +9,15 @@ import 'package:agriflock360/features/auth/quiz/shared/user_type_selection.dart'
 import 'package:agriflock360/core/widgets/location_picker_step.dart';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
+import 'package:agriflock360/core/utils/date_util.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:http/http.dart' as http;
 import 'dart:io';
-
-import '../../../main.dart';
-
-
 
 class OnboardingQuestionsScreen extends StatefulWidget {
   final String token;
-  const OnboardingQuestionsScreen({super.key,required this.token});
+  const OnboardingQuestionsScreen({super.key, required this.token});
 
   @override
   State<OnboardingQuestionsScreen> createState() => _OnboardingQuestionsScreenState();
@@ -29,6 +25,7 @@ class OnboardingQuestionsScreen extends StatefulWidget {
 
 class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
   final PageController _pageController = PageController();
+  final OnboardingRepository _repository = OnboardingRepository();
   int _currentPage = 0;
   bool _isSubmitting = false;
 
@@ -42,10 +39,11 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
 
   // Farmer data
   final TextEditingController _chickenNumberController = TextEditingController();
-  final TextEditingController _farmerAgeController = TextEditingController();
+  final TextEditingController _farmerExperienceController = TextEditingController();
 
   // Vet data
-  final TextEditingController _vetAgeController = TextEditingController();
+  DateTime? _selectedDateOfBirth;
+  final TextEditingController _dobController = TextEditingController();
   final TextEditingController _vetExperienceController = TextEditingController();
   final TextEditingController _vetProfileController = TextEditingController();
 
@@ -100,8 +98,8 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
   void dispose() {
     _pageController.dispose();
     _chickenNumberController.dispose();
-    _farmerAgeController.dispose();
-    _vetAgeController.dispose();
+    _farmerExperienceController.dispose();
+    _dobController.dispose();
     _vetExperienceController.dispose();
     _vetProfileController.dispose();
     super.dispose();
@@ -122,6 +120,34 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
       );
+    }
+  }
+
+  Future<void> _selectDateOfBirth() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateUtil.addYears(DateTime.now(), -25),
+      firstDate: DateTime(1940),
+      lastDate: DateUtil.addYears(DateTime.now(), -18),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: primaryGreen,
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null && picked != _selectedDateOfBirth) {
+      setState(() {
+        _selectedDateOfBirth = picked;
+        _dobController.text = DateUtil.toISODate(picked);
+      });
     }
   }
 
@@ -153,36 +179,32 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      final response = await apiClient.post(
-        '/auth/farmer-register',
-        body: {
-          'location': {
-            'address': _selectedAddress,
-            'latitude': _latitude,
-            'longitude': _longitude,
-          },
-          'years_of_experience': int.tryParse(_farmerAgeController.text) ?? 0,
-          'current_number_of_chickens': int.tryParse(_chickenNumberController.text) ?? 0,
-        },
-          headers: {'Authorization': 'Bearer ${widget.token}'}
+      final result = await _repository.submitFarmerOnboarding(
+        token: widget.token,
+        address: _selectedAddress!,
+        latitude: _latitude!,
+        longitude: _longitude!,
+        yearsOfExperience: int.tryParse(_farmerExperienceController.text) ?? 0,
+        numberOfChickens: int.tryParse(_chickenNumberController.text) ?? 0,
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
 
-        if (data['success'] == true || data['status'] == 'success') {
-          await SharedPrefs.setBool('hasCompletedOnboarding', true);
-          ToastUtil.showSuccess("Farm profile created successfully!");
 
-          if (mounted) {
-            _goToNextPage(); // Go to congratulations page
-          }
-        } else {
-          final errorMessage = data['message'] ?? 'Failed to create farm profile';
-          ToastUtil.showError(errorMessage);
+      if (result['success'] == true) {
+        await SharedPrefs.setBool('hasCompletedOnboarding', true);
+        ToastUtil.showSuccess(result['message']);
+
+        if (mounted) {
+          _goToNextPage(); // Navigate to congratulations page
         }
       } else {
-        ApiErrorHandler.handle(response);
+        if (result.containsKey('response')) {
+          ApiErrorHandler.handle(result['response']);
+        } else if (result.containsKey('error')) {
+          ApiErrorHandler.handle(result['error']);
+        } else {
+          ToastUtil.showError(result['message']);
+        }
       }
     } catch (e) {
       ApiErrorHandler.handle(e);
@@ -195,88 +217,37 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      // Prepare fields
-      final fields = <String, String>{
-        'location': jsonEncode({
-          'address': _selectedAddress,
-          'latitude': _latitude,
-          'longitude': _longitude,
-        }),
-        'age': _vetAgeController.text,
-        'gender': _selectedGender ?? '',
-        'years_of_experience': _vetExperienceController.text,
-        'professional_summary': _vetProfileController.text,
-        'education_level': _selectedEducationLevel ?? '',
-      };
-
-      // Prepare files
-      final files = <http.MultipartFile>[];
-
-      // Add ID photo
-      if (_idPhotoFile != null) {
-        files.add(await http.MultipartFile.fromPath(
-          'id_photo',
-          _idPhotoFile!.path,
-        ));
-      }
-
-      // Add selfie
-      if (_selfieFile != null) {
-        files.add(await http.MultipartFile.fromPath(
-          'selfie',
-          _selfieFile!.path,
-        ));
-      }
-
-      // Add certificates (main qualification certificates)
-      for (var i = 0; i < _uploadedCertificates.length; i++) {
-        final file = _uploadedCertificates[i];
-        if (file.path != null) {
-          files.add(await http.MultipartFile.fromPath(
-            'certificates[]', // Using array notation for multiple files
-            file.path!,
-          ));
-        }
-      }
-
-      // Add additional documents
-      for (var i = 0; i < _uploadedFiles.length; i++) {
-        final file = _uploadedFiles[i];
-        if (file.path != null) {
-          files.add(await http.MultipartFile.fromPath(
-            'additional_documents[]', // Using array notation for multiple files
-            file.path!,
-          ));
-        }
-      }
-
-      // Submit multipart request
-      final streamedResponse = await apiClient.postMultipart(
-        '/auth/extension-officer',
-        fields: fields,
-        files: files,
-          headers: {'Authorization': 'Bearer ${widget.token}'}
+      final result = await _repository.submitVetOnboarding(
+        token: widget.token,
+        address: _selectedAddress!,
+        latitude: _latitude!,
+        longitude: _longitude!,
+        dateOfBirth: _dobController.text,
+        gender: _selectedGender!,
+        yearsOfExperience: _vetExperienceController.text,
+        professionalSummary: _vetProfileController.text,
+        educationLevel: _selectedEducationLevel!,
+        idPhotoPath: _idPhotoFile!.path,
+        selfiePath: _selfieFile!.path,
+        certificates: _uploadedCertificates,
+        additionalDocuments: _uploadedFiles.isNotEmpty ? _uploadedFiles : null,
       );
 
-      // Convert StreamedResponse to Response to read body
-      final response = await http.Response.fromStream(streamedResponse);
+      if (result['success'] == true) {
+        await SharedPrefs.setBool('hasCompletedOnboarding', true);
+        ToastUtil.showSuccess(result['message']);
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-
-        if (data['success'] == true || data['status'] == 'success') {
-          await SharedPrefs.setBool('hasCompletedOnboarding', true);
-          ToastUtil.showSuccess("Veterinary profile submitted successfully!");
-
-          if (mounted) {
-            _goToNextPage(); // Go to congratulations page
-          }
-        } else {
-          final errorMessage = data['message'] ?? 'Failed to submit veterinary profile';
-          ToastUtil.showError(errorMessage);
+        if (mounted) {
+          _goToNextPage(); // Navigate to congratulations page
         }
       } else {
-        ApiErrorHandler.handle(response);
+        if (result.containsKey('response')) {
+          ApiErrorHandler.handle(result['response']);
+        } else if (result.containsKey('error')) {
+          ApiErrorHandler.handle(result['error']);
+        } else {
+          ToastUtil.showError(result['message']);
+        }
       }
     } catch (e) {
       ApiErrorHandler.handle(e);
@@ -296,7 +267,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         ToastUtil.showError("Please enter the number of chickens");
         return;
       }
-      if (_farmerAgeController.text.isEmpty) {
+      if (_farmerExperienceController.text.isEmpty) {
         ToastUtil.showError("Please enter your years of experience");
         return;
       }
@@ -308,8 +279,8 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         ToastUtil.showError("Please select a location");
         return;
       }
-      if (_vetAgeController.text.isEmpty) {
-        ToastUtil.showError("Please enter your age");
+      if (_dobController.text.isEmpty || _selectedDateOfBirth == null) {
+        ToastUtil.showError("Please select your date of birth");
         return;
       }
       if (_selectedGender == null) {
@@ -396,13 +367,11 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         if (_selectedUserType == 'farmer') {
           return true;
         } else if (_selectedUserType == 'vet') {
-          return _vetAgeController.text.isNotEmpty;
+          return _dobController.text.isNotEmpty;
         }
         return true;
       case 2:
-        return _selectedAddress != null &&
-            _latitude != null &&
-            _longitude != null;
+        return _selectedAddress != null && _latitude != null && _longitude != null;
       case 3:
         return true;
       default:
@@ -419,7 +388,9 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black54),
-          onPressed: _isSubmitting ? null : () {
+          onPressed: _isSubmitting
+              ? null
+              : () {
             if (_currentPage > 0) {
               _goToPreviousPage();
             } else {
@@ -497,18 +468,21 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
                 _buildDetailsPage(),
 
                 // Page 3: Location Picker
-                LocationPickerStep(
-                  selectedAddress: _selectedAddress,
-                  latitude: _latitude,
-                  longitude: _longitude,
-                  onLocationSelected: (String address, double lat, double lng) {
-                    setState(() {
-                      _selectedAddress = address;
-                      _latitude = lat;
-                      _longitude = lng;
-                    });
-                  },
-                  primaryColor: primaryGreen,
+                SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: LocationPickerStep(
+                    selectedAddress: _selectedAddress,
+                    latitude: _latitude,
+                    longitude: _longitude,
+                    onLocationSelected: (String address, double lat, double lng) {
+                      setState(() {
+                        _selectedAddress = address;
+                        _latitude = lat;
+                        _longitude = lng;
+                      });
+                    },
+                    primaryColor: primaryGreen,
+                  ),
                 ),
 
                 // Page 4: Congratulations
@@ -571,9 +545,9 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
           CustomTextField(
             label: 'Years of experience',
             hintText: 'Enter your years of experience in poultry farming',
-            icon: Icons.person,
+            icon: Icons.work,
             keyboardType: TextInputType.number,
-            controller: _farmerAgeController,
+            controller: _farmerExperienceController,
             value: '',
           ),
 
@@ -641,14 +615,18 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
           ),
           const SizedBox(height: 20),
 
-          // Age
-          CustomTextField(
-            controller: _vetAgeController,
-            label: 'Age *Required',
-            hintText: 'Enter your age',
-            icon: Icons.calendar_today,
-            keyboardType: TextInputType.number,
-            value: '',
+          // Date of Birth Picker
+          GestureDetector(
+            onTap: _selectDateOfBirth,
+            child: AbsorbPointer(
+              child: CustomTextField(
+                controller: _dobController,
+                label: 'Date of Birth *Required',
+                hintText: 'Select your date of birth',
+                icon: Icons.calendar_today,
+                value: '',
+              ),
+            ),
           ),
           const SizedBox(height: 20),
 
@@ -792,11 +770,16 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
                     ),
                   if (isFarmer) ...[
                     _buildSummaryItem('Chicken Number', _chickenNumberController.text),
-                    _buildSummaryItem('Experience', '${_farmerAgeController.text} years'),
+                    _buildSummaryItem('Experience', '${_farmerExperienceController.text} years'),
                   ] else ...[
                     _buildSummaryItem('Highest Education', _selectedEducationLevel ?? 'Not provided'),
                     _buildSummaryItem('Professional Summary', _vetProfileController.text),
-                    _buildSummaryItem('Age', _vetAgeController.text),
+                    _buildSummaryItem(
+                      'Date of Birth',
+                      _selectedDateOfBirth != null
+                          ? DateUtil.toReadableDate(_selectedDateOfBirth!)
+                          : 'Not provided',
+                    ),
                     _buildSummaryItem('Gender', _selectedGender?.toUpperCase() ?? ''),
                     _buildSummaryItem('Experience', '${_vetExperienceController.text} years'),
                     _buildSummaryItem('ID Photo', _idPhotoFile != null ? 'Uploaded' : 'Not uploaded'),

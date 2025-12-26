@@ -269,6 +269,8 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 24),
+                      TextButton(onPressed: ()=>context.go('/login'), child: Text('Go back to login'))
                     ],
                   ),
                 ),

@@ -24,7 +24,8 @@ class LocationPickerStep extends StatefulWidget {
 }
 
 class _LocationPickerStepState extends State<LocationPickerStep> {
-  final TextEditingController _controller = TextEditingController();
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
   String? _selectedAddress;
   double? _latitude;
   double? _longitude;
@@ -32,49 +33,123 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
   @override
   void initState() {
     super.initState();
+    // Initialize controller and focus node ONCE
+    _controller = TextEditingController(text: widget.selectedAddress ?? '');
+    _focusNode = FocusNode();
+
     _selectedAddress = widget.selectedAddress;
     _latitude = widget.latitude;
     _longitude = widget.longitude;
-    if (_selectedAddress != null) {
-      _controller.text = _selectedAddress!;
+
+    // Listen to focus changes
+    _focusNode.addListener(_onFocusChange);
+  }
+
+  void _onFocusChange() {
+    // This helps prevent focus issues with other text fields
+    if (!_focusNode.hasFocus) {
+      // When focus is lost, ensure the field is properly unfocused
+      setState(() {});
+    }
+  }
+
+  @override
+  void didUpdateWidget(LocationPickerStep oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Only update if the parent widget's values changed
+    if (widget.selectedAddress != oldWidget.selectedAddress &&
+        widget.selectedAddress != _selectedAddress) {
+      _controller.text = widget.selectedAddress ?? '';
+      _selectedAddress = widget.selectedAddress;
+      _latitude = widget.latitude;
+      _longitude = widget.longitude;
     }
   }
 
   @override
   void dispose() {
+    // Properly dispose focus node and controller
+    _focusNode.removeListener(_onFocusChange);
+    _focusNode.dispose();
     _controller.dispose();
     super.dispose();
   }
 
+  void _handleLocationSelected(Prediction prediction) {
+    final address = prediction.description ?? '';
+    final lat = double.tryParse(prediction.lat ?? '0');
+    final lng = double.tryParse(prediction.lng ?? '0');
+
+    if (address.isNotEmpty && lat != null && lng != null) {
+      setState(() {
+        _selectedAddress = address;
+        _latitude = lat;
+        _longitude = lng;
+      });
+
+      // Notify parent widget
+      widget.onLocationSelected(address, lat, lng);
+
+      // CRITICAL: Unfocus this field immediately after selection
+      _focusNode.unfocus();
+
+      // Extra safety: request focus removal from the entire scope
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          FocusScope.of(context).unfocus();
+        }
+      });
+    }
+  }
+
+  void _clearLocation() {
+    setState(() {
+      _controller.clear();
+      _selectedAddress = null;
+      _latitude = null;
+      _longitude = null;
+    });
+
+    // Unfocus when clearing
+    _focusNode.unfocus();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Select Your Location',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Select Your Location',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
           ),
-          const SizedBox(height: 8),
-          const Text(
-            'Search and select your farm or practice location',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.black54,
-            ),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Search and select your farm or practice location',
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.black54,
           ),
-          const SizedBox(height: 40),
+        ),
+        const SizedBox(height: 40),
 
-          // Google Places Autocomplete TextField
-          GooglePlaceAutoCompleteTextField(
+        // Google Places Autocomplete TextField
+        Focus(
+          // Wrap in Focus widget for better focus control
+          onFocusChange: (hasFocus) {
+            if (!hasFocus) {
+              // Additional handling when focus is lost
+              setState(() {});
+            }
+          },
+          child: GooglePlaceAutoCompleteTextField(
             textEditingController: _controller,
             googleAPIKey: AppConstants.googleApiKey,
+            focusNode: _focusNode, // Explicitly provide focus node
             inputDecoration: InputDecoration(
               hintText: 'Search for your location',
               labelText: 'Location',
@@ -85,14 +160,7 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
               suffixIcon: _controller.text.isNotEmpty
                   ? IconButton(
                 icon: const Icon(Icons.clear),
-                onPressed: () {
-                  setState(() {
-                    _controller.clear();
-                    _selectedAddress = null;
-                    _latitude = null;
-                    _longitude = null;
-                  });
-                },
+                onPressed: _clearLocation,
               )
                   : null,
               border: OutlineInputBorder(
@@ -111,25 +179,9 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
               fillColor: Colors.grey.shade50,
             ),
             debounceTime: 800,
-            countries: ["ke"], // Kenya - change to your country code if needed
+            countries: const ["ke"],
             isLatLngRequired: true,
-            getPlaceDetailWithLatLng: (Prediction prediction) {
-              setState(() {
-                _selectedAddress = prediction.description ?? '';
-                _latitude = double.tryParse(prediction.lat ?? '0');
-                _longitude = double.tryParse(prediction.lng ?? '0');
-              });
-
-              if (_selectedAddress != null &&
-                  _latitude != null &&
-                  _longitude != null) {
-                widget.onLocationSelected(
-                  _selectedAddress!,
-                  _latitude!,
-                  _longitude!,
-                );
-              }
-            },
+            getPlaceDetailWithLatLng: _handleLocationSelected,
             itemClick: (Prediction prediction) {
               _controller.text = prediction.description ?? "";
               _controller.selection = TextSelection.fromPosition(
@@ -161,90 +213,90 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
             },
             isCrossBtnShown: true,
           ),
+        ),
 
-          const SizedBox(height: 30),
+        const SizedBox(height: 30),
 
-          // Selected Location Display
-          if (_selectedAddress != null && _latitude != null && _longitude != null)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: widget.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: widget.primaryColor.withOpacity(0.3),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.check_circle,
-                        color: widget.primaryColor,
-                        size: 24,
-                      ),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Text(
-                          'Location Selected',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    _selectedAddress!,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                ],
-              ),
-            ),
-
-          const SizedBox(height: 20),
-
-          // Info Card
+        // Selected Location Display
+        if (_selectedAddress != null && _latitude != null && _longitude != null)
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.blue.shade50,
+              color: widget.primaryColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.blue.shade200),
+              border: Border.all(
+                color: widget.primaryColor.withOpacity(0.3),
+              ),
             ),
-            child: Row(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.info_outline,
-                  color: Colors.blue.shade700,
-                  size: 24,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Start typing to search for your location. Select from the dropdown suggestions to set your exact location.',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.blue.shade900,
-                      height: 1.4,
+                Row(
+                  children: [
+                    Icon(
+                      Icons.check_circle,
+                      color: widget.primaryColor,
+                      size: 24,
                     ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Location Selected',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  _selectedAddress!,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.black87,
                   ),
                 ),
+                const SizedBox(height: 8),
               ],
             ),
           ),
-        ],
-      ),
+
+        const SizedBox(height: 20),
+
+        // Info Card
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.blue.shade50,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.blue.shade200),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.info_outline,
+                color: Colors.blue.shade700,
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Start typing to search for your location. Select from the dropdown suggestions to set your exact location.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.blue.shade900,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

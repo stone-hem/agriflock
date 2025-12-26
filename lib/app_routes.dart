@@ -5,6 +5,7 @@ import 'package:agriflock360/features/farmer/batch/log_feeding_screen.dart';
 import 'package:agriflock360/features/farmer/batch/quick_done_today_screen.dart';
 import 'package:agriflock360/features/farmer/batch/record_product_screen.dart';
 import 'package:agriflock360/features/farmer/batch/update_vaccination_status_screen.dart';
+import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
 import 'package:agriflock360/features/farmer/farm/view/add_farm_screen.dart';
 import 'package:agriflock360/features/farmer/farm/view/add_inventory_item_screen.dart';
 import 'package:agriflock360/features/farmer/farm/view/batch_screen.dart';
@@ -28,6 +29,7 @@ import 'package:agriflock360/features/farmer/vet/vet_details_screen.dart';
 import 'package:agriflock360/features/farmer/vet/vet_order_screen.dart';
 import 'package:agriflock360/features/farmer/vet/vet_order_tracking_screen.dart';
 import 'package:agriflock360/features/farmer/vet/main_vet_screen.dart';
+import 'package:agriflock360/features/shared/error_screen.dart';
 import 'package:agriflock360/features/vet/payments/vet_payments_history_screen.dart';
 import 'package:agriflock360/features/vet/payments/vet_service_payments_screen.dart';
 import 'package:flutter/material.dart';
@@ -248,7 +250,16 @@ class AppRoutes {
         ),
         GoRoute(
           path: batches,
-          builder: (context, state) => const BatchesScreen(),
+          builder: (context, state) {
+            if (state.extra is! FarmModel) {
+              return const ErrorScreen(
+                title: 'Invalid navigation',
+                message: 'Farm not provided. Please select a farm and try again.',
+              );
+            }
+            final farm = state.extra as FarmModel;
+            return BatchesScreen(farm: farm);
+          },
           routes: [
             GoRoute(
               path: 'add',

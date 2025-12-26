@@ -32,65 +32,59 @@ class FarmModel {
   });
 
   factory FarmModel.fromJson(Map<String, dynamic> json) {
-    // Parse location - handle both string and object formats
+    // Parse location - handle JSON string or direct object
     String? locationStr;
     GpsCoordinates? gpsCoords;
 
-    // Check if location_data was preprocessed (from repository)
-    if (json['location_data'] != null) {
-      final locData = json['location_data'];
-      if (locData['location'] != null) {
-        final loc = locData['location'];
+    if (json['location'] != null) {
+      if (json['location'] is String) {
+        try {
+          // Try to parse as JSON string
+          final locationData = jsonDecode(json['location']);
+
+          // Extract formatted address
+          if (locationData['address'] != null &&
+              locationData['address']['formatted_address'] != null) {
+            locationStr = locationData['address']['formatted_address'];
+          }
+
+          // Extract GPS coordinates
+          if (locationData['latitude'] != null &&
+              locationData['longitude'] != null) {
+            gpsCoords = GpsCoordinates(
+              latitude: _parseDouble(locationData['latitude']),
+              longitude: _parseDouble(locationData['longitude']),
+              address: locationData['address'] != null
+                  ? AddressDetails.fromJson(locationData['address'])
+                  : null,
+            );
+          }
+        } catch (e) {
+          // If parsing fails, use the string as is
+          locationStr = json['location'];
+        }
+      } else if (json['location'] is Map) {
+        // Location is already a Map/object
+        final locationData = json['location'] as Map<String, dynamic>;
 
         // Extract formatted address
-        if (loc['address'] != null && loc['address']['formatted_address'] != null) {
-          locationStr = loc['address']['formatted_address'];
+        if (locationData['address'] != null &&
+            locationData['address']['formatted_address'] != null) {
+          locationStr = locationData['address']['formatted_address'];
         }
 
         // Extract GPS coordinates
-        if (loc['latitude'] != null && loc['longitude'] != null) {
+        if (locationData['latitude'] != null &&
+            locationData['longitude'] != null) {
           gpsCoords = GpsCoordinates(
-            latitude: _parseDouble(loc['latitude']),
-            longitude: _parseDouble(loc['longitude']),
-            address: loc['address'] != null
-                ? AddressDetails.fromJson(loc['address'])
+            latitude: _parseDouble(locationData['latitude']),
+            longitude: _parseDouble(locationData['longitude']),
+            address: locationData['address'] != null
+                ? AddressDetails.fromJson(locationData['address'])
                 : null,
           );
         }
       }
-    }
-    // Fallback: try parsing location field directly if it's a string
-    else if (json['location'] != null && json['location'] is String) {
-      try {
-        final locData = jsonDecode(json['location']);
-        if (locData['location'] != null) {
-          final loc = locData['location'];
-
-          if (loc['address'] != null && loc['address']['formatted_address'] != null) {
-            locationStr = loc['address']['formatted_address'];
-          }
-
-          if (loc['latitude'] != null && loc['longitude'] != null) {
-            gpsCoords = GpsCoordinates(
-              latitude: _parseDouble(loc['latitude']),
-              longitude: _parseDouble(loc['longitude']),
-              address: loc['address'] != null
-                  ? AddressDetails.fromJson(loc['address'])
-                  : null,
-            );
-          }
-        }
-      } catch (e) {
-        // If parsing fails, use the string as is
-        locationStr = json['location'];
-      }
-    }
-    // Handle old format where gps_coordinates is separate
-    else if (json['gps_coordinates'] != null) {
-      gpsCoords = GpsCoordinates.fromJson(json['gps_coordinates']);
-      locationStr = json['location'];
-    } else {
-      locationStr = json['location'];
     }
 
     return FarmModel(
