@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
+import 'package:agriflock360/features/shared/widgets/profile_menu_item.dart';
 import 'package:agriflock360/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -491,7 +492,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 children: [
-                  _ProfileMenuItem(
+                  ProfileMenuItem(
                     icon: Icons.payment_outlined,
                     title: 'Subscription',
                     subtitle: 'Check my subscription',
@@ -500,7 +501,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       context.push('/payg');
                     },
                   ),
-                  _ProfileMenuItem(
+                  ProfileMenuItem(
                     icon: Icons.location_on_outlined,
                     title: 'Brooder live data',
                     subtitle: 'See live brooder data',
@@ -509,7 +510,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       context.push('/telemetry');
                     },
                   ),
-                  _ProfileMenuItem(
+                  ProfileMenuItem(
                     icon: Icons.settings_outlined,
                     title: 'Settings',
                     subtitle: 'App preferences and notifications',
@@ -518,7 +519,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       context.push('/settings');
                     },
                   ),
-                  _ProfileMenuItem(
+                  ProfileMenuItem(
                     icon: Icons.help_outline,
                     title: 'Help & Support',
                     subtitle: 'Get help and contact support',
@@ -527,7 +528,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       context.push('/help');
                     },
                   ),
-                  _ProfileMenuItem(
+                  ProfileMenuItem(
                     icon: Icons.info_outline,
                     title: 'About Agriflock 360',
                     subtitle: 'App version and information',
@@ -738,64 +739,3 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-class _ProfileMenuItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _ProfileMenuItem({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.shade200),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: color, size: 20),
-        ),
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: TextStyle(
-            color: Colors.grey.shade600,
-            fontSize: 12,
-          ),
-        ),
-        trailing: Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(Icons.chevron_right, size: 16, color: Colors.grey.shade600),
-        ),
-        onTap: onTap,
-      ),
-    );
-  }
-}

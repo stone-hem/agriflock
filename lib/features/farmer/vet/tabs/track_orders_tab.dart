@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/utils/date_util.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_order.dart';
@@ -9,13 +10,6 @@ class TrackOrdersTab extends StatelessWidget {
     super.key,
     required this.vetOrders,
   });
-
-  void _navigateToOrderTracking(VetOrder order) {
-    BuildContext? context = navigatorKey.currentContext;
-    if (context != null) {
-      context.push('/vet-order-tracking', extra: order);
-    }
-  }
 
   List<VetOrder> get activeOrders => vetOrders.where((order) => order.status != OrderStatus.completed).toList();
 
@@ -68,7 +62,7 @@ class TrackOrdersTab extends StatelessWidget {
       ),
       margin: const EdgeInsets.only(bottom: 16),
       child: InkWell(
-        onTap: () => _navigateToOrderTracking(order),
+        onTap: () =>  context.push('/vet-order-tracking', extra: order),
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -133,7 +127,7 @@ class TrackOrdersTab extends StatelessWidget {
                   SizedBox(
                     width: MediaQuery.of(context).size.width * 0.4,
                     child: Text(
-                      order.scheduledDate.toLocal().toString(),
+                      DateUtil.toDateWithDay(order.scheduledDate),
                       style: TextStyle(
                         color: Colors.grey.shade700,
                         fontSize: 14,
@@ -207,7 +201,7 @@ class TrackOrdersTab extends StatelessWidget {
                       ),
                       IconButton(
                         icon: Icon(Icons.track_changes, color: Colors.blue.shade600),
-                        onPressed: () => _navigateToOrderTracking(order),
+                        onPressed: () =>  context.push('/vet-order-tracking', extra: order),
                       ),
                     ],
                   ),
@@ -235,7 +229,7 @@ class TrackOrdersTab extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () => _navigateToOrderTracking(order),
+                      onPressed: () =>  context.push('/vet-order-tracking', extra: order),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
                         padding: const EdgeInsets.symmetric(vertical: 12),
