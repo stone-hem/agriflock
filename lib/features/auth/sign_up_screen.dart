@@ -537,9 +537,9 @@ class _SignupScreenState extends State<SignupScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Prepare the complete phone number with country code
       final countryCode = _selectedCountry?.dialCode ?? '+1';
-      final completePhoneNumber = phone.startsWith('+') ? phone : '$countryCode$phone';
+      final completePhoneNumber =
+      phone.startsWith('+') ? phone : '$countryCode$phone';
 
       final response = await apiClient.post(
         '/auth/register',
@@ -547,38 +547,32 @@ class _SignupScreenState extends State<SignupScreen> {
           'name': fullName,
           'email': email,
           'password': password,
-          // 'country_code': _selectedCountry?.code ?? 'US',
           'phone_number': completePhoneNumber,
-          'agreed_to_terms': true
+          'agreed_to_terms': true,
         },
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-
-        // Check if registration was successful
-        if (data['success'] == true || response.statusCode == 201) {
-
-          if (mounted) {
-            ToastUtil.showSuccess("Account created successfully! Please verify your account.");
-
-            // Navigate to verification screen
-            // Pass email as query parameter for verification
-            context.go('/verify-email-or-phone?email=${Uri.encodeComponent(email)}');
-          }
-        } else {
-          final errorMessage = data['message'] ?? 'Registration failed';
-          ToastUtil.showError(errorMessage);
-        }
-      } else {
+      if (response.statusCode != 200 && response.statusCode != 201) {
         ApiErrorHandler.handle(response);
+        return;
       }
+
+      if (!mounted) return;
+
+      ToastUtil.showSuccess(
+        "Account created successfully! Please verify your account.",
+      );
+
+      context.go(
+        '/verify-email-or-phone?email=${Uri.encodeComponent(email)}',
+      );
     } catch (e) {
       ApiErrorHandler.handle(e);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
+
 
   void _signUpWithGoogle() async {
     setState(() => _isLoading = true);

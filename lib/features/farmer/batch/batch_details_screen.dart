@@ -1,3 +1,4 @@
+import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/tabs/batch_feed_tab.dart';
 import 'package:agriflock360/features/farmer/batch/tabs/batch_overview.dart';
 import 'package:agriflock360/features/farmer/batch/tabs/batch_products_tab.dart';
@@ -5,9 +6,10 @@ import 'package:agriflock360/features/farmer/batch/tabs/batch_vaccinations_tab.d
 import 'package:flutter/material.dart';
 
 class BatchDetailsScreen extends StatefulWidget {
-  final Map<String, dynamic> batch;
+  final BatchModel batch;
+  final String farmId;
 
-  const BatchDetailsScreen({super.key, required this.batch});
+  const BatchDetailsScreen({super.key, required this.batch, required this.farmId});
 
   @override
   State<BatchDetailsScreen> createState() => _BatchDetailsScreenState();

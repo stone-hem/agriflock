@@ -1,9 +1,10 @@
+import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/shared/stat_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class BatchFeedTab extends StatefulWidget {
-  final Map<String, dynamic> batch;
+  final BatchModel batch;
 
   const BatchFeedTab({super.key, required this.batch});
 

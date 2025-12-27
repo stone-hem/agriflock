@@ -8,7 +8,7 @@ import 'package:agriflock360/features/farmer/batch/update_vaccination_status_scr
 import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
 import 'package:agriflock360/features/farmer/farm/view/add_farm_screen.dart';
 import 'package:agriflock360/features/farmer/farm/view/add_inventory_item_screen.dart';
-import 'package:agriflock360/features/farmer/farm/view/batch_screen.dart';
+import 'package:agriflock360/features/farmer/batch/batch_screen.dart';
 import 'package:agriflock360/features/farmer/farm/view/farms_home_screen.dart';
 import 'package:agriflock360/features/farmer/farm/view/inventory_screen.dart';
 import 'package:agriflock360/features/farmer/more/notifications_screen.dart';
@@ -263,19 +263,37 @@ class AppRoutes {
           routes: [
             GoRoute(
               path: 'add',
-              builder: (context, state) => const AddBatchScreen(),
+              name: 'addBatch',
+              builder: (context, state) {
+                final extra = state.extra as Map<String, dynamic>?;
+                return AddEditBatchScreen(
+                  farmId: extra?['farmId'] ?? '',
+                  houseId: extra?['houseId'],
+                  houses: extra?['houses'],
+                );
+              },
+            ),
+            GoRoute(
+              path: 'edit',
+              name: 'editBatch',
+              builder: (context, state) {
+                final extra = state.extra as Map<String, dynamic>;
+                return AddEditBatchScreen(
+                  farmId: extra['farmId'],
+                  batch: extra['batch'],
+                  houses: extra['houses'],
+                );
+              },
             ),
             GoRoute(
               path: 'details',
-              builder: (context, state) => BatchDetailsScreen(
-                batch: {
-                  "name": "Layer Batch 1",
-                  "breed": "Kienyeji Improved",
-                  "quantity": 320,
-                  "age": 87,
-                  "mortality": 5,
-                },
-              ),
+              builder: (context, state) {
+                final extra = state.extra as Map<String, dynamic>;
+                return BatchDetailsScreen(
+                  farmId: extra['farmId'],
+                  batch: extra['batch'],
+              );
+              }
             ),
             GoRoute(
               path: 'feed',

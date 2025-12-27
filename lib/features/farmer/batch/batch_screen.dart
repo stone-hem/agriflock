@@ -1,6 +1,6 @@
 import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
-import 'package:agriflock360/features/farmer/farm/view/tabs/active_batches_tab.dart';
-import 'package:agriflock360/features/farmer/farm/view/tabs/archived_batches_tab.dart';
+import 'package:agriflock360/features/farmer/batch/tabs/active_batches_tab.dart';
+import 'package:agriflock360/features/farmer/batch/tabs/archived_batches_tab.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 

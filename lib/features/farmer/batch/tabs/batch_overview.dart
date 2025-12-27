@@ -1,9 +1,10 @@
+import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/shared/stat_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class BatchOverview extends StatelessWidget {
-  final Map<String, dynamic> batch;
+  final BatchModel batch;
 
   const BatchOverview({super.key, required this.batch});
 
@@ -44,7 +45,7 @@ class BatchOverview extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              batch['name'],
+                              batch.batchName,
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -52,7 +53,7 @@ class BatchOverview extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              batch['breed'],
+                              batch.breed,
                               style: TextStyle(
                                 color: Colors.grey.shade600,
                                 fontSize: 16,
@@ -91,7 +92,7 @@ class BatchOverview extends StatelessWidget {
             children: [
               Expanded(
                 child: StatCard(
-                  value: '${batch['quantity']}',
+                  value: '${batch.birdsAlive}',
                   label: 'Total Birds',
                   color: Colors.blue.shade100,
                   icon: Icons.agriculture, textColor: Colors.blue.shade800,
@@ -100,7 +101,7 @@ class BatchOverview extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: StatCard(
-                  value: '${batch['age']}',
+                  value: '${batch.age}',
                   label: 'Days Old',
                   color: Colors.orange.shade100,
                   icon: Icons.calendar_today, textColor: Colors.orange.shade800,
@@ -113,7 +114,7 @@ class BatchOverview extends StatelessWidget {
             children: [
               Expanded(
                 child: StatCard(
-                  value: '${batch['mortality']}',
+                  value: '${batch.mortality}',
                   label: 'Mortality',
                   color: Colors.red.shade100,
                   icon: Icons.flag, textColor: Colors.red.shade800,
@@ -122,7 +123,7 @@ class BatchOverview extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: StatCard(
-                  value: '${(batch['quantity'] - batch['mortality'])}',
+                  value: '${(batch.birdsAlive - batch.mortality)}',
                   label: 'Live Birds',
                   color: Colors.green.shade100,
                   icon: Icons.verified_user, textColor: Colors.green.shade800,

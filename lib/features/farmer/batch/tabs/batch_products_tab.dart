@@ -1,9 +1,10 @@
+import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/shared/stat_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class BatchProductsTab extends StatelessWidget {
-  final Map<String, dynamic> batch;
+  final BatchModel batch;
 
   const BatchProductsTab({super.key, required this.batch});
 
@@ -106,7 +107,7 @@ class BatchProductsTab extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          context.push('/batches/${batch['id']}/record-product');
+          context.push('/batches/${batch.id}/record-product');
         },
         backgroundColor: Colors.green,
         icon: const Icon(Icons.add),

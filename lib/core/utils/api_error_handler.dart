@@ -58,7 +58,9 @@ class ApiErrorHandler {
           }
         } else if (statusCode == 404) {
           ToastUtil.showError(body['message'] ?? "Resource not found");
-        } else if (statusCode >= 500) {
+        } else if (statusCode == 409) {
+        ToastUtil.showError(body['message'] ?? "Conflict");
+      } else if (statusCode >= 500) {
           ToastUtil.showError("Server error. Please try again later.");
         } else if (body['message'] != null) {
           ToastUtil.showError(body['message']);

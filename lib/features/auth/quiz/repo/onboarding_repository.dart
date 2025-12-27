@@ -79,9 +79,9 @@ class OnboardingRepository {
         'date_of_birth': dateOfBirth,
         'gender': gender,
         'years_of_experience': yearsOfExperience,
-        'professional_summary': professionalSummary,
+        'profile_bio': professionalSummary,
         'education_level': educationLevel,
-        'officer_type': 'ext_officer',
+        'officer_type': 'vet',
       };
 
       // Prepare files
@@ -103,27 +103,28 @@ class OnboardingRepository {
       for (var file in certificates) {
         if (file.path != null) {
           files.add(await http.MultipartFile.fromPath(
-            'certificates[]',
+            'certificates',
             file.path!,
           ));
         }
       }
 
-      // Add additional documents if any
+// Add additional documents if any
       if (additionalDocuments != null) {
         for (var file in additionalDocuments) {
           if (file.path != null) {
             files.add(await http.MultipartFile.fromPath(
-              'additional_certificates[]',
+              'additional_certificates',
               file.path!,
             ));
           }
         }
       }
 
+
       // Submit multipart request
       final streamedResponse = await apiClient.postMultipart(
-        '/extension-officer',
+        '/extension-officers',
         fields: fields,
         files: files,
         headers: {'Authorization': 'Bearer $token'},
