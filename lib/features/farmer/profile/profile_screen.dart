@@ -1,9 +1,12 @@
+import 'dart:io';
+import 'dart:convert';
 import 'package:agriflock360/core/utils/secure_storage.dart';
+import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
-
+import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -14,6 +17,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final SecureStorage _secureStorage = SecureStorage();
+  final ImagePicker _imagePicker = ImagePicker();
 
   // User data variables
   String _userName = 'Loading...';
@@ -23,7 +27,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? _userPhone;
   bool _isPremium = false;
   bool _isLoading = true;
-  double _profileCompletion = 65.0; // Default value, can be calculated from user data
+  bool _isUploading = false;
+  double _profileCompletion = 65.0;
 
   @override
   void initState() {
@@ -52,7 +57,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _userRole = 'Farmer';
           }
 
-          // Check if user is premium (you can adjust this logic based on your criteria)
+          // Check if user is premium
           _isPremium = userData['status'] == 'active' &&
               (userData['agreed_to_terms'] == true);
 
@@ -86,9 +91,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   double _calculateProfileCompletion(Map<String, dynamic> userData) {
-    // Calculate completion percentage based on available user data
     int completedFields = 0;
-    int totalFields = 5; // Adjust based on your required fields
+    int totalFields = 5;
 
     if (userData['name'] != null && userData['name'].toString().isNotEmpty) completedFields++;
     if (userData['email'] != null && userData['email'].toString().isNotEmpty) completedFields++;
@@ -97,6 +101,191 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (userData['agreed_to_terms'] == true) completedFields++;
 
     return (completedFields / totalFields) * 100;
+  }
+
+  Future<void> _uploadAvatar() async {
+    // Show image picker options
+    final option = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Take Photo'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Choose from Gallery'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete, color: Colors.red),
+              title: const Text('Remove Avatar', style: TextStyle(color: Colors.red)),
+              onTap: () async {
+                Navigator.pop(context);
+                await _deleteAvatar();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.cancel),
+              title: const Text('Cancel'),
+              onTap: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (option == null) return;
+
+    try {
+      final pickedFile = await _imagePicker.pickImage(
+        source: option,
+        imageQuality: 85,
+        maxWidth: 800,
+        maxHeight: 800,
+      );
+
+      if (pickedFile != null) {
+        await _uploadAvatarFile(File(pickedFile.path));
+      }
+    } catch (e) {
+      ToastUtil.showError('Failed to pick image: ${e.toString()}');
+    }
+  }
+
+  Future<void> _uploadAvatarFile(File imageFile) async {
+    setState(() {
+      _isUploading = true;
+    });
+
+    try {
+      // Create multipart file
+      final file = await http.MultipartFile.fromPath(
+        'file', // Field name as per your API
+        imageFile.path,
+      );
+
+      // Use the ApiClient's postMultipart method
+      final response = await apiClient.postMultipart(
+        '/users/profile/avatar',
+        files: [file],
+      );
+
+      // Get the response
+      final responseBody = await response.stream.bytesToString();
+      final responseData = jsonDecode(responseBody);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // Update avatar in local storage
+        final newAvatarUrl = responseData['avatar'] ?? responseData['data']?['avatar'];
+
+        if (newAvatarUrl != null) {
+          // Update secure storage
+          final userData = await _secureStorage.getUserData();
+          if (userData != null) {
+            userData['avatar'] = newAvatarUrl;
+            await _secureStorage.saveUserData(userData);
+          }
+
+          // Update UI
+          if (mounted) {
+            setState(() {
+              _userAvatar = newAvatarUrl;
+              _profileCompletion = _calculateProfileCompletion(userData ?? {});
+            });
+          }
+
+          ToastUtil.showSuccess('Avatar updated successfully!');
+        } else {
+          ToastUtil.showError('Failed to get avatar URL from response');
+        }
+      } else {
+        // Handle API error
+        final errorMessage = responseData['message'] ??
+            responseData['error'] ??
+            'Failed to upload avatar';
+        ToastUtil.showError(errorMessage);
+      }
+    } catch (e) {
+      ToastUtil.showError('Failed to upload avatar: ${e.toString()}');
+      print('Upload error: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _deleteAvatar() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remove Avatar'),
+        content: const Text('Are you sure you want to remove your avatar?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              'Remove',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() {
+      _isUploading = true;
+    });
+
+    try {
+      final response = await apiClient.delete('/users/profile/avatar');
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        // Update local storage
+        final userData = await _secureStorage.getUserData();
+        if (userData != null) {
+          userData['avatar'] = null;
+          await _secureStorage.saveUserData(userData);
+        }
+
+        // Update UI
+        if (mounted) {
+          setState(() {
+            _userAvatar = null;
+            _profileCompletion = _calculateProfileCompletion(userData ?? {});
+          });
+        }
+
+        ToastUtil.showSuccess('Avatar removed successfully!');
+      } else {
+        final responseData = jsonDecode(response.body);
+        final errorMessage = responseData['message'] ??
+            responseData['error'] ??
+            'Failed to remove avatar';
+        ToastUtil.showError(errorMessage);
+      }
+    } catch (e) {
+      ToastUtil.showError('Failed to remove avatar: ${e.toString()}');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -150,19 +339,78 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               child: Column(
                 children: [
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Colors.white,
-                    child: _isLoading
-                        ? const CircularProgressIndicator()
-                        : CircleAvatar(
-                      radius: 46,
-                      backgroundImage: _userAvatar != null
-                          ? NetworkImage(_userAvatar!)
-                          : const NetworkImage('https://i.pravatar.cc/300'),
-                    ),
+                  // Avatar with edit button
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      _isLoading || _isUploading
+                          ? Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.grey.shade200,
+                        ),
+                        child: const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      )
+                          : GestureDetector(
+                        onTap: _isUploading ? null : _uploadAvatar,
+                        child: Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.green,
+                              width: 2,
+                            ),
+                          ),
+                          child: CircleAvatar(
+                            radius: 46,
+                            backgroundColor: Colors.white,
+                            backgroundImage: _userAvatar != null
+                                ? NetworkImage(_userAvatar!)
+                                : const NetworkImage('https://i.pravatar.cc/300')
+                            as ImageProvider,
+                            child: _userAvatar == null
+                                ? const Icon(
+                              Icons.person,
+                              size: 40,
+                              color: Colors.grey,
+                            )
+                                : null,
+                          ),
+                        ),
+                      ),
+                      // Edit icon overlay
+                      if (!_isLoading && !_isUploading)
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.green,
+                              border: Border.all(
+                                color: Colors.white,
+                                width: 3,
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.edit,
+                              size: 18,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
-                  const SizedBox(height: 5),
+
+                  const SizedBox(height: 16),
                   Text(
                     _userName,
                     style: const TextStyle(
@@ -237,7 +485,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
             ),
-
 
             // Menu Items
             Padding(

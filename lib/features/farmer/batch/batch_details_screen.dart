@@ -4,6 +4,7 @@ import 'package:agriflock360/features/farmer/batch/tabs/batch_overview.dart';
 import 'package:agriflock360/features/farmer/batch/tabs/batch_products_tab.dart';
 import 'package:agriflock360/features/farmer/batch/tabs/batch_vaccinations_tab.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class BatchDetailsScreen extends StatefulWidget {
   final BatchModel batch;
@@ -63,7 +64,11 @@ class _BatchDetailsScreenState extends State<BatchDetailsScreen>
           IconButton(
             icon: Icon(Icons.edit, color: Colors.grey.shade700),
             onPressed: () {
-              // Navigate to edit screen
+              context.push('/batches/edit', extra: {
+                'batch': widget.batch,
+                'farmId': widget.farmId,
+                'houseId': widget.batch.houseId,
+              });
             },
           ),
         ],

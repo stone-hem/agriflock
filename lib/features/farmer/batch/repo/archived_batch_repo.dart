@@ -51,7 +51,7 @@ class ArchivedBatchRepository {
   Future<void> restoreBatch(String farmId, String batchId) async {
     try {
       final response = await apiClient.post(
-        '/farms/$farmId/batches/$batchId/restore',
+        '/batchs/$batchId/restore',
         body: {},
       );
 
@@ -68,7 +68,7 @@ class ArchivedBatchRepository {
   // Permanently delete an archived batch
   Future<void> deleteArchivedBatch(String farmId, String batchId) async {
     try {
-      final response = await apiClient.delete('/farms/$farmId/batches/$batchId/permanent');
+      final response = await apiClient.delete('/batchs/$batchId');
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
         final jsonResponse = jsonDecode(response.body);

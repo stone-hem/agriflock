@@ -1,3 +1,5 @@
+import 'package:agriflock360/core/utils/api_error_handler.dart';
+import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/features/auth/quiz/shared/custom_text_field.dart';
 import 'package:agriflock360/core/widgets/file_upload.dart';
 import 'package:agriflock360/features/auth/quiz/shared/gender_selector.dart';
@@ -6,6 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
+import 'dart:convert';
+
+import '../../../main.dart';
 
 class CompleteProfileScreen extends StatefulWidget {
   const CompleteProfileScreen({super.key});
@@ -26,9 +31,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   final TextEditingController _idNumberController = TextEditingController();
   final TextEditingController _dobController = TextEditingController();
   String? _selectedGender;
-  String? _selectedPoultryType; // Changed from TextEditingController
+  String? _selectedPoultryType;
   final TextEditingController _houseCapacityController = TextEditingController();
-  final TextEditingController _currentChickensController = TextEditingController();
+  final TextEditingController _otherPoultryTypeController = TextEditingController();
 
   // Photos
   File? _idPhoto;
@@ -36,16 +41,14 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   // Additional documents
   final List<PlatformFile> _uploadedFiles = [];
 
+  // Loading state
+  bool _isLoading = false;
+
   // Poultry type options
   final List<String> _poultryTypes = [
     'Broilers',
     'Layers',
-    'Indigenous',
-    'Dual Purpose',
-    'Quails',
-    'Turkey',
-    'Ducks',
-    'Geese',
+    'Improved Kienyeji',
     'Other'
   ];
 
@@ -64,13 +67,13 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       color: primaryGreen,
       stepNumber: 2,
     ),
-    ProfileStep(
-      title: 'Verification',
-      subtitle: 'Upload photos for verification',
-      icon: Icons.verified_user_outlined,
-      color: primaryGreen,
-      stepNumber: 3,
-    ),
+    // ProfileStep(
+    //   title: 'Verification',
+    //   subtitle: 'Upload photos for verification',
+    //   icon: Icons.verified_user_outlined,
+    //   color: primaryGreen,
+    //   stepNumber: 3,
+    // ),
   ];
 
   @override
@@ -84,7 +87,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     _idNumberController.dispose();
     _dobController.dispose();
     _houseCapacityController.dispose();
-    _currentChickensController.dispose();
+    _otherPoultryTypeController.dispose();
     super.dispose();
   }
 
@@ -117,7 +120,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     );
     if (picked != null && mounted) {
       setState(() {
-        _dobController.text = "${picked.day}/${picked.month}/${picked.year}";
+        _dobController.text = picked.toIso8601String(); // Use ISO format for API
       });
     }
   }
@@ -137,49 +140,82 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   bool _isCurrentStepValid() {
     switch (_currentPage) {
       case 0: // Personal Information
-        return true;
-    // return _fullNameController.text.isNotEmpty &&
-    //     _idNumberController.text.isNotEmpty &&
-    //     _phoneController.text.isNotEmpty &&
-    //     _dobController.text.isNotEmpty &&
-    //     _selectedGender != null &&
-    //     _experienceController.text.isNotEmpty;
+        return
+          _idNumberController.text.isNotEmpty &&
+              _dobController.text.isNotEmpty &&
+              _selectedGender != null;
 
       case 1: // Farm Operations
-        return true;
-    // return _selectedPoultryType != null &&
-    //     _houseCapacityController.text.isNotEmpty &&
-    //     _currentChickensController.text.isNotEmpty;
+        return _selectedPoultryType != null &&
+            _houseCapacityController.text.isNotEmpty &&
+            (_selectedPoultryType != 'Other' ||
+                _otherPoultryTypeController.text.isNotEmpty);
 
-      case 2: // Verification
-        return true;
-    // return _idPhoto != null;
+    // case 2: // Verification
+    //   return true;
+    //   // return _idPhoto != null;
 
       default:
         return false;
     }
   }
 
-  void _completeProfile() {
-    // TODO: Save profile data to backend
-    final profileData = {
-      'idNumber': _idNumberController.text,
-      'dob': _dobController.text,
-      'gender': _selectedGender,
-      'poultryType': _selectedPoultryType,
-      'houseCapacity': _houseCapacityController.text,
-      'currentChickens': _currentChickensController.text,
-    };
+  Future<void> _completeProfile() async {
+    if (!_isCurrentStepValid()) {
+      ToastUtil.showError('Please fill all required fields');
+      return;
+    }
 
-    print('Profile data to save: $profileData');
+    setState(() {
+      _isLoading = true;
+    });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Profile completed successfully!'),
-        backgroundColor: Colors.green,
-      ),
-    );
-    context.go('/dashboard'); // Navigate to dashboard after completion
+    try {
+      // Prepare profile data
+      final profileData = {
+        'national_id': _idNumberController.text.trim(),
+        'date_of_birth': _dobController.text.trim(),
+        'gender': _selectedGender,
+        'poultry_type': (_selectedPoultryType == 'Other'
+            ? _otherPoultryTypeController.text.trim()
+            : _selectedPoultryType)?.toLowerCase() ?? '',
+        'chicken_house_capacity': int.tryParse(_houseCapacityController.text.trim()) ?? 0,
+      };
+
+
+      // Make API call
+      final response = await apiClient.put(
+        '/users/profile', // Your API endpoint
+        body: profileData,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          // Add auth token if needed:
+          // 'Authorization': 'Bearer $yourToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        ToastUtil.showSuccess(
+         'Profile completed successfully! Please Log in again to use the app.',
+        );
+
+        // Navigate to login
+        await apiClient.logout();
+      } else {
+        ApiErrorHandler.handle(response);
+      }
+    } catch (e) {
+      ApiErrorHandler.handle(e);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -271,8 +307,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         return _buildPersonalInfoPage();
       case 1:
         return _buildFarmOperationsPage();
-      case 2:
-        return _buildVerificationPage();
+    // case 2:
+    //   return _buildVerificationPage();
       default:
         return Container();
     }
@@ -342,7 +378,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       Text(
                         _dobController.text.isEmpty
                             ? 'Select your date of birth'
-                            : _dobController.text,
+                            : _formatDateForDisplay(_dobController.text),
                         style: TextStyle(
                           color: _dobController.text.isEmpty
                               ? Colors.grey.shade500
@@ -428,6 +464,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     onChanged: (String? newValue) {
                       setState(() {
                         _selectedPoultryType = newValue;
+                        if (newValue != 'Other') {
+                          _otherPoultryTypeController.clear();
+                        }
                       });
                     },
                     items: _poultryTypes.map((String type) {
@@ -444,11 +483,14 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                 Padding(
                   padding: const EdgeInsets.only(top: 10),
                   child: CustomTextField(
-                    controller: TextEditingController(),
-                    label: 'Specify other poultry type',
+                    controller: _otherPoultryTypeController,
+                    label: 'Specify other poultry type *',
                     hintText: 'Enter your specific poultry type',
                     icon: Icons.edit,
                     value: '',
+                    onChanged: (value) {
+                      setState(() {});
+                    },
                   ),
                 ),
             ],
@@ -463,74 +505,67 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
             icon: Icons.home_work,
             keyboardType: TextInputType.number,
             value: '',
-          ),
-          const SizedBox(height: 20),
-
-          // Current Number of Chickens
-          CustomTextField(
-            controller: _currentChickensController,
-            label: 'Current Number of Chickens *',
-            hintText: 'Current number of chickens in your farm',
-            icon: Icons.numbers,
-            keyboardType: TextInputType.number,
-            value: '',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildVerificationPage() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Verification Photos',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Upload photos for profile verification',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.black54,
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // ID Photo
-          PhotoUpload(
-            file: _idPhoto,
-            onFileSelected: (File? file) {
-              setState(() {
-                _idPhoto = file;
-              });
+            onChanged: (value) {
+              setState(() {});
             },
-            title: 'ID Photo *',
-            description: 'Upload a clear photo of your government-issued ID',
-            primaryColor: primaryGreen,
           ),
           const SizedBox(height: 20),
-
-          // Additional documents (optional)
-          FileUpload(
-            uploadedFiles: _uploadedFiles,
-            onFilesSelected: _onFilesSelected,
-            onFileRemoved: _onFileRemoved,
-            title: 'Additional Documents (Optional)',
-            description: 'Upload any additional farming certificates or documents',
-            primaryColor: primaryGreen,
-          ),
         ],
       ),
     );
   }
+
+  // Widget _buildVerificationPage() {
+  //   return SingleChildScrollView(
+  //     padding: const EdgeInsets.all(20),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         const Text(
+  //           'Verification Photos',
+  //           style: TextStyle(
+  //             fontSize: 24,
+  //             fontWeight: FontWeight.bold,
+  //             color: Colors.black87,
+  //           ),
+  //         ),
+  //         const SizedBox(height: 8),
+  //         const Text(
+  //           'Upload photos for profile verification',
+  //           style: TextStyle(
+  //             fontSize: 16,
+  //             color: Colors.black54,
+  //           ),
+  //         ),
+  //         const SizedBox(height: 20),
+  //
+  //         // ID Photo
+  //         PhotoUpload(
+  //           file: _idPhoto,
+  //           onFileSelected: (File? file) {
+  //             setState(() {
+  //               _idPhoto = file;
+  //             });
+  //           },
+  //           title: 'ID Photo *',
+  //           description: 'Upload a clear photo of your government-issued ID',
+  //           primaryColor: primaryGreen,
+  //         ),
+  //         const SizedBox(height: 20),
+  //
+  //         // Additional documents (optional)
+  //         FileUpload(
+  //           uploadedFiles: _uploadedFiles,
+  //           onFilesSelected: _onFilesSelected,
+  //           onFileRemoved: _onFileRemoved,
+  //           title: 'Additional Documents (Optional)',
+  //           description: 'Upload any additional farming certificates or documents',
+  //           primaryColor: primaryGreen,
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildBottomNavigation() {
     return Container(
@@ -550,7 +585,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           if (_currentPage > 0)
             Expanded(
               child: OutlinedButton(
-                onPressed: _previousPage,
+                onPressed: _isLoading ? null : _previousPage,
                 style: OutlinedButton.styleFrom(
                   foregroundColor: primaryGreen,
                   side: const BorderSide(color: primaryGreen),
@@ -566,15 +601,15 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           Expanded(
             flex: _currentPage > 0 ? 1 : 2,
             child: ElevatedButton(
-              onPressed: _isCurrentStepValid()
-                  ? () {
+              onPressed: _isLoading || !_isCurrentStepValid()
+                  ? null
+                  : () {
                 if (_currentPage < _profileSteps.length - 1) {
                   _nextPage();
                 } else {
                   _completeProfile();
                 }
-              }
-                  : null,
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryGreen,
                 foregroundColor: Colors.white,
@@ -584,7 +619,16 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                 ),
                 disabledBackgroundColor: Colors.grey.shade300,
               ),
-              child: Text(
+              child: _isLoading
+                  ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+                  : Text(
                 _currentPage == _profileSteps.length - 1
                     ? 'Complete Profile'
                     : 'Continue',
@@ -598,6 +642,15 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         ],
       ),
     );
+  }
+
+  String _formatDateForDisplay(String isoDate) {
+    try {
+      final date = DateTime.parse(isoDate);
+      return "${date.day}/${date.month}/${date.year}";
+    } catch (e) {
+      return isoDate;
+    }
   }
 }
 

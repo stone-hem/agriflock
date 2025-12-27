@@ -247,7 +247,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
-        if (data['success'] == true) {
           // Store the reset token from response
           final resetToken = data['resetToken'] ?? data['token'];
 
@@ -259,10 +258,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               '/reset-password?email=${Uri.encodeComponent(_emailController.text.trim())}&token=${Uri.encodeComponent(resetToken)}',
             );
           }
-        } else {
-          final errorMessage = data['message'] ?? 'Failed to send reset OTP';
-          ToastUtil.showError(errorMessage);
-        }
+
       } else {
         ApiErrorHandler.handle(response);
       }

@@ -236,7 +236,7 @@ class _AddEditBatchScreenState extends State<AddEditBatchScreen> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _selectedBreed,
+                initialValue: _selectedBreed,
                 decoration: InputDecoration(
                   hintText: 'Select breed',
                   border: OutlineInputBorder(
@@ -273,7 +273,7 @@ class _AddEditBatchScreenState extends State<AddEditBatchScreen> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _selectedType,
+                initialValue: _selectedType,
                 decoration: InputDecoration(
                   hintText: 'Select type',
                   border: OutlineInputBorder(
@@ -452,7 +452,7 @@ class _AddEditBatchScreenState extends State<AddEditBatchScreen> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _selectedFeedingTime,
+                initialValue: _selectedFeedingTime,
                 decoration: InputDecoration(
                   hintText: 'Select feeding time',
                   border: OutlineInputBorder(

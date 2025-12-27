@@ -10,11 +10,7 @@ class ResetPasswordScreen extends StatefulWidget {
   final String? email;
   final String? token;
 
-  const ResetPasswordScreen({
-    super.key,
-    this.email,
-    this.token,
-  });
+  const ResetPasswordScreen({super.key, this.email, this.token});
 
   @override
   State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
@@ -120,10 +116,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               Center(
                 child: Text(
                   'Create a new strong password for your account',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -133,7 +126,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 const SizedBox(height: 16),
                 Center(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.green.shade50,
                       borderRadius: BorderRadius.circular(12),
@@ -142,7 +138,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.email_outlined, color: Colors.green.shade700, size: 16),
+                        Icon(
+                          Icons.email_outlined,
+                          color: Colors.green.shade700,
+                          size: 16,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           _email,
@@ -192,11 +192,15 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade300,
+                              ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade300,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -255,11 +259,15 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade300,
+                              ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade300,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -309,17 +317,22 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                               ),
                               onPressed: () {
                                 setState(() {
-                                  _obscureConfirmPassword = !_obscureConfirmPassword;
+                                  _obscureConfirmPassword =
+                                      !_obscureConfirmPassword;
                                 });
                               },
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade300,
+                              ),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade300,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -349,10 +362,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                             onPressed: _isLoading
                                 ? null
                                 : () {
-                              if (_formKey.currentState!.validate()) {
-                                _resetPassword();
-                              }
-                            },
+                                    if (_formKey.currentState!.validate()) {
+                                      _resetPassword();
+                                    }
+                                  },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.green,
                               foregroundColor: Colors.white,
@@ -360,24 +373,28 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              disabledBackgroundColor: Colors.green.withOpacity(0.5),
+                              disabledBackgroundColor: Colors.green.withOpacity(
+                                0.5,
+                              ),
                             ),
                             child: _isLoading
                                 ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                    ),
+                                  )
                                 : const Text(
-                              'Reset Password',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                                    'Reset Password',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                           ),
                         ),
                       ],
@@ -395,7 +412,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   void _resetPassword() async {
     // Validate that we have token and email
     if (_token.isEmpty) {
-      ToastUtil.showError('Reset token is missing. Please request a new reset link.');
+      ToastUtil.showError(
+        'Reset token is missing. Please request a new reset link.',
+      );
       return;
     }
 
@@ -407,27 +426,23 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       final response = await apiClient.post(
         '/auth/reset-password',
         body: {
-          'token': _token,
-          'password': _newPasswordController.text,
-          'otp': _otpController.text, // Add OTP if your API needs it
+          "token": _token,
+          "new_password": _newPasswordController.text,
+          "confirm_password": _confirmPasswordController.text,
+          "otp": _otpController.text,
+          "email": _email
         },
       );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
-        if (data['success'] == true) {
-          ToastUtil.showSuccess(data['message'] ?? 'Password reset successfully!');
+        ToastUtil.showSuccess(
+          data['message'] ?? 'Password reset successfully!',
+        );
 
-          // Navigate to login after success
-          Future.delayed(const Duration(seconds: 1), () {
-            if (mounted) {
-              context.go('/login');
-            }
-          });
-        } else {
-          final errorMessage = data['message'] ?? 'Failed to reset password';
-          ToastUtil.showError(errorMessage);
+        if (mounted) {
+          context.go('/login');
         }
       } else {
         ApiErrorHandler.handle(response);
