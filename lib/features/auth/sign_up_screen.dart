@@ -1,7 +1,9 @@
 import 'dart:convert';
 
+import 'package:agriflock360/core/services/auth_service.dart';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
+import 'package:agriflock360/features/auth/repo/manual_auth_repo.dart';
 import 'package:agriflock360/features/auth/shared/auth_text_field.dart';
 import 'package:agriflock360/features/auth/shared/country_phone_input.dart';
 import 'package:agriflock360/features/auth/shared/country_service.dart';
@@ -23,6 +25,8 @@ class _SignupScreenState extends State<SignupScreen> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _manualAuthRepo = ManualAuthRepository();
+
 
   Country? _selectedCountry;
   List<Country> _countries = [];
@@ -541,33 +545,27 @@ class _SignupScreenState extends State<SignupScreen> {
       final completePhoneNumber =
       phone.startsWith('+') ? phone : '$countryCode$phone';
 
-      final response = await apiClient.post(
-        '/auth/register',
-        body: {
-          'name': fullName,
-          'email': email,
-          'password': password,
-          'phone_number': completePhoneNumber,
-          'agreed_to_terms': true,
-        },
+      final result = await _manualAuthRepo.signUp(
+        fullName: fullName,
+        email: email,
+        phoneNumber: completePhoneNumber,
+        password: password,
+        agreedToTerms: true,
       );
-
-      if (response.statusCode != 200 && response.statusCode != 201) {
-        ApiErrorHandler.handle(response);
-        return;
-      }
 
       if (!mounted) return;
 
-      ToastUtil.showSuccess(
-        "Account created successfully! Please verify your account.",
-      );
+      if (result['success'] == true) {
+        ToastUtil.showSuccess(
+          "Account created successfully! Please verify your account.",
+        );
 
-      context.go(
-        '/verify-email-or-phone?email=${Uri.encodeComponent(email)}',
-      );
+        context.go(
+          '/verify-email-or-phone?email=${Uri.encodeComponent(email)}',
+        );
+      }
     } catch (e) {
-      ApiErrorHandler.handle(e);
+      // Error already handled by repository
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -578,25 +576,24 @@ class _SignupScreenState extends State<SignupScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // final response = await AuthService().signInWithGoogle();
-      //
-      // if (response['success'] == true) {
-      //   final userData = response['data'];
-      //
-      //   // For social signup, check if user needs to complete profile
-      //   // or if they're already registered
-      //   if (userData['is_new_user'] == true) {
-      //     // New social user - redirect to complete profile or verification
-      //     context.go('/complete-profile');
-      //   } else {
-      //     // Existing user - log them in
-      //     if (mounted) {
-      //       ToastUtil.showSuccess("Welcome back!");
-      //       context.go('/dashboard');
-      //     }
-      //   }
-      // }
-      context.go('/dashboard');
+      final response = await AuthService().signInWithGoogle();
+
+      if (response['success'] == true) {
+        final userData = response['data'];
+
+        // For social signup, check if user needs to complete profile
+        // or if they're already registered
+        if (userData['is_new_user'] == true) {
+          // New social user - redirect to complete profile or verification
+          context.go('/complete-profile');
+        } else {
+          // Existing user - log them in
+          if (mounted) {
+            ToastUtil.showSuccess("Welcome back!");
+            context.go('/dashboard');
+          }
+        }
+      }
 
     } catch (e) {
       ApiErrorHandler.handle(e);
@@ -609,22 +606,21 @@ class _SignupScreenState extends State<SignupScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // final response = await AuthService().signInWithApple();
-      //
-      // if (response['success'] == true) {
-      //   final userData = response['data'];
-      //
-      //   // Similar logic as Google signup
-      //   if (userData['is_new_user'] == true) {
-      //     context.go('/complete-profile');
-      //   } else {
-      //     if (mounted) {
-      //       ToastUtil.showSuccess("Welcome back!");
-      //       context.go('/dashboard');
-      //     }
-      //   }
-      // }
-      context.go('/dashboard');
+      final response = await AuthService().signInWithApple();
+
+      if (response['success'] == true) {
+        final userData = response['data'];
+
+        // Similar logic as Google signup
+        if (userData['is_new_user'] == true) {
+          context.go('/complete-profile');
+        } else {
+          if (mounted) {
+            ToastUtil.showSuccess("Welcome back!");
+            context.go('/dashboard');
+          }
+        }
+      }
 
     } catch (e) {
       ApiErrorHandler.handle(e);

@@ -1,4 +1,4 @@
-import 'dart:io'; // Add this import at the top
+import 'dart:io';
 import 'package:agriflock360/core/network/api_client.dart';
 import 'package:agriflock360/core/services/auth_service.dart';
 import 'package:agriflock360/core/utils/secure_storage.dart';
@@ -8,9 +8,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'firebase_options.dart';
 
-// Create a global instance of AuthService
+// Create global instances
 final authService = AuthService();
-// Create global instances to access throughout the app
 late SecureStorage secureStorage;
 late ApiClient apiClient;
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -18,23 +17,47 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize SharedPreferences
-  await SharedPrefs.init();
+  print('=== App Initialization Starting ===');
 
-  // Initialize SecureStorage and ApiClient
-  secureStorage = SecureStorage();
-  apiClient = ApiClient(storage: secureStorage, navigatorKey: navigatorKey);
+  try {
+    // 1. Initialize SharedPreferences
+    print('Initializing SharedPreferences...');
+    await SharedPrefs.init();
 
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    // 2. Initialize SecureStorage
+    print('Initializing SecureStorage...');
+    secureStorage = SecureStorage();
 
-  // Initialize Google Sign-In only for Android
-  await authService.initializeGoogleSignIn(
-    clientId: DefaultFirebaseOptions.currentPlatform.iosClientId,
-    serverClientId:
-        '966300580112-mu5f3anb1ff4rce7dts.apps.googleusercontent.com',
-  );
+    // 3. Initialize Firebase
+    print('Initializing Firebase...');
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
 
-  runApp(MyApp());
+    // 4. Initialize Google Sign-In (CRITICAL - must be done after Firebase)
+    print('Initializing Google Sign-In...');
+    await authService.initializeGoogleSignIn();
+
+    // 5. Initialize ApiClient
+    print('Initializing ApiClient...');
+    apiClient = ApiClient(storage: secureStorage, navigatorKey: navigatorKey);
+
+    print('=== App Initialization Complete ===');
+
+    runApp(const MyApp());
+  } catch (e, stackTrace) {
+    print('=== INITIALIZATION ERROR ===');
+    print('Error: $e');
+    print('Stack trace: $stackTrace');
+    // You might want to show an error screen here
+    runApp(MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: Text('Initialization Error: $e'),
+        ),
+      ),
+    ));
+  }
 }
 
 class MyApp extends StatelessWidget {

@@ -48,7 +48,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyDlcsIUtIBvX0DcJZFc8yGSI09KF-jhuag',
-    appId: '1:966300580112:android:1de389eef8808b7e304d95',
+    appId: '1:966300580112:android:3b1ba4947d7effbe304d95',
     messagingSenderId: '966300580112',
     projectId: 'agriflock-360-cb236',
     storageBucket: 'agriflock-360-cb236.firebasestorage.app',
@@ -56,7 +56,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyBp_g1jSDl7MMBXoVqEb0CD038jsbPl08U',
-    appId: '1:966300580112:ios:95f91eccf4389d3e304d95',
+    appId: '1:966300580112:ios:a6ba7e86dee56d13304d95',
     messagingSenderId: '966300580112',
     projectId: 'agriflock-360-cb236',
     storageBucket: 'agriflock-360-cb236.firebasestorage.app',
@@ -65,7 +65,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBp_g1jSDl7MMBXoVqEb0CD038jsbPl08U',
-    appId: '1:966300580112:ios:95f91eccf4389d3e304d95',
+    appId: '1:966300580112:ios:a6ba7e86dee56d13304d95',
     messagingSenderId: '966300580112',
     projectId: 'agriflock-360-cb236',
     storageBucket: 'agriflock-360-cb236.firebasestorage.app',

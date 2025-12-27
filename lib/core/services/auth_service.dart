@@ -12,113 +12,113 @@ class AuthService {
 
   static const String baseUrl = "YOUR_API_URL";
 
-  // Store the current Google user from the stream
+  // Track current Google user from authentication events
   GoogleSignInAccount? _currentGoogleUser;
 
   // Stream subscription for Google sign-in events
   StreamSubscription<GoogleSignInAuthenticationEvent>? _authEventSubscription;
 
-  // Completer to wait for authentication event
-  Completer<GoogleSignInAccount?>? _authCompleter;
-
   // Required scopes for Google Sign In
   final List<String> _googleScopes = [
     'email',
-    'profile',
+    'https://www.googleapis.com/auth/userinfo.profile',
   ];
 
-  /// Initialize Google Sign In - call this during app startup
-  Future<void> initializeGoogleSignIn({
-    String? clientId,
-    String? serverClientId,
-  }) async {
+  /// Initialize Google Sign In - MUST be called during app startup in main()
+  Future<void> initializeGoogleSignIn() async {
     print('=== Initializing Google Sign-In ===');
-    print('clientId: $clientId');
-    print('serverClientId: $serverClientId');
 
     try {
       final GoogleSignIn signIn = GoogleSignIn.instance;
 
+      // Initialize with your client IDs (configured in android/app/build.gradle and Info.plist)
+      // serverClientId is optional - only needed if you want server auth codes
       await signIn.initialize(
-        clientId: clientId,
-        serverClientId: serverClientId,
+        // clientId: 'YOUR_WEB_CLIENT_ID', // Only needed for web
+        // serverClientId: 'YOUR_WEB_CLIENT_ID', // Optional: for server-side auth
       );
 
       print('Google Sign-In initialized successfully');
 
-      // Listen to authentication events to track current user
+      // Listen to authentication events to track current user state
       _authEventSubscription = signIn.authenticationEvents.listen(
-            (GoogleSignInAuthenticationEvent event) {
-          switch (event) {
-            case GoogleSignInAuthenticationEventSignIn():
-              _currentGoogleUser = event.user;
-              // Complete the auth completer if waiting
-              if (_authCompleter != null && !_authCompleter!.isCompleted) {
-                _authCompleter!.complete(event.user);
-              }
-              break;
-            case GoogleSignInAuthenticationEventSignOut():
-              _currentGoogleUser = null;
-              // Complete with null if waiting during sign out
-              if (_authCompleter != null && !_authCompleter!.isCompleted) {
-                _authCompleter!.complete(null);
-              }
-              break;
-          }
-        },
+        _handleAuthenticationEvent,
+        onError: _handleAuthenticationError,
       );
 
-      // Attempt silent sign-in on startup
+      // Attempt silent sign-in (if user was previously signed in)
       await signIn.attemptLightweightAuthentication();
+
+      print('Lightweight authentication attempt completed');
     } catch (e) {
       print('Error initializing Google Sign-In: $e');
       rethrow;
     }
   }
 
+  /// Handle authentication events from Google Sign-In
+  Future<void> _handleAuthenticationEvent(
+      GoogleSignInAuthenticationEvent event,
+      ) async {
+    print('Authentication event: ${event.runtimeType}');
+
+    switch (event) {
+      case GoogleSignInAuthenticationEventSignIn():
+        _currentGoogleUser = event.user;
+        print('User signed in: ${event.user.email}');
+        break;
+      case GoogleSignInAuthenticationEventSignOut():
+        _currentGoogleUser = null;
+        print('User signed out');
+        break;
+    }
+  }
+
+  /// Handle authentication errors
+  Future<void> _handleAuthenticationError(Object error) async {
+    print('Authentication error: $error');
+    _currentGoogleUser = null;
+  }
+
+  /// Sign in with Google using the new API
   Future<Map<String, dynamic>> signInWithGoogle() async {
     try {
+      print('=== Starting Google Sign-In ===');
       final GoogleSignIn signIn = GoogleSignIn.instance;
 
-      // Create a completer to wait for the authentication event
-      _authCompleter = Completer<GoogleSignInAccount?>();
-
-      // 1. Trigger authentication flow (user interaction)
+      // 1. Trigger authentication flow (requires user interaction)
+      print('Step 1: Calling authenticate()...');
       await signIn.authenticate();
 
-      // 2. Wait for the authentication event to propagate
-      final GoogleSignInAccount? googleUser = await _authCompleter!.future
-          .timeout(
-        const Duration(seconds: 10),
-        onTimeout: () => null,
-      );
+      // 2. Wait a bit for the authentication event to propagate
+      await Future.delayed(const Duration(milliseconds: 500));
 
-      // Reset completer
-      _authCompleter = null;
+      // 3. Get the current user from our tracked state
+      final GoogleSignInAccount? googleUser = _currentGoogleUser;
 
       if (googleUser == null) {
         throw Exception("User cancelled Google sign-in or authentication failed");
       }
 
-      // 3. Request authorization for the required scopes
-      final GoogleSignInClientAuthorization? authorization =
+      print('Step 2: Got Google user: ${googleUser.email}');
+
+      // 4. Check if user has already authorized the required scopes
+      print('Step 3: Checking authorization...');
+      GoogleSignInClientAuthorization? authorization =
       await googleUser.authorizationClient.authorizationForScopes(_googleScopes);
 
-      String? accessToken;
-      if (authorization != null) {
-        accessToken = authorization.accessToken;
-      } else {
-        // If not previously authorized, request authorization
-        final newAuth = await googleUser.authorizationClient.authorizeScopes(_googleScopes);
-        accessToken = newAuth.accessToken;
+      // 5. If not authorized, request authorization
+      if (authorization == null) {
+        print('Step 4: Requesting authorization for scopes...');
+        authorization = await googleUser.authorizationClient.authorizeScopes(_googleScopes);
       }
 
-      if (accessToken == null) {
-        throw Exception("Failed to get access token");
-      }
+      final String accessToken = authorization.accessToken;
 
-      // 4. Sign in to Firebase ONLY to verify the Google token
-      // You're using Firebase just for authentication, not for persistence
+      print('Step 5: Got access token');
+
+      // 6. Sign in to Firebase to verify the Google token
+      print('Step 6: Signing in to Firebase...');
       final credential = GoogleAuthProvider.credential(
         accessToken: accessToken,
       );
@@ -132,36 +132,40 @@ class AuthService {
         throw Exception("Firebase authentication failed");
       }
 
-      // 5. Get Firebase ID Token (this is what you'll send to your backend)
+      print('Step 7: Firebase authentication successful');
+
+      // 7. Get Firebase ID Token (to send to your backend)
       final firebaseIdToken = await firebaseUser.getIdToken();
 
-      // 6. Prepare data for YOUR backend (not Firebase)
+      // 8. Prepare data for YOUR backend
       final data = {
         "provider": "google",
         "firebase_uid": firebaseUser.uid,
-        "id_token": firebaseIdToken, // Your backend will verify this
+        "id_token": firebaseIdToken,
         "email": firebaseUser.email ?? googleUser.email,
         "display_name": firebaseUser.displayName ?? googleUser.displayName,
         "photo_url": firebaseUser.photoURL ?? googleUser.photoUrl,
-        "access_token": accessToken, // Google's access token
+        "access_token": accessToken,
       };
 
-      // Optional: Get server auth code if needed for backend
+      // 9. Optional: Get server auth code (only if you configured serverClientId)
       try {
         final serverAuth = await googleUser.authorizationClient.authorizeServer(_googleScopes);
         if (serverAuth != null) {
           data["server_auth_code"] = serverAuth.serverAuthCode;
+          print('Got server auth code');
         }
       } catch (e) {
         print('Server auth not available: $e');
-        // Server auth might not be available on all platforms
+        // Server auth might not be configured or available on all platforms
       }
 
-      // 7. Send to YOUR backend to get YOUR JWT token
+      print('Step 8: Sending data to backend...');
+
+      // 10. Send to YOUR backend to get YOUR JWT token
       return await _authenticateWithBackend(data);
     } catch (e) {
       print("Google Sign-In Error: $e");
-      _authCompleter = null; // Reset on error
       rethrow;
     }
   }
@@ -169,7 +173,9 @@ class AuthService {
   /// Sign in with Apple
   Future<Map<String, dynamic>> signInWithApple() async {
     try {
-      // Step 1: Request Apple Sign In
+      print('=== Starting Apple Sign-In ===');
+
+      // Request Apple Sign In
       final credential = await SignInWithApple.getAppleIDCredential(
         scopes: [
           AppleIDAuthorizationScopes.email,
@@ -177,11 +183,11 @@ class AuthService {
         ],
         webAuthenticationOptions: WebAuthenticationOptions(
           clientId: 'YOUR_CLIENT_ID', // Your Apple Service ID
-          redirectUri: Uri.parse('YOUR_REDIRECT_URI'), // Your redirect URI
+          redirectUri: Uri.parse('YOUR_REDIRECT_URI'),
         ),
       );
 
-      // Step 2: Prepare data to send to your backend
+      // Prepare data to send to your backend
       final Map<String, dynamic> requestData = {
         'provider': 'apple',
         'identity_token': credential.identityToken,
@@ -192,10 +198,9 @@ class AuthService {
         'family_name': credential.familyName,
       };
 
-      print('Apple Sign In Data to send to API:');
-      print(jsonEncode(requestData));
+      print('Apple Sign In Data prepared');
 
-      // Step 3: Send to your backend API
+      // Send to your backend API
       final response = await _authenticateWithBackend(requestData);
 
       return response;
@@ -205,11 +210,7 @@ class AuthService {
     }
   }
 
-  /// Authenticate with YOUR backend API (not Firebase)
-  /// Your backend will:
-  /// 1. Verify the Firebase ID token
-  /// 2. Create/update user in your database
-  /// 3. Return YOUR JWT token for your API
+  /// Authenticate with YOUR backend API
   Future<Map<String, dynamic>> _authenticateWithBackend(
       Map<String, dynamic> authData,
       ) async {
@@ -226,6 +227,15 @@ class AuthService {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
+
+        // Store your backend JWT token
+        if (responseData['data']?['access_token'] != null) {
+          await _secureStorage.write(
+            key: 'access_token',
+            value: responseData['data']['access_token'],
+          );
+        }
+
         return responseData;
       } else {
         throw Exception('Backend authentication failed: ${response.body}');
@@ -237,24 +247,21 @@ class AuthService {
       print('POST $baseUrl/auth/social-login');
       print('Request Body: ${jsonEncode(authData)}');
 
-      // Simulate network delay
       await Future.delayed(const Duration(seconds: 1));
 
-      // SIMULATED RESPONSE - Your backend will return YOUR JWT
       final simulatedResponse = {
         'success': true,
         'message': 'Authentication successful',
         'data': {
-          'access_token': 'your_backend_jwt_token_here', // YOUR JWT, not Firebase's
+          'access_token': 'your_backend_jwt_token_here',
           'refresh_token': 'your_backend_refresh_token_here',
           'token_type': 'Bearer',
           'expires_in': 3600,
           'user': {
-            'id': 'user_123', // Your database user ID
+            'id': 'user_123',
             'email': authData['email'] ?? 'user@example.com',
             'full_name': authData['display_name'] ??
                 '${authData['given_name'] ?? ''} ${authData['family_name'] ?? ''}',
-            'phone': authData['phone'],
             'profile_picture': authData['photo_url'],
             'provider': authData['provider'],
             'firebase_uid': authData['firebase_uid'],
@@ -274,16 +281,19 @@ class AuthService {
     }
   }
 
-
   /// Sign out from Firebase and Google
   Future<void> signOut() async {
     try {
-      // Sign out from both Firebase and Google
       await Future.wait([
         _auth.signOut(),
         GoogleSignIn.instance.disconnect(),
       ]);
       _currentGoogleUser = null;
+
+      // Clear stored tokens
+      await _secureStorage.delete('access_token');
+      await _secureStorage.delete('refresh_token');
+
       print('Successfully signed out');
     } catch (e) {
       print('Error signing out: $e');
@@ -294,16 +304,15 @@ class AuthService {
   /// Clean up subscriptions
   void dispose() {
     _authEventSubscription?.cancel();
-    _authCompleter = null;
   }
 
-  /// Get current Firebase user (temporary, just for Google auth verification)
+  /// Get current Firebase user
   User? get currentUser => _auth.currentUser;
 
   /// Get current Google user from tracked state
   GoogleSignInAccount? get currentGoogleUser => _currentGoogleUser;
 
-  /// Check if user is signed in (to Google via Firebase)
+  /// Check if user is signed in
   bool get isSignedIn => _auth.currentUser != null;
 
   /// Stream of auth state changes

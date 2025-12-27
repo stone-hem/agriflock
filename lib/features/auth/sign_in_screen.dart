@@ -1,9 +1,5 @@
-import 'dart:convert';
-
-import 'package:agriflock360/core/model/user_model.dart';
-import 'package:agriflock360/core/utils/api_error_handler.dart';
-import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
+import 'package:agriflock360/features/auth/repo/manual_auth_repo.dart';
 import 'package:agriflock360/features/auth/shared/auth_text_field.dart';
 import 'package:agriflock360/app_routes.dart';
 import 'package:flutter/material.dart';
@@ -24,9 +20,9 @@ class _LoginScreenState extends State<LoginScreen> {
     text: 'farmer@agriflock360.org',
   );
   final _passwordController = TextEditingController(text: 'Password123!');
-  // final _authService = AuthService();
   bool _isLoading = false;
   bool _obscurePassword = true;
+  final _manualAuthRepo = ManualAuthRepository();
 
   @override
   Widget build(BuildContext context) {
@@ -350,60 +346,31 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final response = await apiClient.post(
-        '/auth/login',
-        body: {'email': email, 'password': password},
+      final result = await _manualAuthRepo.login(
+        email: email,
+        password: password,
       );
 
-      LogUtil.info(response.body);
+      if (!mounted) return;
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final loginResponse = LoginResponse.fromJson(data);
-
-        // Save login data securely
-        await secureStorage.saveLoginData(
-          token: loginResponse.accessToken,
-          refreshToken: loginResponse.refreshToken,
-          userData: loginResponse.user.toJson(),
-          expiresInSeconds: loginResponse.expiresIn ?? 3600,
+      if (result['success'] == true) {
+        ToastUtil.showSuccess("Login successful!");
+        context.go(AppRoutes.dashboard);
+      } else if (result['needsOnboarding'] == true) {
+        // Redirect to onboarding quiz
+        final tempToken = result['tempToken'] ?? '';
+        context.push(
+          '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(tempToken)}',
         );
-
-        if (mounted) {
-          ToastUtil.showSuccess("Login successful!");
-          context.go(AppRoutes.dashboard);
-        }
-      } else {
-        // Check for specific error cases
-        final errorData = jsonDecode(response.body);
-        final message = errorData['message'];
-
-        if (message is Map<String, dynamic>) {
-          final status = message['status'] as String?;
-          final tempToken = message['tempToken'] as String?;
-
-          if (status == 'user_onboarding') {
-            // Handle user onboarding - redirect to onboarding quiz
-            if (mounted) {
-              context.push(
-                '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(tempToken ?? '')}',
-              );
-            }
-            return;
-          } else if (status == 'account_inactive') {
-            // Handle inactive account - redirect to email verification
-            if (mounted) {
-              context.push('${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(email)}');
-            }
-            return;
-          }
-        }
-
-        // Handle other errors with the generic error handler
-        ApiErrorHandler.handle(response);
+      } else if (result['needsVerification'] == true) {
+        // Redirect to email verification
+        final email = result['email'] ?? '';
+        context.push(
+          '${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(email)}',
+        );
       }
     } catch (e) {
-      ApiErrorHandler.handle(e);
+      // Error already handled by repository
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -415,28 +382,58 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      // final response = await _authService.signInWithGoogle();
-      //
-      // if (response['success'] == true) {
-      //   final userData = response['data'];
-      //   final user = userData['user'];
-      //
-      //   // TODO: Store token securely (use flutter_secure_storage)
-      //   // await secureStorage.write(key: 'access_token', value: userData['access_token']);
-      //
-      //   if (mounted) {
-      //     ScaffoldMessenger.of(context).showSnackBar(
-      //       SnackBar(
-      //         content: Text('Welcome back ${user['full_name']}!'),
-      //         backgroundColor: Colors.green,
-      //       ),
-      //     );
-      //
-      //     context.go('/dashboard');
-      //   }
-      // }
-      context.go('/dashboard');
+      // This returns the BACKEND response, not just Google user data
+      final response = await authService.signInWithGoogle();
 
+      /*
+      The 'response' structure (from your AuthService._authenticateWithBackend):
+      {
+        'success': true,
+        'message': 'Authentication successful',
+        'data': {
+          'access_token': 'your_backend_jwt_token_here',
+          'refresh_token': 'your_backend_refresh_token_here',
+          'token_type': 'Bearer',
+          'expires_in': 3600,
+          'user': {
+            'id': 'user_123',
+            'email': 'user@example.com',
+            'full_name': 'John Doe',
+            'profile_picture': 'https://...',
+            'provider': 'google',
+            'firebase_uid': 'firebase_uid_here',
+            'is_email_verified': true,
+            'created_at': '2024-01-01T00:00:00.000Z'
+          }
+        }
+      }
+      */
+
+      if (response['success'] == true) {
+        final userData = response['data'];
+        final user = userData['user'];
+        final accessToken = userData['access_token'];
+        final refreshToken = userData['refresh_token'];
+
+        // ============================================
+        // IMPORTANT: Store YOUR backend tokens securely
+        // ============================================
+        await secureStorage.write('access_token', accessToken);
+        await secureStorage.write('refresh_token',  refreshToken);
+
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Welcome back ${user['full_name']}!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // Navigate to dashboard
+          context.go('/dashboard');
+        }
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -461,27 +458,26 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      // final response = await _authService.signInWithApple();
-      //
-      // if (response['success'] == true) {
-      //   final userData = response['data'];
-      //   final user = userData['user'];
-      //
-      //   // TODO: Store token securely
-      //   // await secureStorage.write(key: 'access_token', value: userData['access_token']);
-      //
-      //   if (mounted) {
-      //     ScaffoldMessenger.of(context).showSnackBar(
-      //       SnackBar(
-      //         content: Text('Welcome back ${user['full_name']}!'),
-      //         backgroundColor: Colors.green,
-      //       ),
-      //     );
-      //
-      //     context.go('/dashboard');
-      //   }
-      // }
-      context.go('/dashboard');
+      final response = await authService.signInWithApple();
+
+      if (response['success'] == true) {
+        final userData = response['data'];
+        final user = userData['user'];
+
+        // TODO: Store token securely
+        await secureStorage.write('access_token', userData['access_token']);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Welcome back ${user['full_name']}!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          context.go('/dashboard');
+        }
+      }
 
     } catch (e) {
       if (mounted) {
