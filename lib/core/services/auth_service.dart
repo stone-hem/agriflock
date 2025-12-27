@@ -1,16 +1,14 @@
 import 'package:agriflock360/core/utils/secure_storage.dart';
+import 'package:agriflock360/features/auth/repo/manual_auth_repo.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'dart:async';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final SecureStorage _secureStorage = SecureStorage();
-
-  static const String baseUrl = "YOUR_API_URL";
+  final ManualAuthRepository _authRepo = ManualAuthRepository();
 
   // Track current Google user from authentication events
   GoogleSignInAccount? _currentGoogleUser;
@@ -32,11 +30,7 @@ class AuthService {
       final GoogleSignIn signIn = GoogleSignIn.instance;
 
       // Initialize with your client IDs (configured in android/app/build.gradle and Info.plist)
-      // serverClientId is optional - only needed if you want server auth codes
-      await signIn.initialize(
-        // clientId: 'YOUR_WEB_CLIENT_ID', // Only needed for web
-        // serverClientId: 'YOUR_WEB_CLIENT_ID', // Optional: for server-side auth
-      );
+      await signIn.initialize();
 
       print('Google Sign-In initialized successfully');
 
@@ -138,7 +132,7 @@ class AuthService {
       final firebaseIdToken = await firebaseUser.getIdToken();
 
       // 8. Prepare data for YOUR backend
-      final data = {
+      final Map<String, dynamic> authData = {
         "provider": "google",
         "firebase_uid": firebaseUser.uid,
         "id_token": firebaseIdToken,
@@ -152,18 +146,21 @@ class AuthService {
       try {
         final serverAuth = await googleUser.authorizationClient.authorizeServer(_googleScopes);
         if (serverAuth != null) {
-          data["server_auth_code"] = serverAuth.serverAuthCode;
+          authData["server_auth_code"] = serverAuth.serverAuthCode;
           print('Got server auth code');
         }
       } catch (e) {
         print('Server auth not available: $e');
-        // Server auth might not be configured or available on all platforms
       }
 
       print('Step 8: Sending data to backend...');
 
-      // 10. Send to YOUR backend to get YOUR JWT token
-      return await _authenticateWithBackend(data);
+      // 10. Send to YOUR backend via the repository
+      final result = await _authRepo.socialLogin(authData: authData);
+
+      print('Step 9: Backend authentication complete');
+
+      return result;
     } catch (e) {
       print("Google Sign-In Error: $e");
       rethrow;
@@ -188,7 +185,7 @@ class AuthService {
       );
 
       // Prepare data to send to your backend
-      final Map<String, dynamic> requestData = {
+      final Map<String, dynamic> authData = {
         'provider': 'apple',
         'identity_token': credential.identityToken,
         'authorization_code': credential.authorizationCode,
@@ -198,86 +195,15 @@ class AuthService {
         'family_name': credential.familyName,
       };
 
-      print('Apple Sign In Data prepared');
+      print('Apple Sign In Data prepared, sending to backend...');
 
-      // Send to your backend API
-      final response = await _authenticateWithBackend(requestData);
+      // Send to your backend API via the repository
+      final result = await _authRepo.socialLogin(authData: authData);
 
-      return response;
+      return result;
     } catch (e) {
       print('Error signing in with Apple: $e');
       throw Exception('Apple sign in failed: $e');
-    }
-  }
-
-  /// Authenticate with YOUR backend API
-  Future<Map<String, dynamic>> _authenticateWithBackend(
-      Map<String, dynamic> authData,
-      ) async {
-    try {
-      // UNCOMMENT THIS SECTION WHEN YOU'RE READY TO USE YOUR REAL API
-      /*
-      final response = await http.post(
-        Uri.parse('$baseUrl/auth/social-login'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(authData),
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final responseData = jsonDecode(response.body);
-
-        // Store your backend JWT token
-        if (responseData['data']?['access_token'] != null) {
-          await _secureStorage.write(
-            key: 'access_token',
-            value: responseData['data']['access_token'],
-          );
-        }
-
-        return responseData;
-      } else {
-        throw Exception('Backend authentication failed: ${response.body}');
-      }
-      */
-
-      // SIMULATED API CALL - Remove this when using real API
-      print('\n=== SIMULATED API CALL ===');
-      print('POST $baseUrl/auth/social-login');
-      print('Request Body: ${jsonEncode(authData)}');
-
-      await Future.delayed(const Duration(seconds: 1));
-
-      final simulatedResponse = {
-        'success': true,
-        'message': 'Authentication successful',
-        'data': {
-          'access_token': 'your_backend_jwt_token_here',
-          'refresh_token': 'your_backend_refresh_token_here',
-          'token_type': 'Bearer',
-          'expires_in': 3600,
-          'user': {
-            'id': 'user_123',
-            'email': authData['email'] ?? 'user@example.com',
-            'full_name': authData['display_name'] ??
-                '${authData['given_name'] ?? ''} ${authData['family_name'] ?? ''}',
-            'profile_picture': authData['photo_url'],
-            'provider': authData['provider'],
-            'firebase_uid': authData['firebase_uid'],
-            'is_email_verified': true,
-            'created_at': DateTime.now().toIso8601String(),
-          }
-        }
-      };
-
-      print('Simulated Response: ${jsonEncode(simulatedResponse)}');
-      print('=== END SIMULATED API CALL ===\n');
-
-      return simulatedResponse;
-    } catch (e) {
-      print('Backend authentication error: $e');
-      rethrow;
     }
   }
 

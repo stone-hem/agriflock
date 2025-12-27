@@ -426,7 +426,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       final response = await apiClient.post(
         '/auth/reset-password',
         body: {
-          "token": _token,
+          "token": _otpController.text,
           "new_password": _newPasswordController.text,
           "confirm_password": _confirmPasswordController.text,
           "otp": _otpController.text,
