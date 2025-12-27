@@ -117,7 +117,7 @@ class _SignupScreenState extends State<SignupScreen> {
               const SizedBox(height: 8),
               Center(
                 child: Text(
-                  'Join thousands of farmers managing their poultry',
+                  'Join thousands of people in Agriflock',
                   style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                   textAlign: TextAlign.center,
                 ),
