@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:agriflock360/app_routes.dart';
+import 'package:agriflock360/core/services/social_auth_service.dart';
 import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
@@ -66,6 +67,7 @@ class ApiClient {
         },
         body: jsonEncode({
           'refresh_token': refreshToken,
+          'session_id': await storage.getSessionId()
         }),
       );
 
@@ -76,7 +78,7 @@ class ApiClient {
         await storage.updateTokens(
           token: data['access_token'] ?? data['accessToken'] ?? data['token'],
           refreshToken: data['refresh_token'] ?? data['refreshToken'],
-          expiresInSeconds: data['expires_in'] ?? data['expiresIn'],
+          expiresInSeconds: data['expires_in'] ?? data['expiresIn'] ?? 3600,
         );
 
         _isRefreshing = false;
@@ -423,9 +425,12 @@ class ApiClient {
 
   // Manual logout method
   Future<void> logout() async {
+    final SocialAuthService socialAuthService = SocialAuthService();
+
     try {
       // Optionally call logout endpoint
       await post('/auth/logout', body: {});
+      await socialAuthService.signOut();
     } catch (e) {
       debugPrint('Logout endpoint error: $e');
     } finally {

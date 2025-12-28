@@ -1,169 +1,339 @@
-import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
+import 'package:agriflock360/features/farmer/batch/model/batch_mgt_model.dart';
+import 'package:agriflock360/features/farmer/batch/repo/batch_mgt_repo.dart';
 import 'package:agriflock360/features/farmer/batch/shared/stat_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class BatchOverview extends StatelessWidget {
-  final BatchModel batch;
+class BatchOverview extends StatefulWidget {
+  final String batchId;
 
-  const BatchOverview({super.key, required this.batch});
+  const BatchOverview({super.key, required this.batchId});
+
+  @override
+  State<BatchOverview> createState() => _BatchOverviewState();
+}
+
+class _BatchOverviewState extends State<BatchOverview> {
+  final BatchMgtRepository _repository = BatchMgtRepository();
+  BatchMgtResponse? _batchData;
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBatchData();
+  }
+
+  Future<void> _loadBatchData() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+
+      final data = await _repository.getBatchDetails(widget.batchId);
+
+      setState(() {
+        _batchData = data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _onRefresh() async {
+    try {
+      final data = await _repository.refreshBatchDetails(widget.batchId);
+      setState(() {
+        _batchData = data;
+        _error = null;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+      });
+      // Show error snackbar
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to refresh: ${e.toString()}')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          // Header Card
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: Colors.grey.shade200),
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            const SizedBox(height: 16),
+            Text('Error: $_error'),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadBatchData,
+              child: const Text('Retry'),
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.green.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.agriculture,
-                          color: Colors.green,
-                          size: 32,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              batch.batchName,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              batch.breed,
-                              style: TextStyle(
-                                color: Colors.grey.shade600,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.green.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          'Active',
-                          style: TextStyle(
-                            color: Colors.green.shade800,
-                            fontWeight: FontWeight.w600,
+          ],
+        ),
+      );
+    }
+
+    if (_batchData == null) {
+      return const Center(child: Text('No data available'));
+    }
+
+    return RefreshIndicator(
+      onRefresh: _onRefresh,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            // Header Card
+            Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: BorderSide(color: Colors.grey.shade200),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.agriculture,
+                            color: Colors.green,
+                            size: 32,
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _batchData!.batch.name,
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _batchData!.batch.breed,
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${_batchData!.batch.houseName} • ${_batchData!.batch.farmName}',
+                                style: TextStyle(
+                                  color: Colors.grey.shade500,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _getStatusColor(_batchData!.batch.status)
+                                .withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            _batchData!.batch.statusLabel,
+                            style: TextStyle(
+                              color: _getStatusColor(_batchData!.batch.status),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-          // Key Metrics
-          Row(
-            children: [
-              Expanded(
-                child: StatCard(
-                  value: '${batch.birdsAlive}',
-                  label: 'Total Birds',
-                  color: Colors.blue.shade100,
-                  icon: Icons.agriculture, textColor: Colors.blue.shade800,
+            // Key Metrics
+            Row(
+              children: [
+                Expanded(
+                  child: StatCard(
+                    value: '${_batchData!.stats.totalBirds}',
+                    label: 'Total Birds',
+                    color: Colors.blue.shade100,
+                    icon: Icons.agriculture,
+                    textColor: Colors.blue.shade800,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: StatCard(
-                  value: '${batch.age}',
-                  label: 'Days Old',
-                  color: Colors.orange.shade100,
-                  icon: Icons.calendar_today, textColor: Colors.orange.shade800,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: StatCard(
+                    value: '${_batchData!.stats.ageDays}',
+                    label: 'Days Old',
+                    color: Colors.orange.shade100,
+                    icon: Icons.calendar_today,
+                    textColor: Colors.orange.shade800,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: StatCard(
-                  value: '${batch.mortality}',
-                  label: 'Mortality',
-                  color: Colors.red.shade100,
-                  icon: Icons.flag, textColor: Colors.red.shade800,
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: StatCard(
+                    value: '${_batchData!.stats.mortality}',
+                    label: 'Mortality',
+                    color: Colors.red.shade100,
+                    icon: Icons.flag,
+                    textColor: Colors.red.shade800,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: StatCard(
-                  value: '${(batch.birdsAlive - batch.mortality)}',
-                  label: 'Live Birds',
-                  color: Colors.green.shade100,
-                  icon: Icons.verified_user, textColor: Colors.green.shade800,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: StatCard(
+                    value: _batchData!.stats.liveBirds,
+                    label: 'Live Birds',
+                    color: Colors.green.shade100,
+                    icon: Icons.verified_user,
+                    textColor: Colors.green.shade800,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
+              ],
+            ),
+            const SizedBox(height: 32),
 
-          // Recent Activity
-          _buildSection(
-            title: 'Recent Activity',
-            context: context,
-            children: [
-              _ActivityItem(
-                icon: Icons.restaurant,
-                title: 'Morning Feeding',
-                subtitle: '25kg feed distributed',
-                time: 'Today, 8:30 AM',
-                color: Colors.green,
-              ),
-              _ActivityItem(
-                icon: Icons.egg,
-                title: 'Egg Collection',
-                subtitle: '45 eggs collected',
-                time: 'Today, 7:00 AM',
-                color: Colors.orange,
-              ),
-              _ActivityItem(
-                icon: Icons.monitor_weight,
-                title: 'Weight Check',
-                subtitle: 'Average: 2.3kg per bird',
-                time: 'Yesterday',
-                color: Colors.blue,
-              ),
-            ],
-          ),
-        ],
+            // Recent Activity
+            _buildSection(
+              title: 'Recent Activity',
+              context: context,
+              children: _batchData!.recentActivities.isEmpty
+                  ? [
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32.0),
+                    child: Text(
+                      'No recent activities',
+                      style: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+              ]
+                  : _batchData!.recentActivities
+                  .map((activity) => _ActivityItem(
+                icon: _getActivityIcon(activity.activityType),
+                title: activity.title,
+                subtitle: activity.description,
+                time: _formatTime(activity.createdAt),
+                color: _getActivityColor(activity.activityType),
+              ))
+                  .toList(),
+            ),
+          ],
+        ),
       ),
     );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return Colors.green.shade800;
+      case 'completed':
+        return Colors.blue.shade800;
+      case 'archived':
+        return Colors.grey.shade800;
+      default:
+        return Colors.grey.shade800;
+    }
+  }
+
+  IconData _getActivityIcon(String activityType) {
+    switch (activityType) {
+      case 'product_recorded':
+        return Icons.inventory;
+      case 'feed_recorded':
+        return Icons.restaurant;
+      case 'egg_collection':
+        return Icons.egg;
+      case 'weight_check':
+        return Icons.monitor_weight;
+      case 'bird_sale':
+        return Icons.sell;
+      default:
+        return Icons.assignment;
+    }
+  }
+
+  Color _getActivityColor(String activityType) {
+    switch (activityType) {
+      case 'product_recorded':
+        return Colors.purple;
+      case 'feed_recorded':
+        return Colors.green;
+      case 'egg_collection':
+        return Colors.orange;
+      case 'weight_check':
+        return Colors.blue;
+      case 'bird_sale':
+        return Colors.indigo;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _formatTime(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inDays == 0) {
+      if (difference.inHours == 0) {
+        if (difference.inMinutes == 0) {
+          return 'Just now';
+        }
+        return '${difference.inMinutes}m ago';
+      }
+      return '${difference.inHours}h ago';
+    } else if (difference.inDays == 1) {
+      return 'Yesterday';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays}d ago';
+    } else {
+      return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+    }
   }
 
   Widget _buildSection({
@@ -181,7 +351,10 @@ class BatchOverview extends StatelessWidget {
               title,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            TextButton(onPressed: ()=>context.push('/activity'), child: Text('View all'))
+            TextButton(
+              onPressed: () => context.push('/activity'),
+              child: const Text('View all'),
+            )
           ],
         ),
         const SizedBox(height: 16),
@@ -190,7 +363,6 @@ class BatchOverview extends StatelessWidget {
     );
   }
 }
-
 
 class _ActivityItem extends StatelessWidget {
   final IconData icon;
@@ -252,4 +424,3 @@ class _ActivityItem extends StatelessWidget {
     );
   }
 }
-

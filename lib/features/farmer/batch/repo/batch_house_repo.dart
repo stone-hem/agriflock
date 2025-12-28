@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
+import 'package:agriflock360/features/farmer/batch/model/bird_type.dart';
 import 'package:agriflock360/main.dart';
 import 'package:http/http.dart' as http;
 
@@ -84,7 +85,7 @@ class BatchHouseRepository {
         );
 
         final streamedResponse = await apiClient.postMultipart(
-          '/farms/$farmId/batches',
+          '/batchs',
           fields: fields,
           files: [multipartFile],
         );
@@ -112,23 +113,15 @@ class BatchHouseRepository {
         batchData.removeWhere((key, value) => value == null);
 
         final response = await apiClient.post(
-          '/farms/$farmId/batches',
+          '/batchs',
           body: batchData,
         );
 
         final jsonResponse = jsonDecode(response.body);
 
         if (response.statusCode >= 200 && response.statusCode < 300) {
-          Map<String, dynamic> batchJson;
-          if (jsonResponse['data'] != null) {
-            batchJson = jsonResponse['data'];
-          } else if (jsonResponse['batch'] != null) {
-            batchJson = jsonResponse['batch'];
-          } else {
-            batchJson = jsonResponse;
-          }
-
-          return BatchModel.fromJson(batchJson);
+          LogUtil.success(jsonResponse);
+          return BatchModel.fromJson(jsonResponse);
         } else {
           LogUtil.error('Failed to create batch: $jsonResponse');
           throw Exception(jsonResponse['message'] ?? 'Failed to create batch');
@@ -173,7 +166,7 @@ class BatchHouseRepository {
         );
 
         final streamedResponse = await apiClient.postMultipart(
-          '/farms/$farmId/batches/$batchId',
+          '/batchs/$batchId',
           fields: fields,
           files: [multipartFile],
         );
@@ -200,7 +193,7 @@ class BatchHouseRepository {
         batchData.removeWhere((key, value) => value == null);
 
         final response = await apiClient.put(
-          '/farms/$farmId/batches/$batchId',
+          '/batchs/$batchId',
           body: batchData,
         );
 
@@ -472,6 +465,28 @@ class BatchHouseRepository {
       }
     } catch (e) {
       LogUtil.error('Error in deleteHouse: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<BirdType>> getBirdTypes() async {
+    try {
+      final response = await apiClient.get('/batchs/bird-types');
+
+      if (response.statusCode == 200) {
+        final jsonResponse = jsonDecode(response.body);
+        LogUtil.info('Bird Types API Response: $jsonResponse');
+
+        // Directly cast the response to List<dynamic> since it's already a list
+        final List<dynamic> data = jsonResponse;
+
+        // Use List<dynamic>.map to create BirdType objects
+        return data.map((item) => BirdType.fromJson(item)).toList();
+      } else {
+        throw Exception('Failed to load bird types: ${response.statusCode}');
+      }
+    } catch (e) {
+      LogUtil.error('Error loading bird types: $e');
       rethrow;
     }
   }

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
-import 'package:agriflock360/core/services/auth_service.dart';
+import 'package:agriflock360/app_routes.dart';
+import 'package:agriflock360/core/services/social_auth_service.dart';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/features/auth/repo/manual_auth_repo.dart';
@@ -10,7 +11,6 @@ import 'package:agriflock360/features/auth/shared/country_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../main.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -422,8 +422,8 @@ class _SignupScreenState extends State<SignupScreen> {
                               height: 20,
                               decoration: const BoxDecoration(
                                 image: DecorationImage(
-                                  image: NetworkImage(
-                                    'https://www.google.com/favicon.ico',
+                                  image: AssetImage(
+                                    'assets/logos/google.png',
                                   ),
                                   fit: BoxFit.contain,
                                 ),
@@ -576,7 +576,7 @@ class _SignupScreenState extends State<SignupScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final response = await AuthService().signInWithGoogle();
+      final response = await SocialAuthService().signInWithGoogle();
 
       if (response['success'] == true) {
         final userData = response['data'];
@@ -584,8 +584,13 @@ class _SignupScreenState extends State<SignupScreen> {
         // For social signup, check if user needs to complete profile
         // or if they're already registered
         if (userData['is_new_user'] == true) {
-          // New social user - redirect to complete profile or verification
-          context.go('/complete-profile');
+          if (!mounted) return;
+
+          if (response['success'] == true) {
+            context.push(
+              '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(response['tempToken'])}',
+            );
+          }
         } else {
           // Existing user - log them in
           if (mounted) {
@@ -606,20 +611,14 @@ class _SignupScreenState extends State<SignupScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final response = await AuthService().signInWithApple();
+      final response = await SocialAuthService().signInWithApple();
+
+      if (!mounted) return;
 
       if (response['success'] == true) {
-        final userData = response['data'];
-
-        // Similar logic as Google signup
-        if (userData['is_new_user'] == true) {
-          context.go('/complete-profile');
-        } else {
-          if (mounted) {
-            ToastUtil.showSuccess("Welcome back!");
-            context.go('/dashboard');
-          }
-        }
+        context.push(
+          '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(response['tempToken'])}',
+        );
       }
 
     } catch (e) {

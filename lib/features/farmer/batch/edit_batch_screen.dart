@@ -11,23 +11,23 @@ import 'package:go_router/go_router.dart';
 
 
 
-class AddBatchScreen extends StatefulWidget {
+class EditBatchScreen extends StatefulWidget {
   final String farmId;
-  final String? houseId;
+  final BatchModel batch;
   final List<House>? houses;
 
-  const AddBatchScreen({
+  const EditBatchScreen({
     super.key,
     required this.farmId,
-    this.houseId,
+    required this.batch,
     this.houses,
   });
 
   @override
-  State<AddBatchScreen> createState() => _AddBatchScreenState();
+  State<EditBatchScreen> createState() => _EditBatchScreenState();
 }
 
-class _AddBatchScreenState extends State<AddBatchScreen> {
+class _EditBatchScreenState extends State<EditBatchScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _initialQuantityController = TextEditingController();
@@ -45,6 +45,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
   File? _batchPhotoFile;
   bool _isLoading = false;
   bool _isLoadingBirdTypes = false;
+  String? _existingPhotoUrl;
 
   List<House> _houses = [];
   List<BirdType> _birdTypes = [];
@@ -81,11 +82,6 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
           _houses = houses;
         });
       }
-
-      // Pre-select house if provided
-      if (widget.houseId != null) {
-        _selectedHouse = widget.houseId;
-      }
     } catch (e) {
       ApiErrorHandler.handle(e);
     }
@@ -97,7 +93,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
         _isLoadingBirdTypes = true;
       });
 
-      // Assuming repository has a method to fetch bird types
+      // Fetch bird types from API
       final types = await _repository.getBirdTypes();
 
       setState(() {
@@ -113,10 +109,23 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
   }
 
   void _initializeForm() {
-    // Set default values for a new batch
-    _birdsAliveController.text = '0';
-    _currentWeightController.text = '0.0';
-    _expectedWeightController.text = '0.0';
+    // Initialize with existing batch data
+    final batch = widget.batch;
+
+    _nameController.text = batch.batchName;
+    _selectedHouse = batch.houseId;
+    _selectedBirdTypeId = batch.type; // Assuming BatchModel has this field
+    _selectedBatchType = batch.type; // Using type as batch_type
+    _hatchDate = batch.startDate; // Using startDate as hatch_date
+    _initialQuantityController.text = batch.initialQuantity.toString();
+    _birdsAliveController.text = batch.birdsAlive.toString();
+    _currentWeightController.text = batch.currentWeight.toString();
+    _expectedWeightController.text = batch.expectedWeight.toString();
+    _selectedFeedingTime = batch.feedingTime;
+    _notesController.text = batch.description ?? '';
+
+    // Store existing photo URL if available
+    _existingPhotoUrl = batch.photoUrl;
   }
 
   @override
@@ -124,7 +133,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Add New Batch'),
+        title: const Text('Edit Batch'),
         centerTitle: false,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -134,7 +143,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: _isLoading ? null : _createBatch,
+            onPressed: _isLoading ? null : _updateBatch,
             child: _isLoading
                 ? const SizedBox(
               width: 20,
@@ -145,7 +154,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
               ),
             )
                 : const Text(
-              'Create',
+              'Save',
               style: TextStyle(
                 color: Colors.green,
                 fontWeight: FontWeight.bold,
@@ -161,7 +170,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Batch Photo Upload
+              // Batch Photo Upload with existing photo preview
               PhotoUpload(
                 file: _batchPhotoFile,
                 onFileSelected: (File? file) {
@@ -169,8 +178,8 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                     _batchPhotoFile = file;
                   });
                 },
-                title: 'Batch Photo (Optional)',
-                description: 'Upload a photo of your batch',
+                title: 'Batch Photo',
+                description: 'Update batch photo (optional)',
                 primaryColor: Colors.green,
               ),
               const SizedBox(height: 32),
@@ -427,7 +436,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                   return null;
                 },
                 labelText: 'Birds Alive',
-                hintText: 'e.g., 1000',
+                hintText: 'e.g., 980',
               ),
               const SizedBox(height: 20),
 
@@ -453,7 +462,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                   return null;
                 },
                 labelText: 'Current Weight',
-                hintText: 'e.g., 0.0',
+                hintText: 'e.g., 1.5',
               ),
               const SizedBox(height: 20),
 
@@ -589,6 +598,25 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
               ),
               const SizedBox(height: 32),
 
+              // Delete Button
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _confirmDelete,
+                  icon: const Icon(Icons.delete),
+                  label: const Text('Delete Batch'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.red,
+                    side: const BorderSide(color: Colors.red),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
               // Additional Information
               Card(
                 elevation: 0,
@@ -602,7 +630,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Batch Creation',
+                        'Batch Management',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -610,7 +638,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                       ),
                       SizedBox(height: 8),
                       Text(
-                        'After creating your batch, you can:\n'
+                        'After updating your batch, you can:\n'
                             '• Track growth progress\n'
                             '• Monitor feeding schedules\n'
                             '• Record health checks\n'
@@ -646,7 +674,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
     }
   }
 
-  Future<void> _createBatch() async {
+  Future<void> _updateBatch() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -679,16 +707,63 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
             : null,
       };
 
-      await _repository.createBatch(
+      await _repository.updateBatch(
         widget.farmId,
+        widget.batch.id!,
         batchData,
         photoFile: _batchPhotoFile,
       );
 
-      ToastUtil.showSuccess('Batch "${_nameController.text}" created successfully!');
+      ToastUtil.showSuccess('Batch updated successfully!');
 
       if (context.mounted) {
         context.pop(true); // Return true to indicate success
+      }
+    } catch (e) {
+      ApiErrorHandler.handle(e);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _confirmDelete() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Batch'),
+        content: Text('Are you sure you want to delete "${widget.batch.batchName}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _deleteBatch();
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteBatch() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await _repository.deleteBatch(widget.farmId, widget.batch.id!);
+      ToastUtil.showSuccess('Batch deleted successfully');
+      if (context.mounted) {
+        context.pop(true);
       }
     } catch (e) {
       ApiErrorHandler.handle(e);

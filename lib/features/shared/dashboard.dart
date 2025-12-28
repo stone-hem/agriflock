@@ -7,7 +7,7 @@ import 'package:agriflock360/features/vet/vet_home_screen.dart';
 import 'package:agriflock360/features/vet/vet_payments_screen.dart';
 import 'package:agriflock360/features/vet/vet_profile_screen.dart';
 import 'package:agriflock360/features/vet/vet_schedules_screen.dart';
-import 'package:agriflock360/features/farmer/home_screen.dart';
+import 'package:agriflock360/features/farmer/home/view/home_screen.dart';
 import 'package:agriflock360/features/farmer/quotation/quotation_screen.dart';
 import 'package:flutter/material.dart';
 

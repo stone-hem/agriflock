@@ -1,6 +1,7 @@
 import 'package:agriflock360/features/farmer/batch/add_batch_screen.dart';
 import 'package:agriflock360/features/farmer/batch/adopt_schedule_screen.dart';
 import 'package:agriflock360/features/farmer/batch/batch_details_screen.dart';
+import 'package:agriflock360/features/farmer/batch/edit_batch_screen.dart';
 import 'package:agriflock360/features/farmer/batch/log_feeding_screen.dart';
 import 'package:agriflock360/features/farmer/batch/quick_done_today_screen.dart';
 import 'package:agriflock360/features/farmer/batch/record_product_screen.dart';
@@ -266,7 +267,7 @@ class AppRoutes {
               name: 'addBatch',
               builder: (context, state) {
                 final extra = state.extra as Map<String, dynamic>?;
-                return AddEditBatchScreen(
+                return AddBatchScreen(
                   farmId: extra?['farmId'] ?? '',
                   houseId: extra?['houseId'],
                   houses: extra?['houses'],
@@ -278,7 +279,7 @@ class AppRoutes {
               name: 'editBatch',
               builder: (context, state) {
                 final extra = state.extra as Map<String, dynamic>;
-                return AddEditBatchScreen(
+                return EditBatchScreen(
                   farmId: extra['farmId'],
                   batch: extra['batch'],
                   houses: extra['houses'],

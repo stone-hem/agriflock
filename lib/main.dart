@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:agriflock360/core/network/api_client.dart';
-import 'package:agriflock360/core/services/auth_service.dart';
+import 'package:agriflock360/core/services/social_auth_service.dart';
 import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:agriflock360/core/utils/shared_prefs.dart';
 import 'package:agriflock360/app_routes.dart';
@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'firebase_options.dart';
 
 // Create global instances
-final authService = AuthService();
+final authService = SocialAuthService();
 late SecureStorage secureStorage;
 late ApiClient apiClient;
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();

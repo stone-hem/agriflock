@@ -224,7 +224,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Widget _buildPage(OnboardingPage page, double screenHeight, double screenWidth) {
     final imageHeight = screenHeight * 0.6; // 60% for image
-    final contentHeight = screenHeight * 0.4; // 40% for content
 
     return Container(
       decoration: const BoxDecoration(

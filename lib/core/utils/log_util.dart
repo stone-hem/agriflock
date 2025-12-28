@@ -1,4 +1,3 @@
-import 'dart:developer';
 
 class LogUtil {
   LogUtil._(); // Private constructor to prevent instantiation
@@ -37,6 +36,6 @@ class LogUtil {
   static void _print(String message, {required String color, required String tag}) {
     // Include timestamp for easier tracing
     final timestamp = DateTime.now().toIso8601String();
-    log('$color[$tag][$timestamp]: $message$_reset');
+    print('$color[$tag][$timestamp]: $message$_reset');
   }
 }

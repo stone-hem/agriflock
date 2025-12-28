@@ -242,8 +242,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               height: 20,
                               decoration: const BoxDecoration(
                                 image: DecorationImage(
-                                  image: NetworkImage(
-                                    'https://www.google.com/favicon.ico',
+                                  image: AssetImage(
+                                    'assets/logos/google.png',
                                   ),
                                   fit: BoxFit.contain,
                                 ),
@@ -385,54 +385,24 @@ class _LoginScreenState extends State<LoginScreen> {
       // This returns the BACKEND response, not just Google user data
       final response = await authService.signInWithGoogle();
 
-      /*
-      The 'response' structure (from your AuthService._authenticateWithBackend):
-      {
-        'success': true,
-        'message': 'Authentication successful',
-        'data': {
-          'access_token': 'your_backend_jwt_token_here',
-          'refresh_token': 'your_backend_refresh_token_here',
-          'token_type': 'Bearer',
-          'expires_in': 3600,
-          'user': {
-            'id': 'user_123',
-            'email': 'user@example.com',
-            'full_name': 'John Doe',
-            'profile_picture': 'https://...',
-            'provider': 'google',
-            'firebase_uid': 'firebase_uid_here',
-            'is_email_verified': true,
-            'created_at': '2024-01-01T00:00:00.000Z'
-          }
-        }
-      }
-      */
+
+      if (!mounted) return;
 
       if (response['success'] == true) {
-        final userData = response['data'];
-        final user = userData['user'];
-        final accessToken = userData['access_token'];
-        final refreshToken = userData['refresh_token'];
-
-        // ============================================
-        // IMPORTANT: Store YOUR backend tokens securely
-        // ============================================
-        await secureStorage.write('access_token', accessToken);
-        await secureStorage.write('refresh_token',  refreshToken);
-
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Welcome back ${user['full_name']}!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-
-          // Navigate to dashboard
-          context.go('/dashboard');
-        }
+        ToastUtil.showSuccess("Login successful!");
+        context.go(AppRoutes.dashboard);
+      } else if (response['needsOnboarding'] == true) {
+        // Redirect to onboarding quiz
+        final tempToken = response['tempToken'] ?? '';
+        context.push(
+          '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(tempToken)}',
+        );
+      } else if (response['needsVerification'] == true) {
+        // Redirect to email verification
+        final email = response['email'] ?? '';
+        context.push(
+          '${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(email)}',
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -460,23 +430,23 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final response = await authService.signInWithApple();
 
+      if (!mounted) return;
+
       if (response['success'] == true) {
-        final userData = response['data'];
-        final user = userData['user'];
-
-        // TODO: Store token securely
-        await secureStorage.write('access_token', userData['access_token']);
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Welcome back ${user['full_name']}!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-
-          context.go('/dashboard');
-        }
+        ToastUtil.showSuccess("Login successful!");
+        context.go(AppRoutes.dashboard);
+      } else if (response['needsOnboarding'] == true) {
+        // Redirect to onboarding quiz
+        final tempToken = response['tempToken'] ?? '';
+        context.push(
+          '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(tempToken)}',
+        );
+      } else if (response['needsVerification'] == true) {
+        // Redirect to email verification
+        final email = response['email'] ?? '';
+        context.push(
+          '${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(email)}',
+        );
       }
 
     } catch (e) {

@@ -31,8 +31,9 @@ class ManualAuthRepository {
         await secureStorage.saveLoginData(
           token: loginResponse.accessToken,
           refreshToken: loginResponse.refreshToken,
+          sessionId:loginResponse.sessionId,
           userData: loginResponse.user.toJson(),
-          expiresInSeconds: loginResponse.expiresIn ?? 3600,
+          expiresInSeconds: loginResponse.expiresIn,
         );
 
         return {
@@ -152,6 +153,7 @@ class ManualAuthRepository {
           await secureStorage.saveLoginData(
             token: accessToken,
             refreshToken: refreshToken,
+            sessionId: user['session_id'] as String,
             userData: user,
             expiresInSeconds: expiresIn ?? 3600,
           );

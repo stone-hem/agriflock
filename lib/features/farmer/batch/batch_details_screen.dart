@@ -128,7 +128,7 @@ class _BatchDetailsScreenState extends State<BatchDetailsScreen>
       body: TabBarView(
         controller: _tabController,
         children: [
-          BatchOverview(batch: widget.batch),
+          BatchOverview(batchId: widget.batch.id),
           BatchFeedTab(batch: widget.batch),
           BatchVaccinationsTab(batch: widget.batch),
           BatchProductsTab(batch: widget.batch),

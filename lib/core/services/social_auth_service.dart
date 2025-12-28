@@ -1,13 +1,11 @@
-import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:agriflock360/features/auth/repo/manual_auth_repo.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'dart:async';
 
-class AuthService {
+class SocialAuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final SecureStorage _secureStorage = SecureStorage();
   final ManualAuthRepository _authRepo = ManualAuthRepository();
 
   // Track current Google user from authentication events
@@ -216,11 +214,7 @@ class AuthService {
       ]);
       _currentGoogleUser = null;
 
-      // Clear stored tokens
-      await _secureStorage.delete('access_token');
-      await _secureStorage.delete('refresh_token');
-
-      print('Successfully signed out');
+      print('Successfully signed out from Firebase and Google');
     } catch (e) {
       print('Error signing out: $e');
       rethrow;

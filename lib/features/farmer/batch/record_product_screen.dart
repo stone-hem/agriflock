@@ -1,3 +1,5 @@
+import 'package:agriflock360/features/farmer/batch/model/product_model.dart';
+import 'package:agriflock360/features/farmer/batch/repo/batch_mgt_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -17,17 +19,31 @@ class RecordProductScreen extends StatefulWidget {
 
 class _RecordProductScreenState extends State<RecordProductScreen> {
   final _formKey = GlobalKey<FormState>();
+  final BatchMgtRepository _repository = BatchMgtRepository();
 
-  String? _selectedProductType = 'Eggs';
-  final List<String> _productTypes = ['Eggs', 'Meat (Birds Sold)', 'Other'];
+  String? _selectedProductType = 'eggs';
+  final List<Map<String, String>> _productTypes = [
+    {'value': 'eggs', 'label': 'Eggs'},
+    {'value': 'meat', 'label': 'Meat (Birds Sold)'},
+    {'value': 'other', 'label': 'Other'},
+  ];
 
   final _quantityController = TextEditingController();
-  final _crackedEggsController = TextEditingController(); // only for eggs
-  final _weightController = TextEditingController(); // for meat or other
+  final _crackedEggsController = TextEditingController();
+  final _weightController = TextEditingController();
+  final _priceController = TextEditingController();
   final _notesController = TextEditingController();
 
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay.now();
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Set default cracked eggs to 0
+    _crackedEggsController.text = '0';
+  }
 
   Future<void> _selectDate() async {
     final DateTime? picked = await showDatePicker(
@@ -51,17 +67,93 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
     }
   }
 
-  void _saveRecord() {
-    if (_formKey.currentState!.validate()) {
-      // TODO: Save to database / provider
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$_selectedProductType recorded successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-      context.pop(); // Go back to batch details
+  Future<void> _saveRecord() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
     }
+
+    setState(() => _isSaving = true);
+
+    try {
+      // Combine date and time
+      final collectionDateTime = DateTime(
+        _selectedDate.year,
+        _selectedDate.month,
+        _selectedDate.day,
+        _selectedTime.hour,
+        _selectedTime.minute,
+      );
+
+      // Create request based on product type
+      CreateProductRequest request;
+
+      if (_selectedProductType == 'eggs') {
+        request = CreateProductRequest(
+          productType: _selectedProductType!,
+          batchId: widget.batchId,
+          eggsCollected: int.parse(_quantityController.text),
+          crackedEggs: int.tryParse(_crackedEggsController.text) ?? 0,
+          price: num.parse(_priceController.text),
+          collectionDate: collectionDateTime.toIso8601String(),
+          notes: _notesController.text.isNotEmpty ? _notesController.text : null,
+        );
+      } else if (_selectedProductType == 'meat') {
+        request = CreateProductRequest(
+          productType: _selectedProductType!,
+          batchId: widget.batchId,
+          birdsSold: int.parse(_quantityController.text),
+          weight: _weightController.text.isNotEmpty
+              ? num.parse(_weightController.text)
+              : null,
+          price: num.parse(_priceController.text),
+          collectionDate: collectionDateTime.toIso8601String(),
+          notes: _notesController.text.isNotEmpty ? _notesController.text : null,
+        );
+      } else {
+        // other
+        request = CreateProductRequest(
+          productType: _selectedProductType!,
+          batchId: widget.batchId,
+          quantity: num.parse(_quantityController.text),
+          price: num.parse(_priceController.text),
+          collectionDate: collectionDateTime.toIso8601String(),
+          notes: _notesController.text.isNotEmpty ? _notesController.text : null,
+        );
+      }
+
+      await _repository.createProduct(request);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${_getProductLabel()} recorded successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        context.pop(true); // Return true to indicate success
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to save: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
+  }
+
+  String _getProductLabel() {
+    final type = _productTypes.firstWhere(
+          (t) => t['value'] == _selectedProductType,
+      orElse: () => {'label': 'Product'},
+    );
+    return type['label']!;
   }
 
   @override
@@ -100,16 +192,28 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
           onPressed: () => context.pop(),
         ),
         actions: [
-          TextButton(
-            onPressed: _saveRecord,
-            child: const Text(
-              'Save',
-              style: TextStyle(
-                color: Colors.green,
-                fontWeight: FontWeight.bold,
+          if (_isSaving)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            )
+          else
+            TextButton(
+              onPressed: _saveRecord,
+              child: const Text(
+                'Save',
+                style: TextStyle(
+                  color: Colors.green,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -133,10 +237,14 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.1),
+                          color: Colors.green.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.egg, color: Colors.green, size: 28),
+                        child: Icon(
+                          _getHeaderIcon(),
+                          color: Colors.green,
+                          size: 28,
+                        ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -151,7 +259,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
                               ),
                             ),
                             Text(
-                              'Recording collection for this batch',
+                              'Recording ${_getProductLabel().toLowerCase()} for this batch',
                               style: TextStyle(
                                 color: Colors.grey.shade600,
                                 fontSize: 14,
@@ -181,44 +289,55 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
+                  prefixIcon: Icon(Icons.category, color: Colors.grey.shade600),
                 ),
                 items: _productTypes.map((type) {
-                  return DropdownMenuItem(value: type, child: Text(type));
+                  return DropdownMenuItem(
+                    value: type['value'],
+                    child: Text(type['label']!),
+                  );
                 }).toList(),
                 onChanged: (value) {
-                  setState(() => _selectedProductType = value);
+                  setState(() {
+                    _selectedProductType = value;
+                    // Reset cracked eggs when switching product types
+                    if (value == 'eggs') {
+                      _crackedEggsController.text = '0';
+                    }
+                  });
                 },
               ),
               const SizedBox(height: 24),
 
-              // Conditional Fields
-              if (_selectedProductType == 'Eggs') ...[
-                // Quantity (Eggs)
+              // Conditional Fields based on Product Type
+              if (_selectedProductType == 'eggs') ...[
                 _buildTextField(
                   controller: _quantityController,
                   label: 'Number of Eggs Collected',
                   hint: 'e.g., 245',
                   keyboardType: TextInputType.number,
-                  icon: Icons.format_list_numbered,
+                  icon: Icons.egg,
+                  isRequired: true,
                 ),
                 const SizedBox(height: 20),
-                // Cracked / Broken Eggs
                 _buildTextField(
                   controller: _crackedEggsController,
-                  label: 'Cracked or Broken Eggs (Optional)',
+                  label: 'Cracked or Broken Eggs',
                   hint: 'e.g., 5',
                   keyboardType: TextInputType.number,
                   icon: Icons.broken_image,
+                  isRequired: false,
                 ),
               ],
 
-              if (_selectedProductType == 'Meat (Birds Sold)') ...[
+              if (_selectedProductType == 'meat') ...[
                 _buildTextField(
                   controller: _quantityController,
                   label: 'Number of Birds Sold',
                   hint: 'e.g., 12',
                   keyboardType: TextInputType.number,
-                  icon: Icons.kebab_dining,
+                  icon: Icons.agriculture,
+                  isRequired: true,
                 ),
                 const SizedBox(height: 20),
                 _buildTextField(
@@ -227,16 +346,32 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
                   hint: 'e.g., 28.5',
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   icon: Icons.monitor_weight,
+                  isRequired: false,
                 ),
               ],
 
-              if (_selectedProductType == 'Other')
+              if (_selectedProductType == 'other') ...[
                 _buildTextField(
                   controller: _quantityController,
                   label: 'Quantity',
-                  hint: 'e.g., 50 trays, 10 crates...',
+                  hint: 'e.g., 50',
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   icon: Icons.inventory,
+                  isRequired: true,
                 ),
+              ],
+
+              const SizedBox(height: 20),
+
+              // Price (common for all types)
+              _buildTextField(
+                controller: _priceController,
+                label: 'Price per Unit',
+                hint: 'e.g., 10.50',
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                icon: Icons.attach_money,
+                isRequired: true,
+              ),
 
               const SizedBox(height: 24),
 
@@ -257,8 +392,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
                       child: _dateTimeTile(
                         icon: Icons.calendar_today,
                         label: 'Date',
-                        value:
-                        '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                        value: '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
                       ),
                     ),
                   ),
@@ -285,6 +419,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
                 hint: 'e.g., Grade A eggs, sold to local market...',
                 maxLines: 3,
                 icon: Icons.note_add,
+                isRequired: false,
               ),
 
               const SizedBox(height: 40),
@@ -295,6 +430,19 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
     );
   }
 
+  IconData _getHeaderIcon() {
+    switch (_selectedProductType) {
+      case 'eggs':
+        return Icons.egg;
+      case 'meat':
+        return Icons.agriculture;
+      case 'other':
+        return Icons.inventory;
+      default:
+        return Icons.production_quantity_limits;
+    }
+  }
+
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
@@ -302,16 +450,29 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
     TextInputType keyboardType = TextInputType.text,
     int maxLines = 1,
     required IconData icon,
+    required bool isRequired,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: Theme.of(context).textTheme.titleMedium!.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.grey.shade800,
-          ),
+        Row(
+          children: [
+            Text(
+              label,
+              style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade800,
+              ),
+            ),
+            if (isRequired)
+              Text(
+                ' *',
+                style: TextStyle(
+                  color: Colors.red.shade600,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+          ],
         ),
         const SizedBox(height: 8),
         TextFormField(
@@ -326,14 +487,18 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
             ),
           ),
           validator: (value) {
-            if ((value == null || value.isEmpty) &&
-                (label.contains('Number') || label.contains('Quantity'))) {
-              return 'Please enter a value';
+            if (isRequired && (value == null || value.isEmpty)) {
+              return 'This field is required';
             }
-            if (keyboardType == TextInputType.number ||
-                keyboardType == const TextInputType.numberWithOptions(decimal: true)) {
-              if (value != null && double.tryParse(value) == null && value.isNotEmpty) {
-                return 'Enter a valid number';
+            if (value != null && value.isNotEmpty) {
+              if (keyboardType == TextInputType.number ||
+                  keyboardType == const TextInputType.numberWithOptions(decimal: true)) {
+                if (num.tryParse(value) == null) {
+                  return 'Please enter a valid number';
+                }
+                if (num.parse(value) < 0) {
+                  return 'Value cannot be negative';
+                }
               }
             }
             return null;
@@ -361,8 +526,14 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-              Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
+              Text(
+                label,
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+              ),
+              Text(
+                value,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
             ],
           ),
         ],
@@ -375,6 +546,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
     _quantityController.dispose();
     _crackedEggsController.dispose();
     _weightController.dispose();
+    _priceController.dispose();
     _notesController.dispose();
     super.dispose();
   }

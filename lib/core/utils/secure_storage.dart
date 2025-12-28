@@ -9,6 +9,7 @@ class SecureStorage {
 
   // Storage keys
   static const String _tokenKey = 'auth_token';
+  static const String _sessionKey = 'session_id';
   static const String _refreshTokenKey = 'refresh_token';
   static const String _userKey = 'user_data';
   static const String _userIdKey = 'user_id';
@@ -19,6 +20,10 @@ class SecureStorage {
   // Token operations
   Future<void> saveToken(String token) async {
     await _storage.write(key: _tokenKey, value: token);
+  }
+
+  Future<void> saveSessionId(String sessionId) async {
+    await _storage.write(key: _sessionKey, value: sessionId);
   }
 
   Future<String?> getToken() async {
@@ -36,6 +41,10 @@ class SecureStorage {
 
   Future<String?> getRefreshToken() async {
     return await _storage.read(key: _refreshTokenKey);
+  }
+
+  Future<String?> getSessionId() async {
+    return await _storage.read(key: _sessionKey);
   }
 
   Future<void> deleteRefreshToken() async {
@@ -128,10 +137,14 @@ class SecureStorage {
     required String token,
     String? refreshToken,
     Map<String, dynamic>? userData,
+    required String sessionId,
     DateTime? tokenExpiry,
     int? expiresInSeconds, // If API returns expiry in seconds
   }) async {
     await saveToken(token);
+    await saveSessionId(sessionId);
+
+    // Save refresh token
 
     if (refreshToken != null) {
       await saveRefreshToken(refreshToken);

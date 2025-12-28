@@ -77,7 +77,7 @@ class _BatchFeedTabState extends State<BatchFeedTab>
 
     // Dispose all scroll controllers
     for (var controller in _scrollControllers.values) {
-      controller?.dispose();
+      controller.dispose();
     }
 
     super.dispose();

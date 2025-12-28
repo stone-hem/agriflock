@@ -1,5 +1,5 @@
 class BatchModel {
-  final String? id;
+  final String id;
   final String batchName;
   final String? houseId;
   final String? houseName;
@@ -20,7 +20,7 @@ class BatchModel {
   final DateTime? updatedAt;
 
   const BatchModel({
-    this.id,
+    required this.id,
     required this.batchName,
     this.houseId,
     this.houseName,
@@ -43,7 +43,7 @@ class BatchModel {
 
   factory BatchModel.fromJson(Map<String, dynamic> json) {
     return BatchModel(
-      id: json['id']?.toString(),
+      id: json['id'].toString(),
       batchName: json['batch_name'] ?? json['name'] ?? '',
       houseId: json['house_id']?.toString(),
       houseName: json['house_name'],
