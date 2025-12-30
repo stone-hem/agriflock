@@ -14,15 +14,23 @@ class SocialAuthService {
   // Stream subscription for Google sign-in events
   StreamSubscription<GoogleSignInAuthenticationEvent>? _authEventSubscription;
 
+  // Track initialization state
+  bool _isInitialized = false;
+
   // Required scopes for Google Sign In
   final List<String> _googleScopes = [
     'email',
     'https://www.googleapis.com/auth/userinfo.profile',
   ];
 
-  /// Initialize Google Sign In - MUST be called during app startup in main()
-  Future<void> initializeGoogleSignIn() async {
-    print('=== Initializing Google Sign-In ===');
+  /// Initialize Google Sign In only when needed (lazy initialization)
+  Future<void> _ensureInitialized() async {
+    if (_isInitialized) {
+      print('Google Sign-In already initialized, skipping...');
+      return;
+    }
+
+    print('=== Initializing Google Sign-In (Lazy) ===');
 
     try {
       final GoogleSignIn signIn = GoogleSignIn.instance;
@@ -38,10 +46,10 @@ class SocialAuthService {
         onError: _handleAuthenticationError,
       );
 
-      // Attempt silent sign-in (if user was previously signed in)
-      await signIn.attemptLightweightAuthentication();
+      _isInitialized = true;
 
-      print('Lightweight authentication attempt completed');
+      // REMOVED: attemptLightweightAuthentication() - this was causing the unwanted popup
+      print('Google Sign-In ready for use');
     } catch (e) {
       print('Error initializing Google Sign-In: $e');
       rethrow;
@@ -76,6 +84,10 @@ class SocialAuthService {
   Future<Map<String, dynamic>> signInWithGoogle() async {
     try {
       print('=== Starting Google Sign-In ===');
+
+      // Initialize Google Sign-In only when user clicks sign in button
+      await _ensureInitialized();
+
       final GoogleSignIn signIn = GoogleSignIn.instance;
 
       // 1. Trigger authentication flow (requires user interaction)
@@ -224,6 +236,7 @@ class SocialAuthService {
   /// Clean up subscriptions
   void dispose() {
     _authEventSubscription?.cancel();
+    _isInitialized = false;
   }
 
   /// Get current Firebase user

@@ -35,8 +35,8 @@ void main() async {
     );
 
     // 4. Initialize Google Sign-In (CRITICAL - must be done after Firebase)
-    print('Initializing Google Sign-In...');
-    await authService.initializeGoogleSignIn();
+    // print('Initializing Google Sign-In...');
+    // await authService.initializeGoogleSignIn();
 
     // 5. Initialize ApiClient
     print('Initializing ApiClient...');
