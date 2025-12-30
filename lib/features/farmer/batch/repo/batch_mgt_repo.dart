@@ -11,7 +11,7 @@ class BatchMgtRepository {
   Future<BatchMgtResponse> getBatchDetails(String batchId) async {
     try {
       final response = await apiClient.get(
-          '/batchs/$batchId/batchScreen'
+          '/batches/$batchId/batchScreen'
       );
 
       final jsonResponse = jsonDecode(response.body);

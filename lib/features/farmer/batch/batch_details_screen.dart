@@ -77,7 +77,7 @@ class _BatchDetailsScreenState extends State<BatchDetailsScreen>
           child: Column(
             children: [
               Container(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                padding: const EdgeInsets.fromLTRB(8, 0, 8, 5),
                 child: TabBar(
                   controller: _tabController,
                   isScrollable: true,

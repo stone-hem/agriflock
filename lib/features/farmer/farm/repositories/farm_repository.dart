@@ -13,7 +13,9 @@ class FarmRepository {
     try {
       final response = await apiClient.get('/farms');
       final jsonResponse = jsonDecode(response.body);
-      LogUtil.info('Farms API Response: ${jsonDecode(response.body).toString()}');
+      LogUtil.info(
+        'Farms API Response: ${jsonDecode(response.body).toString()}',
+      );
 
       // Parse farms list
       List<dynamic> farmsJson = [];
@@ -106,7 +108,10 @@ class FarmRepository {
   }
 
   // Create new farm (with optional photo)
-  Future<FarmModel> createFarm(Map<String, dynamic> farmData, {File? photoFile}) async {
+  Future<FarmModel> createFarm(
+    Map<String, dynamic> farmData, {
+    File? photoFile,
+  }) async {
     try {
       if (photoFile != null) {
         // Use multipart request for file upload
@@ -157,10 +162,7 @@ class FarmRepository {
         // Regular JSON request without photo
         farmData.removeWhere((key, value) => value == null);
 
-        final response = await apiClient.post(
-          '/farms',
-          body: farmData,
-        );
+        final response = await apiClient.post('/farms', body: farmData);
 
         final jsonResponse = jsonDecode(response.body);
 
@@ -187,7 +189,11 @@ class FarmRepository {
   }
 
   // Update existing farm (with optional photo)
-  Future<FarmModel> updateFarm(String farmId, Map<String, dynamic> farmData, {File? photoFile}) async {
+  Future<bool> updateFarm(
+    String farmId,
+    Map<String, dynamic> farmData, {
+    File? photoFile,
+  }) async {
     try {
       if (photoFile != null) {
         // Use multipart request for file upload
@@ -223,16 +229,7 @@ class FarmRepository {
         final jsonResponse = jsonDecode(response.body);
 
         if (response.statusCode >= 200 && response.statusCode < 300) {
-          Map<String, dynamic> farmJson;
-          if (jsonResponse['data'] != null) {
-            farmJson = jsonResponse['data'];
-          } else if (jsonResponse['farm'] != null) {
-            farmJson = jsonResponse['farm'];
-          } else {
-            farmJson = jsonResponse;
-          }
-
-          return FarmModel.fromJson(farmJson);
+          return true;
         } else {
           throw Exception(jsonResponse['message'] ?? 'Failed to update farm');
         }
@@ -240,24 +237,12 @@ class FarmRepository {
         // Regular JSON request without photo
         farmData.removeWhere((key, value) => value == null);
 
-        final response = await apiClient.put(
-          '/farms/$farmId',
-          body: farmData,
-        );
+        final response = await apiClient.patch('/farms/$farmId', body: farmData);
 
         final jsonResponse = jsonDecode(response.body);
 
         if (response.statusCode >= 200 && response.statusCode < 300) {
-          Map<String, dynamic> farmJson;
-          if (jsonResponse['data'] != null) {
-            farmJson = jsonResponse['data'];
-          } else if (jsonResponse['farm'] != null) {
-            farmJson = jsonResponse['farm'];
-          } else {
-            farmJson = jsonResponse;
-          }
-
-          return FarmModel.fromJson(farmJson);
+          return true;
         } else {
           throw Exception(jsonResponse['message'] ?? 'Failed to update farm');
         }
@@ -293,10 +278,7 @@ class FarmsResponse {
   final List<FarmModel> farms;
   final FarmStatistics statistics;
 
-  const FarmsResponse({
-    required this.farms,
-    required this.statistics,
-  });
+  const FarmsResponse({required this.farms, required this.statistics});
 }
 
 // Statistics model

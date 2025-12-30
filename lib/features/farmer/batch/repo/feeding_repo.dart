@@ -8,7 +8,7 @@ class FeedingRepository {
   Future<FeedingRecommendationsResponse> getFeedingRecommendations(String batchId) async {
     try {
       final response = await apiClient.get(
-        '/batchs/$batchId/feeding/recommendations',
+        '/batches/$batchId/feeding/recommendations',
       );
 
       final jsonResponse = jsonDecode(response.body);
@@ -29,7 +29,7 @@ class FeedingRepository {
       }) async {
     try {
       final response = await apiClient.get(
-        '/batchs/$batchId/feeding/records?page=$page&limit=$limit',
+        '/batches/$batchId/feeding/records?page=$page&limit=$limit',
       );
 
       final jsonResponse = jsonDecode(response.body);
@@ -46,7 +46,7 @@ class FeedingRepository {
   Future<FeedDashboard> getFeedDashboard(String batchId) async {
     try {
       final response = await apiClient.get(
-        '/batchs/$batchId/feeding/{id}/feed-dashboard',
+        '/batches/$batchId/feeding/feed-dashboard',
       );
 
       final jsonResponse = jsonDecode(response.body);
@@ -66,7 +66,7 @@ class FeedingRepository {
       ) async {
     try {
       final response = await apiClient.post(
-        '/batchs/$batchId/feeding/records',
+        '/batches/$batchId/feeding/records',
         body: jsonEncode(request.toJson()),
       );
 

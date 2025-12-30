@@ -13,11 +13,8 @@ class ArchivedBatchRepository {
         int limit = 20,
       }) async {
     try {
-      // final response = await apiClient.get(
-      //   '/farms/$farmId/batches/archived?page=$page&limit=$limit',
-      // );
       final response = await apiClient.get(
-        '/batchs/archived?page=$page&limit=$limit',
+        '/batches/archived?page=$page&limit=$limit',
       );
       final jsonResponse = jsonDecode(response.body);
       LogUtil.info('Archived Batches API Response: $jsonResponse');
@@ -51,7 +48,7 @@ class ArchivedBatchRepository {
   Future<void> restoreBatch(String farmId, String batchId) async {
     try {
       final response = await apiClient.post(
-        '/batchs/$batchId/restore',
+        '/batches/$batchId/restore',
         body: {},
       );
 
@@ -68,7 +65,7 @@ class ArchivedBatchRepository {
   // Permanently delete an archived batch
   Future<void> deleteArchivedBatch(String farmId, String batchId) async {
     try {
-      final response = await apiClient.delete('/batchs/$batchId');
+      final response = await apiClient.delete('/batches/$batchId');
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
         final jsonResponse = jsonDecode(response.body);

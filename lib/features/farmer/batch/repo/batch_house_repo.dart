@@ -85,7 +85,7 @@ class BatchHouseRepository {
         );
 
         final streamedResponse = await apiClient.postMultipart(
-          '/batchs',
+          '/batches',
           fields: fields,
           files: [multipartFile],
         );
@@ -113,7 +113,7 @@ class BatchHouseRepository {
         batchData.removeWhere((key, value) => value == null);
 
         final response = await apiClient.post(
-          '/batchs',
+          '/batches',
           body: batchData,
         );
 
@@ -166,7 +166,7 @@ class BatchHouseRepository {
         );
 
         final streamedResponse = await apiClient.postMultipart(
-          '/batchs/$batchId',
+          '/batches/$batchId',
           fields: fields,
           files: [multipartFile],
         );
@@ -192,8 +192,8 @@ class BatchHouseRepository {
         // Regular JSON request without photo
         batchData.removeWhere((key, value) => value == null);
 
-        final response = await apiClient.put(
-          '/batchs/$batchId',
+        final response = await apiClient.patch(
+          '/batches/$batchId',
           body: batchData,
         );
 
@@ -240,7 +240,7 @@ class BatchHouseRepository {
   // Get all houses for a farm
   Future<List<House>> getAllHouses(String farmId) async {
     try {
-      final response = await apiClient.get('/batchs/$farmId/batch-screen');
+      final response = await apiClient.get('/batches/$farmId/batch-screen');
       final jsonResponse = jsonDecode(response.body);
       LogUtil.info('Houses API Response: $jsonResponse');
 
@@ -426,7 +426,7 @@ class BatchHouseRepository {
         // Regular JSON request without photo
         houseData.removeWhere((key, value) => value == null);
 
-        final response = await apiClient.put(
+        final response = await apiClient.patch(
           '/farms/$farmId/houses/$houseId',
           body: houseData,
         );
@@ -458,6 +458,7 @@ class BatchHouseRepository {
   Future<void> deleteHouse(String farmId, String houseId) async {
     try {
       final response = await apiClient.delete('/farms/$farmId/houses/$houseId');
+      LogUtil.info('Delete House Response: ${response.body}');
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
         final jsonResponse = jsonDecode(response.body);
@@ -471,7 +472,7 @@ class BatchHouseRepository {
 
   Future<List<BirdType>> getBirdTypes() async {
     try {
-      final response = await apiClient.get('/batchs/bird-types');
+      final response = await apiClient.get('/batches/bird-types');
 
       if (response.statusCode == 200) {
         final jsonResponse = jsonDecode(response.body);

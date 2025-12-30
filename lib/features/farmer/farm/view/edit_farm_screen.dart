@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
@@ -208,13 +209,14 @@ class _EditFarmScreenState extends State<EditFarmScreen> {
 
       // Add GPS coordinates if location is selected
       if (_selectedAddress != null && _latitude != null && _longitude != null) {
-        farmData["location"] = {
+        farmData["location"] = jsonEncode({
           "address": {
             "formatted_address": _selectedAddress,
           },
           "latitude": _latitude,
           "longitude": _longitude,
-        } as String?;
+        });
+
       }
 
       // Update farm using repository
