@@ -1,6 +1,7 @@
 import 'package:agriflock360/core/utils/date_util.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
+import 'package:agriflock360/features/farmer/batch/model/recommended_vaccination_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/vaccination_repo.dart';
 import 'package:agriflock360/features/farmer/batch/shared/stat_card.dart';
 import 'package:flutter/material.dart';
@@ -26,10 +27,13 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
   // State
   VaccinationDashboard? _dashboard;
   VaccinationsResponse? _vaccinations;
+  RecommendedVaccinationsResponse? _recommendations;
   bool _isDashboardLoading = true;
   bool _isVaccinationsLoading = true;
+  bool _isRecommendationsLoading = true;
   String? _dashboardError;
   String? _vaccinationsError;
+  String? _recommendationsError;
 
   @override
   void initState() {
@@ -48,6 +52,7 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
     // Load data
     _loadDashboard();
     _loadVaccinations();
+    _loadRecommendations();
   }
 
   Future<void> _loadDashboard() async {
@@ -92,10 +97,32 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
     }
   }
 
+  Future<void> _loadRecommendations() async {
+    try {
+      setState(() {
+        _isRecommendationsLoading = true;
+        _recommendationsError = null;
+      });
+
+      final data = await _repository.getRecommendedVaccinations(widget.batch.id);
+
+      setState(() {
+        _recommendations = data;
+        _isRecommendationsLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _recommendationsError = e.toString();
+        _isRecommendationsLoading = false;
+      });
+    }
+  }
+
   Future<void> _onRefresh() async {
     await Future.wait([
       _loadDashboard(),
       _loadVaccinations(),
+      _loadRecommendations(),
     ]);
   }
 
@@ -182,9 +209,9 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
                     splashFactory: NoSplash.splashFactory,
                     overlayColor: WidgetStateProperty.all(Colors.transparent),
                     tabs: [
-                      _buildTabWithIcon(Icons.upcoming, 'Today'),
+                      _buildTabWithIcon(Icons.upcoming, 'Scheduled'),
                       _buildTabWithIcon(Icons.history, 'History'),
-                      _buildTabWithIcon(Icons.schedule, 'Schedule'),
+                      _buildTabWithIcon(Icons.schedule, 'Recommended'),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -192,9 +219,9 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
                     child: TabBarView(
                       controller: _tabController,
                       children: [
-                        _buildTodayTab(),
+                        _buildScheduledTab(),
                         _buildHistoryTab(),
-                        _buildScheduleTab(),
+                        _buildRecommendedTab(),
                       ],
                     ),
                   ),
@@ -304,7 +331,7 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
     );
   }
 
-  Widget _buildTodayTab() {
+  Widget _buildScheduledTab() {
     return RefreshIndicator(
       onRefresh: _onRefresh,
       child: _isVaccinationsLoading
@@ -420,7 +447,20 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
     );
   }
 
-  Widget _buildScheduleTab() {
+  Widget _buildRecommendedTab() {
+    return RefreshIndicator(
+      onRefresh: _onRefresh,
+      child: _isRecommendationsLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _recommendationsError != null || _recommendations == null
+          ? _buildRecommendationsErrorView(_recommendationsError)
+          : _buildRecommendationsContent(),
+    );
+  }
+
+  Widget _buildRecommendationsContent() {
+    final batchAge = _recommendations!.meta.batchAgeDays;
+
     return ListView(
       controller: _scrollControllers[2],
       children: [
@@ -429,7 +469,7 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
           child: FilledButton.icon(
             onPressed: () async {
               final result = await context.push(
-                  '/batches/${widget.batch.id}/adopt-schedule');
+                  '/batches/${widget.batch.id}/adopt-all-schedule');
               if (result == true) {
                 _onRefresh();
               }
@@ -451,64 +491,72 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: Colors.blue.shade200),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.info_outline,
-                    color: Colors.blue.shade700, size: 20),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Standard vaccination schedule for poultry',
-                    style: TextStyle(
-                      color: Colors.blue.shade900,
-                      fontSize: 12,
+                Row(
+                  children: [
+                    Icon(Icons.info_outline,
+                        color: Colors.blue.shade700, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Recommended vaccinations for your poultry batch',
+                        style: TextStyle(
+                          color: Colors.blue.shade900,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Batch Age: $batchAge days • ${_recommendations!.meta.scheduledCount} already scheduled',
+                  style: TextStyle(
+                    color: Colors.blue.shade800,
+                    fontSize: 11,
                   ),
                 ),
               ],
             ),
           ),
         ),
-        _RecommendedVaccinationItem(
-          vaccineName: 'Marek\'s Disease',
-          timing: 'Day 1 (at hatchery)',
-          method: 'Subcutaneous injection',
-          dosage: '0.2ml per chick',
-          description: 'Protects against Marek\'s disease virus',
-          onAdopt: () => _navigateToAdopt('Marek\'s Disease'),
-        ),
-        _RecommendedVaccinationItem(
-          vaccineName: 'Newcastle Disease (ND)',
-          timing: 'Day 7-10',
-          method: 'Eye/nose drop or drinking water',
-          dosage: '1 drop or as per vaccine instructions',
-          description: 'First dose for respiratory protection',
-          onAdopt: () => _navigateToAdopt('Newcastle Disease (ND)'),
-        ),
-        _RecommendedVaccinationItem(
-          vaccineName: 'Infectious Bursal Disease (Gumboro)',
-          timing: 'Day 10-14',
-          method: 'Drinking water',
-          dosage: 'As per vaccine instructions',
-          description: 'Protects immune system development',
-          onAdopt: () => _navigateToAdopt('Infectious Bursal Disease (Gumboro)'),
-        ),
-        _RecommendedVaccinationItem(
-          vaccineName: 'Newcastle Disease (Booster)',
-          timing: 'Day 21-28',
-          method: 'Drinking water or spray',
-          dosage: '1 dose per bird',
-          description: 'Booster for enhanced immunity',
-          onAdopt: () => _navigateToAdopt('Newcastle Disease (Booster)'),
-        ),
-        _RecommendedVaccinationItem(
-          vaccineName: 'Fowl Pox',
-          timing: 'Week 6-8',
-          method: 'Wing-web stab',
-          dosage: '1 puncture per bird',
-          description: 'Long-lasting immunity against pox',
-          onAdopt: () => _navigateToAdopt('Fowl Pox'),
-        ),
+        if (_recommendations!.data.isEmpty)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: Column(
+                children: [
+                  Icon(Icons.celebration, size: 48, color: Colors.green.shade600),
+                  const SizedBox(height: 12),
+                  Text(
+                    'All caught up!',
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'No additional vaccinations are recommended at this time.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.grey.shade500,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ..._recommendations!.data.map((recommendation) => RecommendedVaccinationItem(
+          recommendation: recommendation,
+          batchAge: batchAge,
+          onAdopt: () => _navigateToAdoptRecommendation(recommendation),
+        )),
       ],
     );
   }
@@ -524,6 +572,33 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: _onRefresh,
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecommendationsErrorView(String? error) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, size: 48, color: Colors.red),
+          const SizedBox(height: 16),
+          Text('Error loading recommendations',
+              style: TextStyle(color: Colors.grey.shade600)),
+          if (error != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              error.length > 100 ? '${error.substring(0, 100)}...' : error,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+            ),
+          ],
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _loadRecommendations,
             child: const Text('Retry'),
           ),
         ],
@@ -554,9 +629,10 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
     }
   }
 
-  void _navigateToAdopt(String vaccineName) async {
+  void _navigateToAdoptRecommendation(RecommendedVaccination recommendation) async {
     final result = await context.push(
-      '/batches/${widget.batch.id}/adopt-schedule?item=$vaccineName',
+      '/batches/${widget.batch.id}/adopt-schedule?vaccineId=${recommendation.id}',
+      extra: recommendation,
     );
     if (result == true) {
       _onRefresh();
@@ -686,7 +762,6 @@ class _CompletedVaccinationItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -790,22 +865,48 @@ class _CompletedVaccinationItem extends StatelessWidget {
   }
 }
 
-class _RecommendedVaccinationItem extends StatelessWidget {
-  final String vaccineName;
-  final String timing;
-  final String method;
-  final String dosage;
-  final String description;
+class RecommendedVaccinationItem extends StatelessWidget {
+  final RecommendedVaccination recommendation;
+  final int batchAge;
   final VoidCallback onAdopt;
 
-  const _RecommendedVaccinationItem({
-    required this.vaccineName,
-    required this.timing,
-    required this.method,
-    required this.dosage,
-    required this.description,
+  const RecommendedVaccinationItem({
+    super.key,
+    required this.recommendation,
+    required this.batchAge,
     required this.onAdopt,
   });
+
+  String get _getTimingDescription {
+    final minAge = recommendation.recommendedAgeMin;
+    final maxAge = recommendation.recommendedAgeMax;
+    final ageDesc = recommendation.recommendedAgeDescription;
+
+    if (ageDesc != null && ageDesc.isNotEmpty) {
+      return ageDesc;
+    }
+
+    if (batchAge < minAge) {
+      return 'Due in ${minAge - batchAge} days (Day $minAge-$maxAge)';
+    } else if (batchAge >= minAge && batchAge <= maxAge) {
+      return 'Due now! (Day $minAge-$maxAge)';
+    } else {
+      return 'Recommended for younger birds (Day $minAge-$maxAge)';
+    }
+  }
+
+  Color get _getTimingColor {
+    final minAge = recommendation.recommendedAgeMin;
+    final maxAge = recommendation.recommendedAgeMax;
+
+    if (batchAge < minAge) {
+      return Colors.blue.shade700;
+    } else if (batchAge >= minAge && batchAge <= maxAge) {
+      return Colors.green.shade700;
+    } else {
+      return Colors.grey.shade600;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -840,7 +941,7 @@ class _RecommendedVaccinationItem extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      vaccineName,
+                      recommendation.vaccineName,
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
@@ -848,9 +949,9 @@ class _RecommendedVaccinationItem extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      timing,
+                      _getTimingDescription,
                       style: TextStyle(
-                        color: Colors.purple.shade700,
+                        color: _getTimingColor,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
@@ -882,24 +983,97 @@ class _RecommendedVaccinationItem extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (recommendation.targetDisease != null &&
+                    recommendation.targetDisease!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.medical_services,
+                            size: 14, color: Colors.grey.shade600),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Disease: ',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            recommendation.targetDisease!,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                if (recommendation.description != null &&
+                    recommendation.description!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.info_outline,
+                            size: 14, color: Colors.grey.shade600),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Purpose: ',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            recommendation.description!,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 _InfoRow(
                   icon: Icons.medical_services,
                   label: 'Method',
-                  value: method,
+                  value: recommendation.administrationMethod,
                 ),
                 const SizedBox(height: 6),
                 _InfoRow(
                   icon: Icons.water_drop,
                   label: 'Dosage',
-                  value: dosage,
+                  value: recommendation.dosage,
                 ),
-                const SizedBox(height: 6),
-                _InfoRow(
-                  icon: Icons.info_outline,
-                  label: 'Purpose',
-                  value: description,
-                ),
+                if (recommendation.usageInstructions != null &&
+                    recommendation.usageInstructions!.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  _InfoRow(
+                    icon: Icons.article,
+                    label: 'Instructions',
+                    value: recommendation.usageInstructions!,
+                  ),
+                ],
+                if (recommendation.storageConditions != null &&
+                    recommendation.storageConditions!.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  _InfoRow(
+                    icon: Icons.ac_unit,
+                    label: 'Storage',
+                    value: recommendation.storageConditions!,
+                  ),
+                ],
               ],
             ),
           ),
