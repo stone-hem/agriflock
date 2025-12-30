@@ -330,6 +330,58 @@ class _BrowseVetsTabState extends State<BrowseVetsTab> {
           ),
           const SizedBox(height: 24),
 
+
+
+          // Recommended Section
+          if (_recommendedVets.isNotEmpty && _searchController.text.isEmpty)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Recommended Vets',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '${_recommendedVets.length} available',
+                        style: const TextStyle(
+                          color: Colors.green,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Top-rated veterinarians in your area',
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ..._recommendedVets.map(_buildVetCard),
+                const SizedBox(height: 24),
+              ],
+            ),
+
           // Search Bar
           Card(
             elevation: 0,
@@ -421,56 +473,6 @@ class _BrowseVetsTabState extends State<BrowseVetsTab> {
             ),
           ),
           const SizedBox(height: 24),
-
-          // Recommended Section
-          if (_recommendedVets.isNotEmpty && _searchController.text.isEmpty)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Recommended Vets',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        '${_recommendedVets.length} available',
-                        style: const TextStyle(
-                          color: Colors.green,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Top-rated veterinarians in your area',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                ..._recommendedVets.map(_buildVetCard),
-                const SizedBox(height: 24),
-              ],
-            ),
 
           // All Vets Section
           Text(
