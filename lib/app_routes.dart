@@ -3,6 +3,7 @@ import 'package:agriflock360/features/farmer/batch/adopt_schedule_screen.dart';
 import 'package:agriflock360/features/farmer/batch/batch_details_screen.dart';
 import 'package:agriflock360/features/farmer/batch/edit_batch_screen.dart';
 import 'package:agriflock360/features/farmer/batch/log_feeding_screen.dart';
+import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
 import 'package:agriflock360/features/farmer/batch/quick_done_today_screen.dart';
 import 'package:agriflock360/features/farmer/batch/record_product_screen.dart';
 import 'package:agriflock360/features/farmer/batch/update_vaccination_status_screen.dart';
@@ -297,23 +298,32 @@ class AppRoutes {
               }
             ),
             GoRoute(
-              path: 'feed',
-              builder: (context, state) => const LogFeedingScreen(),
+              path: ':id/feed',
+              builder: (context, state) {
+                final batchId = state.pathParameters['id']!;
+                return LogFeedingScreen(batchId: batchId,);
+                },
             ),
             GoRoute(
-              path: 'quick-done',
-              builder: (context, state) => QuickDoneTodayScreen(),
+              path: ':id/quick-done',
+              builder: (context, state) {
+                final batchId = state.pathParameters['id']!;
+                return QuickDoneTodayScreen(batchId: batchId,);}
             ),
             GoRoute(
               path: 'adopt-schedule',
               builder: (context, state) => AdoptScheduleScreen(),
             ),
             GoRoute(
-              path: 'update-status',
-              builder: (context, state) => UpdateVaccinationStatusScreen(
-                vaccineName: 'Gumboro',
-                scheduledDate: '2025-2-1',
-              ),
+              path: ':id/update-status',
+              builder: (context, state) {
+                final batchId = state.pathParameters['id']!;
+
+                final extra = state.extra as Vaccination;
+                return UpdateVaccinationStatusScreen(
+                    vaccination: extra,
+                batchId: batchId,
+              );}
             ),
             GoRoute(
               path: ':id/record-product',

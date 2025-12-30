@@ -1,7 +1,5 @@
-// lib/features/dashboard/model/dashboard_model.dart
-
 class DashboardSummary {
-  final String totalBirds;
+  final num totalBirds;
   final num eggsToday;
   final num activeBatches;
   final num mortalityRate;

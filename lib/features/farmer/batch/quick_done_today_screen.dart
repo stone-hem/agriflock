@@ -1,8 +1,12 @@
+import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
+import 'package:agriflock360/features/farmer/batch/repo/vaccination_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class QuickDoneTodayScreen extends StatefulWidget {
-  const QuickDoneTodayScreen({super.key});
+  final String batchId;
+
+  const QuickDoneTodayScreen({super.key, required this.batchId});
 
   @override
   State<QuickDoneTodayScreen> createState() => _QuickDoneTodayScreenState();
@@ -10,6 +14,8 @@ class QuickDoneTodayScreen extends StatefulWidget {
 
 class _QuickDoneTodayScreenState extends State<QuickDoneTodayScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _repository = VaccinationRepository();
+
   final _vaccineNameController = TextEditingController();
   final _dosageController = TextEditingController();
   final _birdsVaccinatedController = TextEditingController();
@@ -20,6 +26,7 @@ class _QuickDoneTodayScreenState extends State<QuickDoneTodayScreen> {
   String? _selectedAdministration;
   DateTime _completionDate = DateTime.now();
   TimeOfDay _completionTime = TimeOfDay.now();
+  bool _isSaving = false;
 
   final List<String> _vaccineTypes = [
     'Newcastle Disease',
@@ -76,8 +83,14 @@ class _QuickDoneTodayScreenState extends State<QuickDoneTodayScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: _submitRecord,
-            child: const Text(
+            onPressed: _isSaving ? null : _submitRecord,
+            child: _isSaving
+                ? const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+                : const Text(
               'Save',
               style: TextStyle(
                 color: Colors.green,
@@ -133,38 +146,6 @@ class _QuickDoneTodayScreenState extends State<QuickDoneTodayScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-
-              // Batch Selection
-              Text(
-                'Batch',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(
-                  hintText: 'Select batch',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                items: ['Batch 123', 'Batch 456', 'Batch 789'].map((String batch) {
-                  return DropdownMenuItem<String>(
-                    value: batch,
-                    child: Text(batch),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {},
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please select a batch';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
 
               // Vaccine Name
               Text(
@@ -501,23 +482,69 @@ class _QuickDoneTodayScreenState extends State<QuickDoneTodayScreen> {
     }
   }
 
-  void _submitRecord() {
+  Future<void> _submitRecord() async {
     if (_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Vaccination recorded successfully'),
-              Text('${_birdsVaccinatedController.text} birds vaccinated'),
-              const Text('Status: Completed'),
-            ],
-          ),
-          backgroundColor: Colors.green,
-        ),
-      );
-      context.pop();
+      setState(() {
+        _isSaving = true;
+      });
+
+      try {
+        final completionDateTime = DateTime(
+          _completionDate.year,
+          _completionDate.month,
+          _completionDate.day,
+          _completionTime.hour,
+          _completionTime.minute,
+        );
+
+        final request = QuickDoneVaccinationRequest(
+          vaccineName: _vaccineNameController.text,
+          vaccineType: _selectedVaccineType!,
+          dosage: _dosageController.text,
+          administrationMethod: _selectedAdministration!,
+          birdsVaccinated: int.parse(_birdsVaccinatedController.text),
+          completedDate: completionDateTime,
+          cost: _costController.text.isEmpty
+              ? 0
+              : double.parse(_costController.text),
+          notes: _notesController.text.isEmpty ? null : _notesController.text,
+        );
+
+        await _repository.quickDoneVaccination(widget.batchId, request);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Vaccination recorded successfully'),
+                  Text('${_birdsVaccinatedController.text} birds vaccinated'),
+                  const Text('Status: Completed'),
+                ],
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+          context.pop(true); // Return true to indicate success
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to record vaccination: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isSaving = false;
+          });
+        }
+      }
     }
   }
 

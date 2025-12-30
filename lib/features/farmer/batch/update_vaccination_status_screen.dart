@@ -1,16 +1,15 @@
+import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
+import 'package:agriflock360/features/farmer/batch/repo/vaccination_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class UpdateVaccinationStatusScreen extends StatefulWidget {
-  final String vaccineName;
-  final String scheduledDate;
-  final bool isOverdue;
+  final String batchId;
+  final Vaccination vaccination;
 
   const UpdateVaccinationStatusScreen({
     super.key,
-    required this.vaccineName,
-    required this.scheduledDate,
-    this.isOverdue = false,
+    required this.batchId, required this.vaccination,
   });
 
   @override
@@ -18,6 +17,9 @@ class UpdateVaccinationStatusScreen extends StatefulWidget {
 }
 
 class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusScreen> {
+  final _repository = VaccinationRepository();
+  final _notesController = TextEditingController();
+
   String? _selectedOutcome;
   DateTime? _actualDate;
   TimeOfDay? _actualTime;
@@ -25,7 +27,8 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
   String? _selectedCancellationReason;
   DateTime? _newScheduledDate;
   TimeOfDay? _newScheduledTime;
-  final _notesController = TextEditingController();
+
+  bool _isSubmitting = false;
 
   final List<String> _outcomes = ['Done', 'Failed', 'Canceled', 'Rescheduled'];
 
@@ -57,10 +60,22 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.grey.shade700),
-          onPressed: () => context.pop(),
+          onPressed: _isSubmitting ? null : () => context.pop(),
         ),
         actions: [
-          TextButton(
+          _isSubmitting
+              ? Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.green,
+              ),
+            ),
+          )
+              : TextButton(
             onPressed: _canSubmit() ? _submitStatus : null,
             child: Text(
               'Submit',
@@ -83,7 +98,7 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
                 side: BorderSide(
-                  color: widget.isOverdue ? Colors.red.shade200 : Colors.blue.shade200,
+                  color: widget.vaccination.isOverdue ? Colors.red.shade200 : Colors.blue.shade200,
                 ),
               ),
               child: Padding(
@@ -94,8 +109,8 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
                     Row(
                       children: [
                         Icon(
-                          widget.isOverdue ? Icons.warning : Icons.medical_services,
-                          color: widget.isOverdue ? Colors.red.shade600 : Colors.blue.shade600,
+                          widget.vaccination.isOverdue ? Icons.warning : Icons.medical_services,
+                          color: widget.vaccination.isOverdue ? Colors.red.shade600 : Colors.blue.shade600,
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -103,18 +118,18 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                widget.vaccineName,
+                                widget.vaccination.vaccineName,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
                                 ),
                               ),
                               Text(
-                                widget.isOverdue
-                                    ? 'Overdue: ${widget.scheduledDate}'
-                                    : 'Scheduled: ${widget.scheduledDate}',
+                                widget.vaccination.isOverdue
+                                    ? 'Overdue: ${widget.vaccination.scheduledDate}'
+                                    : 'Scheduled: ${widget.vaccination.scheduledDate}',
                                 style: TextStyle(
-                                  color: widget.isOverdue ? Colors.red.shade700 : Colors.grey.shade600,
+                                  color: widget.vaccination.isOverdue ? Colors.red.shade700 : Colors.grey.shade600,
                                   fontSize: 14,
                                 ),
                               ),
@@ -123,7 +138,7 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
                         ),
                       ],
                     ),
-                    if (widget.isOverdue) ...[
+                    if (widget.vaccination.isOverdue) ...[
                       const SizedBox(height: 12),
                       Container(
                         padding: const EdgeInsets.all(8),
@@ -597,7 +612,7 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
   }
 
   bool _canSubmit() {
-    if (_selectedOutcome == null) return false;
+    if (_selectedOutcome == null || _isSubmitting) return false;
 
     switch (_selectedOutcome) {
       case 'Failed':
@@ -661,14 +676,119 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
     }
   }
 
-  void _submitStatus() {
+  Future<void> _submitStatus() async {
+    try {
+      setState(() {
+        _isSubmitting = true;
+      });
+
+      // Prepare the request based on selected outcome
+      final request = _prepareUpdateRequest();
+
+      // Call the API
+      await _repository.updateVaccinationStatus(
+        widget.batchId,
+        widget.vaccination.id,
+        request,
+      );
+
+      // Show success message
+      _showSuccessMessage();
+
+      // Navigate back with success indicator
+      if (mounted) {
+        context.pop(true);
+      }
+    } catch (e) {
+      _showErrorMessage(e.toString());
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
+  }
+
+  UpdateVaccinationStatusRequest _prepareUpdateRequest() {
+    final status = _getStatusFromOutcome();
+
+    switch (_selectedOutcome) {
+      case 'Done':
+        final actualDateTime = _actualDate != null
+            ? DateTime(
+          _actualDate!.year,
+          _actualDate!.month,
+          _actualDate!.day,
+          _actualTime?.hour ?? 0,
+          _actualTime?.minute ?? 0,
+        )
+            : DateTime.now();
+
+        return UpdateVaccinationStatusRequest(
+          status: status,
+          completedDate: actualDateTime,
+          notes: _notesController.text.isNotEmpty ? _notesController.text : null,
+        );
+
+      case 'Failed':
+        return UpdateVaccinationStatusRequest(
+          status: status,
+          failureReason: _selectedFailureReason,
+          notes: _notesController.text.isNotEmpty ? _notesController.text : null,
+        );
+
+      case 'Canceled':
+        return UpdateVaccinationStatusRequest(
+          status: status,
+          cancellationReason: _selectedCancellationReason,
+          notes: _notesController.text.isNotEmpty ? _notesController.text : null,
+        );
+
+      case 'Rescheduled':
+        final newDateTime = _newScheduledDate != null
+            ? DateTime(
+          _newScheduledDate!.year,
+          _newScheduledDate!.month,
+          _newScheduledDate!.day,
+          _newScheduledTime?.hour ?? 0,
+          _newScheduledTime?.minute ?? 0,
+        )
+            : DateTime.now().add(const Duration(days: 1));
+
+        return UpdateVaccinationStatusRequest(
+          status: 'scheduled', // When rescheduling, status goes back to scheduled
+          scheduledDate: newDateTime,
+          notes: _notesController.text.isNotEmpty ? _notesController.text : null,
+        );
+
+      default:
+        throw Exception('Invalid outcome selected');
+    }
+  }
+
+  String _getStatusFromOutcome() {
+    switch (_selectedOutcome) {
+      case 'Done':
+        return 'completed';
+      case 'Failed':
+        return 'failed';
+      case 'Canceled':
+        return 'canceled';
+      case 'Rescheduled':
+        return 'scheduled';
+      default:
+        throw Exception('Invalid outcome');
+    }
+  }
+
+  void _showSuccessMessage() {
     String message = '';
     Color color = Colors.green;
 
     switch (_selectedOutcome) {
       case 'Done':
         message = 'Vaccination marked as completed';
-        color = Colors.green;
         break;
       case 'Failed':
         message = 'Vaccination marked as failed';
@@ -688,10 +808,19 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
       SnackBar(
         content: Text(message),
         backgroundColor: color,
+        duration: const Duration(seconds: 2),
       ),
     );
+  }
 
-    context.pop();
+  void _showErrorMessage(String error) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Failed to update vaccination: $error'),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 
   @override
