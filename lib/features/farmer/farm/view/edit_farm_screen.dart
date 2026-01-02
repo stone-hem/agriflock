@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
+import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/core/widgets/location_picker_step.dart';
@@ -220,23 +221,29 @@ class _EditFarmScreenState extends State<EditFarmScreen> {
       }
 
       // Update farm using repository
-      await _farmRepository.updateFarm(
+      final res=await _farmRepository.updateFarm(
         widget.farm.id,
         farmData,
         photoFile: _farmPhotoFile,
       );
 
-      // Success
-      ToastUtil.showSuccess(
-          'Farm "${_nameController.text}" updated successfully!');
 
-      // Pop the screen with success result
-      if (context.mounted) {
-        context.pop(true);
+      switch(res) {
+        case Success<bool>():
+        // Success
+          ToastUtil.showSuccess(
+              'Farm "${_nameController.text}" updated successfully!');
+
+          // Pop the screen with success result
+          if (context.mounted) {
+            context.pop(true);
+          }
+        case Failure<bool>(response:final response):
+          ApiErrorHandler.handle(response);
       }
-    } catch (e) {
-      ApiErrorHandler.handle(e);
-    } finally {
+
+
+    }  finally {
       if (mounted) {
         setState(() {
           _isLoading = false;

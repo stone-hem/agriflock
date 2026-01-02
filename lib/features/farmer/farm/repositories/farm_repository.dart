@@ -386,18 +386,6 @@ class FarmRepository {
     }
   }
 
-  // Get farm statistics (backward compatibility)
-  // Future<Result<FarmStatistics>> getFarmStatistics() async {
-  //   final result = await getAllFarmsWithStats();
-  //   return result.when(
-  //     success: (response) => Success(response.statistics),
-  //     failure: (failure) => Failure(
-  //       message: failure.message,
-  //       response: failure.response,
-  //       statusCode: failure.statusCode,
-  //     ),
-  //   );
-  // }
 }
 
 // Response model that combines farms and statistics

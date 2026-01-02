@@ -1,9 +1,11 @@
 import 'dart:io';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
+import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/core/widgets/location_picker_step.dart';
 import 'package:agriflock360/core/widgets/photo_upload.dart';
+import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
 import 'package:agriflock360/features/farmer/farm/repositories/farm_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -218,18 +220,23 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
       }
 
       // Create farm using repository
-      await _farmRepository.createFarm(farmData, photoFile: _farmPhotoFile);
+      final res=await _farmRepository.createFarm(farmData, photoFile: _farmPhotoFile);
 
-      // Success
-      ToastUtil.showSuccess(
-          'Farm "${_nameController.text}" created successfully!');
+      switch(res) {
+        case Success<FarmModel>():
+        // Success
+          ToastUtil.showSuccess(
+              'Farm "${_nameController.text}" created successfully!');
 
-      // Pop the screen with success result
-      if (context.mounted) {
-        context.pop();
+          // Pop the screen with success result
+          if (context.mounted) {
+            context.pop();
+          }
+        case Failure<FarmModel>(response:final response):
+          ApiErrorHandler.handle(response);
       }
-    } catch (e) {
-      ApiErrorHandler.handle(e);
+
+
     } finally {
       if (mounted) {
         setState(() {
