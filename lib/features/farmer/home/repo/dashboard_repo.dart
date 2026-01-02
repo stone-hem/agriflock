@@ -1,62 +1,156 @@
 // lib/features/dashboard/repositories/dashboard_repository.dart
 
 import 'dart:convert';
+import 'dart:io';
 import 'package:agriflock360/core/utils/log_util.dart';
+import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/features/farmer/home/model/dashboard_model.dart';
 import 'package:agriflock360/main.dart';
+import 'package:http/http.dart' as http;
 
 class DashboardRepository {
   /// Get dashboard summary statistics
-  Future<DashboardSummary> getDashboardSummary() async {
+  Future<Result<DashboardSummary>> getDashboardSummary() async {
     try {
       final response = await apiClient.get('/dashboard/summary');
 
       final jsonResponse = jsonDecode(response.body);
       LogUtil.info('Dashboard Summary API Response: $jsonResponse');
 
-      return DashboardSummary.fromJson(jsonResponse);
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return Success(DashboardSummary.fromJson(jsonResponse));
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to fetch dashboard summary',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in getDashboardSummary: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
     } catch (e) {
       LogUtil.error('Error in getDashboardSummary: $e');
-      rethrow;
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to fetch dashboard summary',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+
+      return Failure(message: e.toString());
     }
   }
 
   /// Get recent dashboard activities
-  Future<List<DashboardActivity>> getRecentActivities({int limit = 10}) async {
+  Future<Result<List<DashboardActivity>>> getRecentActivities({int limit = 10}) async {
     try {
       final response = await apiClient.get('/dashboard/recent_activity?limit=$limit');
 
       final jsonResponse = jsonDecode(response.body);
       LogUtil.info('Recent Activities API Response: $jsonResponse');
 
-      if (jsonResponse is List) {
-        return jsonResponse
-            .map((activity) => DashboardActivity.fromJson(activity))
-            .toList();
-      }
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        List<DashboardActivity> activities = [];
 
-      return [];
+        if (jsonResponse is List) {
+          activities = jsonResponse
+              .map((activity) => DashboardActivity.fromJson(activity))
+              .toList();
+        } else if (jsonResponse['data'] != null && jsonResponse['data'] is List) {
+          final data = jsonResponse['data'] as List;
+          activities = data
+              .map((activity) => DashboardActivity.fromJson(activity))
+              .toList();
+        }
+
+        return Success(activities);
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to fetch recent activities',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in getRecentActivities: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
     } catch (e) {
       LogUtil.error('Error in getRecentActivities: $e');
-      rethrow;
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to fetch recent activities',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+
+      return Failure(message: e.toString());
     }
   }
 
   /// Refresh both summary and activities together
-  Future<Map<String, dynamic>> refreshDashboard({int activityLimit = 10}) async {
+  Future<Result<Map<String, dynamic>>> refreshDashboard({int activityLimit = 10}) async {
     try {
       final summaryFuture = getDashboardSummary();
       final activitiesFuture = getRecentActivities(limit: activityLimit);
 
       final results = await Future.wait([summaryFuture, activitiesFuture]);
 
-      return {
-        'summary': results[0] as DashboardSummary,
-        'activities': results[1] as List<DashboardActivity>,
-      };
+      // Check if both requests were successful
+      final summaryResult = results[0] as Result<DashboardSummary>;
+      final activitiesResult = results[1] as Result<List<DashboardActivity>>;
+
+      if (summaryResult is Success<DashboardSummary> &&
+          activitiesResult is Success<List<DashboardActivity>>) {
+        return Success({
+          'summary': summaryResult.data,
+          'activities': activitiesResult.data,
+        });
+      } else if (summaryResult is Failure) {
+        // Return the first failure (summary failure)
+        return Failure(
+          message: 'Failed to refresh dashboard summary',
+        );
+      } else if (activitiesResult is Failure) {
+        // Return activities failure
+        return Failure(
+          message: 'Failed to refresh dashboard activities',
+        );
+      } else {
+        // Unexpected state
+        return const Failure(
+          message: 'Failed to refresh dashboard data',
+          statusCode: 0,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in refreshDashboard: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
     } catch (e) {
       LogUtil.error('Error in refreshDashboard: $e');
-      rethrow;
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to refresh dashboard',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+
+      return Failure(message: e.toString());
     }
   }
 }

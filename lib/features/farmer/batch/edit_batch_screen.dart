@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
+import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/core/widgets/photo_upload.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
@@ -77,10 +78,20 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
           _houses = widget.houses!;
         });
       } else {
-        final houses = await _repository.getAllHouses(widget.farmId);
-        setState(() {
-          _houses = houses;
-        });
+        final result = await _repository.getAllHouses(widget.farmId);
+        switch (result) {
+          case Success(data: final houses):
+            setState(() {
+              _houses = houses;
+            });
+
+          case Failure(:final response, :final message):
+            if (response != null) {
+              ApiErrorHandler.handle(response);
+            } else {
+              ToastUtil.showError(message);
+            }
+        }
       }
     } catch (e) {
       ApiErrorHandler.handle(e);
@@ -94,12 +105,23 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
       });
 
       // Fetch bird types from API
-      final types = await _repository.getBirdTypes();
+      final result = await _repository.getBirdTypes();
 
-      setState(() {
-        _birdTypes = types;
-        _isLoadingBirdTypes = false;
-      });
+      switch (result) {
+        case Success(data: final types):
+          setState(() {
+            _birdTypes = types;
+            _isLoadingBirdTypes = false;
+          });
+
+        case Failure(:final response, :final message):
+        // Handle with full response for detailed error handling
+          if (response != null) {
+            ApiErrorHandler.handle(response);
+          } else {
+            ToastUtil.showError(message);
+          }
+      }
     } catch (e) {
       ApiErrorHandler.handle(e);
       setState(() {
@@ -707,17 +729,27 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
             : null,
       };
 
-      await _repository.updateBatch(
+      final result=await _repository.updateBatch(
         widget.farmId,
-        widget.batch.id!,
+        widget.batch.id,
         batchData,
         photoFile: _batchPhotoFile,
       );
 
-      ToastUtil.showSuccess('Batch updated successfully!');
+      switch (result) {
+        case Success(data: final batch):
+          ToastUtil.showSuccess('Batch "${batch.batchName}" created successfully!');
+          if (context.mounted) {
+            context.pop(true);
+          }
 
-      if (context.mounted) {
-        context.pop(true); // Return true to indicate success
+        case Failure(:final response, :final message):
+        // Handle with full response for detailed error handling
+          if (response != null) {
+            ApiErrorHandler.handle(response);
+          } else {
+            ToastUtil.showError(message);
+          }
       }
     } catch (e) {
       ApiErrorHandler.handle(e);

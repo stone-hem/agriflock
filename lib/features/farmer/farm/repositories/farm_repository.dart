@@ -1,15 +1,14 @@
-// lib/features/farmer/farm/repositories/farm_repository.dart
-
 import 'dart:convert';
 import 'dart:io';
 import 'package:agriflock360/core/utils/log_util.dart';
+import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
 import 'package:agriflock360/main.dart';
 import 'package:http/http.dart' as http;
 
 class FarmRepository {
   // Get all farms with statistics
-  Future<FarmsResponse> getAllFarmsWithStats() async {
+  Future<Result<FarmsResponse>> getAllFarmsWithStats() async {
     try {
       final response = await apiClient.get('/farms');
       final jsonResponse = jsonDecode(response.body);
@@ -17,43 +16,66 @@ class FarmRepository {
         'Farms API Response: ${jsonDecode(response.body).toString()}',
       );
 
-      // Parse farms list
-      List<dynamic> farmsJson = [];
-      if (jsonResponse['farms'] != null) {
-        farmsJson = jsonResponse['farms'] as List;
-      } else if (jsonResponse['data'] != null) {
-        farmsJson = jsonResponse['data'] as List;
-      } else if (jsonResponse is List) {
-        farmsJson = jsonResponse;
-      }
-
-      // Parse farms with proper location handling
-      final farms = farmsJson.map((json) {
-        // Handle location field - it might be a JSON string
-        if (json['location'] != null && json['location'] is String) {
-          try {
-            final locationData = jsonDecode(json['location']);
-            json['location_data'] = locationData;
-          } catch (e) {
-            LogUtil.error('Error parsing location: $e');
-          }
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        // Parse farms list
+        List<dynamic> farmsJson = [];
+        if (jsonResponse['farms'] != null) {
+          farmsJson = jsonResponse['farms'] as List;
+        } else if (jsonResponse['data'] != null) {
+          farmsJson = jsonResponse['data'] as List;
+        } else if (jsonResponse is List) {
+          farmsJson = jsonResponse;
         }
-        return FarmModel.fromJson(json);
-      }).toList();
 
-      // Parse statistics
-      final stats = FarmStatistics(
-        totalFarms: jsonResponse['totalFarms'] ?? farms.length,
-        totalBirds: _parseTotalBirds(jsonResponse['totalBirds']),
-        totalActiveBatches: jsonResponse['activeBatches'] ?? 0,
-        totalBatches: jsonResponse['totalBatches'] ?? 0,
-        archivedBatches: jsonResponse['archivedBatches'] ?? 0,
+        // Parse farms with proper location handling
+        final farms = farmsJson.map((json) {
+          // Handle location field - it might be a JSON string
+          if (json['location'] != null && json['location'] is String) {
+            try {
+              final locationData = jsonDecode(json['location']);
+              json['location_data'] = locationData;
+            } catch (e) {
+              LogUtil.error('Error parsing location: $e');
+            }
+          }
+          return FarmModel.fromJson(json);
+        }).toList();
+
+        // Parse statistics
+        final stats = FarmStatistics(
+          totalFarms: jsonResponse['totalFarms'] ?? farms.length,
+          totalBirds: _parseTotalBirds(jsonResponse['totalBirds']),
+          totalActiveBatches: jsonResponse['activeBatches'] ?? 0,
+          totalBatches: jsonResponse['totalBatches'] ?? 0,
+          archivedBatches: jsonResponse['archivedBatches'] ?? 0,
+        );
+
+        return Success(FarmsResponse(farms: farms, statistics: stats));
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to fetch farms',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in getAllFarmsWithStats: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
       );
-
-      return FarmsResponse(farms: farms, statistics: stats);
     } catch (e) {
       LogUtil.error('Error in getAllFarmsWithStats: $e');
-      rethrow;
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to fetch farms',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+
+      return Failure(message: e.toString());
     }
   }
 
@@ -70,48 +92,79 @@ class FarmRepository {
   }
 
   // Get all farms (backward compatibility)
-  Future<List<FarmModel>> getAllFarms() async {
-    final response = await getAllFarmsWithStats();
-    return response.farms;
-  }
+  // Future<Result<List<FarmModel>>> getAllFarms() async {
+  //   final result = await getAllFarmsWithStats();
+  //   return result.when(
+  //     success: (response) => Success(response.farms),
+  //     failure: (failure) => Failure(
+  //       message: failure.message,
+  //       response: failure.response,
+  //       statusCode: failure.statusCode,
+  //     ),
+  //   );
+  // }
 
   // Get single farm by ID
-  Future<FarmModel> getFarmById(String farmId) async {
+  Future<Result<FarmModel>> getFarmById(String farmId) async {
     try {
       final response = await apiClient.get('/farms/$farmId');
       final jsonResponse = jsonDecode(response.body);
 
-      // Handle different response structures
-      Map<String, dynamic> farmJson;
-      if (jsonResponse['data'] != null) {
-        farmJson = jsonResponse['data'];
-      } else if (jsonResponse['farm'] != null) {
-        farmJson = jsonResponse['farm'];
-      } else {
-        farmJson = jsonResponse;
-      }
-
-      // Handle location field
-      if (farmJson['location'] != null && farmJson['location'] is String) {
-        try {
-          final locationData = jsonDecode(farmJson['location']);
-          farmJson['location_data'] = locationData;
-        } catch (e) {
-          LogUtil.error('Error parsing location: $e');
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        // Handle different response structures
+        Map<String, dynamic> farmJson;
+        if (jsonResponse['data'] != null) {
+          farmJson = jsonResponse['data'];
+        } else if (jsonResponse['farm'] != null) {
+          farmJson = jsonResponse['farm'];
+        } else {
+          farmJson = jsonResponse;
         }
+
+        // Handle location field
+        if (farmJson['location'] != null && farmJson['location'] is String) {
+          try {
+            final locationData = jsonDecode(farmJson['location']);
+            farmJson['location_data'] = locationData;
+          } catch (e) {
+            LogUtil.error('Error parsing location: $e');
+          }
+        }
+
+        return Success(FarmModel.fromJson(farmJson));
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to fetch farm',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in getFarmById: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
+    } catch (e) {
+      LogUtil.error('Error in getFarmById: $e');
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to fetch farm',
+          response: e,
+          statusCode: e.statusCode,
+        );
       }
 
-      return FarmModel.fromJson(farmJson);
-    } catch (e) {
-      rethrow;
+      return Failure(message: e.toString());
     }
   }
 
   // Create new farm (with optional photo)
-  Future<FarmModel> createFarm(
-    Map<String, dynamic> farmData, {
-    File? photoFile,
-  }) async {
+  Future<Result<FarmModel>> createFarm(
+      Map<String, dynamic> farmData, {
+        File? photoFile,
+      }) async {
     try {
       if (photoFile != null) {
         // Use multipart request for file upload
@@ -153,17 +206,20 @@ class FarmRepository {
             farmJson = jsonResponse;
           }
 
-          return FarmModel.fromJson(farmJson);
+          return Success(FarmModel.fromJson(farmJson));
         } else {
           LogUtil.error('Failed to create farm: $jsonResponse');
-          throw Exception(jsonResponse['message'] ?? 'Failed to create farm');
+          return Failure(
+            message: jsonResponse['message'] ?? 'Failed to create farm',
+            response: response,
+            statusCode: response.statusCode,
+          );
         }
       } else {
         // Regular JSON request without photo
         farmData.removeWhere((key, value) => value == null);
 
         final response = await apiClient.post('/farms', body: farmData);
-
         final jsonResponse = jsonDecode(response.body);
 
         if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -176,24 +232,43 @@ class FarmRepository {
             farmJson = jsonResponse;
           }
 
-          return FarmModel.fromJson(farmJson);
+          return Success(FarmModel.fromJson(farmJson));
         } else {
           LogUtil.error('Failed to create farm: $jsonResponse');
-          throw Exception(jsonResponse['message'] ?? 'Failed to create farm');
+          return Failure(
+            message: jsonResponse['message'] ?? 'Failed to create farm',
+            response: response,
+            statusCode: response.statusCode,
+          );
         }
       }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in createFarm: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
     } catch (e) {
-      LogUtil.error(e.toString());
-      rethrow;
+      LogUtil.error('Error in createFarm: $e');
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to create farm',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+
+      return Failure(message: e.toString());
     }
   }
 
   // Update existing farm (with optional photo)
-  Future<bool> updateFarm(
-    String farmId,
-    Map<String, dynamic> farmData, {
-    File? photoFile,
-  }) async {
+  Future<Result<bool>> updateFarm(
+      String farmId,
+      Map<String, dynamic> farmData, {
+        File? photoFile,
+      }) async {
     try {
       if (photoFile != null) {
         // Use multipart request for file upload
@@ -229,48 +304,100 @@ class FarmRepository {
         final jsonResponse = jsonDecode(response.body);
 
         if (response.statusCode >= 200 && response.statusCode < 300) {
-          return true;
+          return const Success(true);
         } else {
-          throw Exception(jsonResponse['message'] ?? 'Failed to update farm');
+          return Failure(
+            message: jsonResponse['message'] ?? 'Failed to update farm',
+            response: response,
+            statusCode: response.statusCode,
+          );
         }
       } else {
         // Regular JSON request without photo
         farmData.removeWhere((key, value) => value == null);
 
         final response = await apiClient.patch('/farms/$farmId', body: farmData);
-
         final jsonResponse = jsonDecode(response.body);
 
         if (response.statusCode >= 200 && response.statusCode < 300) {
-          return true;
+          return const Success(true);
         } else {
-          throw Exception(jsonResponse['message'] ?? 'Failed to update farm');
+          return Failure(
+            message: jsonResponse['message'] ?? 'Failed to update farm',
+            response: response,
+            statusCode: response.statusCode,
+          );
         }
       }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in updateFarm: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
     } catch (e) {
-      rethrow;
+      LogUtil.error('Error in updateFarm: $e');
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to update farm',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+
+      return Failure(message: e.toString());
     }
   }
 
   // Delete farm
-  Future<void> deleteFarm(String farmId) async {
+  Future<Result<void>> deleteFarm(String farmId) async {
     try {
       final response = await apiClient.delete('/farms/$farmId');
 
-      if (response.statusCode < 200 || response.statusCode >= 300) {
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return const Success(null);
+      } else {
         final jsonResponse = jsonDecode(response.body);
-        throw Exception(jsonResponse['message'] ?? 'Failed to delete farm');
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to delete farm',
+          response: response,
+          statusCode: response.statusCode,
+        );
       }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in deleteFarm: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
     } catch (e) {
-      rethrow;
+      LogUtil.error('Error in deleteFarm: $e');
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to delete farm',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+
+      return Failure(message: e.toString());
     }
   }
 
   // Get farm statistics (backward compatibility)
-  Future<FarmStatistics> getFarmStatistics() async {
-    final response = await getAllFarmsWithStats();
-    return response.statistics;
-  }
+  // Future<Result<FarmStatistics>> getFarmStatistics() async {
+  //   final result = await getAllFarmsWithStats();
+  //   return result.when(
+  //     success: (response) => Success(response.statistics),
+  //     failure: (failure) => Failure(
+  //       message: failure.message,
+  //       response: failure.response,
+  //       statusCode: failure.statusCode,
+  //     ),
+  //   );
+  // }
 }
 
 // Response model that combines farms and statistics

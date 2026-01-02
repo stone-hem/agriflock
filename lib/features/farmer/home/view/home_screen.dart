@@ -1,4 +1,4 @@
-// lib/home/home_screen.dart
+import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/features/farmer/home/model/dashboard_model.dart';
 import 'package:agriflock360/features/farmer/home/repo/dashboard_repo.dart';
 import 'package:agriflock360/features/farmer/home/view/widgets/home_skeleton.dart';
@@ -16,50 +16,113 @@ class _HomeScreenState extends State<HomeScreen> {
   final DashboardRepository _repository = DashboardRepository();
   DashboardSummary? _summary;
   List<DashboardActivity> _activities = [];
-  bool _isLoading = true;
-  String? _error;
+  bool _isSummaryLoading = true;
+  bool _isActivitiesLoading = true;
+  String? _summaryError;
+  String? _activitiesError;
 
   @override
   void initState() {
     super.initState();
-    _loadDashboardData();
+    _loadSummary();
+    _loadActivities();
   }
 
-  Future<void> _loadDashboardData() async {
+  Future<void> _loadSummary() async {
+    setState(() {
+      _isSummaryLoading = true;
+      _summaryError = null;
+    });
+
     try {
-      setState(() {
-        _isLoading = true;
-        _error = null;
-      });
+      final result = await _repository.getDashboardSummary();
 
-      final summary = await _repository.getDashboardSummary();
-      final activities = await _repository.getRecentActivities(limit: 5);
+      switch (result) {
+        case Success<DashboardSummary>(data: final data):
+          setState(() {
+            _summary = data;
+            _isSummaryLoading = false;
+          });
+          break;
+        case Failure<DashboardSummary>(message: final error,):
+          setState(() {
+            _summaryError = error;
+            _isSummaryLoading = false;
+          });
+          // Optionally handle the error using ApiErrorHandler
+          // ApiErrorHandler.handle(error);
+          break;
+      }
+    } finally {
+      // Ensure loading state is reset even if there's an unexpected error
+      if (_isSummaryLoading) {
+        setState(() {
+          _isSummaryLoading = false;
+        });
+      }
+    }
+  }
 
-      setState(() {
-        _summary = summary;
-        _activities = activities;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
+  Future<void> _loadActivities() async {
+    setState(() {
+      _isActivitiesLoading = true;
+      _activitiesError = null;
+    });
+
+    try {
+      final result = await _repository.getRecentActivities(limit: 5);
+
+      switch (result) {
+        case Success<List<DashboardActivity>>(data: final data):
+          setState(() {
+            _activities = data;
+            _isActivitiesLoading = false;
+          });
+          break;
+        case Failure<List<DashboardActivity>>(message: final error):
+          setState(() {
+            _activitiesError = error;
+            _isActivitiesLoading = false;
+          });
+          // Optionally handle the error using ApiErrorHandler
+          // ApiErrorHandler.handle(error);
+          break;
+      }
+    } finally {
+      // Ensure loading state is reset even if there's an unexpected error
+      if (_isActivitiesLoading) {
+        setState(() {
+          _isActivitiesLoading = false;
+        });
+      }
     }
   }
 
   Future<void> _onRefresh() async {
     try {
       final result = await _repository.refreshDashboard(activityLimit: 5);
-      setState(() {
-        _summary = result['summary'] as DashboardSummary;
-        _activities = result['activities'] as List<DashboardActivity>;
-        _error = null;
-      });
+
+      switch (result) {
+        case Success<Map<String, dynamic>>(data: final data):
+          setState(() {
+            _summary = data['summary'] as DashboardSummary;
+            _activities = data['activities'] as List<DashboardActivity>;
+            _summaryError = null;
+            _activitiesError = null;
+          });
+          break;
+        case Failure<Map<String, dynamic>>(message: final error):
+        // If refresh fails, we could try loading them separately
+        // or just show the error
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to refresh: $error')),
+            );
+          }
+          break;
+      }
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-      });
+      // Handle any unexpected errors during refresh
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to refresh: ${e.toString()}')),
@@ -67,6 +130,10 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
   }
+
+  bool get _isLoading => _isSummaryLoading || _isActivitiesLoading;
+  bool get _hasError => _summaryError != null || _activitiesError != null;
+  String? get _error => _summaryError ?? _activitiesError;
 
   @override
   Widget build(BuildContext context) {
@@ -106,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: _isLoading
           ? HomeSkeleton()
-          : _error != null
+          : _hasError
           ? Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -116,7 +183,10 @@ class _HomeScreenState extends State<HomeScreen> {
             Text('Error: $_error'),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: _loadDashboardData,
+              onPressed: () {
+                if (_summaryError != null) _loadSummary();
+                if (_activitiesError != null) _loadActivities();
+              },
               child: const Text('Retry'),
             ),
           ],
@@ -199,8 +269,8 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Recent Activity
-              _buildRecentActivity(context),
+              // Recent Activity - Show loading/error state if needed
+              _buildRecentActivitySection(context),
             ],
           ),
         ),
@@ -265,8 +335,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildStatsOverview() {
-    if (_summary == null) {
-      return const SizedBox.shrink();
+    if (_summary == null || _isSummaryLoading) {
+      return _buildStatsLoading();
+    }
+
+    if (_summaryError != null) {
+      return _buildStatsError();
     }
 
     return Column(
@@ -340,6 +414,94 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildStatsLoading() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Container(
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Container(
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Container(
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: Container(
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Container(
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Container(
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatsError() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        _summaryError ?? 'Failed to load statistics',
+        style: TextStyle(color: Colors.red.shade700),
+      ),
+    );
+  }
+
   Widget _buildQuickActions(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -380,7 +542,130 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildRecentActivity(BuildContext context) {
+  Widget _buildRecentActivitySection(BuildContext context) {
+    if (_isActivitiesLoading) {
+      return _buildActivitiesLoading();
+    }
+
+    if (_activitiesError != null) {
+      return _buildActivitiesError();
+    }
+
+    return _buildRecentActivityContent(context);
+  }
+
+  Widget _buildActivitiesLoading() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Recent Activity',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey.shade800,
+          ),
+        ),
+        const SizedBox(height: 16),
+        ...List.generate(
+          3,
+              (index) => Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        height: 14,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        height: 12,
+                        width: 200,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  height: 12,
+                  width: 60,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActivitiesError() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Recent Activity',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey.shade800,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            _activitiesError ?? 'Failed to load activities',
+            style: TextStyle(color: Colors.red.shade700),
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: _loadActivities,
+            child: const Text('Retry'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade100,
+              foregroundColor: Colors.red.shade800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentActivityContent(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -500,7 +785,7 @@ class _StatCard extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: textColor.withValues(alpha: 0.8),
+              color: textColor.withOpacity(0.8),
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
@@ -546,7 +831,7 @@ class _ActionTile extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
+                  color: color.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, size: 20, color: color),
@@ -605,7 +890,7 @@ class _ActivityItem extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
+              color: color.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, size: 18, color: color),

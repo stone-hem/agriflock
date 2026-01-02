@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/features/farmer/batch/model/feeding_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/feeding_repo.dart';
 import 'package:flutter/material.dart';
@@ -46,15 +47,23 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
         _error = null;
       });
 
-      final data = await _feedingRepository.getFeedingRecommendations(widget.batchId);
+      final res = await _feedingRepository.getFeedingRecommendations(widget.batchId);
 
+      switch(res) {
+        case Success<FeedingRecommendationsResponse>(data: final data):
+          setState(() {
+            _recommendations = data;
+            _isLoading = false;
+          });
+        case Failure<FeedingRecommendationsResponse>(message: final e):
+          setState(() {
+            _error = e.toString();
+          });
+      }
+
+
+    } finally  {
       setState(() {
-        _recommendations = data;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _error = e.toString();
         _isLoading = false;
       });
     }

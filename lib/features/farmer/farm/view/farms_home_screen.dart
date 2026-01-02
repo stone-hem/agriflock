@@ -1,7 +1,5 @@
-// lib/features/farmer/farm/view/farms_home_screen.dart
-
 import 'package:agriflock360/app_routes.dart';
-import 'package:agriflock360/core/utils/api_error_handler.dart';
+import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
 import 'package:agriflock360/features/farmer/farm/repositories/farm_repository.dart';
@@ -21,9 +19,11 @@ class _FarmsHomeScreenState extends State<FarmsHomeScreen> {
   final _farmRepository = FarmRepository();
 
   bool _showFab = true;
+  bool _isLoading = false;
+  bool _hasError = false;
+  String? _errorMessage;
 
-  // Combined future for farms and stats
-  late Future<FarmsResponse> _farmsResponseFuture;
+  FarmsResponse? _farmsResponse;
 
   @override
   void initState() {
@@ -44,15 +44,45 @@ class _FarmsHomeScreenState extends State<FarmsHomeScreen> {
     });
   }
 
-  void _loadData() {
-    // Load farms and stats in a single API call
-    _farmsResponseFuture = _farmRepository.getAllFarmsWithStats();
+  Future<void> _loadData() async {
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+      _errorMessage = null;
+    });
+
+    try {
+      final result = await _farmRepository.getAllFarmsWithStats();
+
+      switch (result) {
+        case Success<FarmsResponse>(data: final data):
+          setState(() {
+            _farmsResponse = data;
+            _isLoading = false;
+          });
+          break;
+        case Failure(message: final error, :final statusCode, :final response):
+          setState(() {
+            _hasError = true;
+            _errorMessage = error;
+            _isLoading = false;
+          });
+          // Optionally handle the error using ApiErrorHandler
+          // ApiErrorHandler.handle(error);
+          break;
+      }
+    } finally {
+      // Ensure loading state is reset even if there's an unexpected error
+      if (_isLoading) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   void _refreshData() {
-    setState(() {
-      _loadData();
-    });
+    _loadData();
   }
 
   @override
@@ -116,138 +146,64 @@ class _FarmsHomeScreenState extends State<FarmsHomeScreen> {
           : null,
       body: RefreshIndicator(
         onRefresh: () async {
-          _refreshData();
-          // Wait for future to complete
-          await _farmsResponseFuture;
+          await _loadData();
         },
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-          child: FutureBuilder<FarmsResponse>(
-            future: _farmsResponseFuture,
-            builder: (context, snapshot) {
-              // Show loading state
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return CustomScrollView(
-                  controller: _scrollController,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  slivers: [
-                    SliverToBoxAdapter(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Select a Farm to continue',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall!
-                                .copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey.shade800,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Manage multiple farm locations and their Batches',
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          _buildStatsLoading(),
-                          const SizedBox(height: 24),
-                        ],
+          child: CustomScrollView(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Select a Farm to continue',
+                      style: Theme.of(context)
+                          .textTheme
+                          .headlineSmall!
+                          .copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade800,
                       ),
                     ),
-                    _buildLoadingList(),
-                  ],
-                );
-              }
-
-              // Show error state
-              if (snapshot.hasError) {
-                return CustomScrollView(
-                  controller: _scrollController,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  slivers: [
-                    SliverToBoxAdapter(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Select a Farm to continue',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall!
-                                .copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey.shade800,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Manage multiple farm locations and their Batches',
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          _buildStatsError(),
-                          const SizedBox(height: 24),
-                        ],
+                    const SizedBox(height: 8),
+                    Text(
+                      'Manage multiple farm locations and their Batches',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 16,
                       ),
                     ),
-                    _buildErrorList(snapshot.error.toString()),
+                    const SizedBox(height: 24),
+                    _buildStatsSection(),
+                    const SizedBox(height: 24),
                   ],
-                );
-              }
-
-              // Show data
-              final farmsResponse = snapshot.data!;
-              final farms = farmsResponse.farms;
-              final stats = farmsResponse.statistics;
-
-              return CustomScrollView(
-                controller: _scrollController,
-                physics: const AlwaysScrollableScrollPhysics(),
-                slivers: [
-                  SliverToBoxAdapter(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Select a Farm to continue',
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineSmall!
-                              .copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade800,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Manage multiple farm locations and their Batches',
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 16,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        _buildStatsOverview(stats),
-                        const SizedBox(height: 24),
-                      ],
-                    ),
-                  ),
-                  farms.isEmpty ? _buildEmptyList() : _buildFarmsList(farms),
-                ],
-              );
-            },
+                ),
+              ),
+              _buildFarmsListSection(),
+            ],
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildStatsSection() {
+    if (_isLoading) {
+      return _buildStatsLoading();
+    }
+
+    if (_hasError) {
+      return _buildStatsError();
+    }
+
+    if (_farmsResponse == null) {
+      return const SizedBox();
+    }
+
+    return _buildStatsOverview(_farmsResponse!.statistics);
   }
 
   Widget _buildStatsLoading() {
@@ -294,7 +250,7 @@ class _FarmsHomeScreenState extends State<FarmsHomeScreen> {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
-        'Failed to load statistics',
+        _errorMessage ?? 'Failed to load statistics',
         style: TextStyle(color: Colors.red.shade700),
       ),
     );
@@ -331,6 +287,22 @@ class _FarmsHomeScreenState extends State<FarmsHomeScreen> {
         ),
       ],
     );
+  }
+
+  Widget _buildFarmsListSection() {
+    if (_isLoading) {
+      return _buildLoadingList();
+    }
+
+    if (_hasError) {
+      return _buildErrorList(_errorMessage ?? 'An error occurred');
+    }
+
+    if (_farmsResponse == null || _farmsResponse!.farms.isEmpty) {
+      return _buildEmptyList();
+    }
+
+    return _buildFarmsList(_farmsResponse!.farms);
   }
 
   Widget _buildLoadingList() {
@@ -412,8 +384,9 @@ class _FarmsHomeScreenState extends State<FarmsHomeScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Please try again',
+              error.length > 100 ? '${error.substring(0, 100)}...' : error,
               style: TextStyle(color: Colors.grey.shade600),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
@@ -763,22 +736,38 @@ class _FarmCard extends StatelessWidget {
     );
 
     try {
-      final farmRepository = FarmRepository();
-      await farmRepository.deleteFarm(farm.id);
+      final result = await FarmRepository().deleteFarm(farm.id);
 
       // Close loading dialog
       if (context.mounted) {
         Navigator.of(context).pop();
       }
 
-      ToastUtil.showSuccess('Farm "${farm.farmName}" deleted successfully!');
-      onDeleted();
+      switch (result) {
+        case Success<void>():
+          ToastUtil.showSuccess('Farm "${farm.farmName}" deleted successfully!');
+          onDeleted();
+          break;
+        case Failure(message: final error, :final statusCode, :final response):
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to delete: $error')),
+            );
+          }
+          break;
+      }
     } catch (e) {
       // Close loading dialog
       if (context.mounted) {
         Navigator.of(context).pop();
       }
-      ApiErrorHandler.handle(e);
+
+      // Handle unexpected errors
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unexpected error: $e')),
+        );
+      }
     }
   }
 }

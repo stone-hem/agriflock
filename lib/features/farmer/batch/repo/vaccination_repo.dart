@@ -1,14 +1,15 @@
-// lib/features/farmer/batch/repo/vaccination_repository.dart
-
 import 'dart:convert';
+import 'dart:io';
 import 'package:agriflock360/core/utils/log_util.dart';
+import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
-import 'package:agriflock360/features/farmer/batch/model/recommended_vaccination_model.dart'; // Add this
+import 'package:agriflock360/features/farmer/batch/model/recommended_vaccination_model.dart';
 import 'package:agriflock360/main.dart';
+import 'package:http/http.dart' as http;
 
 class VaccinationRepository {
   /// Get all vaccinations for a batch
-  Future<VaccinationsResponse> getVaccinations(String batchId) async {
+  Future<Result<VaccinationsResponse>> getVaccinations(String batchId) async {
     try {
       final response = await apiClient.get(
         '/batches/$batchId/vaccinations',
@@ -17,15 +18,38 @@ class VaccinationRepository {
       final jsonResponse = jsonDecode(response.body);
       LogUtil.info('Vaccinations API Response: $jsonResponse');
 
-      return VaccinationsResponse.fromJson(jsonResponse);
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return Success(VaccinationsResponse.fromJson(jsonResponse));
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to fetch vaccinations',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in getVaccinations: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
     } catch (e) {
       LogUtil.error('Error in getVaccinations: $e');
-      rethrow;
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to fetch vaccinations',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+
+      return Failure(message: e.toString());
     }
   }
 
   /// Get vaccination dashboard statistics
-  Future<VaccinationDashboard> getVaccinationDashboard(String batchId) async {
+  Future<Result<VaccinationDashboard>> getVaccinationDashboard(String batchId) async {
     try {
       final response = await apiClient.get(
         '/batches/$batchId/vaccinations/vaccinations/dashboard',
@@ -34,37 +58,78 @@ class VaccinationRepository {
       final jsonResponse = jsonDecode(response.body);
       LogUtil.info('Vaccination Dashboard API Response: $jsonResponse');
 
-      return VaccinationDashboard.fromJson(jsonResponse);
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return Success(VaccinationDashboard.fromJson(jsonResponse));
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to fetch vaccination dashboard',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in getVaccinationDashboard: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
     } catch (e) {
       LogUtil.error('Error in getVaccinationDashboard: $e');
-      rethrow;
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to fetch vaccination dashboard',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+
+      return Failure(message: e.toString());
     }
   }
 
   /// Get recommended vaccinations for a batch based on age
-  Future<RecommendedVaccinationsResponse> getRecommendedVaccinations(String batchId) async {
+  Future<Result<RecommendedVaccinationsResponse>> getRecommendedVaccinations(String batchId) async {
     try {
       final response = await apiClient.get(
         '/batches/$batchId/vaccinations/recommendations',
       );
 
-      if (response.statusCode < 200 || response.statusCode >= 300) {
-        final jsonResponse = jsonDecode(response.body);
-        throw Exception(jsonResponse['message'] ?? 'Failed to fetch recommendations');
-      }
-
       final jsonResponse = jsonDecode(response.body);
       LogUtil.info('Recommended Vaccinations API Response: $jsonResponse');
 
-      return RecommendedVaccinationsResponse.fromJson(jsonResponse);
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return Success(RecommendedVaccinationsResponse.fromJson(jsonResponse));
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to fetch recommended vaccinations',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in getRecommendedVaccinations: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
     } catch (e) {
       LogUtil.error('Error in getRecommendedVaccinations: $e');
-      rethrow;
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to fetch recommended vaccinations',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+
+      return Failure(message: e.toString());
     }
   }
 
   /// Create a new vaccination schedule
-  Future<Vaccination> createVaccination(
+  Future<Result<Vaccination>> createVaccination(
       String batchId,
       CreateVaccinationRequest request,
       ) async {
@@ -74,23 +139,41 @@ class VaccinationRepository {
         body: jsonEncode(request.toJson()),
       );
 
-      if (response.statusCode < 200 || response.statusCode >= 300) {
-        final jsonResponse = jsonDecode(response.body);
-        throw Exception(jsonResponse['message'] ?? 'Failed to create vaccination');
-      }
-
       final jsonResponse = jsonDecode(response.body);
       LogUtil.info('Create Vaccination API Response: $jsonResponse');
 
-      return Vaccination.fromJson(jsonResponse);
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return Success(Vaccination.fromJson(jsonResponse));
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to create vaccination',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in createVaccination: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
     } catch (e) {
       LogUtil.error('Error in createVaccination: $e');
-      rethrow;
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to create vaccination',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+
+      return Failure(message: e.toString());
     }
   }
 
   /// Update vaccination status
-  Future<Vaccination> updateVaccinationStatus(
+  Future<Result<Vaccination>> updateVaccinationStatus(
       String batchId,
       String vaccinationId,
       UpdateVaccinationStatusRequest request,
@@ -101,25 +184,41 @@ class VaccinationRepository {
         body: jsonEncode(request.toJson()),
       );
 
-      if (response.statusCode < 200 || response.statusCode >= 300) {
-        final jsonResponse = jsonDecode(response.body);
-        throw Exception(
-          jsonResponse['message'] ?? 'Failed to update vaccination status',
-        );
-      }
-
       final jsonResponse = jsonDecode(response.body);
       LogUtil.info('Update Vaccination Status API Response: $jsonResponse');
 
-      return Vaccination.fromJson(jsonResponse);
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return Success(Vaccination.fromJson(jsonResponse));
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to update vaccination status',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in updateVaccinationStatus: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
     } catch (e) {
       LogUtil.error('Error in updateVaccinationStatus: $e');
-      rethrow;
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to update vaccination status',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+
+      return Failure(message: e.toString());
     }
   }
 
   /// Quick done - Create completed vaccination
-  Future<Vaccination> quickDoneVaccination(
+  Future<Result<Vaccination>> quickDoneVaccination(
       String batchId,
       QuickDoneVaccinationRequest request,
       ) async {
@@ -129,25 +228,41 @@ class VaccinationRepository {
         body: jsonEncode(request.toJson()),
       );
 
-      if (response.statusCode < 200 || response.statusCode >= 300) {
-        final jsonResponse = jsonDecode(response.body);
-        throw Exception(
-          jsonResponse['message'] ?? 'Failed to record vaccination',
-        );
-      }
-
       final jsonResponse = jsonDecode(response.body);
       LogUtil.info('Quick Done Vaccination API Response: $jsonResponse');
 
-      return Vaccination.fromJson(jsonResponse);
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return Success(Vaccination.fromJson(jsonResponse));
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to create vaccination',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in quickDoneVaccination: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
     } catch (e) {
       LogUtil.error('Error in quickDoneVaccination: $e');
-      rethrow;
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to create vaccination',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+
+      return Failure(message: e.toString());
     }
   }
 
   /// Adopt a single recommended vaccination
-  Future<Vaccination> adoptRecommendedVaccination(
+  Future<Result<Vaccination>> adoptRecommendedVaccination(
       String batchId,
       AdoptVaccinationRequest request,
       ) async {
@@ -157,23 +272,41 @@ class VaccinationRepository {
         body: jsonEncode(request.toJson()),
       );
 
-      if (response.statusCode < 200 || response.statusCode >= 300) {
-        final jsonResponse = jsonDecode(response.body);
-        throw Exception(jsonResponse['message'] ?? 'Failed to adopt vaccination');
-      }
-
       final jsonResponse = jsonDecode(response.body);
       LogUtil.info('Adopt Vaccination API Response: $jsonResponse');
 
-      return Vaccination.fromJson(jsonResponse);
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return Success(Vaccination.fromJson(jsonResponse));
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to adopt vaccination',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in adoptRecommendedVaccination: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
     } catch (e) {
       LogUtil.error('Error in adoptRecommendedVaccination: $e');
-      rethrow;
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to adopt vaccination',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+
+      return Failure(message: e.toString());
     }
   }
 
   /// Adopt all recommended vaccinations
-  Future<List<Vaccination>> adoptAllRecommendedVaccinations(
+  Future<Result<List<Vaccination>>> adoptAllRecommendedVaccinations(
       String batchId,
       AdoptAllVaccinationsRequest request,
       ) async {
@@ -183,53 +316,93 @@ class VaccinationRepository {
         body: jsonEncode(request.toJson()),
       );
 
-      if (response.statusCode < 200 || response.statusCode >= 300) {
-        final jsonResponse = jsonDecode(response.body);
-        throw Exception(jsonResponse['message'] ?? 'Failed to adopt all vaccinations');
-      }
-
       final jsonResponse = jsonDecode(response.body);
       LogUtil.info('Adopt All Vaccinations API Response: $jsonResponse');
 
-      final List<dynamic> data = jsonResponse['data'] as List;
-      return data.map((e) => Vaccination.fromJson(e as Map<String, dynamic>)).toList();
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        List<Vaccination> vaccinations = [];
+        if (jsonResponse['data'] != null) {
+          final List<dynamic> data = jsonResponse['data'] as List;
+          vaccinations = data.map((e) => Vaccination.fromJson(e)).toList();
+        }
+        return Success(vaccinations);
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to adopt all vaccinations',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in adoptAllRecommendedVaccinations: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
     } catch (e) {
       LogUtil.error('Error in adoptAllRecommendedVaccinations: $e');
-      rethrow;
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to adopt all vaccinations',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+
+      return Failure(message: e.toString());
     }
   }
 
   /// Delete vaccination
-  Future<void> deleteVaccination(String batchId, String vaccinationId) async {
+  Future<Result<void>> deleteVaccination(String batchId, String vaccinationId) async {
     try {
       final response = await apiClient.delete(
         '/batches/$batchId/vaccinations/$vaccinationId',
       );
 
-      if (response.statusCode < 200 || response.statusCode >= 300) {
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        LogUtil.info('Delete Vaccination: Success');
+        return const Success(null);
+      } else {
         final jsonResponse = jsonDecode(response.body);
-        throw Exception(
-          jsonResponse['message'] ?? 'Failed to delete vaccination',
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to delete vaccination',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in deleteVaccination: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
+    } catch (e) {
+      LogUtil.error('Error in deleteVaccination: $e');
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to delete vaccination',
+          response: e,
+          statusCode: e.statusCode,
         );
       }
 
-      LogUtil.info('Delete Vaccination: Success');
-    } catch (e) {
-      LogUtil.error('Error in deleteVaccination: $e');
-      rethrow;
+      return Failure(message: e.toString());
     }
   }
 
   /// Refresh methods
-  Future<VaccinationsResponse> refreshVaccinations(String batchId) async {
+  Future<Result<VaccinationsResponse>> refreshVaccinations(String batchId) async {
     return getVaccinations(batchId);
   }
 
-  Future<VaccinationDashboard> refreshVaccinationDashboard(String batchId) async {
+  Future<Result<VaccinationDashboard>> refreshVaccinationDashboard(String batchId) async {
     return getVaccinationDashboard(batchId);
   }
 
-  Future<RecommendedVaccinationsResponse> refreshRecommendedVaccinations(String batchId) async {
+  Future<Result<RecommendedVaccinationsResponse>> refreshRecommendedVaccinations(String batchId) async {
     return getRecommendedVaccinations(batchId);
   }
 }

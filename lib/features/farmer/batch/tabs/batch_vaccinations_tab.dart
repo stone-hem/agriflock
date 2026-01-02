@@ -1,4 +1,5 @@
 import 'package:agriflock360/core/utils/date_util.dart';
+import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/recommended_vaccination_model.dart';
@@ -54,67 +55,108 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
     _loadVaccinations();
     _loadRecommendations();
   }
-
   Future<void> _loadDashboard() async {
+    setState(() {
+      _isDashboardLoading = true;
+      _dashboardError = null;
+    });
+
     try {
-      setState(() {
-        _isDashboardLoading = true;
-        _dashboardError = null;
-      });
+      final result = await _repository.getVaccinationDashboard(widget.batch.id);
 
-      final data = await _repository.getVaccinationDashboard(widget.batch.id);
-
-      setState(() {
-        _dashboard = data;
-        _isDashboardLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _dashboardError = e.toString();
-        _isDashboardLoading = false;
-      });
+      switch(result) {
+        case Success<VaccinationDashboard>(data: final data):
+          setState(() {
+            _dashboard = data;
+            _isDashboardLoading = false;
+          });
+          break;
+        case Failure(message: final error, :final statusCode, :final response):
+          setState(() {
+            _dashboardError = error;
+            _isDashboardLoading = false;
+          });
+          // Optionally handle the error using ApiErrorHandler
+          // ApiErrorHandler.handle(error);
+          break;
+      }
+    } finally {
+      // Ensure loading state is reset even if there's an unexpected error
+      if (_isDashboardLoading) {
+        setState(() {
+          _isDashboardLoading = false;
+        });
+      }
     }
   }
 
   Future<void> _loadVaccinations() async {
+    setState(() {
+      _isVaccinationsLoading = true;
+      _vaccinationsError = null;
+    });
+
     try {
-      setState(() {
-        _isVaccinationsLoading = true;
-        _vaccinationsError = null;
-      });
+      final result = await _repository.getVaccinations(widget.batch.id);
 
-      final data = await _repository.getVaccinations(widget.batch.id);
-
-      setState(() {
-        _vaccinations = data;
-        _isVaccinationsLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _vaccinationsError = e.toString();
-        _isVaccinationsLoading = false;
-      });
+      switch(result) {
+        case Success<VaccinationsResponse>(data: final data):
+          setState(() {
+            _vaccinations = data;
+            _isVaccinationsLoading = false;
+          });
+          break;
+        case Failure(message: final error, :final statusCode, :final response):
+          setState(() {
+            _vaccinationsError = error;
+            _isVaccinationsLoading = false;
+          });
+          // Optionally handle the error using ApiErrorHandler
+          // ApiErrorHandler.handle(error);
+          break;
+      }
+    } finally {
+      // Ensure loading state is reset even if there's an unexpected error
+      if (_isVaccinationsLoading) {
+        setState(() {
+          _isVaccinationsLoading = false;
+        });
+      }
     }
   }
 
   Future<void> _loadRecommendations() async {
+    setState(() {
+      _isRecommendationsLoading = true;
+      _recommendationsError = null;
+    });
+
     try {
-      setState(() {
-        _isRecommendationsLoading = true;
-        _recommendationsError = null;
-      });
+      final result = await _repository.getRecommendedVaccinations(widget.batch.id);
 
-      final data = await _repository.getRecommendedVaccinations(widget.batch.id);
-
-      setState(() {
-        _recommendations = data;
-        _isRecommendationsLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _recommendationsError = e.toString();
-        _isRecommendationsLoading = false;
-      });
+      switch(result) {
+        case Success<RecommendedVaccinationsResponse>(data: final data):
+          setState(() {
+            _recommendations = data;
+            _isRecommendationsLoading = false;
+          });
+          break;
+        case Failure(message: final error, :final statusCode, :final response):
+          setState(() {
+            _recommendationsError = error;
+            _isRecommendationsLoading = false;
+          });
+          // Optionally handle the error using ApiErrorHandler
+          // ApiErrorHandler.handle(error);
+          break;
+      }
+    } finally {
+      // Ensure loading state is reset even if there's an unexpected error
+      if (_isRecommendationsLoading) {
+        setState(() {
+          _isRecommendationsLoading = false;
+        });
+      }
     }
   }
 

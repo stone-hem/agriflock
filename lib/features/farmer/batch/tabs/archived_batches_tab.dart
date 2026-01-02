@@ -1,6 +1,7 @@
 // lib/features/farmer/farm/screens/archived_batches_tab.dart
 
 import 'package:agriflock360/core/utils/api_error_handler.dart';
+import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/features/farmer/batch/model/archived_batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/archived_batch_repo.dart';
@@ -42,14 +43,21 @@ class _ArchivedBatchesTabState extends State<ArchivedBatchesTab> {
         limit: _limit,
       );
 
-      setState(() {
-        _archivedBatches = response.batches;
-        _pagination = response.pagination;
-        _currentPage = page;
-        _isLoading = false;
-      });
-    } catch (e) {
-      ApiErrorHandler.handle(e);
+      switch(response){
+
+        case Success<ArchivedBatchesResponse>(data: final res):
+          setState(() {
+            _archivedBatches = res.batches;
+            _pagination = res.pagination;
+            _currentPage = page;
+            _isLoading = false;
+          });
+        case Failure<ArchivedBatchesResponse>(message:final error):
+          ApiErrorHandler.handle(error);
+      }
+
+
+    } finally  {
       setState(() {
         _isLoading = false;
       });
@@ -606,53 +614,3 @@ class _ArchivedStat extends StatelessWidget {
   }
 }
 
-class _StatCard extends StatelessWidget {
-  final IconData icon;
-  final String value;
-  final String label;
-  final Color color;
-
-  const _StatCard({
-    required this.icon,
-    required this.value,
-    required this.label,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: color.withValues(alpha: 700),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.grey.shade600,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-}

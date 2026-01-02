@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/feeding_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/feeding_repo.dart';
@@ -51,55 +52,99 @@ class _BatchFeedTabState extends State<BatchFeedTab>
   }
 
   Future<void> _loadDashboard() async {
+    setState(() {
+      _isDashboardLoading = true;
+      _dashboardError = null;
+    });
+
     try {
-      setState(() {
-        _isDashboardLoading = true;
-        _dashboardError = null;
-      });
+      final result = await _repository.getFeedDashboard(widget.batch.id);
 
-      final data = await _repository.getFeedDashboard(widget.batch.id);
-
-      setState(() {
-        _dashboard = data;
-        _isDashboardLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _dashboardError = e.toString();
-        _isDashboardLoading = false;
-      });
+      switch(result) {
+        case Success<FeedDashboard>(data: final data):
+          setState(() {
+            _dashboard = data;
+            _isDashboardLoading = false;
+          });
+          break;
+        case Failure(message: final error, :final statusCode, :final response):
+          setState(() {
+            _dashboardError = error;
+            _isDashboardLoading = false;
+          });
+          // Optionally handle the error using ApiErrorHandler
+          // ApiErrorHandler.handle(error);
+          break;
+      }
+    } finally {
+      // Ensure loading state is reset even if there's an unexpected error
+      if (_isDashboardLoading) {
+        setState(() {
+          _isDashboardLoading = false;
+        });
+      }
     }
   }
 
   Future<void> _loadRecommendations() async {
+    setState(() {
+      _isRecommendationsLoading = true;
+      _recommendationsError = null;
+    });
+
     try {
-      setState(() {
-        _isRecommendationsLoading = true;
-        _recommendationsError = null;
-      });
+      final result = await _repository.getFeedingRecommendations(widget.batch.id);
 
-      final data = await _repository.getFeedingRecommendations(widget.batch.id);
-
-      setState(() {
-        _recommendations = data;
-        _isRecommendationsLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _recommendationsError = e.toString();
-        _isRecommendationsLoading = false;
-      });
+      switch(result) {
+        case Success<FeedingRecommendationsResponse>(data: final data):
+          setState(() {
+            _recommendations = data;
+            _isRecommendationsLoading = false;
+          });
+          break;
+        case Failure(message: final error):
+          setState(() {
+            _recommendationsError = error;
+            _isRecommendationsLoading = false;
+          });
+          // Optionally handle the error using ApiErrorHandler
+          // ApiErrorHandler.handle(error);
+          break;
+      }
+    } finally {
+      // Ensure loading state is reset even if there's an unexpected error
+      if (_isRecommendationsLoading) {
+        setState(() {
+          _isRecommendationsLoading = false;
+        });
+      }
     }
   }
 
   Future<void> _onRefreshDashboard() async {
     try {
-      final data = await _repository.refreshFeedDashboard(widget.batch.id);
-      setState(() {
-        _dashboard = data;
-        _dashboardError = null;
-      });
+      final result = await _repository.refreshFeedDashboard(widget.batch.id);
+
+      switch(result) {
+        case Success<FeedDashboard>(data: final data):
+          setState(() {
+            _dashboard = data;
+            _dashboardError = null;
+          });
+          break;
+        case Failure(message: final error):
+          setState(() {
+            _dashboardError = error;
+          });
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to refresh: $error')),
+            );
+          }
+          break;
+      }
     } catch (e) {
+      // Handle any unexpected errors
       setState(() {
         _dashboardError = e.toString();
       });
@@ -113,12 +158,28 @@ class _BatchFeedTabState extends State<BatchFeedTab>
 
   Future<void> _onRefreshRecommendations() async {
     try {
-      final data = await _repository.refreshFeedingRecommendations(widget.batch.id);
-      setState(() {
-        _recommendations = data;
-        _recommendationsError = null;
-      });
+      final result = await _repository.refreshFeedingRecommendations(widget.batch.id);
+
+      switch(result) {
+        case Success<FeedingRecommendationsResponse>(data: final data):
+          setState(() {
+            _recommendations = data;
+            _recommendationsError = null;
+          });
+          break;
+        case Failure(message: final error):
+          setState(() {
+            _recommendationsError = error;
+          });
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to refresh: $error')),
+            );
+          }
+          break;
+      }
     } catch (e) {
+      // Handle any unexpected errors
       setState(() {
         _recommendationsError = e.toString();
       });

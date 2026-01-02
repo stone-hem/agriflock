@@ -1,4 +1,5 @@
 import 'package:agriflock360/core/utils/api_error_handler.dart';
+import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/batch_house_repo.dart';
@@ -33,13 +34,21 @@ class _ActiveBatchesTabState extends State<ActiveBatchesTab> {
     });
 
     try {
-      final houses = await _repository.getAllHouses(widget.farm.id);
-      setState(() {
-        _houses = houses;
-        _isLoading = false;
-      });
-    } catch (e) {
-      ApiErrorHandler.handle(e);
+      final result = await _repository.getAllHouses(widget.farm.id);
+
+      switch(result){
+
+        case Success<List<House>>(data: final houses):
+          setState(() {
+            _houses = houses;
+            _isLoading = false;
+          });;
+        case Failure(message: final error):
+          ApiErrorHandler.handle(error);
+          return;
+      }
+
+    } finally {
       setState(() {
         _isLoading = false;
       });

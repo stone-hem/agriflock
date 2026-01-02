@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_mgt_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/batch_mgt_repo.dart';
 import 'package:agriflock360/features/farmer/batch/shared/stat_card.dart';
@@ -32,38 +33,45 @@ class _BatchOverviewState extends State<BatchOverview> {
         _error = null;
       });
 
-      final data = await _repository.getBatchDetails(widget.batchId);
+      final res = await _repository.getBatchDetails(widget.batchId);
 
+      switch(res) {
+        case Success<BatchMgtResponse>(data:final data):
+          setState(() {
+            _batchData = data;
+          });
+        case Failure<BatchMgtResponse>(message:final message):
+          setState(() {
+            _error = message;
+          });
+      }
+
+
+    } finally {
       setState(() {
-        _batchData = data;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _error = e.toString();
         _isLoading = false;
       });
     }
   }
 
   Future<void> _onRefresh() async {
-    try {
-      final data = await _repository.refreshBatchDetails(widget.batchId);
-      setState(() {
-        _batchData = data;
-        _error = null;
-      });
-    } catch (e) {
-      setState(() {
-        _error = e.toString();
-      });
-      // Show error snackbar
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to refresh: ${e.toString()}')),
-        );
+      final res = await _repository.refreshBatchDetails(widget.batchId);
+      switch(res) {
+        case Success<BatchMgtResponse>(data:final data):
+          setState(() {
+            _batchData = data;
+          });
+        case Failure<BatchMgtResponse>(message:final message):
+          setState(() {
+            _error = message;
+          });
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(message),)
+            );
+          }
       }
-    }
+
   }
 
   @override
