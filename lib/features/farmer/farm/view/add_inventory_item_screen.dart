@@ -1,5 +1,8 @@
+import 'package:agriflock360/features/farmer/farm/models/inventory_models.dart';
+import 'package:agriflock360/features/farmer/farm/repositories/inventory_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:agriflock360/core/utils/result.dart';
 
 class AddInventoryItemScreen extends StatefulWidget {
   final String farmId;
@@ -13,24 +16,24 @@ class AddInventoryItemScreen extends StatefulWidget {
 class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final _currentStockController = TextEditingController();
-  final _minStockController = TextEditingController();
+  final _itemCodeController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _currentStockController = TextEditingController(text: '0');
+  final _minStockController = TextEditingController(text: '10');
+  final _reorderPointController = TextEditingController(text: '20');
   final _costController = TextEditingController();
   final _supplierController = TextEditingController();
+  final _supplierContactController = TextEditingController();
+  final _storageLocationController = TextEditingController();
   final _notesController = TextEditingController();
 
-  String? _selectedCategory;
+  final InventoryRepository _repository = InventoryRepository();
+  List<InventoryCategory> _categories = [];
+  bool _isLoadingCategories = true;
+  String? _selectedCategoryId;
   String? _selectedUnit;
-
-  final List<String> _categories = [
-    'Feed',
-    'Vaccines',
-    'Medication',
-    'Supplements',
-    'Cleaning',
-    'Equipment',
-    'Other'
-  ];
+  DateTime? _selectedExpiryDate;
+  DateTime? _lastRestockDate;
 
   final List<String> _units = [
     'kg',
@@ -41,8 +44,157 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
     'doses',
     'bottles',
     'bags',
-    'pieces'
+    'pieces',
+    'boxes',
+    'cartons',
+    'units',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCategories();
+    _lastRestockDate = DateTime.now();
+  }
+
+  Future<void> _loadCategories() async {
+    setState(() {
+      _isLoadingCategories = true;
+    });
+
+    final result = await _repository.getInventoryCategories(activeOnly: true);
+
+    setState(() {
+      _isLoadingCategories = false;
+    });
+
+    switch (result) {
+      case Success<List<InventoryCategory>>(data: final categories):
+        setState(() {
+          _categories = categories;
+          if (categories.isNotEmpty) {
+            _selectedCategoryId = categories.first.id;
+          }
+        });
+      case Failure<List<InventoryCategory>>(message: final message):
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to load categories: $message'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+    }
+  }
+
+  Future<void> _selectExpiryDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().add(const Duration(days: 365)),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+    );
+
+    if (picked != null && picked != _selectedExpiryDate) {
+      setState(() {
+        _selectedExpiryDate = picked;
+      });
+    }
+  }
+
+  Future<void> _addItem() async {
+    if (_formKey.currentState!.validate()) {
+      if (_selectedCategoryId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select a category'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      if (_selectedUnit == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select a unit of measurement'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Show loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      try {
+        final request = CreateInventoryItemRequest(
+          categoryId: _selectedCategoryId!,
+          farmId: widget.farmId,
+          itemName: _nameController.text,
+          itemCode: _itemCodeController.text,
+          description: _descriptionController.text,
+          unitOfMeasurement: _selectedUnit!,
+          currentStock: double.parse(_currentStockController.text),
+          minimumStockLevel: double.parse(_minStockController.text),
+          reorderPoint: double.parse(_reorderPointController.text),
+          costPerUnit: double.parse(_costController.text),
+          supplier: _supplierController.text,
+          supplierContact: _supplierContactController.text.isNotEmpty
+              ? _supplierContactController.text
+              : null,
+          storageLocation: _storageLocationController.text.isNotEmpty
+              ? _storageLocationController.text
+              : null,
+          expiryDate: _selectedExpiryDate,
+          notes: _notesController.text,
+        );
+
+        final result = await _repository.createInventoryItem(request);
+
+        Navigator.of(context).pop(); // Close loading dialog
+
+        switch (result) {
+          case Success<InventoryItem>(data: final item):
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('${item.itemName} added to inventory'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+              context.pop(true); // Return success
+            }
+          case Failure<InventoryItem>(message: final message):
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Failed to add item: $message'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+        }
+      } catch (e) {
+        Navigator.of(context).pop(); // Close loading dialog
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +222,9 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
+      body: _isLoadingCategories
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(
           key: _formKey,
@@ -94,15 +248,15 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Farm: ${widget.farmId}',
-                              style: const TextStyle(
+                            const Text(
+                              'Add New Inventory Item',
+                              style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
                               ),
                             ),
                             Text(
-                              'Add New Inventory Item',
+                              'Farm ID: ${widget.farmId}',
                               style: TextStyle(
                                 color: Colors.grey.shade600,
                                 fontSize: 14,
@@ -118,14 +272,7 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
               const SizedBox(height: 24),
 
               // Item Name
-              Text(
-                'Item Name',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
+              _buildSectionTitle('Item Name'),
               TextFormField(
                 controller: _nameController,
                 decoration: InputDecoration(
@@ -143,32 +290,38 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Category
-              Text(
-                'Category',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
+              // Item Code
+              _buildSectionTitle('Item Code (Optional)'),
+              TextFormField(
+                controller: _itemCodeController,
+                decoration: InputDecoration(
+                  hintText: 'e.g., FEED-001',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 20),
+
+              // Category
+              _buildSectionTitle('Category'),
               DropdownButtonFormField<String>(
-                initialValue: _selectedCategory,
+                value: _selectedCategoryId,
                 decoration: InputDecoration(
                   hintText: 'Select category',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                items: _categories.map((String category) {
+                items: _categories.map((InventoryCategory category) {
                   return DropdownMenuItem<String>(
-                    value: category,
-                    child: Text(category),
+                    value: category.id,
+                    child: Text(category.name),
                   );
                 }).toList(),
                 onChanged: (String? newValue) {
                   setState(() {
-                    _selectedCategory = newValue;
+                    _selectedCategoryId = newValue;
                   });
                 },
                 validator: (value) {
@@ -180,17 +333,24 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Unit
-              Text(
-                'Unit of Measurement',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
+              // Description
+              _buildSectionTitle('Description (Optional)'),
+              TextFormField(
+                controller: _descriptionController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: 'Description of the item...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 20),
+
+              // Unit of Measurement
+              _buildSectionTitle('Unit of Measurement'),
               DropdownButtonFormField<String>(
-                initialValue: _selectedUnit,
+                value: _selectedUnit,
                 decoration: InputDecoration(
                   hintText: 'Select unit',
                   border: OutlineInputBorder(
@@ -218,14 +378,7 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
               const SizedBox(height: 20),
 
               // Current Stock
-              Text(
-                'Current Stock',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
+              _buildSectionTitle('Current Stock'),
               TextFormField(
                 controller: _currentStockController,
                 keyboardType: TextInputType.number,
@@ -242,50 +395,87 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
                   if (double.tryParse(value) == null) {
                     return 'Please enter a valid number';
                   }
+                  final stock = double.parse(value);
+                  if (stock < 0) {
+                    return 'Stock cannot be negative';
+                  }
                   return null;
                 },
               ),
               const SizedBox(height: 20),
 
-              // Minimum Stock Level
-              Text(
-                'Minimum Stock Level',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _minStockController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  hintText: 'e.g., 20.0',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+              // Stock Levels
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionTitle('Min Stock'),
+                        TextFormField(
+                          controller: _minStockController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            hintText: 'Min',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Required';
+                            }
+                            if (double.tryParse(value) == null) {
+                              return 'Invalid';
+                            }
+                            final minStock = double.parse(value);
+                            if (minStock < 0) {
+                              return 'Must be ≥ 0';
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter minimum stock level';
-                  }
-                  if (double.tryParse(value) == null) {
-                    return 'Please enter a valid number';
-                  }
-                  return null;
-                },
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionTitle('Reorder Point'),
+                        TextFormField(
+                          controller: _reorderPointController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            hintText: 'Reorder',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Required';
+                            }
+                            if (double.tryParse(value) == null) {
+                              return 'Invalid';
+                            }
+                            final reorder = double.parse(value);
+                            if (reorder < 0) {
+                              return 'Must be ≥ 0';
+                            }
+                            return null;
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 20),
 
               // Cost per Unit
-              Text(
-                'Cost per Unit (₵)',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
+              _buildSectionTitle('Cost per Unit (₵)'),
               TextFormField(
                 controller: _costController,
                 keyboardType: TextInputType.number,
@@ -302,24 +492,51 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
                   if (double.tryParse(value) == null) {
                     return 'Please enter a valid number';
                   }
+                  final cost = double.parse(value);
+                  if (cost < 0) {
+                    return 'Cost cannot be negative';
+                  }
                   return null;
                 },
               ),
               const SizedBox(height: 20),
 
-              // Supplier
-              Text(
-                'Supplier (Optional)',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
+              // Supplier Information
+              _buildSectionTitle('Supplier Information'),
               TextFormField(
                 controller: _supplierController,
                 decoration: InputDecoration(
-                  hintText: 'e.g., Agrimart Ltd.',
+                  labelText: 'Supplier Name',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter supplier name';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _supplierContactController,
+                decoration: InputDecoration(
+                  labelText: 'Supplier Contact (Optional)',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 20),
+
+              // Storage Location
+              _buildSectionTitle('Storage Location (Optional)'),
+              TextFormField(
+                controller: _storageLocationController,
+                decoration: InputDecoration(
+                  hintText: 'e.g., Warehouse A, Shelf 3',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -327,15 +544,51 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Notes
-              Text(
-                'Notes (Optional)',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
+              // Expiry Date
+              _buildSectionTitle('Expiry Date (Optional)'),
+              InkWell(
+                onTap: _selectExpiryDate,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today,
+                        color: Colors.grey.shade600,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        _selectedExpiryDate != null
+                            ? '${_selectedExpiryDate!.day}/${_selectedExpiryDate!.month}/${_selectedExpiryDate!.year}'
+                            : 'Select expiry date',
+                        style: TextStyle(
+                          color: _selectedExpiryDate != null
+                              ? Colors.grey.shade800
+                              : Colors.grey.shade500,
+                        ),
+                      ),
+                      const Spacer(),
+                      if (_selectedExpiryDate != null)
+                        IconButton(
+                          icon: const Icon(Icons.clear, size: 20),
+                          onPressed: () {
+                            setState(() {
+                              _selectedExpiryDate = null;
+                            });
+                          },
+                        ),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 20),
+
+              // Notes
+              _buildSectionTitle('Notes (Optional)'),
               TextFormField(
                 controller: _notesController,
                 maxLines: 3,
@@ -384,6 +637,7 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: 32),
             ],
           ),
         ),
@@ -391,26 +645,31 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
     );
   }
 
-  void _addItem() {
-    if (_formKey.currentState!.validate()) {
-      // TODO: Implement add inventory item logic
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${_nameController.text} added to inventory'),
-          backgroundColor: Colors.green,
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.titleMedium!.copyWith(
+          fontWeight: FontWeight.bold,
+          color: Colors.grey.shade800,
         ),
-      );
-      context.pop();
-    }
+      ),
+    );
   }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _itemCodeController.dispose();
+    _descriptionController.dispose();
     _currentStockController.dispose();
     _minStockController.dispose();
+    _reorderPointController.dispose();
     _costController.dispose();
     _supplierController.dispose();
+    _supplierContactController.dispose();
+    _storageLocationController.dispose();
     _notesController.dispose();
     super.dispose();
   }

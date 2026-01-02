@@ -1,6 +1,8 @@
-// lib/inventory/inventory_screen.dart
+import 'package:agriflock360/features/farmer/farm/models/inventory_models.dart';
+import 'package:agriflock360/features/farmer/farm/repositories/inventory_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:agriflock360/core/utils/result.dart';
 
 class InventoryScreen extends StatefulWidget {
   final String farmId;
@@ -12,93 +14,117 @@ class InventoryScreen extends StatefulWidget {
 }
 
 class _InventoryScreenState extends State<InventoryScreen> {
-  final List<InventoryItem> _inventoryItems = [
-    InventoryItem(
-      id: '1',
-      name: 'Broiler Starter Feed',
-      category: 'Feed',
-      currentStock: 450.5,
-      unit: 'kg',
-      minStockLevel: 100.0,
-      costPerUnit: 2.50,
-      lastUpdated: DateTime.now().subtract(const Duration(days: 2)),
-    ),
-    InventoryItem(
-      id: '2',
-      name: 'Grower Feed',
-      category: 'Feed',
-      currentStock: 320.0,
-      unit: 'kg',
-      minStockLevel: 150.0,
-      costPerUnit: 2.30,
-      lastUpdated: DateTime.now().subtract(const Duration(days: 1)),
-    ),
-    InventoryItem(
-      id: '3',
-      name: 'Newcastle Vaccine',
-      category: 'Vaccines',
-      currentStock: 50.0,
-      unit: 'doses',
-      minStockLevel: 20.0,
-      costPerUnit: 1.80,
-      lastUpdated: DateTime.now().subtract(const Duration(days: 5)),
-    ),
-    InventoryItem(
-      id: '4',
-      name: 'Vitamin Supplement',
-      category: 'Supplements',
-      currentStock: 5.0,
-      unit: 'kg',
-      minStockLevel: 2.0,
-      costPerUnit: 15.00,
-      lastUpdated: DateTime.now().subtract(const Duration(days: 7)),
-    ),
-    InventoryItem(
-      id: '5',
-      name: 'Antibiotics',
-      category: 'Medication',
-      currentStock: 12.0,
-      unit: 'packets',
-      minStockLevel: 5.0,
-      costPerUnit: 8.50,
-      lastUpdated: DateTime.now().subtract(const Duration(days: 3)),
-    ),
-    InventoryItem(
-      id: '6',
-      name: 'Disinfectant',
-      category: 'Cleaning',
-      currentStock: 8.0,
-      unit: 'liters',
-      minStockLevel: 3.0,
-      costPerUnit: 12.00,
-      lastUpdated: DateTime.now().subtract(const Duration(days: 10)),
-    ),
-    InventoryItem(
-      id: '7',
-      name: 'Feed Additives',
-      category: 'Supplements',
-      currentStock: 2.5,
-      unit: 'kg',
-      minStockLevel: 1.0,
-      costPerUnit: 25.00,
-      lastUpdated: DateTime.now().subtract(const Duration(days: 14)),
-    ),
-    InventoryItem(
-      id: '8',
-      name: 'Water Sanitizer',
-      category: 'Cleaning',
-      currentStock: 15.0,
-      unit: 'liters',
-      minStockLevel: 5.0,
-      costPerUnit: 6.50,
-      lastUpdated: DateTime.now().subtract(const Duration(days: 1)),
-    ),
-  ];
+  final InventoryRepository _repository = InventoryRepository();
 
-  void _showAdjustStockDialog(InventoryItem item) {
+  List<InventoryItem> _inventoryItems = [];
+  bool _isLoading = true;
+  bool _isLoadingMore = false;
+  bool _hasMore = true;
+  int _currentPage = 1;
+  int _totalItems = 0;
+  int _lowStockCount = 0;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInventory();
+  }
+
+  Future<void> _loadInventory({bool loadMore = false}) async {
+    if (loadMore) {
+      if (!_hasMore || _isLoadingMore) return;
+      setState(() {
+        _isLoadingMore = true;
+      });
+    } else {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+        _currentPage = 1;
+      });
+    }
+
+    try {
+      final result = await _repository.getInventoryItems(
+        page: loadMore ? _currentPage + 1 : 1,
+        limit: 20,
+        farmId: widget.farmId,
+      );
+
+      switch (result) {
+        case Success<InventoryResponse>(data: final data):
+          setState(() {
+            if (loadMore) {
+              _inventoryItems.addAll(data.items);
+              _currentPage++;
+            } else {
+              _inventoryItems = data.items;
+              _currentPage = data.page;
+            }
+            _hasMore = data.hasMore;
+            _totalItems = data.total;
+            _error = null;
+
+            // Calculate low stock count
+            _lowStockCount = _inventoryItems.where((item) => item.isLowStock).length;
+          });
+        case Failure<InventoryResponse>(message: final message):
+          setState(() {
+            if (!loadMore) {
+              _error = message;
+            }
+          });
+          if (loadMore) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to load more items: $message'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+      }
+    } finally {
+      setState(() {
+        _isLoading = false;
+        _isLoadingMore = false;
+      });
+    }
+  }
+
+  Future<void> _onRefresh() async {
+    final result = await _repository.refreshInventory(
+      limit: 20,
+      farmId: widget.farmId,
+    );
+
+    switch (result) {
+      case Success<InventoryResponse>(data: final data):
+        setState(() {
+          _inventoryItems = data.items;
+          _currentPage = data.page;
+          _hasMore = data.hasMore;
+          _totalItems = data.total;
+          _error = null;
+          _lowStockCount = _inventoryItems.where((item) => item.isLowStock).length;
+        });
+      case Failure<InventoryResponse>(message: final message):
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to refresh: $message'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+    }
+  }
+
+  Future<void> _showAdjustStockDialog(InventoryItem item) async {
     final TextEditingController adjustmentController = TextEditingController();
     final TextEditingController reasonController = TextEditingController();
     String _adjustmentType = 'add';
+    String? _batchId;
 
     showDialog(
       context: context,
@@ -113,7 +139,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      item.name,
+                      item.itemName,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -121,7 +147,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Current Stock: ${item.currentStock} ${item.unit}',
+                      'Current Stock: ${item.currentStock} ${item.unitOfMeasurement}',
                       style: TextStyle(
                         color: Colors.grey.shade600,
                       ),
@@ -170,7 +196,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       controller: adjustmentController,
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
-                        labelText: 'Amount (${item.unit})',
+                        labelText: 'Amount (${item.unitOfMeasurement})',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -207,16 +233,79 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (adjustmentController.text.isNotEmpty &&
-                        double.tryParse(adjustmentController.text) != null) {
-                      _adjustStock(
-                        item,
-                        double.parse(adjustmentController.text),
-                        _adjustmentType,
-                        reasonController.text,
+                        double.tryParse(adjustmentController.text) != null &&
+                        reasonController.text.isNotEmpty) {
+                      final amount = double.parse(adjustmentController.text);
+                      if (amount <= 0) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Amount must be greater than 0'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                        return;
+                      }
+
+                      // Show loading
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (context) => const Center(
+                          child: CircularProgressIndicator(),
+                        ),
                       );
-                      Navigator.of(context).pop();
+
+                      try {
+                        final request = AdjustStockRequest(
+                          adjustmentAmount: amount,
+                          adjustmentType: _adjustmentType,
+                          reason: reasonController.text,
+                          batchId: _batchId,
+                        );
+
+                        final result = await _repository.adjustStock(item.id, request);
+
+                        Navigator.of(context).pop(); // Close loading dialog
+                        Navigator.of(context).pop(); // Close adjustment dialog
+
+                        switch (result) {
+                          case Success<InventoryItem>(data: final updatedItem):
+                          // Update local list
+                            final index = _inventoryItems.indexWhere((i) => i.id == item.id);
+                            if (index != -1) {
+                              setState(() {
+                                _inventoryItems[index] = updatedItem;
+                                _lowStockCount = _inventoryItems.where((item) => item.isLowStock).length;
+                              });
+                            }
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Stock ${_adjustmentType == 'add' ? 'added to' : 'removed from'} ${item.itemName}',
+                                ),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          case Failure<InventoryItem>(message: final message):
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Failed to adjust stock: $message'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                        }
+                      } catch (e) {
+                        Navigator.of(context).pop(); // Close loading dialog
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Error: $e'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
                     }
                   },
                   child: const Text('Adjust Stock'),
@@ -229,51 +318,34 @@ class _InventoryScreenState extends State<InventoryScreen> {
     );
   }
 
-  void _adjustStock(InventoryItem item, double amount, String type, String reason) {
-    setState(() {
-      final index = _inventoryItems.indexWhere((i) => i.id == item.id);
-      if (index != -1) {
-        if (type == 'add') {
-          _inventoryItems[index] = _inventoryItems[index].copyWith(
-            currentStock: _inventoryItems[index].currentStock + amount,
-            lastUpdated: DateTime.now(),
-          );
-        } else {
-          _inventoryItems[index] = _inventoryItems[index].copyWith(
-            currentStock: _inventoryItems[index].currentStock - amount,
-            lastUpdated: DateTime.now(),
-          );
-        }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Stock ${type == 'add' ? 'added to' : 'removed from'} ${item.name}',
-            ),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    });
-  }
-
   void _showItemDetails(InventoryItem item) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(item.name),
+          title: Text(item.itemName),
           content: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildDetailRow('Category', item.category),
-                _buildDetailRow('Current Stock', '${item.currentStock} ${item.unit}'),
-                _buildDetailRow('Minimum Stock', '${item.minStockLevel} ${item.unit}'),
-                _buildDetailRow('Cost per Unit', '₵${item.costPerUnit}'),
-                _buildDetailRow('Total Value', '₵${(item.currentStock * item.costPerUnit).toStringAsFixed(2)}'),
-                _buildDetailRow('Last Updated', _formatDate(item.lastUpdated)),
+                _buildDetailRow('Category', item.category.name),
+                _buildDetailRow('Item Code', item.itemCode.isNotEmpty ? item.itemCode : 'N/A'),
+                _buildDetailRow('Current Stock', '${item.currentStock} ${item.unitOfMeasurement}'),
+                _buildDetailRow('Minimum Stock', '${item.minimumStockLevel} ${item.unitOfMeasurement}'),
+                _buildDetailRow('Reorder Point', '${item.reorderPoint} ${item.unitOfMeasurement}'),
+                _buildDetailRow('Cost per Unit', '₵${item.costPerUnit.toStringAsFixed(2)}'),
+                _buildDetailRow('Total Value', '₵${item.totalValue.toStringAsFixed(2)}'),
+                _buildDetailRow('Supplier', item.supplier),
+                if (item.storageLocation != null)
+                  _buildDetailRow('Location', item.storageLocation!),
+                if (item.lastRestockDate != null)
+                  _buildDetailRow('Last Restock', _formatDate(item.lastRestockDate!)),
+                if (item.expiryDate != null)
+                  _buildDetailRow('Expiry Date', _formatDate(item.expiryDate!)),
+                if (item.notes.isNotEmpty)
+                  _buildDetailRow('Notes', item.notes),
+                _buildDetailRow('Status', item.formattedStatus),
                 const SizedBox(height: 16),
                 _buildStockStatus(item),
               ],
@@ -301,32 +373,49 @@ class _InventoryScreenState extends State<InventoryScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '$label: ',
-            style: const TextStyle(fontWeight: FontWeight.bold),
+          SizedBox(
+            width: 120,
+            child: Text(
+              '$label:',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
-          Text(value),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                color: Colors.grey.shade700,
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildStockStatus(InventoryItem item) {
-    final status = item.currentStock <= item.minStockLevel
-        ? 'Low Stock'
-        : item.currentStock <= item.minStockLevel * 2
-        ? 'Adequate'
-        : 'Good';
+    Color color;
+    IconData icon;
+    String statusText;
 
-    final color = item.currentStock <= item.minStockLevel
-        ? Colors.red
-        : item.currentStock <= item.minStockLevel * 2
-        ? Colors.orange
-        : Colors.green;
+    if (item.currentStock <= item.minimumStockLevel) {
+      color = Colors.red;
+      icon = Icons.warning;
+      statusText = 'Low Stock';
+    } else if (item.needsReorder) {
+      color = Colors.orange;
+      icon = Icons.info;
+      statusText = 'Needs Reorder';
+    } else {
+      color = Colors.green;
+      icon = Icons.check_circle;
+      statusText = 'Good Stock';
+    }
 
     return Container(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
@@ -335,14 +424,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.circle,
-            color: color,
-            size: 12,
-          ),
+          Icon(icon, color: color, size: 16),
           const SizedBox(width: 8),
           Text(
-            'Stock Status: $status',
+            'Stock Status: $statusText',
             style: TextStyle(
               color: color,
               fontWeight: FontWeight.bold,
@@ -380,6 +465,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 );
               },
             ),
+            const SizedBox(width: 12),
             const Text('Inventory'),
           ],
         ),
@@ -388,28 +474,99 @@ class _InventoryScreenState extends State<InventoryScreen> {
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.grey.shade700),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => context.pop(),
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _onRefresh,
+          ),
+          IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
-             context.push('/farms/inventory/add');
+              context.push('/farms/inventory/add');
             },
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Summary Cards
-          Padding(
+      body: RefreshIndicator(
+        onRefresh: _onRefresh,
+        child: _buildBodyContent(),
+      ),
+    );
+  }
+
+  Widget _buildBodyContent() {
+    if (_isLoading && _inventoryItems.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null && _inventoryItems.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32.0),
+              child: Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey.shade600),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => _loadInventory(),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_inventoryItems.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.inventory_2_outlined,
+                size: 64, color: Colors.grey.shade400),
+            const SizedBox(height: 16),
+            Text(
+              'No inventory items',
+              style: TextStyle(color: Colors.grey.shade600),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Add your first inventory item',
+              style: TextStyle(color: Colors.grey.shade500),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                context.push('/farms/inventory/add');
+              },
+              child: const Text('Add Item'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return CustomScrollView(
+      slivers: [
+        // Summary Section
+        SliverToBoxAdapter(
+          child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
                 Expanded(
                   child: _buildSummaryCard(
                     'Total Items',
-                    _inventoryItems.length.toString(),
+                    _totalItems.toString(),
                     Icons.inventory_2,
                     Colors.blue,
                   ),
@@ -418,7 +575,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 Expanded(
                   child: _buildSummaryCard(
                     'Low Stock',
-                    _inventoryItems.where((item) => item.currentStock <= item.minStockLevel).length.toString(),
+                    _lowStockCount.toString(),
                     Icons.warning,
                     Colors.orange,
                   ),
@@ -426,33 +583,58 @@ class _InventoryScreenState extends State<InventoryScreen> {
               ],
             ),
           ),
+        ),
 
-          // Inventory List
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: _inventoryItems.length,
-              itemBuilder: (context, index) {
-                final item = _inventoryItems[index];
-                return _buildInventoryItem(item);
-              },
+        // Inventory List
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+                (context, index) {
+              final item = _inventoryItems[index];
+              return _buildInventoryItem(item);
+            },
+            childCount: _inventoryItems.length,
+          ),
+        ),
+
+        // Loading More Indicator
+        if (_isLoadingMore)
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(child: CircularProgressIndicator()),
             ),
           ),
-        ],
-      ),
+
+        // Load More Button
+        if (_hasMore && !_isLoading && !_isLoadingMore)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Center(
+                child: ElevatedButton(
+                  onPressed: () => _loadInventory(loadMore: true),
+                  child: const Text('Load More Items'),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
   Widget _buildSummaryCard(String title, String value, IconData icon, Color color) {
     return Card(
-      elevation: 0,
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: color),
-            const SizedBox(height: 8),
+            Icon(icon, color: color, size: 24),
+            const SizedBox(height: 12),
             Text(
               value,
               style: const TextStyle(
@@ -460,11 +642,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
+            const SizedBox(height: 4),
             Text(
               title,
               style: TextStyle(
                 color: Colors.grey.shade600,
-                fontSize: 12,
+                fontSize: 14,
               ),
             ),
           ],
@@ -474,62 +657,117 @@ class _InventoryScreenState extends State<InventoryScreen> {
   }
 
   Widget _buildInventoryItem(InventoryItem item) {
-    final isLowStock = item.currentStock <= item.minStockLevel;
-
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 0,
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      elevation: 1,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
         leading: Container(
           width: 50,
           height: 50,
           decoration: BoxDecoration(
-            color: _getCategoryColor(item.category).withOpacity(0.1),
+            color: _getCategoryColor(item.category.name).withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
-            _getCategoryIcon(item.category),
-            color: _getCategoryColor(item.category),
+            _getCategoryIcon(item.category.name),
+            color: _getCategoryColor(item.category.name),
+            size: 24,
           ),
         ),
         title: Text(
-          item.name,
+          item.itemName,
           style: const TextStyle(
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
           ),
         ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            Text(
-              '${item.currentStock} ${item.unit} • Min: ${item.minStockLevel} ${item.unit}',
-            ),
-            Text(
-              '₵${item.costPerUnit} per ${item.unit}',
-              style: TextStyle(
-                color: Colors.grey.shade600,
-                fontSize: 12,
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${item.currentStock} ${item.unitOfMeasurement} • Min: ${item.minimumStockLevel}',
+                style: const TextStyle(
+                  fontSize: 14,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 2),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      item.category.name,
+                      style: TextStyle(
+                        color: Colors.grey.shade700,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (item.supplier.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  'Supplier: ${item.supplier}',
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            if (isLowStock)
-              Icon(
-                Icons.warning,
-                color: Colors.red,
-                size: 20,
-              ),
             Text(
-              (item.currentStock * item.costPerUnit).toStringAsFixed(2),
+              '₵${item.totalValue.toStringAsFixed(2)}',
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
+                fontSize: 16,
               ),
             ),
+            const SizedBox(height: 4),
+            if (item.isLowStock)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.red.shade100),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.warning,
+                      color: Colors.red.shade600,
+                      size: 12,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Low Stock',
+                      style: TextStyle(
+                        color: Colors.red.shade600,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
         onTap: () => _showItemDetails(item),
@@ -539,79 +777,46 @@ class _InventoryScreenState extends State<InventoryScreen> {
   }
 
   Color _getCategoryColor(String category) {
-    switch (category) {
-      case 'Feed':
+    switch (category.toLowerCase()) {
+      case 'feed':
         return Colors.orange;
-      case 'Vaccines':
+      case 'vaccines':
         return Colors.green;
-      case 'Medication':
+      case 'medication':
         return Colors.red;
-      case 'Supplements':
+      case 'supplements':
         return Colors.blue;
-      case 'Cleaning':
+      case 'cleaning':
+      case 'cleaning supplies':
         return Colors.purple;
+      case 'bedding':
+        return Colors.brown;
+      case 'equipment':
+        return Colors.teal;
       default:
         return Colors.grey;
     }
   }
 
   IconData _getCategoryIcon(String category) {
-    switch (category) {
-      case 'Feed':
+    switch (category.toLowerCase()) {
+      case 'feed':
         return Icons.grain;
-      case 'Vaccines':
+      case 'vaccines':
         return Icons.medical_services;
-      case 'Medication':
+      case 'medication':
         return Icons.medication;
-      case 'Supplements':
+      case 'supplements':
         return Icons.health_and_safety;
-      case 'Cleaning':
+      case 'cleaning':
+      case 'cleaning supplies':
         return Icons.clean_hands;
+      case 'bedding':
+        return Icons.bed;
+      case 'equipment':
+        return Icons.build;
       default:
         return Icons.inventory_2;
     }
-  }
-}
-
-class InventoryItem {
-  final String id;
-  final String name;
-  final String category;
-  final double currentStock;
-  final String unit;
-  final double minStockLevel;
-  final double costPerUnit;
-  final DateTime lastUpdated;
-
-  InventoryItem({
-    required this.id,
-    required this.name,
-    required this.category,
-    required this.currentStock,
-    required this.unit,
-    required this.minStockLevel,
-    required this.costPerUnit,
-    required this.lastUpdated,
-  });
-
-  InventoryItem copyWith({
-    String? name,
-    String? category,
-    double? currentStock,
-    String? unit,
-    double? minStockLevel,
-    double? costPerUnit,
-    DateTime? lastUpdated,
-  }) {
-    return InventoryItem(
-      id: id,
-      name: name ?? this.name,
-      category: category ?? this.category,
-      currentStock: currentStock ?? this.currentStock,
-      unit: unit ?? this.unit,
-      minStockLevel: minStockLevel ?? this.minStockLevel,
-      costPerUnit: costPerUnit ?? this.costPerUnit,
-      lastUpdated: lastUpdated ?? this.lastUpdated,
-    );
   }
 }

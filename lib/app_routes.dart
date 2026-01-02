@@ -369,8 +369,11 @@ class AppRoutes {
           builder: (context, state) => const AddFarmScreen(),
         ),
         GoRoute(
-          path: farmsInventory,
-          builder: (context, state) => const InventoryScreen(farmId: '233'),
+          path: '$farmsInventory/:id',
+          builder: (context, state) {
+            final farmId = state.pathParameters['id']!;
+            return InventoryScreen(farmId: farmId);
+            },
         ),
         GoRoute(
           path: farmsInventoryAdd,

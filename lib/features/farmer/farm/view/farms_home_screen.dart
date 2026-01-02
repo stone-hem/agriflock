@@ -670,7 +670,7 @@ class _FarmCard extends StatelessWidget {
         _navigateToEdit(context);
         break;
       case 'inventory':
-        context.push(AppRoutes.farmsInventory);
+        context.push('${AppRoutes.farmsInventory}/${farm.id}');
         break;
       case 'view_batches':
         context.push(AppRoutes.batches, extra: farm);
