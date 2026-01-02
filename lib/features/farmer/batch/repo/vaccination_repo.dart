@@ -52,7 +52,7 @@ class VaccinationRepository {
   Future<Result<VaccinationDashboard>> getVaccinationDashboard(String batchId) async {
     try {
       final response = await apiClient.get(
-        '/batches/$batchId/vaccinations/vaccinations/dashboard',
+        '/batches/$batchId/vaccinations/dashboard',
       );
 
       final jsonResponse = jsonDecode(response.body);
