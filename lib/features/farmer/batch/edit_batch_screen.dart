@@ -10,8 +10,6 @@ import 'package:agriflock360/features/farmer/batch/repo/batch_house_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-
-
 class EditBatchScreen extends StatefulWidget {
   final String farmId;
   final BatchModel batch;
@@ -55,6 +53,7 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
     'Egg Production',
     'Breeding',
     'Dual Purpose',
+    'LAYERS'
   ];
 
   final Map<String, List<String>> _feedingTimes = {
@@ -136,7 +135,7 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
 
     _nameController.text = batch.batchName;
     _selectedHouse = batch.houseId;
-    _selectedBirdTypeId = batch.type; // Assuming BatchModel has this field
+    _selectedBirdTypeId = batch.birdTypeId; // Assuming BatchModel has this field
     _selectedBatchType = batch.type; // Using type as batch_type
     _hatchDate = batch.startDate; // Using startDate as hatch_date
     _initialQuantityController.text = batch.initialQuantity.toString();
@@ -300,7 +299,7 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
                 ),
               )
                   : DropdownButtonFormField<String>(
-                value: _selectedBirdTypeId,
+                initialValue: _selectedBirdTypeId,
                 decoration: InputDecoration(
                   hintText: 'Select bird type',
                   border: OutlineInputBorder(
@@ -792,13 +791,18 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
     });
 
     try {
-      await _repository.deleteBatch(widget.farmId, widget.batch.id!);
-      ToastUtil.showSuccess('Batch deleted successfully');
-      if (context.mounted) {
-        context.pop(true);
+      final res=await _repository.deleteBatch(widget.farmId, widget.batch.id);
+      switch(res) {
+        case Success<void>():
+          ToastUtil.showSuccess('Batch deleted successfully');
+          if (context.mounted) {
+            context.pop(true);
+          }
+        case Failure<void>(message:final e):
+          ApiErrorHandler.handle(e);
       }
-    } catch (e) {
-      ApiErrorHandler.handle(e);
+
+
     } finally {
       if (mounted) {
         setState(() {

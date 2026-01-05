@@ -2,6 +2,7 @@ class BatchModel {
   final String id;
   final String batchName;
   final String? houseId;
+  final String birdTypeId;
   final String? houseName;
   final String breed;
   final String type;
@@ -23,6 +24,7 @@ class BatchModel {
     required this.id,
     required this.batchName,
     this.houseId,
+    required this.birdTypeId,
     this.houseName,
     required this.breed,
     required this.type,
@@ -46,9 +48,10 @@ class BatchModel {
       id: json['id'].toString(),
       batchName: json['batch_name'] ?? json['name'] ?? '',
       houseId: json['house_id']?.toString(),
+      birdTypeId: json['bird_type_id']?.toString() ?? '',
       houseName: json['house_name'],
       breed: json['breed'] ?? '',
-      type: json['type'] ?? '',
+      type: json['batch_type'] ?? '',
       startDate: json['start_date'] != null
           ? DateTime.parse(json['start_date'])
           : DateTime.now(),
@@ -117,6 +120,7 @@ class BatchModel {
       id: id ?? this.id,
       batchName: batchName ?? this.batchName,
       houseId: houseId ?? this.houseId,
+      birdTypeId: birdTypeId,
       houseName: houseName ?? this.houseName,
       breed: breed ?? this.breed,
       type: type ?? this.type,

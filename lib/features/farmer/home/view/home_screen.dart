@@ -713,9 +713,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
   IconData _getActivityIcon(String activityType) {
     switch (activityType) {
-      case 'product_recorded':
-        return Icons.inventory;
-      case 'feed_recorded':
+      case 'batch_created':
+      case 'batch_updated':
+        return Icons.add_circle_outline;
+      case 'farm_created':
+      case 'farm_updated':
+      case 'farm_deleted':
+        return Icons.agriculture;
+      case 'houses':
+        return Icons.home;
+      case 'vaccination':
+        return Icons.medical_services;
+      case 'feeding':
         return Icons.restaurant;
       case 'egg_collection':
         return Icons.egg;
@@ -723,10 +732,8 @@ class _HomeScreenState extends State<HomeScreen> {
         return Icons.monitor_weight;
       case 'bird_sale':
         return Icons.sell;
-      case 'health_check':
-        return Icons.medical_services;
       default:
-        return Icons.assignment;
+        return Icons.notifications;
     }
   }
 

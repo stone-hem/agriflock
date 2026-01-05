@@ -42,6 +42,7 @@ class _BatchProductsTabState extends State<BatchProductsTab> {
 
       final results = await Future.wait([dashboardFuture, productsFuture]);
 
+
       setState(() {
         _dashboard = results[0] as ProductDashboard;
         _recentProducts = (results[1] as List<Product>)

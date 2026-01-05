@@ -26,7 +26,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? _userAvatar;
   String _userRole = 'Loading...';
   String? _userPhone;
-  bool _isPremium = false;
   bool _isLoading = true;
   bool _isUploading = false;
   double _profileCompletion = 65.0;
@@ -58,9 +57,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _userRole = 'Farmer';
           }
 
-          // Check if user is premium
-          _isPremium = userData['status'] == 'active' &&
-              (userData['agreed_to_terms'] == true);
 
           // Calculate profile completion based on available data
           _profileCompletion = _calculateProfileCompletion(userData);
@@ -459,26 +455,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                   ),
-
-                  // Display premium badge if applicable
-                  if (_isPremium) ...[
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.amber.shade300),
-                      ),
-                      child: Text(
-                        'Premium Member',
-                        style: TextStyle(
-                          color: Colors.amber.shade800,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
 
                   // Profile Completion Card
                   const SizedBox(height: 10),
