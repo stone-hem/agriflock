@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/vaccination_repo.dart';
 import 'package:flutter/material.dart';
@@ -146,30 +147,16 @@ class _QuickDoneTodayScreenState extends State<QuickDoneTodayScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-
-              // Vaccine Name
-              Text(
-                'Vaccine Name',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
+              ReusableInput(
                 controller: _vaccineNameController,
-                decoration: InputDecoration(
-                  hintText: 'e.g., Newcastle Disease Vaccine',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+
+                hintText: 'e.g., Newcastle Disease Vaccine',
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter vaccine name';
                   }
                   return null;
-                },
+                }, labelText: 'Vaccine Name',
               ),
               const SizedBox(height: 20),
 
@@ -246,24 +233,10 @@ class _QuickDoneTodayScreenState extends State<QuickDoneTodayScreen> {
                 },
               ),
               const SizedBox(height: 20),
-
-              // Dosage
-              Text(
-                'Dosage',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
+              ReusableInput(
                 controller: _dosageController,
-                decoration: InputDecoration(
-                  hintText: 'e.g., 1ml per bird',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+                labelText: 'Dosage',
+                hintText: 'e.g., 1ml per bird',
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter dosage';
@@ -273,24 +246,10 @@ class _QuickDoneTodayScreenState extends State<QuickDoneTodayScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Number of Birds Vaccinated
-              Text(
-                'Number of Birds Vaccinated',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
+              ReusableInput(
                 controller: _birdsVaccinatedController,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  hintText: 'e.g., 450',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+                hintText: 'e.g., 450',
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter number of birds';
@@ -299,7 +258,7 @@ class _QuickDoneTodayScreenState extends State<QuickDoneTodayScreen> {
                     return 'Please enter a valid number';
                   }
                   return null;
-                },
+                }, labelText: 'Number of Birds Vaccinated',
               ),
               const SizedBox(height: 20),
 
@@ -366,46 +325,18 @@ class _QuickDoneTodayScreenState extends State<QuickDoneTodayScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-
-              // Cost (Optional)
-              Text(
-                'Total Cost (₵) - Optional',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
+              ReusableInput(
                 controller: _costController,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  hintText: 'e.g., 150.00',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+                hintText: 'e.g., 150.00', labelText: 'Total Cost (₵) - Optional',
+
               ),
               const SizedBox(height: 20),
-
-              // Notes
-              Text(
-                'Notes (Optional)',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
+              ReusableInput(
                 controller: _notesController,
                 maxLines: 3,
-                decoration: InputDecoration(
-                  hintText: 'Batch number, reactions, observations...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+                labelText: 'Notes (Optional)',
+                hintText: 'Batch number, reactions, observations...',
               ),
               const SizedBox(height: 24),
 

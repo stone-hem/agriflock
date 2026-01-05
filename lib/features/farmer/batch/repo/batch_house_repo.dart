@@ -135,7 +135,7 @@ class BatchHouseRepository {
         final jsonResponse = jsonDecode(response.body);
 
         if (response.statusCode >= 200 && response.statusCode < 300) {
-          LogUtil.success(jsonResponse);
+          LogUtil.success(response.body);
           return Success(null);
         } else {
           LogUtil.error('Failed to create batch: $jsonResponse');
@@ -495,12 +495,17 @@ class BatchHouseRepository {
         // Regular JSON request without photo
         houseData.removeWhere((key, value) => value == null);
 
+        LogUtil.info(houseData.toString());
+
         final response = await apiClient.patch(
           '/farms/$farmId/houses/$houseId',
           body: houseData,
         );
 
         final jsonResponse = jsonDecode(response.body);
+
+        LogUtil.info(response.body);
+
 
         if (response.statusCode >= 200 && response.statusCode < 300) {
           return Success(null);

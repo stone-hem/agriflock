@@ -58,7 +58,7 @@ class InventoryRepository {
       final response = await apiClient.get(endpoint);
 
       final jsonResponse = jsonDecode(response.body);
-      LogUtil.info('Inventory Items API Response: $jsonResponse');
+      LogUtil.info('Inventory Items API Response: ${response.body}');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return Success(InventoryResponse.fromJson(jsonResponse));
@@ -107,7 +107,7 @@ class InventoryRepository {
       final response = await apiClient.get(endpoint);
 
       final jsonResponse = jsonDecode(response.body);
-      LogUtil.info('Categories API Response: $jsonResponse');
+      LogUtil.info('Categories API Response: ${response.body}');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final categoryResponse = InventoryCategoryResponse.fromJson(jsonResponse);
@@ -161,7 +161,7 @@ class InventoryRepository {
       );
 
       final jsonResponse = jsonDecode(response.body);
-      LogUtil.info('Create Item API Response: $jsonResponse');
+      LogUtil.info('Create Item API Response: ${response.body}');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         if (jsonResponse['data'] != null) {
@@ -224,7 +224,7 @@ class InventoryRepository {
       );
 
       final jsonResponse = jsonDecode(response.body);
-      LogUtil.info('Adjust Stock API Response: $jsonResponse');
+      LogUtil.info('Adjust Stock API Response: ${response.body}');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         if (jsonResponse['data'] != null) {
@@ -280,7 +280,7 @@ class InventoryRepository {
       final response = await apiClient.get(endpoint);
 
       final jsonResponse = jsonDecode(response.body);
-      LogUtil.info('Get Item API Response: $jsonResponse');
+      LogUtil.info('Get Item API Response: ${response.body}');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         if (jsonResponse['data'] != null) {
@@ -343,7 +343,7 @@ class InventoryRepository {
       );
 
       final jsonResponse = jsonDecode(response.body);
-      LogUtil.info('Update Item API Response: $jsonResponse');
+      LogUtil.info('Update Item API Response: ${response.body}');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         if (jsonResponse['data'] != null) {
@@ -399,7 +399,7 @@ class InventoryRepository {
       final response = await apiClient.delete(endpoint);
 
       final jsonResponse = jsonDecode(response.body);
-      LogUtil.info('Delete Item API Response: $jsonResponse');
+      LogUtil.info('Delete Item API Response: ${response.body}');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return const Success(true);

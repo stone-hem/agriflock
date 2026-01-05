@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/farm/models/inventory_models.dart';
 import 'package:agriflock360/features/farmer/farm/repositories/inventory_repository.dart';
 import 'package:flutter/material.dart';
@@ -273,33 +274,24 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
 
               // Item Name
               _buildSectionTitle('Item Name'),
-              TextFormField(
+              ReusableInput(
                 controller: _nameController,
-                decoration: InputDecoration(
-                  hintText: 'e.g., Broiler Starter Feed',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+                hintText: 'e.g., Broiler Starter Feed',
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter item name';
                   }
                   return null;
-                },
+                }, labelText: '',
               ),
               const SizedBox(height: 20),
 
               // Item Code
               _buildSectionTitle('Item Code (Optional)'),
-              TextFormField(
+              ReusableInput(
                 controller: _itemCodeController,
-                decoration: InputDecoration(
-                  hintText: 'e.g., FEED-001',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+                hintText: 'e.g., FEED-001', labelText: '',
+
               ),
               const SizedBox(height: 20),
 
@@ -335,15 +327,11 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
 
               // Description
               _buildSectionTitle('Description (Optional)'),
-              TextFormField(
+              ReusableInput(
                 controller: _descriptionController,
                 maxLines: 3,
-                decoration: InputDecoration(
-                  hintText: 'Description of the item...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+                hintText: 'Description of the item...', labelText: '',
+
               ),
               const SizedBox(height: 20),
 
@@ -379,15 +367,11 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
 
               // Current Stock
               _buildSectionTitle('Current Stock'),
-              TextFormField(
+              ReusableInput(
                 controller: _currentStockController,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  hintText: 'e.g., 100.0',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+                hintText: 'e.g., 100.0',
+
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter current stock';
@@ -400,7 +384,7 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
                     return 'Stock cannot be negative';
                   }
                   return null;
-                },
+                }, labelText: '',
               ),
               const SizedBox(height: 20),
 
@@ -412,15 +396,11 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildSectionTitle('Min Stock'),
-                        TextFormField(
+                        ReusableInput(
                           controller: _minStockController,
                           keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                            hintText: 'Min',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
+                          hintText: 'Min',
+
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Required';
@@ -433,7 +413,7 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
                               return 'Must be ≥ 0';
                             }
                             return null;
-                          },
+                          }, labelText: '',
                         ),
                       ],
                     ),
@@ -444,15 +424,11 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildSectionTitle('Reorder Point'),
-                        TextFormField(
+                        ReusableInput(
                           controller: _reorderPointController,
                           keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                            hintText: 'Reorder',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
+                          hintText: 'Reorder',
+
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Required';
@@ -465,7 +441,7 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
                               return 'Must be ≥ 0';
                             }
                             return null;
-                          },
+                          }, labelText: '',
                         ),
                       ],
                     ),
@@ -476,15 +452,11 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
 
               // Cost per Unit
               _buildSectionTitle('Cost per Unit (₵)'),
-              TextFormField(
+              ReusableInput(
                 controller: _costController,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  hintText: 'e.g., 2.50',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+                hintText: 'e.g., 2.50',
+
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter cost per unit';
@@ -497,50 +469,36 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
                     return 'Cost cannot be negative';
                   }
                   return null;
-                },
+                }, labelText: '',
               ),
               const SizedBox(height: 20),
 
               // Supplier Information
               _buildSectionTitle('Supplier Information'),
-              TextFormField(
+              ReusableInput(
                 controller: _supplierController,
-                decoration: InputDecoration(
-                  labelText: 'Supplier Name',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+                labelText: 'Supplier Name',
+
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter supplier name';
                   }
                   return null;
-                },
+                }, hintText: '',
               ),
               const SizedBox(height: 12),
-              TextFormField(
+              ReusableInput(
                 controller: _supplierContactController,
-                decoration: InputDecoration(
-                  labelText: 'Supplier Contact (Optional)',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                keyboardType: TextInputType.phone,
+                labelText: 'Supplier Contact (Optional)',
+                keyboardType: TextInputType.phone, hintText: '',
               ),
               const SizedBox(height: 20),
 
               // Storage Location
               _buildSectionTitle('Storage Location (Optional)'),
-              TextFormField(
+              ReusableInput(
                 controller: _storageLocationController,
-                decoration: InputDecoration(
-                  hintText: 'e.g., Warehouse A, Shelf 3',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+                hintText: 'e.g., Warehouse A, Shelf 3', labelText: '',
               ),
               const SizedBox(height: 20),
 
@@ -589,15 +547,11 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
 
               // Notes
               _buildSectionTitle('Notes (Optional)'),
-              TextFormField(
+              ReusableInput(
                 controller: _notesController,
                 maxLines: 3,
-                decoration: InputDecoration(
-                  hintText: 'Any additional notes about this item...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+                hintText: 'Any additional notes about this item...', labelText: '',
+
               ),
               const SizedBox(height: 32),
 

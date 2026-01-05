@@ -736,8 +736,8 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
       );
 
       switch (result) {
-        case Success(data: final batch):
-          ToastUtil.showSuccess('Batch "${batch.batchName}" created successfully!');
+        case Success():
+          ToastUtil.showSuccess('Batch edited successfully!');
           if (context.mounted) {
             context.pop(true);
           }

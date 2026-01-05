@@ -1,3 +1,5 @@
+import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/batch/model/product_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/batch_mgt_repo.dart';
 import 'package:flutter/material.dart';
@@ -121,23 +123,47 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
         );
       }
 
-      await _repository.createProduct(request);
+      // Call repository with proper Result pattern handling
+      final result = await _repository.createProduct(request);
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${_getProductLabel()} recorded successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        context.pop(true); // Return true to indicate success
+      switch (result) {
+        case Success _:
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('${_getProductLabel()} recorded successfully!'),
+                backgroundColor: Colors.green,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+
+            // Delay pop slightly to show success message
+            await Future.delayed(const Duration(milliseconds: 500));
+
+            if (mounted) {
+              context.pop(true); // Return true to indicate success
+            }
+          }
+
+        case Failure(message: final errorMessage):
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to save: $errorMessage'),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
       }
     } catch (e) {
+      // Fallback for unexpected errors
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to save: ${e.toString()}'),
+            content: Text('Unexpected error: ${e.toString()}'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
           ),
         );
       }
@@ -154,6 +180,49 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
       orElse: () => {'label': 'Product'},
     );
     return type['label']!;
+  }
+
+  // Validation functions
+  String? _validatePositiveNumber(String? value, String fieldName) {
+    if (value == null || value.isEmpty) {
+      return '$fieldName is required';
+    }
+    final numValue = num.tryParse(value);
+    if (numValue == null) {
+      return 'Please enter a valid number';
+    }
+    if (numValue <= 0) {
+      return '$fieldName must be greater than 0';
+    }
+    return null;
+  }
+
+  String? _validateNonNegativeNumber(String? value, String fieldName) {
+    if (value == null || value.isEmpty) {
+      return '$fieldName is required';
+    }
+    final numValue = num.tryParse(value);
+    if (numValue == null) {
+      return 'Please enter a valid number';
+    }
+    if (numValue < 0) {
+      return '$fieldName cannot be negative';
+    }
+    return null;
+  }
+
+  String? _validatePrice(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Price is required';
+    }
+    final price = num.tryParse(value);
+    if (price == null) {
+      return 'Please enter a valid price';
+    }
+    if (price <= 0) {
+      return 'Price must be greater than 0';
+    }
+    return null;
   }
 
   @override
@@ -237,7 +306,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.green.withValues(alpha: 0.1),
+                          color: Colors.green.withAlpha(40),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -311,66 +380,65 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
 
               // Conditional Fields based on Product Type
               if (_selectedProductType == 'eggs') ...[
-                _buildTextField(
+                ReusableInput(
                   controller: _quantityController,
-                  label: 'Number of Eggs Collected',
-                  hint: 'e.g., 245',
+                  labelText: 'Number of Eggs Collected',
+                  hintText: 'e.g., 245',
                   keyboardType: TextInputType.number,
                   icon: Icons.egg,
-                  isRequired: true,
+                  validator: (value) => _validatePositiveNumber(value, 'Eggs collected'),
                 ),
                 const SizedBox(height: 20),
-                _buildTextField(
+                ReusableInput(
                   controller: _crackedEggsController,
-                  label: 'Cracked or Broken Eggs',
-                  hint: 'e.g., 5',
+                  labelText: 'Cracked or Broken Eggs',
+                  hintText: 'e.g., 5',
                   keyboardType: TextInputType.number,
                   icon: Icons.broken_image,
-                  isRequired: false,
+                  validator: (value) => _validateNonNegativeNumber(value, 'Cracked eggs'),
                 ),
               ],
 
               if (_selectedProductType == 'meat') ...[
-                _buildTextField(
+                ReusableInput(
                   controller: _quantityController,
-                  label: 'Number of Birds Sold',
-                  hint: 'e.g., 12',
+                  labelText: 'Number of Birds Sold',
+                  hintText: 'e.g., 12',
                   keyboardType: TextInputType.number,
                   icon: Icons.agriculture,
-                  isRequired: true,
+                  validator: (value) => _validatePositiveNumber(value, 'Birds sold'),
                 ),
                 const SizedBox(height: 20),
-                _buildTextField(
+                ReusableInput(
                   controller: _weightController,
-                  label: 'Total Weight (kg) - Optional',
-                  hint: 'e.g., 28.5',
+                  labelText: 'Total Weight (kg) - Optional',
+                  hintText: 'e.g., 28.5',
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   icon: Icons.monitor_weight,
-                  isRequired: false,
                 ),
               ],
 
               if (_selectedProductType == 'other') ...[
-                _buildTextField(
+                ReusableInput(
                   controller: _quantityController,
-                  label: 'Quantity',
-                  hint: 'e.g., 50',
+                  labelText: 'Quantity',
+                  hintText: 'e.g., 50',
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   icon: Icons.inventory,
-                  isRequired: true,
+                  validator: (value) => _validatePositiveNumber(value, 'Quantity'),
                 ),
               ],
 
               const SizedBox(height: 20),
 
               // Price (common for all types)
-              _buildTextField(
+              ReusableInput(
                 controller: _priceController,
-                label: 'Price per Unit',
-                hint: 'e.g., 10.50',
+                labelText: 'Price per Unit',
+                hintText: 'e.g., 10.50',
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 icon: Icons.attach_money,
-                isRequired: true,
+                validator: _validatePrice,
               ),
 
               const SizedBox(height: 24),
@@ -413,13 +481,12 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
               const SizedBox(height: 24),
 
               // Notes
-              _buildTextField(
+              ReusableInput(
                 controller: _notesController,
-                label: 'Notes (Optional)',
-                hint: 'e.g., Grade A eggs, sold to local market...',
+                labelText: 'Notes (Optional)',
+                hintText: 'e.g., Grade A eggs, sold to local market...',
                 maxLines: 3,
                 icon: Icons.note_add,
-                isRequired: false,
               ),
 
               const SizedBox(height: 40),
@@ -441,71 +508,6 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
       default:
         return Icons.production_quantity_limits;
     }
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    TextInputType keyboardType = TextInputType.text,
-    int maxLines = 1,
-    required IconData icon,
-    required bool isRequired,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text(
-              label,
-              style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
-              ),
-            ),
-            if (isRequired)
-              Text(
-                ' *',
-                style: TextStyle(
-                  color: Colors.red.shade600,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          maxLines: maxLines,
-          decoration: InputDecoration(
-            hintText: hint,
-            prefixIcon: Icon(icon, color: Colors.grey.shade600),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          validator: (value) {
-            if (isRequired && (value == null || value.isEmpty)) {
-              return 'This field is required';
-            }
-            if (value != null && value.isNotEmpty) {
-              if (keyboardType == TextInputType.number ||
-                  keyboardType == const TextInputType.numberWithOptions(decimal: true)) {
-                if (num.tryParse(value) == null) {
-                  return 'Please enter a valid number';
-                }
-                if (num.parse(value) < 0) {
-                  return 'Value cannot be negative';
-                }
-              }
-            }
-            return null;
-          },
-        ),
-      ],
-    );
   }
 
   Widget _dateTimeTile({

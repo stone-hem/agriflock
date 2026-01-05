@@ -484,7 +484,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
-              context.push('/farms/inventory/add');
+              context.push('/farms/inventory/add/${widget.farmId}');
             },
           ),
         ],
@@ -544,9 +544,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
               style: TextStyle(color: Colors.grey.shade500),
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
+            FilledButton(
               onPressed: () {
-                context.push('/farms/inventory/add');
+                context.push('/farms/inventory/add/${widget.farmId}');
               },
               child: const Text('Add Item'),
             ),

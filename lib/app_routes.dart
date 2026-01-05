@@ -376,9 +376,12 @@ class AppRoutes {
             },
         ),
         GoRoute(
-          path: farmsInventoryAdd,
-          builder: (context, state) =>
-              const AddInventoryItemScreen(farmId: "233"),
+          path: '$farmsInventoryAdd/:id',
+          builder: (context, state) {
+    final farmId = state.pathParameters['id']!;
+    return AddInventoryItemScreen(farmId: farmId);
+    }
+
         ),
         GoRoute(
           path: activity,

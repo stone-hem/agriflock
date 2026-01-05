@@ -1,30 +1,25 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:agriflock360/app_routes.dart';
-import 'package:agriflock360/core/services/social_auth_service.dart';
+import 'package:agriflock360/core/constants/app_constants.dart';
 import 'package:agriflock360/core/utils/log_util.dart';
+import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
-import '../constants/app_constants.dart';
-import '../utils/secure_storage.dart';
 
 class ApiClient {
   final SecureStorage storage;
   final GlobalKey<NavigatorState> navigatorKey;
 
-  // Flag to prevent multiple simultaneous refresh attempts
   bool _isRefreshing = false;
-
-  // Queue to hold requests while refreshing
-  final List<Function> _requestQueue = [];
+  final List<Completer<bool>> _refreshCompleters = [];
 
   ApiClient({
     required this.storage,
     required this.navigatorKey,
   });
 
-  // Get headers with authentication token
   Future<Map<String, String>> _getHeaders({Map<String, String>? extraHeaders}) async {
     final token = await storage.getToken();
     final headers = {
@@ -40,12 +35,13 @@ class ApiClient {
     return headers;
   }
 
-  // Refresh access token using refresh token
+  // Enhanced token refresh with proper queuing
   Future<bool> _refreshToken() async {
+    // If already refreshing, wait for that refresh to complete
     if (_isRefreshing) {
-      // Wait for the current refresh to complete
-      await Future.delayed(const Duration(milliseconds: 100));
-      return await storage.isLoggedIn();
+      final completer = Completer<bool>();
+      _refreshCompleters.add(completer);
+      return completer.future;
     }
 
     _isRefreshing = true;
@@ -55,6 +51,7 @@ class ApiClient {
 
       if (refreshToken == null) {
         await _handleUnauthorized();
+        _completeWaitingRefreshes(false);
         return false;
       }
 
@@ -74,42 +71,39 @@ class ApiClient {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
-        // Update tokens
         await storage.updateTokens(
           token: data['access_token'] ?? data['accessToken'] ?? data['token'],
           refreshToken: data['refresh_token'] ?? data['refreshToken'],
           expiresInSeconds: data['expires_in'] ?? data['expiresIn'] ?? 3600,
         );
 
-        _isRefreshing = false;
-
-        // Process queued requests
-        _processQueue();
-
+        _completeWaitingRefreshes(true);
         return true;
       } else {
-        // Refresh failed - logout user
         await _handleUnauthorized();
-        _isRefreshing = false;
+        _completeWaitingRefreshes(false);
         return false;
       }
     } catch (e) {
       debugPrint('Token refresh error: $e');
       await _handleUnauthorized();
-      _isRefreshing = false;
+      _completeWaitingRefreshes(false);
       return false;
+    } finally {
+      _isRefreshing = false;
     }
   }
 
-  // Process queued requests after token refresh
-  void _processQueue() {
-    for (var request in _requestQueue) {
-      request();
+  // Complete all waiting refresh requests
+  void _completeWaitingRefreshes(bool success) {
+    for (var completer in _refreshCompleters) {
+      if (!completer.isCompleted) {
+        completer.complete(success);
+      }
     }
-    _requestQueue.clear();
+    _refreshCompleters.clear();
   }
 
-  // Handle 401 errors - clear storage and redirect to login
   Future<void> _handleUnauthorized() async {
     await storage.clearAll();
     final context = navigatorKey.currentContext;
@@ -118,239 +112,163 @@ class ApiClient {
     }
   }
 
-  // Check if token needs refresh and refresh if necessary
-  Future<bool> _ensureValidToken() async {
-    final isExpired = await storage.isTokenExpired();
+  // Enhanced response handler with automatic retry
+  Future<http.Response> _handleResponse(
+      http.Response response,
+      Future<http.Response> Function() retryRequest,
+      {bool hasRetried = false}
+      ) async {
+    if (response.statusCode == 401 && !hasRetried) {
+      debugPrint('Received 401, attempting token refresh...');
 
-    if (isExpired) {
-      return await _refreshToken();
-    }
-
-    return true;
-  }
-
-  // Handle response and check for 401
-  Future<http.Response> _handleResponse(http.Response response, Function retryRequest) async {
-    if (response.statusCode == 401) {
-      // Try to refresh token
       final refreshed = await _refreshToken();
 
       if (refreshed) {
+        debugPrint('Token refreshed, retrying request...');
         // Retry the original request with new token
-        return await retryRequest();
+        final retryResponse = await retryRequest();
+
+        // Mark as retried to prevent infinite loops
+        return await _handleResponse(retryResponse, retryRequest, hasRetried: true);
       } else {
+        debugPrint('Token refresh failed, logging out...');
         await _handleUnauthorized();
       }
+    } else if (response.statusCode == 401 && hasRetried) {
+      // Already retried once and still got 401, logout
+      debugPrint('Retry also failed with 401, logging out...');
+      await _handleUnauthorized();
     }
+
     return response;
   }
 
-  // GET request
+  // GET request with automatic retry
   Future<http.Response> get(
       String endpoint, {
         Map<String, String>? headers,
         Map<String, dynamic>? queryParameters,
       }) async {
     try {
-      // Ensure token is valid before making request
-      await _ensureValidToken();
-
       final uri = Uri.parse('${AppConstants.baseUrl}$endpoint')
           .replace(queryParameters: queryParameters);
 
-      LogUtil.info(uri.toString());
-      LogUtil.info(headers.toString());
-      final response = await http.get(
-        uri,
-        headers: await _getHeaders(extraHeaders: headers),
-      );
-
-      return await _handleResponse(response, () async {
+      Future<http.Response> makeRequest() async {
         return await http.get(
           uri,
           headers: await _getHeaders(extraHeaders: headers),
         );
-      });
+      }
+
+      final response = await makeRequest();
+      return await _handleResponse(response, makeRequest);
     } catch (e) {
-      LogUtil.error(e.toString());
+      LogUtil.error('GET request error: $e');
       rethrow;
     }
   }
 
-  // POST request
+  // POST request with automatic retry
   Future<http.Response> post(
       String endpoint, {
         Map<String, String>? headers,
         dynamic body,
       }) async {
     try {
-      await _ensureValidToken();
-
       final uri = Uri.parse('${AppConstants.baseUrl}$endpoint');
 
-      LogUtil.info(uri.toString());
-      LogUtil.info(headers.toString());
-      print(body);
-
-      final response = await http.post(
-        uri,
-        headers: await _getHeaders(extraHeaders: headers),
-        body: body != null ? jsonEncode(body) : null,
-      );
-
-      return await _handleResponse(response, () async {
+      Future<http.Response> makeRequest() async {
         return await http.post(
           uri,
           headers: await _getHeaders(extraHeaders: headers),
           body: body != null ? jsonEncode(body) : null,
         );
-      });
+      }
+
+      final response = await makeRequest();
+      return await _handleResponse(response, makeRequest);
     } catch (e) {
-      LogUtil.error(e.toString());
+      LogUtil.error('POST request error: $e');
       rethrow;
     }
   }
 
-  // PUT request
+  // PUT request with automatic retry
   Future<http.Response> put(
       String endpoint, {
         Map<String, String>? headers,
         dynamic body,
       }) async {
     try {
-      await _ensureValidToken();
-
       final uri = Uri.parse('${AppConstants.baseUrl}$endpoint');
 
-      final response = await http.put(
-        uri,
-        headers: await _getHeaders(extraHeaders: headers),
-        body: body != null ? jsonEncode(body) : null,
-      );
-
-      return await _handleResponse(response, () async {
+      Future<http.Response> makeRequest() async {
         return await http.put(
           uri,
           headers: await _getHeaders(extraHeaders: headers),
           body: body != null ? jsonEncode(body) : null,
         );
-      });
+      }
+
+      final response = await makeRequest();
+      return await _handleResponse(response, makeRequest);
     } catch (e) {
+      LogUtil.error('PUT request error: $e');
       rethrow;
     }
   }
 
-  // PATCH request
+  // PATCH request with automatic retry
   Future<http.Response> patch(
       String endpoint, {
         Map<String, String>? headers,
         dynamic body,
       }) async {
     try {
-      await _ensureValidToken();
-
       final uri = Uri.parse('${AppConstants.baseUrl}$endpoint');
 
-      final response = await http.patch(
-        uri,
-        headers: await _getHeaders(extraHeaders: headers),
-        body: body != null ? jsonEncode(body) : null,
-      );
-
-      return await _handleResponse(response, () async {
+      Future<http.Response> makeRequest() async {
         return await http.patch(
           uri,
           headers: await _getHeaders(extraHeaders: headers),
           body: body != null ? jsonEncode(body) : null,
         );
-      });
+      }
+
+      final response = await makeRequest();
+      return await _handleResponse(response, makeRequest);
     } catch (e) {
+      LogUtil.error('PATCH request error: $e');
       rethrow;
     }
   }
 
-  // DELETE request
+  // DELETE request with automatic retry
   Future<http.Response> delete(
       String endpoint, {
         Map<String, String>? headers,
         dynamic body,
       }) async {
     try {
-      await _ensureValidToken();
-
       final uri = Uri.parse('${AppConstants.baseUrl}$endpoint');
 
-      final response = await http.delete(
-        uri,
-        headers: await _getHeaders(extraHeaders: headers),
-        body: body != null ? jsonEncode(body) : null,
-      );
-
-      return await _handleResponse(response, () async {
+      Future<http.Response> makeRequest() async {
         return await http.delete(
           uri,
           headers: await _getHeaders(extraHeaders: headers),
           body: body != null ? jsonEncode(body) : null,
         );
-      });
+      }
+
+      final response = await makeRequest();
+      return await _handleResponse(response, makeRequest);
     } catch (e) {
+      LogUtil.error('DELETE request error: $e');
       rethrow;
     }
   }
 
-  // Multipart request for file uploads
-  Future<http.StreamedResponse> uploadFile(
-      String endpoint, {
-        required String filePath,
-        required String fileField,
-        Map<String, String>? fields,
-        Map<String, String>? headers,
-      }) async {
-    try {
-      await _ensureValidToken();
-
-      final uri = Uri.parse('${AppConstants.baseUrl}$endpoint');
-      final request = http.MultipartRequest('POST', uri);
-
-      // Add headers
-      final allHeaders = await _getHeaders(extraHeaders: headers);
-      request.headers.addAll(allHeaders);
-
-      // Add file
-      request.files.add(await http.MultipartFile.fromPath(fileField, filePath));
-
-      // Add other fields
-      if (fields != null) {
-        request.fields.addAll(fields);
-      }
-
-      final streamedResponse = await request.send();
-
-      if (streamedResponse.statusCode == 401) {
-        final refreshed = await _refreshToken();
-
-        if (refreshed) {
-          // Retry with new token
-          final retryRequest = http.MultipartRequest('POST', uri);
-          final newHeaders = await _getHeaders(extraHeaders: headers);
-          retryRequest.headers.addAll(newHeaders);
-          retryRequest.files.add(await http.MultipartFile.fromPath(fileField, filePath));
-          if (fields != null) {
-            retryRequest.fields.addAll(fields);
-          }
-          return await retryRequest.send();
-        } else {
-          await _handleUnauthorized();
-        }
-      }
-
-      return streamedResponse;
-    } catch (e) {
-      rethrow;
-    }
-  }
-
-  // NEW: General multipart POST request with multiple files support
+  // Multipart POST with automatic retry
   Future<http.StreamedResponse> postMultipart(
       String endpoint, {
         Map<String, String>? fields,
@@ -358,60 +276,40 @@ class ApiClient {
         List<http.MultipartFile>? files,
       }) async {
     try {
-      await _ensureValidToken();
+      Future<http.StreamedResponse> makeRequest() async {
+        final uri = Uri.parse('${AppConstants.baseUrl}$endpoint');
+        final request = http.MultipartRequest('POST', uri);
 
-      final uri = Uri.parse('${AppConstants.baseUrl}$endpoint');
-      final request = http.MultipartRequest('POST', uri);
+        final token = await storage.getToken();
+        final authHeaders = {
+          'Accept': 'application/json',
+          ...?headers,
+        };
 
-      // Get auth headers (remove Content-Type as it will be set automatically for multipart)
-      final token = await storage.getToken();
-      final authHeaders = {
-        'Accept': 'application/json',
-        ...?headers,
-      };
+        if (token != null) {
+          authHeaders['Authorization'] = 'Bearer $token';
+        }
 
-      if (token != null) {
-        authHeaders['Authorization'] = 'Bearer $token';
+        request.headers.addAll(authHeaders);
+
+        if (fields != null) {
+          request.fields.addAll(fields);
+        }
+
+        if (files != null) {
+          request.files.addAll(files);
+        }
+
+        return await request.send();
       }
 
-      request.headers.addAll(authHeaders);
-
-      // Add fields
-      if (fields != null) {
-        request.fields.addAll(fields);
-      }
-
-      // Add files
-      if (files != null) {
-        request.files.addAll(files);
-      }
-
-      final streamedResponse = await request.send();
+      final streamedResponse = await makeRequest();
 
       if (streamedResponse.statusCode == 401) {
         final refreshed = await _refreshToken();
 
         if (refreshed) {
-          // Retry with new token
-          final retryRequest = http.MultipartRequest('POST', uri);
-          final newToken = await storage.getToken();
-          final retryHeaders = {
-            'Accept': 'application/json',
-            ...?headers,
-          };
-          if (newToken != null) {
-            retryHeaders['Authorization'] = 'Bearer $newToken';
-          }
-          retryRequest.headers.addAll(retryHeaders);
-
-          if (fields != null) {
-            retryRequest.fields.addAll(fields);
-          }
-          if (files != null) {
-            retryRequest.files.addAll(files);
-          }
-
-          return await retryRequest.send();
+          return await makeRequest();
         } else {
           await _handleUnauthorized();
         }
@@ -419,18 +317,14 @@ class ApiClient {
 
       return streamedResponse;
     } catch (e) {
+      LogUtil.error('Multipart request error: $e');
       rethrow;
     }
   }
 
-  // Manual logout method
   Future<void> logout() async {
-    final SocialAuthService socialAuthService = SocialAuthService();
-
     try {
-      // Optionally call logout endpoint
       await post('/auth/logout', body: {});
-      await socialAuthService.signOut();
     } catch (e) {
       debugPrint('Logout endpoint error: $e');
     } finally {

@@ -714,8 +714,8 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
       );
 
       switch (result) {
-        case Success(data: final batch):
-          ToastUtil.showSuccess('Batch "${batch.batchName}" created successfully!');
+        case Success():
+          ToastUtil.showSuccess('Batch created successfully!');
           if (context.mounted) {
             context.pop(true);
           }
