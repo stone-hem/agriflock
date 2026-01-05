@@ -15,9 +15,12 @@ import 'package:agriflock360/features/farmer/farm/view/farms_home_screen.dart';
 import 'package:agriflock360/features/farmer/farm/view/inventory_screen.dart';
 import 'package:agriflock360/features/farmer/more/notifications_screen.dart';
 import 'package:agriflock360/features/farmer/more/recent_activity_screen.dart';
+import 'package:agriflock360/features/farmer/payg/flow/day_31_transition_screen.dart';
+import 'package:agriflock360/features/farmer/payg/flow/day_one_welcome_screen.dart';
 import 'package:agriflock360/features/farmer/payg/payg_dashboard.dart';
 import 'package:agriflock360/features/farmer/payg/payment_history_screen.dart';
 import 'package:agriflock360/features/farmer/payg/payment_screen.dart';
+import 'package:agriflock360/features/farmer/payg/plans.dart';
 import 'package:agriflock360/features/farmer/payg/view_invoice.dart';
 import 'package:agriflock360/features/farmer/profile/about_screen.dart';
 import 'package:agriflock360/features/farmer/profile/complete_profile_screen.dart';
@@ -427,6 +430,31 @@ class AppRoutes {
             return VetOrderScreen(vet: vet);
           },
         ),
+        GoRoute(
+          path: '/welcome-day1',
+          builder: (context, state) => const Day1WelcomeScreen(),
+        ),
+        GoRoute(
+          path: '/transition-day31',
+          builder: (context, state) => Day31TransitionScreen(
+            planDetails: {
+              'features': [
+                'Up to 500 birds per batch',
+                'Feeding & vaccination schedules',
+                '10 quotations per month',
+                'Basic analytics',
+              ],
+              'price': '\$9.99',
+              'period': 'per month',
+            },
+          ),
+        ),
+
+        GoRoute(
+          path: '/plans',
+          builder: (context, state) => const PlansPreviewScreen(),
+        ),
+
 
         //vet
         GoRoute(

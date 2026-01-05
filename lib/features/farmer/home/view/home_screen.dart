@@ -2,6 +2,8 @@ import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/features/farmer/home/model/dashboard_model.dart';
 import 'package:agriflock360/features/farmer/home/repo/dashboard_repo.dart';
 import 'package:agriflock360/features/farmer/home/view/widgets/home_skeleton.dart';
+import 'package:agriflock360/features/farmer/payg/flow/future_framing_banner.dart';
+import 'package:agriflock360/features/farmer/payg/flow/value_confirmation_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -200,8 +202,14 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ValueConfirmationBanner(
+              //   onViewActivity: () => context.go('/activity'),
+              // ),
+              FutureFramingBanner(
+                onSeePlans: () => context.push('/plans'),
+              ),
               // Welcome Section
-              _buildWelcomeSection(context),
+              // _buildWelcomeSection(context),
               const SizedBox(height: 20),
 
               // Stats Overview
