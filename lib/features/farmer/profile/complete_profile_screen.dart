@@ -488,9 +488,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     hintText: 'Enter your specific poultry type',
                     icon: Icons.edit,
                     value: '',
-                    onChanged: (value) {
-                      setState(() {});
-                    },
                   ),
                 ),
             ],
@@ -505,9 +502,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
             icon: Icons.home_work,
             keyboardType: TextInputType.number,
             value: '',
-            onChanged: (value) {
-              setState(() {});
-            },
           ),
           const SizedBox(height: 20),
         ],

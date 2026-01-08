@@ -308,7 +308,7 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
           if (mounted) {
             // Clear OTP fields on failure
             _clearOtpFields();
-            context.push(
+            context.go(
               '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(tempToken ?? '')}',
             );
           }

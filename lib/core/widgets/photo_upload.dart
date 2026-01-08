@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:camera/camera.dart';
 import 'dart:io';
 
 class PhotoUpload extends StatefulWidget {
@@ -9,6 +10,7 @@ class PhotoUpload extends StatefulWidget {
   final String title;
   final String description;
   final Color primaryColor;
+  final bool showSelfieFirst;
 
   const PhotoUpload({
     super.key,
@@ -18,6 +20,7 @@ class PhotoUpload extends StatefulWidget {
     this.title = 'Photo',
     this.description = 'Upload photo',
     this.primaryColor = Colors.green,
+    this.showSelfieFirst = false,
   });
 
   @override
@@ -27,11 +30,54 @@ class PhotoUpload extends StatefulWidget {
 class _PhotoUploadState extends State<PhotoUpload> {
   final ImagePicker _imagePicker = ImagePicker();
 
-  Future<void> _pickImage(ImageSource source) async {
+  Future<void> _openCamera() async {
+    try {
+      final cameras = await availableCameras();
+      if (cameras.isEmpty) {
+        _showErrorSnackBar('No camera available');
+        return;
+      }
+
+      // Select camera based on showSelfieFirst preference
+      CameraDescription selectedCamera;
+      if (widget.showSelfieFirst) {
+        selectedCamera = cameras.firstWhere(
+              (camera) => camera.lensDirection == CameraLensDirection.front,
+          orElse: () => cameras.first,
+        );
+      } else {
+        selectedCamera = cameras.firstWhere(
+              (camera) => camera.lensDirection == CameraLensDirection.back,
+          orElse: () => cameras.first,
+        );
+      }
+
+      if (!mounted) return;
+
+      // Navigate to camera screen
+      final File? imageFile = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CameraScreen(
+            camera: selectedCamera,
+            allCameras: cameras,
+          ),
+        ),
+      );
+
+      if (imageFile != null) {
+        widget.onFileSelected(imageFile);
+      }
+    } catch (e) {
+      _showErrorSnackBar('Error opening camera: $e');
+    }
+  }
+
+  Future<void> _pickFromGallery() async {
     try {
       final XFile? image = await _imagePicker.pickImage(
-        source: source,
-        imageQuality: 85,
+        source: ImageSource.gallery,
+        imageQuality: 100,
       );
 
       if (image != null) {
@@ -126,7 +172,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     ElevatedButton.icon(
-                      onPressed: () => _pickImage(ImageSource.camera),
+                      onPressed: _openCamera,
                       icon: const Icon(Icons.camera),
                       label: const Text('Camera'),
                       style: ElevatedButton.styleFrom(
@@ -136,7 +182,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
                     ),
                     const SizedBox(width: 12),
                     OutlinedButton.icon(
-                      onPressed: () => _pickImage(ImageSource.gallery),
+                      onPressed: _pickFromGallery,
                       icon: const Icon(Icons.photo),
                       label: const Text('Gallery'),
                       style: OutlinedButton.styleFrom(
@@ -180,6 +226,180 @@ class _PhotoUploadState extends State<PhotoUpload> {
             ],
           ),
       ],
+    );
+  }
+}
+
+// Custom Camera Screen
+class CameraScreen extends StatefulWidget {
+  final CameraDescription camera;
+  final List<CameraDescription> allCameras;
+
+  const CameraScreen({
+    super.key,
+    required this.camera,
+    required this.allCameras,
+  });
+
+  @override
+  State<CameraScreen> createState() => _CameraScreenState();
+}
+
+class _CameraScreenState extends State<CameraScreen> {
+  late CameraController _controller;
+  late Future<void> _initializeControllerFuture;
+  bool _isTakingPicture = false;
+  CameraDescription? _currentCamera;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentCamera = widget.camera;
+    _initializeCamera(_currentCamera!);
+  }
+
+  void _initializeCamera(CameraDescription camera) {
+    _controller = CameraController(
+      camera,
+      ResolutionPreset.high,
+      enableAudio: false,
+    );
+    _initializeControllerFuture = _controller.initialize();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _switchCamera() async {
+    final newCamera = widget.allCameras.firstWhere(
+          (camera) =>
+      camera.lensDirection !=
+          (_currentCamera?.lensDirection ?? CameraLensDirection.back),
+      orElse: () => widget.allCameras.first,
+    );
+
+    await _controller.dispose();
+    setState(() {
+      _currentCamera = newCamera;
+      _initializeCamera(newCamera);
+    });
+  }
+
+  Future<void> _takePicture() async {
+    if (_isTakingPicture) return;
+
+    try {
+      setState(() => _isTakingPicture = true);
+      await _initializeControllerFuture;
+      final image = await _controller.takePicture();
+
+      if (!mounted) return;
+      Navigator.pop(context, File(image.path));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error taking picture: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isTakingPicture = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: FutureBuilder<void>(
+        future: _initializeControllerFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                Center(
+                  child: CameraPreview(_controller),
+                ),
+                SafeArea(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Top bar with close button
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                            if (widget.allCameras.length > 1)
+                              IconButton(
+                                icon: const Icon(Icons.flip_camera_ios, color: Colors.white, size: 30),
+                                onPressed: _switchCamera,
+                              ),
+                          ],
+                        ),
+                      ),
+                      // Bottom bar with capture button
+                      Padding(
+                        padding: const EdgeInsets.all(32.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            GestureDetector(
+                              onTap: _isTakingPicture ? null : _takePicture,
+                              child: Container(
+                                width: 70,
+                                height: 70,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 4,
+                                  ),
+                                ),
+                                child: _isTakingPicture
+                                    ? const Padding(
+                                  padding: EdgeInsets.all(12.0),
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 3,
+                                  ),
+                                )
+                                    : Container(
+                                  margin: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          } else {
+            return const Center(
+              child: CircularProgressIndicator(color: Colors.white),
+            );
+          }
+        },
+      ),
     );
   }
 }

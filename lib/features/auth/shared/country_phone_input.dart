@@ -41,7 +41,6 @@ class Country {
   }
 }
 
-
 class PhoneValidationRules {
   static final Map<String, PhoneRule> rules = {
     'US': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),
@@ -49,243 +48,241 @@ class PhoneValidationRules {
     'GB': PhoneRule(length: 10, format: 'XXXX XXX XXX'),
     'IN': PhoneRule(length: 10, format: 'XXXXX XXXXX'),
     'NG': PhoneRule(length: 10, format: 'XXX XXX XXXX'),
-    'ZA': PhoneRule(length: 9,  format: 'XX XXX XXXX'),
-    'AU': PhoneRule(length: 9,  format: 'XXX XXX XXX'),
+    'ZA': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'AU': PhoneRule(length: 9, format: 'XXX XXX XXX'),
     'CA': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),
     'DE': PhoneRule(length: 10, format: 'XXX XXXXXXX'),
-    'FR': PhoneRule(length: 9,  format: 'X XX XX XX XX'),
+    'FR': PhoneRule(length: 9, format: 'X XX XX XX XX'),
     'BR': PhoneRule(length: 11, format: '(XX) XXXXX-XXXX'),
     'JP': PhoneRule(length: 10, format: 'XX-XXXX-XXXX'),
-
-    // ==== THE REST OF THE WORLD (249 total) ====
-    'AD': PhoneRule(length: 6,  format: 'XXX XXX'),          // Andorra
-    'AE': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // UAE
-    'AF': PhoneRule(length: 9,  format: 'XX XXX XXXX'),        // Afghanistan
-    'AG': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),   // Antigua & Barbuda
-    'AI': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),   // Anguilla
-    'AL': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // Albania
-    'AM': PhoneRule(length: 8,  format: 'XX XXXXXX'),        // Armenia
-    'AO': PhoneRule(length: 9,  format: 'XXX XXX XXX XXX'),   // Angola
-    'AQ': PhoneRule(length: 6,  format: 'XXX XXX'),          // Antarctica (rare)
-    'AR': PhoneRule(length: 10, format: 'XX XXXX-XXXX'),     // Argentina
-    'AS': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),   // American Samoa
-    'AT': PhoneRule(length: 10, format: 'XXX XXXXXXXX'),     // Austria (variable, 10 most common)
-    'AW': PhoneRule(length: 7,  format: 'XXX XXXX'),         // Aruba
-    'AX': PhoneRule(length: 7,  format: 'XX XXXXX'),         // Åland Islands
-    'AZ': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // Azerbaijan
-    'BA': PhoneRule(length: 8,  format: 'XX XXX XXX'),     // Bosnia
-    'BB': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),   // Barbados
-    'BD': PhoneRule(length: 10, format: 'XX-XXXX-XXXX'),     // Bangladesh
-    'BE': PhoneRule(length: 9,  format: 'XXX XX XX XX'),     // Belgium
-    'BF': PhoneRule(length: 8,  format: 'XX XX XX XX'),      // Burkina Faso
-    'BG': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // Bulgaria
-    'BH': PhoneRule(length: 8,  format: 'XXXX XXXX'),        // Bahrain
-    'BI': PhoneRule(length: 8,  format: 'XX XX XXXX'),       // Burundi
-    'BJ': PhoneRule(length: 8,  format: 'XX XX XX XX'),      // Benin
-    'BL': PhoneRule(length: 9,  format: 'X XX XX XX XX'),    // St. Barthélemy
-    'BM': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),   // Bermuda
-    'BN': PhoneRule(length: 7,  format: 'XXX XXXX'),         // Brunei
-    'BO': PhoneRule(length: 8,  format: 'X XXX XXXX'),       // Bolivia
-    'BS': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),   // Bahamas
-    'BT': PhoneRule(length: 7,  format: 'XX XXX XXX'),       // Bhutan
-    'BW': PhoneRule(length: 8,  format: 'XX XXX XXX'),       // Botswana
-    'BY': PhoneRule(length: 9,  format: 'XX XXX-XX-XX'),   // Belarus
-    'BZ': PhoneRule(length: 7,  format: 'XXX-XXXX'),         // Belize
-    'CC': PhoneRule(length: 9,  format: 'XXX XXX XXX'),      // Cocos Islands (same as AU)
-    'CD': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // Congo Kinshasa
-    'CF': PhoneRule(length: 8,  format: 'XX XX XX XX'),      // Central African Rep.
-    'CG': PhoneRule(length: 9,   format: 'XX XXX XXXX'),   // Congo Brazzaville
-    'CH': PhoneRule(length: 9,  format: 'XX XXX XX XX'),     // Switzerland
-    'CI': PhoneRule(length: 8,  format: 'XX XX XX XX'),      // Côte d’Ivoire
-    'CK': PhoneRule(length: 5,  format: 'XX XXX'),           // Cook Islands
-    'CL': PhoneRule(length: 9,  format: 'X XXXX XXXX'),      // Chile
-    'CM': PhoneRule(length: 9,  format: 'XXXX XXXX'),        // Cameroon
-    'CN': PhoneRule(length: 11, format: 'XXX XXXX XXXX'),    // China
-    'CO': PhoneRule(length: 10, format: 'XXX XXX XXXX'),     // Colombia
-    'CR': PhoneRule(length: 8,  format: 'XXXX XXXX'),        // Costa Rica
-    'CU': PhoneRule(length: 8,  format: 'X XXX XXXX'),       // Cuba
-    'CV': PhoneRule(length: 7,  format: 'XXX XXXX'),         // Cape Verde
-    'CX': PhoneRule(length: 9,  format: 'XXX XXX XXX'),      // Christmas Island
-    'CY': PhoneRule(length: 8,  format: 'XX XXXXXX'),        // Cyprus
-    'CZ': PhoneRule(length: 9,  format: 'XXX XXX XXX'),    // Czechia
-    'DJ': PhoneRule(length: 8,  format: 'XX XX XX XX'),      // Djibouti
-    'DK': PhoneRule(length: 8,  format: 'XX XX XX XX'),      // Denmark
-    'DM': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),   // Dominica
-    'DO': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),   // Dominican Republic
-    'DZ': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // Algeria
-    'EC': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // Ecuador
-    'EE': PhoneRule(length: 8,  format: 'XXXX XXXX'),        // Estonia (7–8, 8 most common mobile)
-    'EG': PhoneRule(length: 10, format: 'XX XXXX XXXX'),     // Egypt
-    'ER': PhoneRule(length: 7,  format: 'X XXX XXX'),        // Eritrea
-    'ES': PhoneRule(length: 9,  format: 'XXX XXX XXX'),      // Spain
-    'ET': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // Ethiopia
-    'FI': PhoneRule(length: 9,  format: 'XX XXX XX XX'),     // Finland (variable, 9 common)
-    'FJ': PhoneRule(length: 7,  format: 'XXX XXXX'),         // Fiji
-    'FK': PhoneRule(length: 5,  format: 'XXXXX'),            // Falkland Islands
-    'FM': PhoneRule(length: 7,  format: 'XXX XXXX'),         // Micronesia
-    'FO': PhoneRule(length: 6,  format: 'XXX XXX'),          // Faroe Islands
-    'GA': PhoneRule(length: 8,  format: 'X XX XX XX'),       // Gabon
-    'GD': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),   // Grenada
-    'GE': PhoneRule(length: 9,  format: 'XXX XX XX XX'),     // Georgia
-    'GF': PhoneRule(length: 9,  format: 'X XX XX XX XX'),    // French Guiana
-    'GG': PhoneRule(length: 10, format: 'XXXXX XXXXX'),      // Guernsey (uses GB format)
-    'GH': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // Ghana
-    'GI': PhoneRule(length: 8,  format: 'XXX XXXX'),        // Gibraltar
-    'GL': PhoneRule(length: 6,  format: 'XX XX XX'),         // Greenland
-    'GM': PhoneRule(length: 7,  format: 'XXX XXXX'),         // Gambia
-    'GN': PhoneRule(length: 9,  format: 'XX XXX XXXX'),    // Guinea
-    'GP': PhoneRule(length: 9,  format: 'X XX XX XX XX'),    // Guadeloupe
-    'GQ': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // Equatorial Guinea
-    'GR': PhoneRule(length: 10, format: 'XXX XXX XXXX'),     // Greece
-    'GT': PhoneRule(length: 8,  format: 'XXXX XXXX'),        // Guatemala
-    'GU': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),   // Guam
-    'GW': PhoneRule(length: 7,  format: 'XXX XXXX'),         // Guinea-Bissau
-    'GY': PhoneRule(length: 7,  format: 'XXX XXXX'),         // Guyana
-    'HK': PhoneRule(length: 8,  format: 'XXXX XXXX'),        // Hong Kong
-    'HN': PhoneRule(length: 8,  format: 'XXXX XXXX'),        // Honduras
-    'HR': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // Croatia
-    'HT': PhoneRule(length: 8,  format: 'XX XX XXXX'),       // Haiti
-    'HU': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // Hungary
-    'ID': PhoneRule(length: 10, format: 'XX XXXX XXXX'),   // Indonesia (9–12, 10 most common)
-    'IE': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // Ireland
-    'IL': PhoneRule(length: 9,  format: 'XX-XXX-XXXX'),      // Israel
-    'IM': PhoneRule(length: 10, format: 'XXXXX XXXXX'),      // Isle of Man (GB format)
-    'IO': PhoneRule(length: 7,  format: 'XXX XXXX'),         // British Indian Ocean Territory
-    'IQ': PhoneRule(length: 10, format: 'XXX XXX XXXX'),     // Iraq
-    'IR': PhoneRule(length: 10, format: 'XXX XXX XXXX'),     // Iran
-    'IS': PhoneRule(length: 7,  format: 'XXX XXXX'),         // Iceland
-    'IT': PhoneRule(length: 10, format: 'XXX XXXX XXX'),     // Italy (variable, 10 common)
-    'JE': PhoneRule(length: 10, format: 'XXXXX XXXXX'),      // Jersey (GB format)
-    'JM': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),   // Jamaica
-    'JO': PhoneRule(length: 9,  format: 'X XXXX XXXX'),      // Jordan
-    'KG': PhoneRule(length: 9,  format: 'XXX XXX XXX'),      // Kyrgyzstan
-    'KH': PhoneRule(length: 8,  format: 'XX XXX XXX'),       // Cambodia
-    'KI': PhoneRule(length: 5,  format: 'XX XXX'),           // Kiribati
-    'KM': PhoneRule(length: 7,  format: 'XXX XXXX'),         // Comoros
-    'KN': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),   // St. Kitts & Nevis
-    'KP': PhoneRule(length: 9,  format: 'XXX XXX XXX'),      // North Korea (variable)
-    'KR': PhoneRule(length: 10, format: 'XX-XXX-XXXX'),      // South Korea
-    'KW': PhoneRule(length: 8,  format: 'XXXX XXXX'),        // Kuwait
-    'KY': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),   // Cayman Islands
-    'KZ': PhoneRule(length: 10, format: 'XXX XXX-XX-XX'),     // Kazakhstan
-    'LA': PhoneRule(length: 9,  format: 'XX XX XXX XXX'),    // Laos
-    'LB': PhoneRule(length: 8,  format: 'XX XXX XXX'),       // Lebanon
-    'LC': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),   // Saint Lucia
-    'LI': PhoneRule(length: 7,  format: 'XXX XXXX'),         // Liechtenstein
-    'LK': PhoneRule(length: 9,  format: 'XX XXX XXXX'),    // Sri Lanka
-    'LR': PhoneRule(length: 8,  format: 'XX XXX XXXX'),      // Liberia
-    'LS': PhoneRule(length: 8,  format: 'XX XXX XXX'),       // Lesotho
-    'LT': PhoneRule(length: 8,  format: 'XXX XXXXX'),        // Lithuania
-    'LU': PhoneRule(length: 9,  format: 'XXX XXX XXX'),      // Luxembourg
-    'LV': PhoneRule(length: 8,  format: 'XX XXX XXX'),       // Latvia
-    'LY': PhoneRule(length: 9,  format: 'XX-XXX-XXXX'),      // Libya
-    'MA': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // Morocco
-    'MC': PhoneRule(length: 8,  format: 'XX XX XX XX'),      // Monaco
-    'MD': PhoneRule(length: 8,  format: 'XX XXX XXX'),       // Moldova
-    'ME': PhoneRule(length: 8,  format: 'XX XXX XXX'),       // Montenegro
-    'MF': PhoneRule(length: 9,  format: 'X XX XX XX XX'),    // St. Martin
-    'MG': PhoneRule(length: 9,  format: 'XX XX XX XXX'),     // Madagascar
-    'MH': PhoneRule(length: 7,  format: 'XXX-XXXX'),         // Marshall Islands
-    'MK': PhoneRule(length: 8,  format: 'XX XXX XXX'),       // North Macedonia
-    'ML': PhoneRule(length: 8,  format: 'XX XX XX XX'),      // Mali
-    'MM': PhoneRule(length: 9,  format: 'XX XXX XXXX'),     // Myanmar
-    'MN': PhoneRule(length: 8,  format: 'XX XX XXXX'),      // Mongolia
-    'MO': PhoneRule(length: 8,  format: 'XXXX XXXX'),        // Macao
-    'MP': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),   // Northern Mariana
-    'MQ': PhoneRule(length: 9,  format: 'X XX XX XX XX'),    // Martinique
-    'MR': PhoneRule(length: 8,  format: 'XX XX XX XX'),      // Mauritania
-    'MS': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),   // Montserrat
-    'MT': PhoneRule(length: 8,  format: 'XXXX XXXX'),        // Malta
-    'MU': PhoneRule(length: 8,  format: 'XXXX XXXX'),        // Mauritius
-    'MV': PhoneRule(length: 7,  format: 'XXX-XXXX'),         // Maldives
-    'MW': PhoneRule(length: 9,  format: 'XX XXX XXXX'),     // Malawi
-    'MX': PhoneRule(length: 10, format: 'XXX XXX XXXX'),     // Mexico
-    'MY': PhoneRule(length: 9,  format: 'XX-XXX XXXX'),      // Malaysia (9–10)
-    'MZ': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // Mozambique
-    'NA': PhoneRule(length: 8,  format: 'XX XXX XXXX'),      // Namibia
-    'NC': PhoneRule(length: 6,  format: 'XX.XX.XX'),         // New Caledonia
-    'NE': PhoneRule(length: 8,  format: 'XX XX XX XX'),      // Niger
-    'NF': PhoneRule(length: 5,  format: 'XXXXX'),            // Norfolk Island
-    'NI': PhoneRule(length: 8,  format: 'XXXX XXXX'),        // Nicaragua
-    'NL': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // Netherlands
-    'NO': PhoneRule(length: 8,  format: 'XXX XX XXX'),       // Norway
-    'NP': PhoneRule(length: 10, format: 'XX-XXXX-XXXX'),     // Nepal
-    'NR': PhoneRule(length: 7,  format: 'XXX XXXX'),         // Nauru
-    'NU': PhoneRule(length: 4,  format: 'XXXX'),             // Niue (very small)
-    'NZ': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // New Zealand (8–10, 9 common)
-    'OM': PhoneRule(length: 8,  format: 'XXXX XXXX'),        // Oman
-    'PA': PhoneRule(length: 8,  format: 'XXXX-XXXX'),        // Panama
-    'PE': PhoneRule(length: 9,  format: 'XXX XXX XXX'),      // Peru
-    'PF': PhoneRule(length: 8,  format: 'XX XX XX XX'),      // French Polynesia
-    'PG': PhoneRule(length: 8,  format: 'XXX XXXX'),         // Papua New Guinea
-    'PH': PhoneRule(length: 10, format: 'XXX XXX XXXX'),     // Philippines
-    'PK': PhoneRule(length: 10, format: 'XXX XXXXXXX'),      // Pakistan
-    'PL': PhoneRule(length: 9,  format: 'XXX XXX XXX'),      // Poland
-    'PM': PhoneRule(length: 6,  format: 'XX XX XX'),         // St. Pierre & Miquelon
-    'PN': PhoneRule(length: 5,  format: 'XXXXX'),            // Pitcairn
-    'PR': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),   // Puerto Rico
-    'PS': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // Palestine
-    'PT': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // Portugal
-    'PW': PhoneRule(length: 7,  format: 'XXX XXXX'),         // Palau
-    'PY': PhoneRule(length: 9,  format: 'XXX XXXXXXX'),      // Paraguay
-    'QA': PhoneRule(length: 8,  format: 'XXXX XXXX'),        // Qatar
-    'RE': PhoneRule(length: 9,  format: 'X XX XX XX XX'),    // Réunion
-    'RO': PhoneRule(length: 9,  format: 'XXX XXX XXX'),      // Romania
-    'RS': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // Serbia
-    'RU': PhoneRule(length: 10, format: 'XXX XXX-XX-XX'),     // Russia
-    'RW': PhoneRule(length: 9,  format: 'XXX XXX XXX'),      // Rwanda
-    'SA': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // Saudi Arabia
-    'SB': PhoneRule(length: 7,  format: 'XXX XXXX'),       // Solomon Islands
-    'SC': PhoneRule(length: 7,  format: 'X XXX XXX'),       // Seychelles
-    'SD': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // Sudan
-    'SE': PhoneRule(length: 9,  format: 'XX XXX XX XX'),   // Sweden
-    'SG': PhoneRule(length: 8,  format: 'XXXX XXXX'),        // Singapore
-    'SH': PhoneRule(length: 4,  format: 'XXXX'),             // St. Helena (very small)
-    'SI': PhoneRule(length: 8,  format: 'XX XXX XXX'),       // Slovenia
-    'SJ': PhoneRule(length: 8,  format: 'XXX XX XXX'),       // Svalbard
-    'SK': PhoneRule(length: 9,  format: 'XXX XXX XXX'),      // Slovakia
-    'SL': PhoneRule(length: 8,  format: 'XX XXX XXX'),       // Sierra Leone
-    'SM': PhoneRule(length: 10, format: 'XXXXX XXXXX'),      // San Marino (uses Italian numbering)
-    'SN': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // Senegal
-    'SO': PhoneRule(length: 8,  format: 'X XXXXXXX'),        // Somalia
-    'SR': PhoneRule(length: 7,  format: 'XXX-XXXX'),         // Suriname
-    'SS': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // South Sudan
-    'ST': PhoneRule(length: 7,  format: 'XX XXXXX'),         // São Tomé & Príncipe
-    'SV': PhoneRule(length: 8,  format: 'XXXX XXXX'),        // El Salvador
-    'SY': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // Syria
-    'SZ': PhoneRule(length: 8,  format: 'XX XX XXXX'),       // Eswatini
-    'TC': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),   // Turks & Caicos
-    'TD': PhoneRule(length: 8,  format: 'XX XX XX XX'),      // Chad
-    'TG': PhoneRule(length: 8,  format: 'XX XX XX XX'),      // Togo
-    'TH': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // Thailand
-    'TJ': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // Tajikistan
-    'TK': PhoneRule(length: 4,  format: 'XXXX'),             // Tokelau
-    'TL': PhoneRule(length: 7,  format: 'XXX XXXX'),         // Timor-Leste
-    'TM': PhoneRule(length: 8,  format: 'XX XXXXXX'),        // Turkmenistan
-    'TN': PhoneRule(length: 8,  format: 'XX XXX XXX'),       // Tunisia
-    'TO': PhoneRule(length: 5,  format: 'XX XXX'),           // Tonga
-    'TR': PhoneRule(length: 10, format: 'XXX XXX XXXX'),     // Turkey
-    'TT': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),   // Trinidad & Tobago
-    'TV': PhoneRule(length: 5,  format: 'XX XXX'),           // Tuvalu
-    'TW': PhoneRule(length: 9,  format: 'X XXXX XXXX'),    // Taiwan
-    'TZ': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // Tanzania
-    'UA': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // Ukraine
-    'UG': PhoneRule(length: 9,  format: 'XXX XXX XXX'),      // Uganda
-    'UY': PhoneRule(length: 8,  format: 'X XXX XXXX'),       // Uruguay
-    'UZ': PhoneRule(length: 9,  format: 'XX XXX XXXX'),     // Uzbekistan
-    'VA': PhoneRule(length: 10, format: 'XX XXXX XXXX'),     // Vatican City (uses Italian)
-    'VC': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),   // St. Vincent
-    'VE': PhoneRule(length: 10, format: 'XXX XXX XXXX'),     // Venezuela
-    'VG': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),   // British Virgin Islands
-    'VI': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),   // U.S. Virgin Islands
-    'VN': PhoneRule(length: 9,  format: 'XXX XXX XXXX'),      // Vietnam (9–10)
-    'VU': PhoneRule(length: 7,  format: 'XXX XXXX'),         // Vanuatu
-    'WF': PhoneRule(length: 6,  format: 'XX XX XX'),         // Wallis & Futuna
-    'WS': PhoneRule(length: 7,  format: 'XX XXXX'),          // Samoa
-    'YE': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // Yemen
-    'YT': PhoneRule(length: 9,  format: 'X XX XX XX XX'),    // Mayotte
-    'ZM': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // Zambia
-    'ZW': PhoneRule(length: 9,  format: 'XX XXX XXXX'),      // Zimbabwe
+    'AD': PhoneRule(length: 6, format: 'XXX XXX'),
+    'AE': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'AF': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'AG': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),
+    'AI': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),
+    'AL': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'AM': PhoneRule(length: 8, format: 'XX XXXXXX'),
+    'AO': PhoneRule(length: 9, format: 'XXX XXX XXX XXX'),
+    'AQ': PhoneRule(length: 6, format: 'XXX XXX'),
+    'AR': PhoneRule(length: 10, format: 'XX XXXX-XXXX'),
+    'AS': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),
+    'AT': PhoneRule(length: 10, format: 'XXX XXXXXXXX'),
+    'AW': PhoneRule(length: 7, format: 'XXX XXXX'),
+    'AX': PhoneRule(length: 7, format: 'XX XXXXX'),
+    'AZ': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'BA': PhoneRule(length: 8, format: 'XX XXX XXX'),
+    'BB': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),
+    'BD': PhoneRule(length: 10, format: 'XX-XXXX-XXXX'),
+    'BE': PhoneRule(length: 9, format: 'XXX XX XX XX'),
+    'BF': PhoneRule(length: 8, format: 'XX XX XX XX'),
+    'BG': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'BH': PhoneRule(length: 8, format: 'XXXX XXXX'),
+    'BI': PhoneRule(length: 8, format: 'XX XX XXXX'),
+    'BJ': PhoneRule(length: 8, format: 'XX XX XX XX'),
+    'BL': PhoneRule(length: 9, format: 'X XX XX XX XX'),
+    'BM': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),
+    'BN': PhoneRule(length: 7, format: 'XXX XXXX'),
+    'BO': PhoneRule(length: 8, format: 'X XXX XXXX'),
+    'BS': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),
+    'BT': PhoneRule(length: 7, format: 'XX XXX XXX'),
+    'BW': PhoneRule(length: 8, format: 'XX XXX XXX'),
+    'BY': PhoneRule(length: 9, format: 'XX XXX-XX-XX'),
+    'BZ': PhoneRule(length: 7, format: 'XXX-XXXX'),
+    'CC': PhoneRule(length: 9, format: 'XXX XXX XXX'),
+    'CD': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'CF': PhoneRule(length: 8, format: 'XX XX XX XX'),
+    'CG': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'CH': PhoneRule(length: 9, format: 'XX XXX XX XX'),
+    'CI': PhoneRule(length: 8, format: 'XX XX XX XX'),
+    'CK': PhoneRule(length: 5, format: 'XX XXX'),
+    'CL': PhoneRule(length: 9, format: 'X XXXX XXXX'),
+    'CM': PhoneRule(length: 9, format: 'XXXX XXXX'),
+    'CN': PhoneRule(length: 11, format: 'XXX XXXX XXXX'),
+    'CO': PhoneRule(length: 10, format: 'XXX XXX XXXX'),
+    'CR': PhoneRule(length: 8, format: 'XXXX XXXX'),
+    'CU': PhoneRule(length: 8, format: 'X XXX XXXX'),
+    'CV': PhoneRule(length: 7, format: 'XXX XXXX'),
+    'CX': PhoneRule(length: 9, format: 'XXX XXX XXX'),
+    'CY': PhoneRule(length: 8, format: 'XX XXXXXX'),
+    'CZ': PhoneRule(length: 9, format: 'XXX XXX XXX'),
+    'DJ': PhoneRule(length: 8, format: 'XX XX XX XX'),
+    'DK': PhoneRule(length: 8, format: 'XX XX XX XX'),
+    'DM': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),
+    'DO': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),
+    'DZ': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'EC': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'EE': PhoneRule(length: 8, format: 'XXXX XXXX'),
+    'EG': PhoneRule(length: 10, format: 'XX XXXX XXXX'),
+    'ER': PhoneRule(length: 7, format: 'X XXX XXX'),
+    'ES': PhoneRule(length: 9, format: 'XXX XXX XXX'),
+    'ET': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'FI': PhoneRule(length: 9, format: 'XX XXX XX XX'),
+    'FJ': PhoneRule(length: 7, format: 'XXX XXXX'),
+    'FK': PhoneRule(length: 5, format: 'XXXXX'),
+    'FM': PhoneRule(length: 7, format: 'XXX XXXX'),
+    'FO': PhoneRule(length: 6, format: 'XXX XXX'),
+    'GA': PhoneRule(length: 8, format: 'X XX XX XX'),
+    'GD': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),
+    'GE': PhoneRule(length: 9, format: 'XXX XX XX XX'),
+    'GF': PhoneRule(length: 9, format: 'X XX XX XX XX'),
+    'GG': PhoneRule(length: 10, format: 'XXXXX XXXXX'),
+    'GH': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'GI': PhoneRule(length: 8, format: 'XXX XXXX'),
+    'GL': PhoneRule(length: 6, format: 'XX XX XX'),
+    'GM': PhoneRule(length: 7, format: 'XXX XXXX'),
+    'GN': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'GP': PhoneRule(length: 9, format: 'X XX XX XX XX'),
+    'GQ': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'GR': PhoneRule(length: 10, format: 'XXX XXX XXXX'),
+    'GT': PhoneRule(length: 8, format: 'XXXX XXXX'),
+    'GU': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),
+    'GW': PhoneRule(length: 7, format: 'XXX XXXX'),
+    'GY': PhoneRule(length: 7, format: 'XXX XXXX'),
+    'HK': PhoneRule(length: 8, format: 'XXXX XXXX'),
+    'HN': PhoneRule(length: 8, format: 'XXXX XXXX'),
+    'HR': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'HT': PhoneRule(length: 8, format: 'XX XX XXXX'),
+    'HU': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'ID': PhoneRule(length: 10, format: 'XX XXXX XXXX'),
+    'IE': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'IL': PhoneRule(length: 9, format: 'XX-XXX-XXXX'),
+    'IM': PhoneRule(length: 10, format: 'XXXXX XXXXX'),
+    'IO': PhoneRule(length: 7, format: 'XXX XXXX'),
+    'IQ': PhoneRule(length: 10, format: 'XXX XXX XXXX'),
+    'IR': PhoneRule(length: 10, format: 'XXX XXX XXXX'),
+    'IS': PhoneRule(length: 7, format: 'XXX XXXX'),
+    'IT': PhoneRule(length: 10, format: 'XXX XXXX XXX'),
+    'JE': PhoneRule(length: 10, format: 'XXXXX XXXXX'),
+    'JM': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),
+    'JO': PhoneRule(length: 9, format: 'X XXXX XXXX'),
+    'KG': PhoneRule(length: 9, format: 'XXX XXX XXX'),
+    'KH': PhoneRule(length: 8, format: 'XX XXX XXX'),
+    'KI': PhoneRule(length: 5, format: 'XX XXX'),
+    'KM': PhoneRule(length: 7, format: 'XXX XXXX'),
+    'KN': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),
+    'KP': PhoneRule(length: 9, format: 'XXX XXX XXX'),
+    'KR': PhoneRule(length: 10, format: 'XX-XXX-XXXX'),
+    'KW': PhoneRule(length: 8, format: 'XXXX XXXX'),
+    'KY': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),
+    'KZ': PhoneRule(length: 10, format: 'XXX XXX-XX-XX'),
+    'LA': PhoneRule(length: 9, format: 'XX XX XXX XXX'),
+    'LB': PhoneRule(length: 8, format: 'XX XXX XXX'),
+    'LC': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),
+    'LI': PhoneRule(length: 7, format: 'XXX XXXX'),
+    'LK': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'LR': PhoneRule(length: 8, format: 'XX XXX XXXX'),
+    'LS': PhoneRule(length: 8, format: 'XX XXX XXX'),
+    'LT': PhoneRule(length: 8, format: 'XXX XXXXX'),
+    'LU': PhoneRule(length: 9, format: 'XXX XXX XXX'),
+    'LV': PhoneRule(length: 8, format: 'XX XXX XXX'),
+    'LY': PhoneRule(length: 9, format: 'XX-XXX-XXXX'),
+    'MA': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'MC': PhoneRule(length: 8, format: 'XX XX XX XX'),
+    'MD': PhoneRule(length: 8, format: 'XX XXX XXX'),
+    'ME': PhoneRule(length: 8, format: 'XX XXX XXX'),
+    'MF': PhoneRule(length: 9, format: 'X XX XX XX XX'),
+    'MG': PhoneRule(length: 9, format: 'XX XX XX XXX'),
+    'MH': PhoneRule(length: 7, format: 'XXX-XXXX'),
+    'MK': PhoneRule(length: 8, format: 'XX XXX XXX'),
+    'ML': PhoneRule(length: 8, format: 'XX XX XX XX'),
+    'MM': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'MN': PhoneRule(length: 8, format: 'XX XX XXXX'),
+    'MO': PhoneRule(length: 8, format: 'XXXX XXXX'),
+    'MP': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),
+    'MQ': PhoneRule(length: 9, format: 'X XX XX XX XX'),
+    'MR': PhoneRule(length: 8, format: 'XX XX XX XX'),
+    'MS': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),
+    'MT': PhoneRule(length: 8, format: 'XXXX XXXX'),
+    'MU': PhoneRule(length: 8, format: 'XXXX XXXX'),
+    'MV': PhoneRule(length: 7, format: 'XXX-XXXX'),
+    'MW': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'MX': PhoneRule(length: 10, format: 'XXX XXX XXXX'),
+    'MY': PhoneRule(length: 9, format: 'XX-XXX XXXX'),
+    'MZ': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'NA': PhoneRule(length: 8, format: 'XX XXX XXXX'),
+    'NC': PhoneRule(length: 6, format: 'XX.XX.XX'),
+    'NE': PhoneRule(length: 8, format: 'XX XX XX XX'),
+    'NF': PhoneRule(length: 5, format: 'XXXXX'),
+    'NI': PhoneRule(length: 8, format: 'XXXX XXXX'),
+    'NL': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'NO': PhoneRule(length: 8, format: 'XXX XX XXX'),
+    'NP': PhoneRule(length: 10, format: 'XX-XXXX-XXXX'),
+    'NR': PhoneRule(length: 7, format: 'XXX XXXX'),
+    'NU': PhoneRule(length: 4, format: 'XXXX'),
+    'NZ': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'OM': PhoneRule(length: 8, format: 'XXXX XXXX'),
+    'PA': PhoneRule(length: 8, format: 'XXXX-XXXX'),
+    'PE': PhoneRule(length: 9, format: 'XXX XXX XXX'),
+    'PF': PhoneRule(length: 8, format: 'XX XX XX XX'),
+    'PG': PhoneRule(length: 8, format: 'XXX XXXX'),
+    'PH': PhoneRule(length: 10, format: 'XXX XXX XXXX'),
+    'PK': PhoneRule(length: 10, format: 'XXX XXXXXXX'),
+    'PL': PhoneRule(length: 9, format: 'XXX XXX XXX'),
+    'PM': PhoneRule(length: 6, format: 'XX XX XX'),
+    'PN': PhoneRule(length: 5, format: 'XXXXX'),
+    'PR': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),
+    'PS': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'PT': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'PW': PhoneRule(length: 7, format: 'XXX XXXX'),
+    'PY': PhoneRule(length: 9, format: 'XXX XXXXXXX'),
+    'QA': PhoneRule(length: 8, format: 'XXXX XXXX'),
+    'RE': PhoneRule(length: 9, format: 'X XX XX XX XX'),
+    'RO': PhoneRule(length: 9, format: 'XXX XXX XXX'),
+    'RS': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'RU': PhoneRule(length: 10, format: 'XXX XXX-XX-XX'),
+    'RW': PhoneRule(length: 9, format: 'XXX XXX XXX'),
+    'SA': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'SB': PhoneRule(length: 7, format: 'XXX XXXX'),
+    'SC': PhoneRule(length: 7, format: 'X XXX XXX'),
+    'SD': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'SE': PhoneRule(length: 9, format: 'XX XXX XX XX'),
+    'SG': PhoneRule(length: 8, format: 'XXXX XXXX'),
+    'SH': PhoneRule(length: 4, format: 'XXXX'),
+    'SI': PhoneRule(length: 8, format: 'XX XXX XXX'),
+    'SJ': PhoneRule(length: 8, format: 'XXX XX XXX'),
+    'SK': PhoneRule(length: 9, format: 'XXX XXX XXX'),
+    'SL': PhoneRule(length: 8, format: 'XX XXX XXX'),
+    'SM': PhoneRule(length: 10, format: 'XXXXX XXXXX'),
+    'SN': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'SO': PhoneRule(length: 8, format: 'X XXXXXXX'),
+    'SR': PhoneRule(length: 7, format: 'XXX-XXXX'),
+    'SS': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'ST': PhoneRule(length: 7, format: 'XX XXXXX'),
+    'SV': PhoneRule(length: 8, format: 'XXXX XXXX'),
+    'SY': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'SZ': PhoneRule(length: 8, format: 'XX XX XXXX'),
+    'TC': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),
+    'TD': PhoneRule(length: 8, format: 'XX XX XX XX'),
+    'TG': PhoneRule(length: 8, format: 'XX XX XX XX'),
+    'TH': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'TJ': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'TK': PhoneRule(length: 4, format: 'XXXX'),
+    'TL': PhoneRule(length: 7, format: 'XXX XXXX'),
+    'TM': PhoneRule(length: 8, format: 'XX XXXXXX'),
+    'TN': PhoneRule(length: 8, format: 'XX XXX XXX'),
+    'TO': PhoneRule(length: 5, format: 'XX XXX'),
+    'TR': PhoneRule(length: 10, format: 'XXX XXX XXXX'),
+    'TT': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),
+    'TV': PhoneRule(length: 5, format: 'XX XXX'),
+    'TW': PhoneRule(length: 9, format: 'X XXXX XXXX'),
+    'TZ': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'UA': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'UG': PhoneRule(length: 9, format: 'XXX XXX XXX'),
+    'UY': PhoneRule(length: 8, format: 'X XXX XXXX'),
+    'UZ': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'VA': PhoneRule(length: 10, format: 'XX XXXX XXXX'),
+    'VC': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),
+    'VE': PhoneRule(length: 10, format: 'XXX XXX XXXX'),
+    'VG': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),
+    'VI': PhoneRule(length: 10, format: '(XXX) XXX-XXXX'),
+    'VN': PhoneRule(length: 9, format: 'XXX XXX XXXX'),
+    'VU': PhoneRule(length: 7, format: 'XXX XXXX'),
+    'WF': PhoneRule(length: 6, format: 'XX XX XX'),
+    'WS': PhoneRule(length: 7, format: 'XX XXXX'),
+    'YE': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'YT': PhoneRule(length: 9, format: 'X XX XX XX XX'),
+    'ZM': PhoneRule(length: 9, format: 'XX XXX XXXX'),
+    'ZW': PhoneRule(length: 9, format: 'XX XXX XXXX'),
   };
 
   static PhoneRule? getRule(String countryCode) {
@@ -298,6 +295,65 @@ class PhoneRule {
   final String format;
 
   PhoneRule({required this.length, required this.format});
+}
+
+// Custom TextInputFormatter that formats phone numbers as user types
+class PhoneNumberFormatter extends TextInputFormatter {
+  final String countryCode;
+
+  PhoneNumberFormatter(this.countryCode);
+
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue,
+      TextEditingValue newValue,
+      ) {
+    final rule = PhoneValidationRules.getRule(countryCode);
+    if (rule == null) return newValue;
+
+    // Get only digits from the new value
+    final digitsOnly = newValue.text.replaceAll(RegExp(r'\D'), '');
+
+    if (digitsOnly.isEmpty) {
+      return const TextEditingValue(
+        text: '',
+        selection: TextSelection.collapsed(offset: 0),
+      );
+    }
+
+    // Don't allow more digits than the format requires
+    final maxLength = rule.length;
+    final limitedDigits = digitsOnly.length > maxLength
+        ? digitsOnly.substring(0, maxLength)
+        : digitsOnly;
+
+    // Apply the format
+    final formatted = _applyFormat(limitedDigits, rule.format);
+
+    // Calculate cursor position
+    int selectionIndex = formatted.length;
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: selectionIndex),
+    );
+  }
+
+  String _applyFormat(String digits, String format) {
+    String result = '';
+    int digitIndex = 0;
+
+    for (int i = 0; i < format.length && digitIndex < digits.length; i++) {
+      if (format[i] == 'X') {
+        result += digits[digitIndex];
+        digitIndex++;
+      } else {
+        result += format[i];
+      }
+    }
+
+    return result;
+  }
 }
 
 class CountryPhoneInput extends StatefulWidget {
@@ -350,6 +406,8 @@ class _CountryPhoneInputState extends State<CountryPhoneInput> {
         onCountrySelected: (country) {
           setState(() {
             _selectedCountry = country;
+            // Clear the phone number when country changes
+            widget.controller.clear();
           });
           widget.onCountryChanged?.call(country);
           Navigator.pop(context);
@@ -379,13 +437,22 @@ class _CountryPhoneInputState extends State<CountryPhoneInput> {
     return widget.customValidator?.call(value);
   }
 
+  String _getHintText() {
+    final rule = PhoneValidationRules.getRule(_selectedCountry.code);
+    if (rule != null) {
+      // Replace X with placeholder digits
+      return rule.format.replaceAll('X', '0');
+    }
+    return widget.hintText;
+  }
+
   @override
   Widget build(BuildContext context) {
     return TextFormField(
       controller: widget.controller,
       decoration: InputDecoration(
         labelText: widget.labelText,
-        hintText: widget.hintText,
+        hintText: _getHintText(),
         prefixIcon: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -458,7 +525,7 @@ class _CountryPhoneInputState extends State<CountryPhoneInput> {
       keyboardType: TextInputType.phone,
       inputFormatters: [
         FilteringTextInputFormatter.digitsOnly,
-        LengthLimitingTextInputFormatter(15),
+        PhoneNumberFormatter(_selectedCountry.code),
       ],
       validator: _validatePhone,
     );
@@ -604,5 +671,3 @@ class _CountryPickerSheetState extends State<CountryPickerSheet> {
     );
   }
 }
-
-

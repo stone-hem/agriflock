@@ -48,6 +48,7 @@ dependencies:
   shared_preferences:
   google_maps_flutter:
   flutter_riverpod:
+  camera:
 
 dev_dependencies:
   flutter_test:

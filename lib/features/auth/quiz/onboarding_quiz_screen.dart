@@ -1,4 +1,5 @@
 import 'package:agriflock360/core/utils/shared_prefs.dart';
+import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/features/auth/quiz/repo/onboarding_repository.dart';
 import 'package:agriflock360/features/auth/quiz/shared/custom_text_field.dart';
 import 'package:agriflock360/features/auth/quiz/shared/education_level_selector.dart';
@@ -26,6 +27,9 @@ class OnboardingQuestionsScreen extends StatefulWidget {
 class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
   final PageController _pageController = PageController();
   final OnboardingRepository _repository = OnboardingRepository();
+  final ScrollController _scrollController = ScrollController();
+  final currentYear = DateTime.now().year;
+
   int _currentPage = 0;
   bool _isSubmitting = false;
 
@@ -40,12 +44,16 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
   // Farmer data
   final TextEditingController _chickenNumberController = TextEditingController();
   final TextEditingController _farmerExperienceController = TextEditingController();
+  final FocusNode _chickenNumberFocus = FocusNode();
+  final FocusNode _farmerExperienceFocus = FocusNode();
 
   // Vet data
   DateTime? _selectedDateOfBirth;
   final TextEditingController _dobController = TextEditingController();
   final TextEditingController _vetExperienceController = TextEditingController();
   final TextEditingController _vetProfileController = TextEditingController();
+  final FocusNode _vetExperienceFocus = FocusNode();
+  final FocusNode _vetProfileFocus = FocusNode();
 
   // For vet gender and education level
   String? _selectedGender;
@@ -91,22 +99,88 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
           _pageTitles[1] = _getDetailsPageTitle(_selectedUserType);
         }
       });
+
+      // Scroll to top when page changes
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollController.jumpTo(0);
+      });
+    });
+
+    // Setup focus listeners to scroll when field is focused
+    _setupFocusListeners();
+  }
+
+  void _setupFocusListeners() {
+    _chickenNumberFocus.addListener(() {
+      if (_chickenNumberFocus.hasFocus) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollController.animateTo(
+            100,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+        });
+      }
+    });
+
+    _farmerExperienceFocus.addListener(() {
+      if (_farmerExperienceFocus.hasFocus) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollController.animateTo(
+            200,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+        });
+      }
+    });
+
+    _vetExperienceFocus.addListener(() {
+      if (_vetExperienceFocus.hasFocus) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollController.animateTo(
+            300,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+        });
+      }
+    });
+
+    _vetProfileFocus.addListener(() {
+      if (_vetProfileFocus.hasFocus) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollController.animateTo(
+            400,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+        });
+      }
     });
   }
 
   @override
   void dispose() {
     _pageController.dispose();
+    _scrollController.dispose();
     _chickenNumberController.dispose();
     _farmerExperienceController.dispose();
+    _chickenNumberFocus.dispose();
+    _farmerExperienceFocus.dispose();
     _dobController.dispose();
     _vetExperienceController.dispose();
     _vetProfileController.dispose();
+    _vetExperienceFocus.dispose();
+    _vetProfileFocus.dispose();
     super.dispose();
   }
 
   void _goToNextPage() {
     if (_currentPage < _totalPages - 1) {
+      // Hide keyboard before page transition
+      FocusScope.of(context).unfocus();
+
       _pageController.nextPage(
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
@@ -116,38 +190,13 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
 
   void _goToPreviousPage() {
     if (_currentPage > 0) {
+      // Hide keyboard before page transition
+      FocusScope.of(context).unfocus();
+
       _pageController.previousPage(
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
       );
-    }
-  }
-
-  Future<void> _selectDateOfBirth() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateUtil.addYears(DateTime.now(), -25),
-      firstDate: DateTime(1940),
-      lastDate: DateUtil.addYears(DateTime.now(), -18),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: primaryGreen,
-              onPrimary: Colors.white,
-              onSurface: Colors.black,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (picked != null && picked != _selectedDateOfBirth) {
-      setState(() {
-        _selectedDateOfBirth = picked;
-        _dobController.text = DateUtil.toISODate(picked);
-      });
     }
   }
 
@@ -187,8 +236,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         yearsOfExperience: int.tryParse(_farmerExperienceController.text) ?? 0,
         numberOfChickens: int.tryParse(_chickenNumberController.text) ?? 0,
       );
-
-
 
       if (result['success'] == true) {
         await SharedPrefs.setBool('hasCompletedOnboarding', true);
@@ -271,6 +318,11 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         ToastUtil.showError("Please enter your years of experience");
         return;
       }
+
+      if(int.parse(_farmerExperienceController.text)>50){
+        ToastUtil.showError("Your years of experience is too high");
+      }
+
 
       await _submitFarmerOnboarding();
     } else if (_selectedUserType == 'vet') {
@@ -381,6 +433,9 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Check if keyboard is visible
+    final bool keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
+
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
@@ -408,91 +463,104 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         ),
         centerTitle: true,
       ),
-      body: Column(
-        children: [
-          // Progress indicator
-          Container(
-            height: 4,
-            margin: const EdgeInsets.symmetric(horizontal: 20),
-            child: LinearProgressIndicator(
-              value: (_currentPage + 1) / _totalPages,
-              backgroundColor: Colors.grey.shade300,
-              valueColor: const AlwaysStoppedAnimation<Color>(primaryGreen),
+      body: GestureDetector(
+        onTap: () {
+          // Dismiss keyboard when tapping outside text fields
+          FocusScope.of(context).unfocus();
+        },
+        child: Column(
+          children: [
+            // Progress indicator section (fixed height)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              color: Colors.white,
+              child: Column(
+                children: [
+                  // Progress bar
+                  LinearProgressIndicator(
+                    value: (_currentPage + 1) / _totalPages,
+                    backgroundColor: Colors.grey.shade300,
+                    valueColor: const AlwaysStoppedAnimation<Color>(primaryGreen),
+                  ),
+                  const SizedBox(height: 12),
+                  // Step indicator
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Step ${_currentPage + 1} of $_totalPages',
+                        style: const TextStyle(
+                          color: Colors.black54,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        _pageTitles[_currentPage],
+                        style: const TextStyle(
+                          color: primaryGreen,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
 
-          // Page indicator
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Step ${_currentPage + 1} of $_totalPages',
-                  style: const TextStyle(
-                    color: Colors.black54,
-                    fontSize: 14,
+            // Main scrollable content area
+            Expanded(
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+                child: SizedBox(
+                  // Ensure the content takes enough space to be scrollable
+                  height: MediaQuery.of(context).size.height * 0.7,
+                  child: PageView(
+                    controller: _pageController,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: [
+                      // Page 1: User Type Selection
+                      UserTypeSelection(
+                        selectedUserType: _selectedUserType,
+                        onUserTypeSelected: (String userType) {
+                          setState(() {
+                            _selectedUserType = userType;
+                          });
+                        },
+                      ),
+
+                      // Page 2: Dynamic based on user type
+                      _buildDetailsPage(),
+
+                      // Page 3: Location Picker
+                      SingleChildScrollView(
+                        child: LocationPickerStep(
+                          selectedAddress: _selectedAddress,
+                          latitude: _latitude,
+                          longitude: _longitude,
+                          onLocationSelected: (String address, double lat, double lng) {
+                            setState(() {
+                              _selectedAddress = address;
+                              _latitude = lat;
+                              _longitude = lng;
+                            });
+                          },
+                          primaryColor: primaryGreen,
+                        ),
+                      ),
+
+                      // Page 4: Congratulations
+                      _buildCongratulationsPage(),
+                    ],
                   ),
                 ),
-                Text(
-                  _pageTitles[_currentPage],
-                  style: const TextStyle(
-                    color: primaryGreen,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-          const SizedBox(height: 20),
-
-          // PageView content
-          Expanded(
-            child: PageView(
-              controller: _pageController,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                // Page 1: User Type Selection
-                UserTypeSelection(
-                  selectedUserType: _selectedUserType,
-                  onUserTypeSelected: (String userType) {
-                    setState(() {
-                      _selectedUserType = userType;
-                    });
-                  },
-                ),
-
-                // Page 2: Dynamic based on user type
-                _buildDetailsPage(),
-
-                // Page 3: Location Picker
-                SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: LocationPickerStep(
-                    selectedAddress: _selectedAddress,
-                    latitude: _latitude,
-                    longitude: _longitude,
-                    onLocationSelected: (String address, double lat, double lng) {
-                      setState(() {
-                        _selectedAddress = address;
-                        _latitude = lat;
-                        _longitude = lng;
-                      });
-                    },
-                    primaryColor: primaryGreen,
-                  ),
-                ),
-
-                // Page 4: Congratulations
-                _buildCongratulationsPage(),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
-      bottomNavigationBar: _buildBottomNavigation(),
+      bottomNavigationBar: _buildBottomNavigation(keyboardVisible),
     );
   }
 
@@ -510,7 +578,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
 
   Widget _buildFarmerDetailsPage() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -531,16 +598,18 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
             ),
           ),
           const SizedBox(height: 40),
-
+      
           CustomTextField(
             label: 'Current number of chickens',
             hintText: 'Enter the number of chickens you rear',
             icon: Icons.numbers,
             keyboardType: TextInputType.number,
             controller: _chickenNumberController,
+            focusNode: _chickenNumberFocus,
+            nextFocusNode: _farmerExperienceFocus,
             value: '',
           ),
-
+      
           const SizedBox(height: 20),
           CustomTextField(
             label: 'Years of experience',
@@ -548,10 +617,13 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
             icon: Icons.work,
             keyboardType: TextInputType.number,
             controller: _farmerExperienceController,
+            focusNode: _farmerExperienceFocus,
             value: '',
           ),
-
+      
           const SizedBox(height: 30),
+          // Add extra space for scrolling when keyboard is open
+          SizedBox(height: MediaQuery.of(context).viewInsets.bottom > 0 ? 100 : 0),
         ],
       ),
     );
@@ -559,7 +631,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
 
   Widget _buildVetDetailsPage() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -580,7 +651,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
             ),
           ),
           const SizedBox(height: 40),
-
+      
           // Education Level Radio Buttons
           EducationLevelSelector(
             selectedEducationLevel: _selectedEducationLevel,
@@ -591,7 +662,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
             },
           ),
           const SizedBox(height: 30),
-
+      
           // Qualification Certificates Upload
           FileUpload(
             uploadedFiles: _uploadedCertificates,
@@ -602,34 +673,35 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
             primaryColor: primaryGreen,
           ),
           const SizedBox(height: 30),
-
+      
           // Professional Profile
           CustomTextField(
             controller: _vetProfileController,
             label: 'Professional Summary (max 100 characters)',
             hintText: 'Brief description of your expertise and qualifications',
             icon: Icons.description,
+            focusNode: _vetProfileFocus,
             maxLines: 3,
             maxLength: 100,
             value: '',
           ),
           const SizedBox(height: 20),
-
+      
           // Date of Birth Picker
-          GestureDetector(
-            onTap: _selectDateOfBirth,
-            child: AbsorbPointer(
-              child: CustomTextField(
-                controller: _dobController,
-                label: 'Date of Birth *Required',
-                hintText: 'Select your date of birth',
-                icon: Icons.calendar_today,
-                value: '',
-              ),
-            ),
+          CustomDateTextField(
+            controller: _dobController,
+            label: 'Date of Birth *Required',
+            hintText: 'Enter your date of birth',
+            icon: Icons.calendar_today,
+            required: true,
+            minYear: 1900,
+            maxYear: currentYear - 18, // Must be at least 18 years old
+            onChanged: (value) {
+              print('DOB changed: $value');
+            },
           ),
           const SizedBox(height: 20),
-
+      
           // Gender
           GenderSelector(
             selectedGender: _selectedGender,
@@ -640,18 +712,20 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
             },
           ),
           const SizedBox(height: 20),
-
+      
           // Years of Experience
           CustomTextField(
             controller: _vetExperienceController,
             label: 'Years of Experience *Required',
             hintText: 'Enter your years of veterinary experience',
             icon: Icons.work,
+            focusNode: _vetExperienceFocus,
+            nextFocusNode: _vetProfileFocus,
             keyboardType: TextInputType.number,
             value: '',
           ),
           const SizedBox(height: 30),
-
+      
           // ID Photo Upload
           PhotoUpload(
             file: _idPhotoFile,
@@ -665,7 +739,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
             primaryColor: primaryGreen,
           ),
           const SizedBox(height: 20),
-
+      
           // Face Selfie Upload
           PhotoUpload(
             file: _selfieFile,
@@ -677,9 +751,10 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
             title: 'Face Selfie *Required',
             description: 'Upload a recent clear photo of yourself',
             primaryColor: primaryGreen,
+            showSelfieFirst: true,
           ),
           const SizedBox(height: 20),
-
+      
           // Additional File Upload Section
           FileUpload(
             uploadedFiles: _uploadedFiles,
@@ -689,6 +764,9 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
             description: 'Upload additional professional certificates if any',
             primaryColor: primaryGreen,
           ),
+      
+          // Extra space for scrolling when keyboard is open
+          SizedBox(height: MediaQuery.of(context).viewInsets.bottom > 0 ? 150 : 30),
         ],
       ),
     );
@@ -697,102 +775,100 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
   Widget _buildCongratulationsPage() {
     final isFarmer = _selectedUserType == 'farmer';
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          const SizedBox(height: 40),
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              color: primaryGreen.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.check_circle,
-              size: 60,
-              color: primaryGreen,
-            ),
+    return Column(
+      children: [
+        const SizedBox(height: 40),
+        Container(
+          width: 120,
+          height: 120,
+          decoration: BoxDecoration(
+            color: primaryGreen.withOpacity(0.1),
+            shape: BoxShape.circle,
           ),
-          const SizedBox(height: 32),
-          const Text(
-            'Congratulations!',
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: primaryGreen,
-            ),
-            textAlign: TextAlign.center,
+          child: const Icon(
+            Icons.check_circle,
+            size: 60,
+            color: primaryGreen,
           ),
-          const SizedBox(height: 16),
-          Text(
-            isFarmer
-                ? 'Your farm account has been created successfully! '
-                'You can now start managing your poultry farm.'
-                : 'Your veterinary account registration is complete! '
-                'Your documents have been submitted for admin verification.',
-            style: const TextStyle(
-              fontSize: 18,
-              color: Colors.black54,
-              height: 1.5,
-            ),
-            textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 32),
+        const Text(
+          'Congratulations!',
+          style: TextStyle(
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+            color: primaryGreen,
           ),
-          const SizedBox(height: 40),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        Text(
+          isFarmer
+              ? 'Your farm account has been created successfully! '
+              'You can now start managing your poultry farm.'
+              : 'Your veterinary account registration is complete! '
+              'Your documents have been submitted for admin verification.',
+          style: const TextStyle(
+            fontSize: 18,
+            color: Colors.black54,
+            height: 1.5,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 40),
 
-          // Summary Card
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Account Summary',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: primaryGreen,
-                    ),
+        // Summary Card
+        Card(
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Account Summary',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: primaryGreen,
                   ),
-                  const SizedBox(height: 16),
-                  _buildSummaryItem('Role', isFarmer ? 'Farmer' : 'Veterinary Doctor'),
-                  _buildSummaryItem('Location', _selectedAddress ?? 'Not provided'),
-                  if (_latitude != null && _longitude != null)
-                    _buildSummaryItem(
-                      'Coordinates',
-                      'Lat: ${_latitude!.toStringAsFixed(4)}, Lng: ${_longitude!.toStringAsFixed(4)}',
-                    ),
-                  if (isFarmer) ...[
-                    _buildSummaryItem('Chicken Number', _chickenNumberController.text),
-                    _buildSummaryItem('Experience', '${_farmerExperienceController.text} years'),
-                  ] else ...[
-                    _buildSummaryItem('Highest Education', _selectedEducationLevel ?? 'Not provided'),
-                    _buildSummaryItem('Professional Summary', _vetProfileController.text),
-                    _buildSummaryItem(
-                      'Date of Birth',
-                      _selectedDateOfBirth != null
-                          ? DateUtil.toReadableDate(_selectedDateOfBirth!)
-                          : 'Not provided',
-                    ),
-                    _buildSummaryItem('Gender', _selectedGender?.toUpperCase() ?? ''),
-                    _buildSummaryItem('Experience', '${_vetExperienceController.text} years'),
-                    _buildSummaryItem('ID Photo', _idPhotoFile != null ? 'Uploaded' : 'Not uploaded'),
-                    _buildSummaryItem('Selfie', _selfieFile != null ? 'Uploaded' : 'Not uploaded'),
-                    _buildSummaryItem('Qualification Certificates', '${_uploadedCertificates.length} files'),
-                    _buildSummaryItem('Additional Documents', '${_uploadedFiles.length} files'),
-                  ],
+                ),
+                const SizedBox(height: 16),
+                _buildSummaryItem('Role', isFarmer ? 'Farmer' : 'Veterinary Doctor'),
+                _buildSummaryItem('Location', _selectedAddress ?? 'Not provided'),
+                if (_latitude != null && _longitude != null)
+                  _buildSummaryItem(
+                    'Coordinates',
+                    'Lat: ${_latitude!.toStringAsFixed(4)}, Lng: ${_longitude!.toStringAsFixed(4)}',
+                  ),
+                if (isFarmer) ...[
+                  _buildSummaryItem('Chicken Number', _chickenNumberController.text),
+                  _buildSummaryItem('Experience', '${_farmerExperienceController.text} years'),
+                ] else ...[
+                  _buildSummaryItem('Highest Education', _selectedEducationLevel ?? 'Not provided'),
+                  _buildSummaryItem('Professional Summary', _vetProfileController.text),
+                  _buildSummaryItem(
+                    'Date of Birth',
+                    _selectedDateOfBirth != null
+                        ? DateUtil.toReadableDate(_selectedDateOfBirth!)
+                        : 'Not provided',
+                  ),
+                  _buildSummaryItem('Gender', _selectedGender?.toUpperCase() ?? ''),
+                  _buildSummaryItem('Experience', '${_vetExperienceController.text} years'),
+                  _buildSummaryItem('ID Photo', _idPhotoFile != null ? 'Uploaded' : 'Not uploaded'),
+                  _buildSummaryItem('Selfie', _selfieFile != null ? 'Uploaded' : 'Not uploaded'),
+                  _buildSummaryItem('Qualification Certificates', '${_uploadedCertificates.length} files'),
+                  _buildSummaryItem('Additional Documents', '${_uploadedFiles.length} files'),
                 ],
-              ),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 40),
+      ],
     );
   }
 
@@ -825,9 +901,14 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     );
   }
 
-  Widget _buildBottomNavigation() {
+  Widget _buildBottomNavigation(bool keyboardVisible) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 16,
+        bottom: keyboardVisible ? 20 : MediaQuery.of(context).padding.bottom + 16,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -864,10 +945,8 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
                 if (_currentPage < _totalPages - 2) {
                   _goToNextPage();
                 } else if (_currentPage == _totalPages - 2) {
-                  // Last data page - submit to API
                   _completeOnboarding();
                 } else if (_currentPage == _totalPages - 1) {
-                  // Congratulations page - finalize
                   _finalizeOnboarding();
                 }
               }

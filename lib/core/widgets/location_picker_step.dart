@@ -179,7 +179,6 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
               fillColor: Colors.grey.shade50,
             ),
             debounceTime: 800,
-            countries: const ["ke"],
             isLatLngRequired: true,
             getPlaceDetailWithLatLng: _handleLocationSelected,
             itemClick: (Prediction prediction) {
