@@ -205,11 +205,11 @@ class _HomeScreenState extends State<HomeScreen> {
               // ValueConfirmationBanner(
               //   onViewActivity: () => context.go('/activity'),
               // ),
-              FutureFramingBanner(
-                onSeePlans: () => context.push('/plans'),
-              ),
+              // FutureFramingBanner(
+              //   onSeePlans: () => context.push('/plans'),
+              // ),
               // Welcome Section
-              // _buildWelcomeSection(context),
+              _buildWelcomeSection(context),
               const SizedBox(height: 20),
 
               // Stats Overview
