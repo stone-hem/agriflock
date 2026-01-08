@@ -270,7 +270,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         address: _selectedAddress!,
         latitude: _latitude!,
         longitude: _longitude!,
-        dateOfBirth: _dobController.text,
+        dateOfBirth: DateUtil.toISO8601(_selectedDateOfBirth!),
         gender: _selectedGender!,
         yearsOfExperience: _vetExperienceController.text,
         professionalSummary: _vetProfileController.text,
@@ -379,13 +379,8 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-          title: const Row(
-            children: [
-              Icon(Icons.verified_user, color: primaryGreen),
-              SizedBox(width: 8),
-              Text('Verification Required'),
-            ],
-          ),
+          icon: Icon(Icons.verified_user, color: primaryGreen),
+          title: Text('Verification Required'),
           content: const Text(
             'Your details have been sent to the admin for verification. '
                 'You will be notified once your account is approved. '
