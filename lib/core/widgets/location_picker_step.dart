@@ -152,7 +152,6 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
             focusNode: _focusNode, // Explicitly provide focus node
             inputDecoration: InputDecoration(
               hintText: 'Search for your location',
-              labelText: 'Location',
               prefixIcon: Icon(
                 Icons.location_on,
                 color: widget.primaryColor,
@@ -163,21 +162,28 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
                 onPressed: _clearLocation,
               )
                   : null,
+
+              filled: true,
+              fillColor: Colors.grey.shade50,
+
+              // REQUIRED to prevent the extra line
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey.shade300),
+                borderSide: BorderSide.none,
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey.shade300),
+                borderSide: BorderSide.none,
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: widget.primaryColor, width: 2),
+                borderSide: BorderSide(
+                  color: widget.primaryColor,
+                  width: 2,
+                ),
               ),
-              filled: true,
-              fillColor: Colors.grey.shade50,
             ),
+
             debounceTime: 800,
             isLatLngRequired: true,
             getPlaceDetailWithLatLng: _handleLocationSelected,
@@ -210,7 +216,7 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
                 ),
               );
             },
-            isCrossBtnShown: true,
+            isCrossBtnShown: false,
           ),
         ),
 

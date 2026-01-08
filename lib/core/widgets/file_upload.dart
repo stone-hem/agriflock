@@ -153,6 +153,7 @@ class _FileUploadState extends State<FileUpload> {
             final index = entry.key;
             final file = entry.value;
             return Card(
+              elevation: 0,
               margin: const EdgeInsets.only(bottom: 8),
               child: ListTile(
                 leading: _getFileIcon(file),

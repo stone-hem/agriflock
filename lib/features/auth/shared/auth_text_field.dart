@@ -6,7 +6,7 @@ class AuthTextField extends StatelessWidget {
   final String hintText;
   final IconData icon;
   final bool obscureText;
-  final TextInputType keyboardType;
+  final TextInputType? keyboardType;
   final String? Function(String?)? validator;
   final VoidCallback? onTap;
   final bool readOnly;
@@ -19,6 +19,10 @@ class AuthTextField extends StatelessWidget {
   final TextInputAction? textInputAction;
   final void Function(String)? onChanged;
   final void Function(String)? onFieldSubmitted;
+  final FocusNode? focusNode;
+  final FocusNode? nextFocusNode;
+  final int? maxLength;
+  final String? value;
 
   const AuthTextField({
     super.key,
@@ -40,6 +44,10 @@ class AuthTextField extends StatelessWidget {
     this.textInputAction,
     this.onChanged,
     this.onFieldSubmitted,
+    this.focusNode,
+    this.nextFocusNode,
+    this.maxLength,
+    this.value,
   });
 
   @override
@@ -57,6 +65,7 @@ class AuthTextField extends StatelessWidget {
       textInputAction: textInputAction,
       onChanged: onChanged,
       onFieldSubmitted: onFieldSubmitted,
+      maxLength: maxLength,
       decoration: InputDecoration(
         labelText: labelText,
         hintText: hintText,

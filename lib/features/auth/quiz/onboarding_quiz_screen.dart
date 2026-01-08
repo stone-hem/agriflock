@@ -1,7 +1,7 @@
+import 'package:agriflock360/app_routes.dart';
 import 'package:agriflock360/core/utils/shared_prefs.dart';
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/features/auth/quiz/repo/onboarding_repository.dart';
-import 'package:agriflock360/features/auth/quiz/shared/custom_text_field.dart';
 import 'package:agriflock360/features/auth/quiz/shared/education_level_selector.dart';
 import 'package:agriflock360/core/widgets/file_upload.dart';
 import 'package:agriflock360/features/auth/quiz/shared/gender_selector.dart';
@@ -11,6 +11,7 @@ import 'package:agriflock360/core/widgets/location_picker_step.dart';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/core/utils/date_util.dart';
+import 'package:agriflock360/features/auth/shared/auth_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
@@ -319,10 +320,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         return;
       }
 
-      if(int.parse(_farmerExperienceController.text)>50){
-        ToastUtil.showError("Your years of experience is too high");
-      }
-
 
       await _submitFarmerOnboarding();
     } else if (_selectedUserType == 'vet') {
@@ -343,6 +340,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         ToastUtil.showError("Please enter your years of experience");
         return;
       }
+
       if (_selectedEducationLevel == null) {
         ToastUtil.showError("Please select your education level");
         return;
@@ -441,18 +439,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black54),
-          onPressed: _isSubmitting
-              ? null
-              : () {
-            if (_currentPage > 0) {
-              _goToPreviousPage();
-            } else {
-              context.pop();
-            }
-          },
-        ),
         title: Text(
           _pageTitles[_currentPage],
           style: const TextStyle(
@@ -461,7 +447,15 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
             fontSize: 18,
           ),
         ),
-        centerTitle: true,
+        automaticallyImplyLeading: false,
+        actions: [
+          FilledButton(
+            style: FilledButton.styleFrom(foregroundColor: Colors.red,backgroundColor: Colors.red),
+              onPressed: (){
+            context.go(AppRoutes.login);
+          }, child: Text("Cancel Onboarding",style: TextStyle(color: Colors.white),))
+        ],
+        centerTitle: false,
       ),
       body: GestureDetector(
         onTap: () {
@@ -598,9 +592,9 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
             ),
           ),
           const SizedBox(height: 40),
-      
-          CustomTextField(
-            label: 'Current number of chickens',
+
+          AuthTextField(
+            labelText: 'Current number of chickens',
             hintText: 'Enter the number of chickens you rear',
             icon: Icons.numbers,
             keyboardType: TextInputType.number,
@@ -611,16 +605,18 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
           ),
       
           const SizedBox(height: 20),
-          CustomTextField(
-            label: 'Years of experience',
+          AuthTextField(
+            labelText: 'Years of experience',
             hintText: 'Enter your years of experience in poultry farming',
             icon: Icons.work,
             keyboardType: TextInputType.number,
             controller: _farmerExperienceController,
             focusNode: _farmerExperienceFocus,
+            maxLength: 2,
             value: '',
           ),
-      
+
+
           const SizedBox(height: 30),
           // Add extra space for scrolling when keyboard is open
           SizedBox(height: MediaQuery.of(context).viewInsets.bottom > 0 ? 100 : 0),
@@ -675,9 +671,9 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
           const SizedBox(height: 30),
       
           // Professional Profile
-          CustomTextField(
+          AuthTextField(
             controller: _vetProfileController,
-            label: 'Professional Summary (max 100 characters)',
+            labelText: 'Professional Summary (max 100 characters)',
             hintText: 'Brief description of your expertise and qualifications',
             icon: Icons.description,
             focusNode: _vetProfileFocus,
@@ -697,7 +693,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
             minYear: 1900,
             maxYear: currentYear - 18, // Must be at least 18 years old
             onChanged: (value) {
-              print('DOB changed: $value');
+              _selectedDateOfBirth=DateUtil.parseMMDDYYYY(value);
             },
           ),
           const SizedBox(height: 20),
@@ -714,15 +710,16 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
           const SizedBox(height: 20),
       
           // Years of Experience
-          CustomTextField(
+          AuthTextField(
             controller: _vetExperienceController,
-            label: 'Years of Experience *Required',
+            labelText: 'Years of Experience *Required',
             hintText: 'Enter your years of veterinary experience',
             icon: Icons.work,
             focusNode: _vetExperienceFocus,
             nextFocusNode: _vetProfileFocus,
             keyboardType: TextInputType.number,
             value: '',
+           maxLength: 2,
           ),
           const SizedBox(height: 30),
       
@@ -775,100 +772,102 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
   Widget _buildCongratulationsPage() {
     final isFarmer = _selectedUserType == 'farmer';
 
-    return Column(
-      children: [
-        const SizedBox(height: 40),
-        Container(
-          width: 120,
-          height: 120,
-          decoration: BoxDecoration(
-            color: primaryGreen.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(
-            Icons.check_circle,
-            size: 60,
-            color: primaryGreen,
-          ),
-        ),
-        const SizedBox(height: 32),
-        const Text(
-          'Congratulations!',
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: primaryGreen,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 16),
-        Text(
-          isFarmer
-              ? 'Your farm account has been created successfully! '
-              'You can now start managing your poultry farm.'
-              : 'Your veterinary account registration is complete! '
-              'Your documents have been submitted for admin verification.',
-          style: const TextStyle(
-            fontSize: 18,
-            color: Colors.black54,
-            height: 1.5,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 40),
-
-        // Summary Card
-        Card(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Account Summary',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: primaryGreen,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _buildSummaryItem('Role', isFarmer ? 'Farmer' : 'Veterinary Doctor'),
-                _buildSummaryItem('Location', _selectedAddress ?? 'Not provided'),
-                if (_latitude != null && _longitude != null)
-                  _buildSummaryItem(
-                    'Coordinates',
-                    'Lat: ${_latitude!.toStringAsFixed(4)}, Lng: ${_longitude!.toStringAsFixed(4)}',
-                  ),
-                if (isFarmer) ...[
-                  _buildSummaryItem('Chicken Number', _chickenNumberController.text),
-                  _buildSummaryItem('Experience', '${_farmerExperienceController.text} years'),
-                ] else ...[
-                  _buildSummaryItem('Highest Education', _selectedEducationLevel ?? 'Not provided'),
-                  _buildSummaryItem('Professional Summary', _vetProfileController.text),
-                  _buildSummaryItem(
-                    'Date of Birth',
-                    _selectedDateOfBirth != null
-                        ? DateUtil.toReadableDate(_selectedDateOfBirth!)
-                        : 'Not provided',
-                  ),
-                  _buildSummaryItem('Gender', _selectedGender?.toUpperCase() ?? ''),
-                  _buildSummaryItem('Experience', '${_vetExperienceController.text} years'),
-                  _buildSummaryItem('ID Photo', _idPhotoFile != null ? 'Uploaded' : 'Not uploaded'),
-                  _buildSummaryItem('Selfie', _selfieFile != null ? 'Uploaded' : 'Not uploaded'),
-                  _buildSummaryItem('Qualification Certificates', '${_uploadedCertificates.length} files'),
-                  _buildSummaryItem('Additional Documents', '${_uploadedFiles.length} files'),
-                ],
-              ],
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          const SizedBox(height: 40),
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: primaryGreen.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.check_circle,
+              size: 60,
+              color: primaryGreen,
             ),
           ),
-        ),
-        const SizedBox(height: 40),
-      ],
+          const SizedBox(height: 32),
+          const Text(
+            'Congratulations!',
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: primaryGreen,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            isFarmer
+                ? 'Your farm account has been created successfully! '
+                'You can now start managing your poultry farm.'
+                : 'Your veterinary account registration is complete! '
+                'Your documents have been submitted for admin verification.',
+            style: const TextStyle(
+              fontSize: 18,
+              color: Colors.black54,
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 40),
+
+          // Summary Card
+          Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Account Summary',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: primaryGreen,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildSummaryItem('Role', isFarmer ? 'Farmer' : 'Veterinary Doctor'),
+                  _buildSummaryItem('Location', _selectedAddress ?? 'Not provided'),
+                  if (_latitude != null && _longitude != null)
+                    _buildSummaryItem(
+                      'Coordinates',
+                      'Lat: ${_latitude!.toStringAsFixed(4)}, Lng: ${_longitude!.toStringAsFixed(4)}',
+                    ),
+                  if (isFarmer) ...[
+                    _buildSummaryItem('Chicken Number', _chickenNumberController.text),
+                    _buildSummaryItem('Experience', '${_farmerExperienceController.text} years'),
+                  ] else ...[
+                    _buildSummaryItem('Highest Education', _selectedEducationLevel ?? 'Not provided'),
+                    _buildSummaryItem('Professional Summary', _vetProfileController.text),
+                    _buildSummaryItem(
+                      'Date of Birth',
+                      _selectedDateOfBirth != null
+                          ? DateUtil.toReadableDate(_selectedDateOfBirth!)
+                          : 'Not provided',
+                    ),
+                    _buildSummaryItem('Gender', _selectedGender?.toUpperCase() ?? ''),
+                    _buildSummaryItem('Experience', '${_vetExperienceController.text} years'),
+                    _buildSummaryItem('ID Photo', _idPhotoFile != null ? 'Uploaded' : 'Not uploaded'),
+                    _buildSummaryItem('Selfie', _selfieFile != null ? 'Uploaded' : 'Not uploaded'),
+                    _buildSummaryItem('Qualification Certificates', '${_uploadedCertificates.length} files'),
+                    _buildSummaryItem('Additional Documents', '${_uploadedFiles.length} files'),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 40),
+        ],
+      ),
     );
   }
 

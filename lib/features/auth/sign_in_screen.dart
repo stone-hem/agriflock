@@ -394,7 +394,7 @@ class _LoginScreenState extends State<LoginScreen> {
       } else if (response['needsOnboarding'] == true) {
         // Redirect to onboarding quiz
         final tempToken = response['tempToken'] ?? '';
-        context.push(
+        context.go(
           '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(tempToken)}',
         );
       } else if (response['needsVerification'] == true) {

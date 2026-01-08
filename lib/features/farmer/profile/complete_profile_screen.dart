@@ -1,6 +1,6 @@
 import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
-import 'package:agriflock360/features/auth/quiz/shared/custom_text_field.dart';
+import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/core/widgets/file_upload.dart';
 import 'package:agriflock360/features/auth/quiz/shared/gender_selector.dart';
 import 'package:agriflock360/core/widgets/photo_upload.dart';
@@ -339,13 +339,12 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           const SizedBox(height: 30),
 
           // ID Number
-          CustomTextField(
+          ReusableInput(
             controller: _idNumberController,
-            label: 'ID Number *',
+            labelText: 'ID Number *',
             hintText: 'Enter your national ID number',
             icon: Icons.badge,
             keyboardType: TextInputType.number,
-            value: '',
           ),
           const SizedBox(height: 20),
 
@@ -482,12 +481,11 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
               if (_selectedPoultryType == 'Other')
                 Padding(
                   padding: const EdgeInsets.only(top: 10),
-                  child: CustomTextField(
+                  child: ReusableInput(
                     controller: _otherPoultryTypeController,
-                    label: 'Specify other poultry type *',
+                    labelText: 'Specify other poultry type *',
                     hintText: 'Enter your specific poultry type',
                     icon: Icons.edit,
-                    value: '',
                   ),
                 ),
             ],
@@ -495,13 +493,12 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           const SizedBox(height: 20),
 
           // Chicken House Capacity
-          CustomTextField(
+          ReusableInput(
             controller: _houseCapacityController,
-            label: 'Chicken House Capacity *',
+            labelText: 'Chicken House Capacity *',
             hintText: 'Maximum number of chickens your house can hold',
             icon: Icons.home_work,
             keyboardType: TextInputType.number,
-            value: '',
           ),
           const SizedBox(height: 20),
         ],
