@@ -153,12 +153,49 @@ class FeedingRecommendationsResponse {
 
   factory FeedingRecommendationsResponse.fromJson(Map<String, dynamic> json) {
     final data = json['data'];
+
+    // Handle current_recommendation - create dummy if empty
+    FeedingRecommendation currentRec;
+    final currentRecData = data['current_recommendation'];
+
+    if (currentRecData is Map<String, dynamic>) {
+      currentRec = FeedingRecommendation.fromJson(currentRecData);
+    } else if (currentRecData is List && currentRecData.isNotEmpty) {
+      final firstItem = currentRecData.first;
+      if (firstItem is Map<String, dynamic>) {
+        currentRec = FeedingRecommendation.fromJson(firstItem);
+      } else {
+        currentRec = _createEmptyRecommendation();
+      }
+    } else {
+      currentRec = _createEmptyRecommendation();
+    }
+
     return FeedingRecommendationsResponse(
-      currentRecommendation: FeedingRecommendation.fromJson(data['current_recommendation']),
+      currentRecommendation: currentRec,
       allRecommendations: (data['all_recommendations'] as List)
           .map((item) => FeedingRecommendation.fromJson(item))
           .toList(),
       batchInfo: BatchInfo.fromJson(data['batch_info']),
+    );
+  }
+
+  static FeedingRecommendation _createEmptyRecommendation() {
+    return FeedingRecommendation(
+      id: 'no-recommendation',
+      birdTypeId: '',
+      stageName: 'No recommendation available',
+      ageStart: 0,
+      ageEnd: 0,
+      feedType: 'N/A',
+      proteinPercentage: 'N/A',
+      quantityPerBirdPerDay: 'N/A',
+      timesPerDay: 0,
+      feedingTimes: FeedingTimes(slots: []),
+      isActive: false,
+      isSystemDefault: false,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
     );
   }
 }

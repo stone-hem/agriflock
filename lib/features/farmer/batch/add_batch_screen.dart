@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
+import 'package:agriflock360/core/utils/date_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
+import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/core/widgets/photo_upload.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
@@ -31,6 +33,7 @@ class AddBatchScreen extends StatefulWidget {
 class _AddBatchScreenState extends State<AddBatchScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _hatchController = TextEditingController();
   final _initialQuantityController = TextEditingController();
   final _birdsAliveController = TextEditingController();
   final _currentWeightController = TextEditingController();
@@ -234,7 +237,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _selectedHouse,
+                initialValue: _selectedHouse,
                 decoration: InputDecoration(
                   hintText: 'Select house',
                   border: OutlineInputBorder(
@@ -296,7 +299,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                 ),
               )
                   : DropdownButtonFormField<String>(
-                value: _selectedBirdTypeId,
+                initialValue: _selectedBirdTypeId,
                 decoration: InputDecoration(
                   hintText: 'Select bird type',
                   border: OutlineInputBorder(
@@ -333,7 +336,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _selectedBatchType,
+                initialValue: _selectedBatchType,
                 decoration: InputDecoration(
                   hintText: 'Select batch type',
                   border: OutlineInputBorder(
@@ -369,32 +372,20 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              InkWell(
-                onTap: _selectHatchDate,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade400),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.calendar_today, color: Colors.grey.shade600),
-                      const SizedBox(width: 12),
-                      Text(
-                        _hatchDate == null
-                            ? 'Select hatch date'
-                            : '${_hatchDate!.day}/${_hatchDate!.month}/${_hatchDate!.year}',
-                        style: TextStyle(
-                          color: _hatchDate == null
-                              ? Colors.grey.shade600
-                              : Colors.grey.shade800,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              CustomDateTextField(
+                label: 'Date of Birth *Required',
+                hintText: 'Enter your date of birth',
+                icon: Icons.calendar_today,
+                required: true,
+                minYear: DateTime.now().year-1,
+                returnFormat: DateReturnFormat.dateTime,
+                maxYear: DateTime.now().year, controller: _hatchController,
+                onChanged: (value){
+                  if (value != null) {
+                    _hatchDate = value;
+                  }
+                },
+
               ),
               const SizedBox(height: 20),
 
@@ -525,7 +516,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _selectedFeedingTime,
+                initialValue: _selectedFeedingTime,
                 decoration: InputDecoration(
                   hintText: 'Select feeding time',
                   border: OutlineInputBorder(
@@ -659,19 +650,6 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
     );
   }
 
-  Future<void> _selectHatchDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _hatchDate ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
-    );
-    if (picked != null && picked != _hatchDate) {
-      setState(() {
-        _hatchDate = picked;
-      });
-    }
-  }
 
   Future<void> _createBatch() async {
     if (!_formKey.currentState!.validate()) {
@@ -695,7 +673,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
         'bird_type_id': _selectedBirdTypeId,
         'batch_type': _selectedBatchType,
         'initial_count': int.parse(_initialQuantityController.text.trim()),
-        'hatch_date': _hatchDate!.toIso8601String().split('T')[0], // Date only
+        'hatch_date': DateUtil.toISO8601(_hatchDate!), // Date only
         'birds_alive': int.parse(_birdsAliveController.text.trim()),
         'current_weight': double.parse(_currentWeightController.text.trim()),
         'expected_weight': double.parse(_expectedWeightController.text.trim()),

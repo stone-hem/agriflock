@@ -27,7 +27,7 @@ class StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(12),
@@ -55,13 +55,13 @@ class StatCard extends StatelessWidget {
                   color: iconColor ?? textColor,
                   size: iconSize,
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: 8),
               ],
 
               Expanded(
                 child: Text(
                   value,
-                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                  style: Theme.of(context).textTheme.headlineSmall!.copyWith(
                     fontWeight: FontWeight.bold,
                     color: textColor,
                   ),
@@ -72,7 +72,7 @@ class StatCard extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 2),
+          const SizedBox(height: 4),
 
           // Label
           Text(

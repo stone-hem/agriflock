@@ -37,7 +37,7 @@ class _BatchDetailsScreenState extends State<BatchDetailsScreen>
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title:Row(
+        title: Row(
           children: [
             Image.asset(
               'assets/logos/Logo_0725.png',
@@ -55,6 +55,7 @@ class _BatchDetailsScreenState extends State<BatchDetailsScreen>
                 );
               },
             ),
+            const SizedBox(width: 12),
             const Text('Batch Details'),
           ],
         ),
@@ -73,55 +74,80 @@ class _BatchDetailsScreenState extends State<BatchDetailsScreen>
           ),
         ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.fromLTRB(8, 0, 8, 5),
-                child: TabBar(
-                  controller: _tabController,
-                  isScrollable: true,
-                  tabAlignment: TabAlignment.start,
-                  indicatorSize: TabBarIndicatorSize.tab,
-                  indicator: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF4CAF50), Color(0xFF2E7D32)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.green.withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
+          preferredSize: const Size.fromHeight(48), // Reduced height
+          child: Container(
+            color: Colors.white,
+            child: TabBar(
+              controller: _tabController,
+              isScrollable: true,
+              tabAlignment: TabAlignment.start,
+              indicatorSize: TabBarIndicatorSize.tab,
+              indicator: BoxDecoration(
+                color: Colors.grey.shade300, // Light grey for active tab
+                borderRadius: BorderRadius.circular(8),
+              ),
+              labelColor: Colors.grey.shade800, // Darker text for active
+              unselectedLabelColor: Colors.grey.shade600,
+              labelStyle: const TextStyle(
+                fontSize: 11, // Smaller font
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.1,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontSize: 11, // Smaller font
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.1,
+              ),
+              dividerColor: Colors.transparent,
+              splashFactory: NoSplash.splashFactory,
+              overlayColor: WidgetStateProperty.all(Colors.transparent),
+              tabs: const [
+                Tab(
+                  height: 36, // Smaller tab height
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.dashboard, size: 16), // Smaller icon
+                      SizedBox(width: 4),
+                      Text('Overview'),
                     ],
                   ),
-                  labelColor: Colors.white,
-                  unselectedLabelColor: Colors.grey.shade700,
-                  labelStyle: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.3,
-                  ),
-                  unselectedLabelStyle: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: 0.3,
-                  ),
-                  dividerColor: Colors.transparent,
-                  splashFactory: NoSplash.splashFactory,
-                  overlayColor: WidgetStateProperty.all(Colors.transparent),
-                  tabs: [
-                    _buildTabWithIcon(Icons.dashboard, 'Overview'),
-                    _buildTabWithIcon(Icons.fastfood, 'Feed'),
-                    _buildTabWithIcon(Icons.medical_services, 'Vaccinations'),
-                    _buildTabWithIcon(Icons.inventory, 'Products'),
-                  ],
                 ),
-              ),
-            ],
+                Tab(
+                  height: 36,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.fastfood, size: 16),
+                      SizedBox(width: 4),
+                      Text('Feed'),
+                    ],
+                  ),
+                ),
+                Tab(
+                  height: 36,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.medical_services, size: 16),
+                      SizedBox(width: 4),
+                      Text('Vaccinations'),
+                    ],
+                  ),
+                ),
+                Tab(
+                  height: 36,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.inventory, size: 16),
+                      SizedBox(width: 4),
+                      Text('Products'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -136,18 +162,4 @@ class _BatchDetailsScreenState extends State<BatchDetailsScreen>
       ),
     );
   }
-
-  Widget _buildTabWithIcon(IconData icon, String label) {
-    return Tab(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 18),
-          const SizedBox(width: 4),
-          Text(label),
-        ],
-      ),
-    );
-  }
-
 }

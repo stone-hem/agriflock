@@ -5,8 +5,6 @@ import 'package:agriflock360/core/utils/result.dart';
 import 'package:http/http.dart' as http;
 import 'toast_util.dart';
 
-
-
 class ApiErrorHandler {
   // Private constructor to prevent instantiation
   ApiErrorHandler._();
@@ -14,38 +12,67 @@ class ApiErrorHandler {
   /// Extract error message from response body, handling nested structures
   static String _extractErrorMessage(dynamic body) {
     try {
-      // Handle various nested error formats
+      // Check for the specific structure in your example
+      // {"statusCode":400,"timestamp":"...","path":"...","message":{"message":["birds_alive must not be less than 1"],"error":"Bad Request","statusCode":400}}
       if (body['message'] != null) {
         final message = body['message'];
 
         // Check if message is a nested JSON object
         if (message is Map<String, dynamic>) {
-          // First check for nested message inside the message object
+          // Handle: {"message": ["birds_alive must not be less than 1"], "error": "Bad Request", "statusCode": 400}
           if (message['message'] != null) {
-            return message['message'].toString();
+            final innerMessage = message['message'];
+
+            // If innerMessage is a list (array of error messages)
+            if (innerMessage is List) {
+              return innerMessage.join('\n');
+            }
+            // If innerMessage is a string
+            else if (innerMessage is String) {
+              return innerMessage;
+            }
+            // If innerMessage is another map
+            else if (innerMessage is Map<String, dynamic>) {
+              return innerMessage.toString();
+            }
           }
-          // Check for error field
+
+          // If there's an error field in the nested message
           else if (message['error'] != null) {
             return message['error'].toString();
           }
-          // Check for status field that might contain error info
-          else if (message['status'] != null) {
-            return message['status'].toString();
+
+          // If there's a statusCode field in the nested message
+          else if (message['statusCode'] != null) {
+            return "Error ${message['statusCode']}";
           }
+
           // If it's a map but we can't find specific fields, stringify it
           else {
             return message.toString();
           }
         }
         // Message is a string
-        else {
-          return message.toString();
+        else if (message is String) {
+          return message;
+        }
+        // Message is a list
+        else if (message is List) {
+          return message.join('\n');
         }
       }
 
       // Check for error field at root level
       else if (body['error'] != null) {
-        return body['error'].toString();
+        final error = body['error'];
+        if (error is Map<String, dynamic>) {
+          // Handle nested error object
+          if (error['message'] != null) {
+            return error['message'].toString();
+          }
+          return error.toString();
+        }
+        return error.toString();
       }
 
       // Check for errors array (common in validation)
@@ -63,6 +90,11 @@ class ApiErrorHandler {
       // Check for status field at root level
       else if (body['status'] != null) {
         return body['status'].toString();
+      }
+
+      // Check for statusCode field at root level
+      else if (body['statusCode'] != null) {
+        return "Error ${body['statusCode']}";
       }
 
       // Check for detail field (common in some APIs)
@@ -317,6 +349,4 @@ class ApiErrorHandler {
   static bool isErrorResponse(http.Response response) {
     return response.statusCode >= 400;
   }
-
-
 }

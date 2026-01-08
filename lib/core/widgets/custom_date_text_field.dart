@@ -187,17 +187,25 @@ class DateTextFormatter extends TextInputFormatter {
   }
 }
 
+// Enum to specify return format
+enum DateReturnFormat {
+  string,      // Returns "DD/MM/YYYY" string (default)
+  isoString,   // Returns ISO string "YYYY-MM-DD"
+  dateTime,    // Returns DateTime object
+}
+
 class CustomDateTextField extends StatefulWidget {
   final String label;
   final String hintText;
   final IconData icon;
   final String? value;
-  final Function(String)? onChanged;
+  final Function(dynamic)? onChanged; // Changed to dynamic to support different return types
   final TextEditingController controller;
   final int? minYear;
   final int? maxYear;
   final bool required;
   final String? Function(String?)? customValidator;
+  final DateReturnFormat returnFormat; // New parameter to specify return format
 
   const CustomDateTextField({
     super.key,
@@ -211,6 +219,7 @@ class CustomDateTextField extends StatefulWidget {
     this.maxYear,
     this.required = false,
     this.customValidator,
+    this.returnFormat = DateReturnFormat.string, // Default to string format
   });
 
   @override
@@ -328,6 +337,43 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
     return months[month - 1];
   }
 
+  // Helper method to parse date string and return in requested format
+  dynamic _parseDateToFormat(String dateString) {
+    if (dateString.isEmpty ||
+        dateString == 'DD/MM/YYYY' ||
+        dateString.contains('D') ||
+        dateString.contains('M') ||
+        dateString.contains('Y')) {
+      return null;
+    }
+
+    try {
+      final parts = dateString.split('/');
+      if (parts.length != 3) return null;
+
+      final day = int.parse(parts[0]);
+      final month = int.parse(parts[1]);
+      final year = int.parse(parts[2]);
+
+      switch (widget.returnFormat) {
+        case DateReturnFormat.isoString:
+        // Return as ISO string "YYYY-MM-DD"
+          return '${year.toString().padLeft(4, '0')}-${month.toString().padLeft(2, '0')}-${day.toString().padLeft(2, '0')}';
+
+        case DateReturnFormat.dateTime:
+        // Return as DateTime object
+          return DateTime(year, month, day);
+
+        case DateReturnFormat.string:
+        default:
+        // Return as original "DD/MM/YYYY" string
+          return dateString;
+      }
+    } catch (e) {
+      return null;
+    }
+  }
+
   void _handleChanged(String value) {
     // Clear error when user starts typing
     if (_errorText != null) {
@@ -339,7 +385,12 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
     if (widget.onChanged != null) {
       // Only callback with actual date, not the mask
       if (!value.contains('D') && !value.contains('M') && !value.contains('Y')) {
-        widget.onChanged!(value);
+        // Parse and return in requested format
+        final formattedValue = _parseDateToFormat(value);
+        widget.onChanged!(formattedValue);
+      } else {
+        // If incomplete, pass null
+        widget.onChanged!(null);
       }
     }
   }

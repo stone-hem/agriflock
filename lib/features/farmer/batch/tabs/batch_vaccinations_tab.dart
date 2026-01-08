@@ -229,25 +229,24 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
                     controller: _tabController,
                     isScrollable: true,
                     tabAlignment: TabAlignment.start,
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.all(1),
-                    dividerColor: Colors.transparent,
-                    indicator: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
                     indicatorSize: TabBarIndicatorSize.tab,
-                    labelColor: Colors.black,
+                    indicator: BoxDecoration(
+                      color: Colors.grey.shade300, // Light grey for active tab
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    labelColor: Colors.grey.shade800, // Darker text for active
                     unselectedLabelColor: Colors.grey.shade600,
                     labelStyle: const TextStyle(
-                      fontSize: 13,
+                      fontSize: 11, // Smaller font
                       fontWeight: FontWeight.w600,
-                      letterSpacing: 0.5,
+                      letterSpacing: 0.1,
                     ),
                     unselectedLabelStyle: const TextStyle(
-                      fontSize: 13,
+                      fontSize: 11, // Smaller font
                       fontWeight: FontWeight.w500,
+                      letterSpacing: 0.1,
                     ),
+                    dividerColor: Colors.transparent,
                     splashFactory: NoSplash.splashFactory,
                     overlayColor: WidgetStateProperty.all(Colors.transparent),
                     tabs: [
@@ -650,11 +649,12 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
 
   Widget _buildTabWithIcon(IconData icon, String label) {
     return Tab(
+      height: 36, // Smaller tab height
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 16),
-          const SizedBox(width: 4),
+          Icon(icon, size: 16), // Smaller icon
+          SizedBox(width: 4),
           Text(label),
         ],
       ),

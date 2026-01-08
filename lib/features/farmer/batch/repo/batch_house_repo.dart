@@ -138,7 +138,7 @@ class BatchHouseRepository {
           LogUtil.success(response.body);
           return Success(null);
         } else {
-          LogUtil.error('Failed to create batch: $jsonResponse');
+          LogUtil.error('Failed to create batch: ${response.body}');
           return Failure(
             message: jsonResponse['message'] ?? 'Failed to create batch',
             response: response,
