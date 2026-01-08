@@ -58,6 +58,9 @@ class User {
   final String? deletedAt;
   final bool agreedToTerms;
   final String? agreedToTermsAt;
+  final String? firstLogin;
+  final String? lastLogin;
+
 
   User({
     required this.id,
@@ -81,7 +84,7 @@ class User {
     required this.updatedAt,
     this.deletedAt,
     required this.agreedToTerms,
-    this.agreedToTermsAt,
+    this.agreedToTermsAt, this.firstLogin, this.lastLogin,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -108,6 +111,8 @@ class User {
       deletedAt: json['deleted_at'],
       agreedToTerms: json['agreed_to_terms'],
       agreedToTermsAt: json['agreed_to_terms_at'],
+      firstLogin: json['first_login'],
+      lastLogin: json['last_login'],
     );
   }
 
