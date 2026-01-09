@@ -75,18 +75,18 @@ class _BatchDetailsScreenState extends State<BatchDetailsScreen>
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48), // Reduced height
-          child: Container(
-            color: Colors.white,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 12),
             child: TabBar(
               controller: _tabController,
               isScrollable: true,
               tabAlignment: TabAlignment.start,
               indicatorSize: TabBarIndicatorSize.tab,
               indicator: BoxDecoration(
-                color: Colors.grey.shade300, // Light grey for active tab
+                color: Colors.green, // Light grey for active tab
                 borderRadius: BorderRadius.circular(8),
               ),
-              labelColor: Colors.grey.shade800, // Darker text for active
+              labelColor: Colors.white, //  for active
               unselectedLabelColor: Colors.grey.shade600,
               labelStyle: const TextStyle(
                 fontSize: 11, // Smaller font

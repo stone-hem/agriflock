@@ -94,7 +94,14 @@ class _ActiveBatchesTabState extends State<ActiveBatchesTab> {
                 title: 'Add New Batch',
                 subtitle: 'Start a new batch',
                 color: Colors.green,
-                onTap: () => _navigateToAddBatch(),
+                active: _houses.isNotEmpty,
+                onTap: () {
+                  if(_houses.isEmpty){
+                    ToastUtil.showError('No houses available');
+                    return;
+                  }
+                  _navigateToAddBatch();
+                },
               ),
               _ActionCard(
                 icon: Icons.warehouse,
@@ -231,7 +238,7 @@ class _ActiveBatchesTabState extends State<ActiveBatchesTab> {
 
   void _navigateToAddBatch() async {
     final result = await context.push('/batches/add', extra: {
-      'farmId': widget.farm.id,
+      'farm': widget.farm,
       'houses': _houses,
     });
 
@@ -302,6 +309,7 @@ class _ActionCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final Color color;
+  final bool? active;
   final VoidCallback onTap;
 
   const _ActionCard({
@@ -309,7 +317,7 @@ class _ActionCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.color,
-    required this.onTap,
+    required this.onTap, this.active,
   });
 
   @override

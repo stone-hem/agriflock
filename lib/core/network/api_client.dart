@@ -278,7 +278,7 @@ class ApiClient {
     try {
       Future<http.StreamedResponse> makeRequest() async {
         final uri = Uri.parse('${AppConstants.baseUrl}$endpoint');
-        final request = http.MultipartRequest('POST', uri);
+        final request = http.MultipartRequest(fields?['_method'] ?? 'POST', uri);
 
         final token = await storage.getToken();
         final authHeaders = {

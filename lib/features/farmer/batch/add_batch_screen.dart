@@ -9,19 +9,20 @@ import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/bird_type.dart';
 import 'package:agriflock360/features/farmer/batch/repo/batch_house_repo.dart';
+import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 
 
 class AddBatchScreen extends StatefulWidget {
-  final String farmId;
+  final FarmModel farm;
   final String? houseId;
   final List<House>? houses;
 
   const AddBatchScreen({
     super.key,
-    required this.farmId,
+    required this.farm,
     this.houseId,
     this.houses,
   });
@@ -80,7 +81,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
           _houses = widget.houses!;
         });
       } else {
-        final result = await _repository.getAllHouses(widget.farmId);
+        final result = await _repository.getAllHouses(widget.farm.id);
 
         switch (result) {
           case Success(data: final houses):
@@ -154,7 +155,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Add New Batch'),
+        title:  Text('Add New Batch - ${widget.farm.farmName}'),
         centerTitle: false,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -686,7 +687,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
 
 
       final result = await _repository.createBatch(
-        widget.farmId,
+        widget.farm.id,
         batchData,
         photoFile: _batchPhotoFile,
       );
@@ -695,7 +696,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
         case Success():
           ToastUtil.showSuccess('Batch created successfully!');
           if (context.mounted) {
-            context.pop(true);
+           context.pushReplacement('/batches', extra: widget.farm);
           }
 
         case Failure(:final response, :final message):

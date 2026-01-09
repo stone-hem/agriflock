@@ -132,11 +132,12 @@ class FeedingRepository {
   }
 
   /// Create a new feeding record
-  Future<Result<FeedingRecord>> createFeedingRecord(
+  Future<Result> createFeedingRecord(
       String batchId,
       CreateFeedingRecordRequest request,
       ) async {
     try {
+      LogUtil.warning(request.toJson());
       final response = await apiClient.post(
         '/batches/$batchId/feeding/records',
         body: jsonEncode(request.toJson()),
@@ -146,7 +147,7 @@ class FeedingRepository {
       LogUtil.info('Create Feeding Record API Response: $jsonResponse');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        return Success(FeedingRecord.fromJson(jsonResponse));
+        return Success(null);
       } else {
         return Failure(
           message: jsonResponse['message'] ?? 'Failed to create feeding record',

@@ -272,7 +272,7 @@ class AppRoutes {
               builder: (context, state) {
                 final extra = state.extra as Map<String, dynamic>?;
                 return AddBatchScreen(
-                  farmId: extra?['farmId'] ?? '',
+                  farm: extra?['farm'] ?? '',
                   houseId: extra?['houseId'],
                   houses: extra?['houses'],
                 );

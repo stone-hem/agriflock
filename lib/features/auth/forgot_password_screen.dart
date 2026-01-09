@@ -1,11 +1,8 @@
-import 'dart:convert';
-import 'package:agriflock360/core/utils/log_util.dart';
+import 'package:agriflock360/features/auth/repo/manual_auth_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
-
-import '../../main.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -18,6 +15,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   bool _isLoading = false;
+  final ManualAuthRepository _authRepository = ManualAuthRepository();
 
   @override
   Widget build(BuildContext context) {
@@ -161,10 +159,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             onPressed: _isLoading
                                 ? null
                                 : () {
-                                    if (_formKey.currentState!.validate()) {
-                                      _sendResetLink();
-                                    }
-                                  },
+                              if (_formKey.currentState!.validate()) {
+                                _sendResetLink();
+                              }
+                            },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.green,
                               foregroundColor: Colors.white,
@@ -178,22 +176,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             ),
                             child: _isLoading
                                 ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
-                                      ),
-                                    ),
-                                  )
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                              ),
+                            )
                                 : const Text(
-                                    'Send Reset OTP',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
+                              'Send Reset OTP',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -224,7 +222,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       Expanded(
                         child: Text(
                           'We will send a password reset OTP to your email address. '
-                          'Check your inbox and spam folder.',
+                              'Check your inbox and spam folder.',
                           style: TextStyle(
                             color: Colors.blue.shade800,
                             fontSize: 14,
@@ -248,34 +246,25 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     });
 
     try {
-      final response = await apiClient.post(
-        '/auth/forgot-password',
-        body: {'email': _emailController.text.trim()},
+      final result = await _authRepository.forgotPassword(
+        email: _emailController.text.trim(),
       );
 
-      LogUtil.info(response.body);
+      if (result['success'] == true) {
+        ToastUtil.showSuccess(result['message']);
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-
-        // Store the reset token from response
-        final resetToken = data['resetToken'] ?? data['token'];
-
-        ToastUtil.showSuccess(
-          'Reset OTP sent successfully!',
-        );
-
-        // Navigate to reset password screen with email and token
+        // Navigate to reset password screen with email
         if (mounted) {
-          context.push(
-            '/reset-password?email=${Uri.encodeComponent(_emailController.text.trim())}&token=${Uri.encodeComponent(resetToken)}',
+          context.go(
+            '/reset-password?email=${Uri.encodeComponent(_emailController.text.trim())}',
           );
         }
       } else {
-        ApiErrorHandler.handle(response);
+        ToastUtil.showError('Failed to send reset OTP. Please try again.');
       }
     } catch (e) {
       ApiErrorHandler.handle(e);
+      ToastUtil.showError('An error occurred. Please try again.');
     } finally {
       if (mounted) {
         setState(() {

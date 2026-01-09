@@ -32,7 +32,7 @@ class ManualAuthRepository {
         await secureStorage.saveLoginData(
           token: loginResponse.accessToken,
           refreshToken: loginResponse.refreshToken,
-          sessionId:loginResponse.sessionId,
+          sessionId: loginResponse.sessionId,
           userData: loginResponse.user.toJson(),
           expiresInSeconds: loginResponse.expiresIn,
         );
@@ -206,4 +206,159 @@ class ManualAuthRepository {
       rethrow;
     }
   }
+
+  /// Forgot Password - Request OTP
+  ///
+  /// Returns a Map with response data:
+  /// - 'success': bool
+  /// - 'resetToken': String? (token for password reset)
+  /// - 'email': String (email address)
+  Future<Map<String, dynamic>> forgotPassword({
+    required String email,
+  }) async {
+    try {
+      final response = await apiClient.post(
+        '/auth/forgot-password',
+        body: {'email': email.trim()},
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Reset OTP sent successfully!',
+        };
+      } else {
+        ApiErrorHandler.handle(response);
+        return {
+          'success': false,
+          'email': email,
+        };
+      }
+    } catch (e) {
+      LogUtil.error(e.toString());
+      ApiErrorHandler.handle(e);
+      rethrow;
+    }
+  }
+
+  /// Reset Password with OTP
+  ///
+  /// Returns a Map with response data:
+  /// - 'success': bool
+  /// - 'message': String (success message)
+  Future<Map<String, dynamic>> resetPassword({
+    required String email,
+    required String otp,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    try {
+      final response = await apiClient.post(
+        '/auth/reset-password',
+        body: {
+          'code': otp.trim(),
+          'password': newPassword,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Password reset successfully!',
+        };
+      } else {
+        ApiErrorHandler.handle(response);
+        return {
+          'success': false,
+          'message': 'Password reset failed',
+        };
+      }
+    } catch (e) {
+      LogUtil.error(e.toString());
+      ApiErrorHandler.handle(e);
+      rethrow;
+    }
+  }
+
+  /// Verify Email with OTP (using /auth/verify-email endpoint)
+  ///
+  /// Returns a Map with response data:
+  /// - 'success': bool
+  /// - 'tempToken': String? (token for onboarding)
+  /// - 'message': String
+  Future<Map<String, dynamic>> verifyEmail({
+    required String otpCode,
+  }) async {
+    try {
+      final response = await apiClient.post(
+        '/auth/verify-email',
+        body: {
+          'code': otpCode.trim(),
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final message = data['message'] as Map<String, dynamic>?;
+
+        return {
+          'success': true,
+          'tempToken': message?['tempToken'],
+          'message': 'Email verified successfully!',
+        };
+      } else {
+        ApiErrorHandler.handle(response);
+        return {
+          'success': false,
+          'message': 'Email verification failed',
+        };
+      }
+    } catch (e) {
+      LogUtil.error(e.toString());
+      ApiErrorHandler.handle(e);
+      rethrow;
+    }
+  }
+
+  /// Resend Verification OTP (using /auth/resend-code endpoint)
+  ///
+  /// Returns a Map with response data:
+  /// - 'success': bool
+  /// - 'message': String
+  Future<Map<String, dynamic>> resendVerificationCode({
+    required String identifier,
+  }) async {
+    try {
+      final response = await apiClient.post(
+        '/auth/resend-code',
+        body: {
+          'identifier': identifier.trim(),
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Verification code resent successfully!',
+        };
+      } else {
+        ApiErrorHandler.handle(response);
+        return {
+          'success': false,
+          'message': 'Failed to resend verification code',
+        };
+      }
+    } catch (e) {
+      LogUtil.error(e.toString());
+      ApiErrorHandler.handle(e);
+      rethrow;
+    }
+  }
+
 }

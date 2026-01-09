@@ -1,12 +1,9 @@
-import 'dart:convert';
-
 import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/app_routes.dart';
+import 'package:agriflock360/features/auth/repo/manual_auth_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
-import '../../main.dart';
 
 class OTPVerifyScreen extends StatefulWidget {
   final String email;
@@ -24,15 +21,13 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
   bool _isLoading = false;
   int _countdown = 60;
   bool _canResend = false;
+  final ManualAuthRepository _authRepository = ManualAuthRepository();
 
   @override
   void initState() {
     super.initState();
     _startCountdown();
   }
-
-
-
 
   void _startCountdown() {
     Future.delayed(const Duration(seconds: 1), () {
@@ -55,7 +50,6 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       body: SafeArea(
@@ -64,19 +58,40 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Back Button
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => context.go('/login'),
+                  color: Colors.grey.shade700,
+                ),
+              ),
+              const SizedBox(height: 20),
+
               // Logo
               Center(
                 child: Image.asset(
                   'assets/logos/Logo_0725.png',
                   fit: BoxFit.cover,
-                  width: 100,
-                  height: 100,
+                  width: 80,
+                  height: 80,
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
                       color: Colors.green,
                       child: const Icon(
                         Icons.image,
-                        size: 100,
+                        size: 80,
                         color: Colors.white54,
                       ),
                     );
@@ -98,17 +113,35 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
 
               // Email display
               Center(
-                child: Text(
-                  widget.email,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.green.shade700,
-                    fontWeight: FontWeight.w600,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.green.shade100),
                   ),
-                  textAlign: TextAlign.center,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.email_outlined,
+                        color: Colors.green.shade700,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        widget.email,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.green.shade700,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 16),
 
               Center(
                 child: Text(
@@ -133,13 +166,13 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
-                      // OTP Input Fields (6 digits for email verification)
+                      // OTP Input Fields (6 digits)
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: List.generate(
                           6,
                               (index) => SizedBox(
-                            width: MediaQuery.of(context).size.width * 0.1,
+                            width: MediaQuery.of(context).size.width * 0.12,
                             height: 60,
                             child: TextField(
                               controller: _otpControllers[index],
@@ -175,7 +208,7 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
                                 ),
                                 filled: true,
                                 fillColor: Colors.grey.shade50,
-                                contentPadding: EdgeInsets.zero, // removes internal padding
+                                contentPadding: EdgeInsets.zero,
                               ),
                               onChanged: (value) {
                                 // Move to next field when a digit is entered
@@ -269,8 +302,12 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 24),
-                      TextButton(onPressed: ()=>context.go('/login'), child: Text('Go back to login'))
+                      const SizedBox(height: 16),
+
+                      TextButton(
+                          onPressed: () => context.go('/login'),
+                          child: const Text('Go back to login')
+                      )
                     ],
                   ),
                 ),
@@ -292,32 +329,35 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final response = await apiClient.post(
-        '/auth/verify-email',
-        body: {
-          'code': _otpCode.toString(),
-        },
+      // Call repository method using your original endpoint
+      final result = await _authRepository.verifyEmail(
+        otpCode: _otpCode,
       );
 
-      if (response.statusCode == 200) {
-          ToastUtil.showSuccess("Email verified successfully!");
-          final decoded = jsonDecode(response.body) as Map<String, dynamic>;
-          final message = decoded['message'] as Map<String, dynamic>;
-          final tempToken = message['tempToken'] as String?;
+      if (result['success'] == true) {
+        ToastUtil.showSuccess(result['message'] ?? "Email verified successfully!");
 
-          if (mounted) {
-            // Clear OTP fields on failure
-            _clearOtpFields();
+        final tempToken = result['tempToken'];
+
+        if (mounted) {
+          _clearOtpFields();
+
+          // Navigate to onboarding with tempToken if available
+          if (tempToken != null) {
             context.go(
-              '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(tempToken ?? '')}',
+              '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(tempToken)}',
             );
+          } else {
+            context.go('/login');
           }
+        }
       } else {
-        ApiErrorHandler.handle(response);
+        ToastUtil.showError(result['message'] ?? 'Email verification failed');
         _clearOtpFields();
       }
     } catch (e) {
       ApiErrorHandler.handle(e);
+      ToastUtil.showError('An error occurred. Please try again.');
       _clearOtpFields();
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -333,35 +373,29 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
     });
 
     try {
-      final response = await apiClient.post(
-        '/auth/resend-code',
-        body: {
-          'identifier': widget.email,
-        },
+      // Call repository method using your original endpoint
+      final result = await _authRepository.resendVerificationCode(
+        identifier: widget.email,
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+      if (result['success'] == true) {
+        ToastUtil.showSuccess(result['message'] ?? "Verification code resent successfully!");
 
-        if (data['success'] == true) {
-          ToastUtil.showSuccess("Verification code resent successfully!");
+        // Start countdown again
+        _startCountdown();
 
-          // Start countdown again
-          _startCountdown();
-
-          // Clear previous OTP
-          _clearOtpFields();
+        // Clear previous OTP
+        _clearOtpFields();
+        if (_focusNodes.isNotEmpty) {
           _focusNodes[0].requestFocus();
-        } else {
-          ToastUtil.showError(data['message'] ?? 'Failed to resend code');
-          setState(() => _canResend = true);
         }
       } else {
-        ApiErrorHandler.handle(response);
+        ToastUtil.showError(result['message'] ?? 'Failed to resend code');
         setState(() => _canResend = true);
       }
     } catch (e) {
       ApiErrorHandler.handle(e);
+      ToastUtil.showError('An error occurred. Please try again.');
       setState(() => _canResend = true);
     }
   }

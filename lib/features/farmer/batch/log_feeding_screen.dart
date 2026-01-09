@@ -1,4 +1,7 @@
+import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock360/core/utils/toast_util.dart';
+import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/batch/model/feeding_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/feeding_repo.dart';
 import 'package:flutter/material.dart';
@@ -279,7 +282,6 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
 
   Widget _buildFeedingInformationSection() {
     final currentRec = _recommendations!.currentRecommendation;
-    final batchInfo = _recommendations!.batchInfo;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -350,24 +352,10 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
         ),
         const SizedBox(height: 20),
 
-        // Total Feed Quantity
-        Text(
-          'Total Feed Quantity (kg)',
-          style: Theme.of(context).textTheme.titleMedium!.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.grey.shade800,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
+        ReusableInput(
           controller: _quantityController,
           keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            hintText: 'Recommended: ${currentRec.dailyFeedRequiredKg?.toStringAsFixed(2) ?? "N/A"} kg',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
+          hintText: 'Recommended: ${currentRec.dailyFeedRequiredKg?.toStringAsFixed(2) ?? "N/A"} kg',
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'Please enter feed quantity';
@@ -376,28 +364,15 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
               return 'Please enter a valid number';
             }
             return null;
-          },
+          }, labelText: 'Quantity',
         ),
         const SizedBox(height: 20),
 
-        // Feed Cost per kg
-        Text(
-          'Feed Cost per kg (₵)',
-          style: Theme.of(context).textTheme.titleMedium!.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.grey.shade800,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
+        ReusableInput(
           controller: _costController,
           keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            hintText: 'e.g., 2.50',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
+          hintText: 'e.g., 2.50',
+          labelText: 'Feed Cost per kg',
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'Please enter feed cost';
@@ -410,23 +385,10 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
         ),
         const SizedBox(height: 20),
 
-        // Feed Supplier
-        Text(
-          'Feed Supplier',
-          style: Theme.of(context).textTheme.titleMedium!.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.grey.shade800,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
+        ReusableInput(
           controller: _supplierController,
-          decoration: InputDecoration(
-            hintText: 'e.g., Agrimart Ltd.',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
+          hintText: 'e.g., Agrimart Ltd.',
+          labelText: 'Feed Supplier',
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'Please enter feed supplier';
@@ -435,25 +397,11 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
           },
         ),
         const SizedBox(height: 20),
-
-        // Notes
-        Text(
-          'Notes (Optional)',
-          style: Theme.of(context).textTheme.titleMedium!.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.grey.shade800,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
+        ReusableInput(
+          labelText: 'Notes (Optional)',
           controller: _notesController,
           maxLines: 3,
-          decoration: InputDecoration(
-            hintText: 'Any observations or special notes...',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
+          hintText: 'Any observations or special notes...',
         ),
       ],
     );
@@ -472,87 +420,35 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
         ),
         const SizedBox(height: 16),
 
-        // Birds Alive Before Feeding
-        Text(
-          'Birds Alive Before Feeding',
-          style: Theme.of(context).textTheme.titleMedium!.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.grey.shade800,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
+        ReusableInput(
           controller: _birdsAliveBeforeController,
           keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            hintText: 'Current: ${_recommendations!.batchInfo.currentCount}',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
+          hintText: 'Current: ${_recommendations!.batchInfo.currentCount}',
+          labelText: 'Birds Alive Before Feeding',
         ),
         const SizedBox(height: 20),
 
-        // Mortality Today
-        Text(
-          'Mortality Today',
-          style: Theme.of(context).textTheme.titleMedium!.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.grey.shade800,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
+        ReusableInput(
           controller: _mortalityTodayController,
           keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            hintText: 'e.g., 0',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
+          labelText: 'Mortality Today',
+          hintText: 'e.g., 0',
         ),
         const SizedBox(height: 20),
 
         // Current Total Weight
-        Text(
-          'Current Total Weight (kg)',
-          style: Theme.of(context).textTheme.titleMedium!.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.grey.shade800,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
+        ReusableInput(
           controller: _currentWeightController,
           keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            hintText: 'e.g., 310',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
+          hintText: 'e.g., 310',
+          labelText: 'Current Total Weight (kg)',
         ),
         const SizedBox(height: 20),
-
-        // Expected Weight
-        Text(
-          'Expected Weight (kg)',
-          style: Theme.of(context).textTheme.titleMedium!.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.grey.shade800,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
+        ReusableInput(
           controller: _expectedWeightController,
           keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            hintText: 'e.g., 330',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
+          hintText: 'e.g., 330',
+          labelText: 'Expected Weight (kg)',
         ),
       ],
     );
@@ -625,26 +521,17 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
               : double.parse(_expectedWeightController.text),
         );
 
-        await _feedingRepository.createFeedingRecord(widget.batchId, request);
+        final res=await _feedingRepository.createFeedingRecord(widget.batchId, request);
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Feeding logged successfully!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          context.pop(true); // Return true to indicate success
+        switch (res) {
+          case Success():
+            ToastUtil.showSuccess('Feeding logged successfully!');
+            context.pop(true);
+          case Failure<dynamic>(response:final response):
+            ApiErrorHandler.handle(response);
         }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to log feeding: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+
+
       } finally {
         if (mounted) {
           setState(() {

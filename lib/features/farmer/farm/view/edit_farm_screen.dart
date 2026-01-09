@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:agriflock360/app_routes.dart';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
@@ -232,11 +233,11 @@ class _EditFarmScreenState extends State<EditFarmScreen> {
         case Success<bool>():
         // Success
           ToastUtil.showSuccess(
-              'Farm "${_nameController.text}" updated successfully!');
+              'Farm  updated successfully!');
 
           // Pop the screen with success result
           if (context.mounted) {
-            context.pop(true);
+            context.pushReplacement(AppRoutes.farms);
           }
         case Failure<bool>(response:final response):
           ApiErrorHandler.handle(response);
