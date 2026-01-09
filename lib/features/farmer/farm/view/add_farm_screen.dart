@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:agriflock360/app_routes.dart';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
@@ -230,7 +231,7 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
 
           // Pop the screen with success result
           if (context.mounted) {
-            context.pop();
+            context.pushReplacement(AppRoutes.farms);
           }
         case Failure<FarmModel>(response:final response):
           ApiErrorHandler.handle(response);

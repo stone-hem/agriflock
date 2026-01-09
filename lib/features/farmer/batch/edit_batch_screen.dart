@@ -739,7 +739,10 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
         case Success():
           ToastUtil.showSuccess('Batch edited successfully!');
           if (context.mounted) {
-            context.pop(true);
+             context.pushReplacement('/batches/details', extra: {
+              'batch': widget.batch,
+              'farmId': widget.farmId,
+            });
           }
 
         case Failure(:final response, :final message):
@@ -796,7 +799,10 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
         case Success<void>():
           ToastUtil.showSuccess('Batch deleted successfully');
           if (context.mounted) {
-            context.pop(true);
+            context.pushReplacement('/batches/details', extra: {
+              'batch': widget.batch,
+              'farmId': widget.farmId,
+            });
           }
         case Failure<void>(message:final e):
           ApiErrorHandler.handle(e);

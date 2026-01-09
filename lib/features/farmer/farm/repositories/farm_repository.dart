@@ -91,19 +91,6 @@ class FarmRepository {
     return 0;
   }
 
-  // Get all farms (backward compatibility)
-  // Future<Result<List<FarmModel>>> getAllFarms() async {
-  //   final result = await getAllFarmsWithStats();
-  //   return result.when(
-  //     success: (response) => Success(response.farms),
-  //     failure: (failure) => Failure(
-  //       message: failure.message,
-  //       response: failure.response,
-  //       statusCode: failure.statusCode,
-  //     ),
-  //   );
-  // }
-
   // Get single farm by ID
   Future<Result<FarmModel>> getFarmById(String farmId) async {
     try {
@@ -306,8 +293,12 @@ class FarmRepository {
         if (response.statusCode >= 200 && response.statusCode < 300) {
           return const Success(true);
         } else {
+          LogUtil.error(' Something to fix ${response.body}');
+          final message = jsonResponse['message'] is Map
+              ? jsonResponse['message']['message']
+              : jsonResponse['message'];
           return Failure(
-            message: jsonResponse['message'] ?? 'Failed to update farm',
+            message: message ?? 'Failed to update farm',
             response: response,
             statusCode: response.statusCode,
           );

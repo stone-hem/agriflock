@@ -204,8 +204,13 @@ class BatchHouseRepository {
         if (response.statusCode >= 200 && response.statusCode < 300) {
           return Success(null);
         } else {
+          LogUtil.error(' Something to fix ${response.body}');
+
+          final message = jsonResponse['message'] is Map
+              ? jsonResponse['message']['message']
+              : jsonResponse['message'];
           return Failure(
-            message: jsonResponse['message'] ?? 'Failed to update batch',
+            message: message ?? 'Failed to update batch',
             response: response,
             statusCode: response.statusCode,
           );
@@ -223,8 +228,13 @@ class BatchHouseRepository {
         if (response.statusCode >= 200 && response.statusCode < 300) {
           return Success(null);
         } else {
+          LogUtil.error(' Something to fix ${response.body}');
+
+          final message = jsonResponse['message'] is Map
+              ? jsonResponse['message']['message']
+              : jsonResponse['message'];
           return Failure(
-            message: jsonResponse['message'] ?? 'Failed to update batch',
+            message: message ?? 'Failed to update batch',
             response: response,
             statusCode: response.statusCode,
           );
