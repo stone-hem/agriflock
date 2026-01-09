@@ -16,10 +16,8 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _identifierController = TextEditingController(
-    text: 'farmer@agriflock360.org',
-  );
-  final _passwordController = TextEditingController(text: 'Password123!');
+  final _identifierController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
   final _manualAuthRepo = ManualAuthRepository();

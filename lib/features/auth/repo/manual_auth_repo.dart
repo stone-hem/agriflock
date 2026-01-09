@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:agriflock360/core/model/user_model.dart';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
+import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/main.dart';
 
 class ManualAuthRepository {
@@ -117,6 +118,7 @@ class ManualAuthRepository {
         'email': email,
       };
     } catch (e) {
+      LogUtil.error(e.toString());
       ApiErrorHandler.handle(e);
       rethrow;
     }

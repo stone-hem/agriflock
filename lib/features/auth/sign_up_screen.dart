@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:agriflock360/app_routes.dart';
 import 'package:agriflock360/core/services/social_auth_service.dart';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
@@ -160,10 +158,12 @@ class _SignupScreenState extends State<SignupScreen> {
                           countries: _countries,
                           labelText: 'Phone Number',
                           hintText: 'Enter your phone number',
-                          initialCountry: _countries.firstWhere(
-                                (c) => c.code == 'US',
-                            orElse: () => _countries.isNotEmpty ? _countries.first : Country(code: 'US', name: 'United States', dialCode: '+1', emoji: '', unicode: '', image: ''),
-                          ),
+                          initialCountry: Country(name: "United States",
+                              code: "US",
+                              emoji: "🇺🇸",
+                              unicode: "U+1F1FA U+1F1F8",
+                              image: "US.svg",
+                              dialCode: "+1"),
                           onCountryChanged: (country) {
                             setState(() {
                               _selectedCountry = country;
