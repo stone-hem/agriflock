@@ -499,27 +499,18 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
       });
 
       try {
-        final request = CreateFeedingRecordRequest(
-          age: _recommendations!.batchInfo.ageDays,
-          feedType: _recommendations!.currentRecommendation.feedType,
-          quantity: double.parse(_quantityController.text),
-          cost: double.parse(_costController.text),
-          supplier: _supplierController.text,
-          fedAt: _selectedFeedingTime,
-          notes: _notesController.text.isEmpty ? null : _notesController.text,
-          birdsAliveBefore: _birdsAliveBeforeController.text.isEmpty
-              ? null
-              : int.parse(_birdsAliveBeforeController.text),
-          mortalityToday: _mortalityTodayController.text.isEmpty
-              ? null
-              : int.parse(_mortalityTodayController.text),
-          currentTotalWeight: _currentWeightController.text.isEmpty
-              ? null
-              : double.parse(_currentWeightController.text),
-          expectedWeight: _expectedWeightController.text.isEmpty
-              ? null
-              : double.parse(_expectedWeightController.text),
-        );
+        final request= {
+          'feed_type': 'somthing',
+          'quantity': double.parse(_quantityController.text),
+          'cost': double.parse(_costController.text),
+          'supplier': _supplierController.text,
+          'fed_at': _selectedFeedingTime.toIso8601String(),
+          'notes': _notesController.text,
+          'birds_alive_before': int.parse(_birdsAliveBeforeController.text),
+          'mortality_today': int.parse(_mortalityTodayController.text),
+          'current_total_weight': double.parse(_currentWeightController.text),
+          'expected_weight': double.parse(_expectedWeightController.text)
+        };
 
         final res=await _feedingRepository.createFeedingRecord(widget.batchId, request);
 

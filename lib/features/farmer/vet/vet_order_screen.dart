@@ -1,12 +1,14 @@
-import 'package:agriflock360/core/widgets/reusable_input.dart';
-import 'package:agriflock360/features/farmer/vet/models/vet_officer.dart';
+import 'package:agriflock360/features/farmer/vet/models/vet_farmer_model.dart';
+import 'package:agriflock360/features/farmer/vet/models/vet_order_model.dart';
+import 'package:agriflock360/features/farmer/vet/repo/vet_farmer_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock360/core/widgets/reusable_input.dart';
 
-import 'models/order_screen.dart';
 
 class VetOrderScreen extends StatefulWidget {
-  final VetOfficer vet;
+  final VetFarmer vet;
 
   const VetOrderScreen({super.key, required this.vet});
 
@@ -15,8 +17,10 @@ class VetOrderScreen extends StatefulWidget {
 }
 
 class _VetOrderScreenState extends State<VetOrderScreen> {
+  final VetFarmerRepository _vetRepository = VetFarmerRepository();
   final _formKey = GlobalKey<FormState>();
   final _reasonController = TextEditingController();
+  final _additionalNotesController = TextEditingController();
 
   // Selection states
   String? _selectedHouse;
@@ -25,8 +29,14 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
   String? _selectedPriority;
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
+  bool _termsAgreed = false;
 
-  // Mock data structures
+  // Estimate state
+  VetEstimateResponse? _estimate;
+  bool _isLoadingEstimate = false;
+  bool _isSubmittingOrder = false;
+
+  // Mock data - You'll need to fetch these from your API
   final List<FarmHouse> _farmHouses = [
     FarmHouse(
       id: '1',
@@ -64,92 +74,27 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
           birdType: 'Broilers',
           healthStatus: 'Recently Vaccinated',
         ),
-        FarmBatch(
-          id: '4',
-          name: 'Batch 126 - Breeders',
-          birdCount: 200,
-          ageWeeks: 30,
-          birdType: 'Breeders',
-          healthStatus: 'Excellent',
-        ),
-      ],
-    ),
-    FarmHouse(
-      id: '3',
-      name: 'Quarantine House',
-      location: 'Isolated Area',
-      batches: [
-        FarmBatch(
-          id: '5',
-          name: 'Batch 127 - Recovery',
-          birdCount: 50,
-          ageWeeks: 8,
-          birdType: 'Mixed',
-          healthStatus: 'Under Treatment',
-        ),
       ],
     ),
   ];
 
-  // Service pricing data
-  final Map<String, double> _servicePrices = {
-    'Routine Check-up': 2000.0,
-    'Vaccination Service': 3500.0,
-    'Emergency Visit': 8000.0,
-    'Disease Diagnosis': 5000.0,
-    'Consultation': 1500.0,
-    'Treatment': 4500.0,
-    'Post-mortem Examination': 2500.0,
-    'Health Certification': 3000.0,
+  // Service types - You might want to fetch these from API
+  final Map<String, String> _services = {
+    'routine_checkup': 'Routine Check-up',
+    'vaccination': 'Vaccination Service',
+    'emergency': 'Emergency Visit',
+    'diagnosis': 'Disease Diagnosis',
+    'consultation': 'Consultation',
+    'treatment': 'Treatment',
+    'post_mortem': 'Post-mortem Examination',
+    'certification': 'Health Certification',
   };
 
   final List<String> _priorities = [
-    'Normal',
-    'Urgent',
-    'Emergency',
+    'normal',
+    'urgent',
+    'emergency',
   ];
-
-  // Mileage calculation constants (Kenya rates)
-  static const double _mileageRatePerKm = 80.0; // KES per km
-  static const double _minimumMileageFee = 500.0; // Minimum charge
-  static const double _emergencySurcharge = 0.5; // 50% for emergency priority
-
-  // Calculate total cost
-  double get _consultationFee {
-    // Extract numeric value from string like "\$75"
-    final feeString = widget.vet.consultationFee.replaceAll(
-        RegExp(r'[^0-9.]'), '');
-    return double.tryParse(feeString) ?? 0.0;
-  }
-
-  double get _serviceFee {
-    return _selectedServiceType != null
-        ? (_servicePrices[_selectedServiceType] ?? 0.0)
-        : 0.0;
-  }
-
-  double get _mileageFee {
-    // Parse distance from string like "2.5 km"
-    final distanceString = widget.vet.distance.replaceAll(
-        RegExp(r'[^0-9.]'), '');
-    final distance = double.tryParse(distanceString) ?? 0.0;
-
-    double fee = distance * _mileageRatePerKm;
-    return fee < _minimumMileageFee ? _minimumMileageFee : fee;
-  }
-
-  double get _prioritySurcharge {
-    if (_selectedPriority == 'Emergency') {
-      return (_serviceFee + _consultationFee) * _emergencySurcharge;
-    } else if (_selectedPriority == 'Urgent') {
-      return (_serviceFee + _consultationFee) * 0.25; // 25% for urgent
-    }
-    return 0.0;
-  }
-
-  double get _totalCost {
-    return _consultationFee + _serviceFee + _mileageFee + _prioritySurcharge;
-  }
 
   // Get filtered batches based on selected house
   List<FarmBatch> get _availableBatches {
@@ -161,12 +106,190 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
     return selectedHouse.batches;
   }
 
+  Future<void> _getEstimate() async {
+    if (_selectedPriority == null || _selectedServiceType == null) {
+      return;
+    }
+
+    setState(() {
+      _isLoadingEstimate = true;
+      _estimate = null;
+    });
+
+    final request = VetEstimateRequest(
+      vetId: widget.vet.id,
+      houseId: _selectedHouse,
+      batchId: _selectedBatch,
+      serviceId: _selectedServiceType,
+      priorityLevel: _selectedPriority!,
+      preferredDate: _selectedDate?.toIso8601String().split('T').first ??
+          DateTime.now().add(const Duration(days: 1)).toIso8601String().split('T').first,
+      preferredTime: _selectedTime?.format(context) ?? '09:00',
+      reasonForVisit: _reasonController.text,
+      additionalNotes: _additionalNotesController.text.isNotEmpty
+          ? _additionalNotesController.text
+          : null,
+      termsAgreed: _termsAgreed,
+    );
+
+    final result = await _vetRepository.getVetOrderEstimate(request);
+
+    switch (result) {
+      case Success<VetEstimateResponse>(data: final data):
+        setState(() {
+          _estimate = data;
+          _isLoadingEstimate = false;
+        });
+        break;
+      case Failure(message: final error):
+        setState(() {
+          _isLoadingEstimate = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to get estimate: $error'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        break;
+    }
+  }
+
+  Future<void> _submitOrder() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (!_termsAgreed) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please agree to the terms and conditions'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSubmittingOrder = true;
+    });
+
+    final request = VetOrderRequest(
+      vetId: widget.vet.id,
+      houseId: _selectedHouse,
+      batchId: _selectedBatch,
+      serviceId: _selectedServiceType,
+      priorityLevel: _selectedPriority!,
+      preferredDate: _selectedDate!.toIso8601String().split('T').first,
+      preferredTime: _selectedTime!.format(context),
+      reasonForVisit: _reasonController.text,
+      additionalNotes: _additionalNotesController.text.isNotEmpty
+          ? _additionalNotesController.text
+          : null,
+      termsAgreed: _termsAgreed,
+    );
+
+    final result = await _vetRepository.submitVetOrder(request);
+
+    setState(() {
+      _isSubmittingOrder = false;
+    });
+
+    switch (result) {
+      case Success<VetOrderResponse>(data: final data):
+      // Show success dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Icon(
+              Icons.check_circle,
+              color: Colors.green,
+              size: 60,
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Order Submitted Successfully!',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  data.message,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                if (data.referenceNumber != null)
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        children: [
+                          Text(
+                            'Reference Number',
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 12,
+                            ),
+                          ),
+                          Text(
+                            data.referenceNumber!,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                Text(
+                  '${data.currency} ${data.totalCost.toStringAsFixed(0)}',
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  context.pop(); // Go back to vet details
+                  context.pop(); // Go back to vet list
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+        break;
+      case Failure(message: final error):
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to submit order: $error'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Order Details'),
+        title: const Text('Book Veterinary Service'),
         centerTitle: false,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -174,18 +297,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
           icon: Icon(Icons.arrow_back, color: Colors.grey.shade700),
           onPressed: () => context.pop(),
         ),
-        actions: [
-          TextButton(
-            onPressed: _submitOrder,
-            child: const Text(
-              'Submit Order',
-              style: TextStyle(
-                color: Colors.green,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -208,13 +319,13 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                         width: 50,
                         height: 50,
                         decoration: BoxDecoration(
-                          color: widget.vet.avatarColor.withOpacity(0.2),
+                          color: Colors.green.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Center(
                           child: Icon(
                             Icons.pets,
-                            color: widget.vet.avatarColor,
+                            color: Colors.green,
                             size: 24,
                           ),
                         ),
@@ -233,7 +344,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                               overflow: TextOverflow.ellipsis,
                             ),
                             Text(
-                              widget.vet.specialization,
+                              widget.vet.educationLevel,
                               style: TextStyle(
                                 color: Colors.grey.shade600,
                                 fontSize: 14,
@@ -244,14 +355,14 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                             Row(
                               children: [
                                 Icon(
-                                  Icons.medical_services,
+                                  Icons.location_on,
                                   color: Colors.grey.shade500,
                                   size: 12,
                                 ),
                                 const SizedBox(width: 4),
                                 Expanded(
                                   child: Text(
-                                    widget.vet.clinic,
+                                    widget.vet.location.address,
                                     style: TextStyle(
                                       color: Colors.grey.shade600,
                                       fontSize: 12,
@@ -264,6 +375,35 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                           ],
                         ),
                       ),
+                      if (widget.vet.isVerified)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.verified,
+                                size: 14,
+                                color: Colors.green,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Verified',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -287,7 +427,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                           Icon(Icons.description, color: Colors.blue.shade600),
                           const SizedBox(width: 8),
                           const Text(
-                            'Order Details',
+                            'Service Booking',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -297,8 +437,8 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Please provide details for your veterinary service request. '
-                            'The veterinarian will review your order and contact you to confirm.',
+                        'Provide details for your veterinary service request. '
+                            'The veterinarian will review your booking and contact you.',
                         style: TextStyle(
                           color: Colors.grey.shade600,
                           fontSize: 14,
@@ -313,11 +453,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               // House Selection
               Text(
                 'Select House',
-                style: Theme
-                    .of(context)
-                    .textTheme
-                    .titleMedium!
-                    .copyWith(
+                style: Theme.of(context).textTheme.titleMedium!.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.grey.shade800,
                 ),
@@ -332,8 +468,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                   ),
                   filled: true,
                   fillColor: Colors.grey.shade50,
-                  prefixIcon: Icon(
-                      Icons.home_work, color: Colors.grey.shade600),
+                  prefixIcon: Icon(Icons.home_work, color: Colors.grey.shade600),
                 ),
                 isExpanded: true,
                 items: _farmHouses.map((FarmHouse house) {
@@ -360,9 +495,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         Text(
-                          '${house.batches.length} ${house.batches.length == 1
-                              ? 'batch'
-                              : 'batches'} available',
+                          '${house.batches.length} batch${house.batches.length == 1 ? '' : 'es'}',
                           style: TextStyle(
                             fontSize: 11,
                             color: Colors.green.shade700,
@@ -376,7 +509,8 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                 onChanged: (String? newValue) {
                   setState(() {
                     _selectedHouse = newValue;
-                    _selectedBatch = null; // Reset batch when house changes
+                    _selectedBatch = null;
+                    _estimate = null;
                   });
                 },
                 validator: (value) {
@@ -388,15 +522,11 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Batch Selection (only shows if house is selected)
+              // Batch Selection
               if (_selectedHouse != null) ...[
                 Text(
                   'Select Batch',
-                  style: Theme
-                      .of(context)
-                      .textTheme
-                      .titleMedium!
-                      .copyWith(
+                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Colors.grey.shade800,
                   ),
@@ -431,8 +561,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                           ),
                           Row(
                             children: [
-                              Icon(Icons.pets, size: 12,
-                                  color: Colors.grey.shade600),
+                              Icon(Icons.pets, size: 12, color: Colors.grey.shade600),
                               const SizedBox(width: 4),
                               Text(
                                 '${batch.birdCount} birds',
@@ -442,8 +571,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                                 ),
                               ),
                               const SizedBox(width: 12),
-                              Icon(Icons.calendar_today, size: 12,
-                                  color: Colors.grey.shade600),
+                              Icon(Icons.calendar_today, size: 12, color: Colors.grey.shade600),
                               const SizedBox(width: 4),
                               Text(
                                 '${batch.ageWeeks} weeks',
@@ -455,7 +583,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                             ],
                           ),
                           Text(
-                            'Status: ${batch.healthStatus}',
+                            batch.healthStatus,
                             style: TextStyle(
                               fontSize: 11,
                               color: _getHealthStatusColor(batch.healthStatus),
@@ -470,6 +598,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                   onChanged: (String? newValue) {
                     setState(() {
                       _selectedBatch = newValue;
+                      _estimate = null;
                     });
                   },
                   validator: (value) {
@@ -482,14 +611,10 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                 const SizedBox(height: 20),
               ],
 
-              // Service Type with pricing
+              // Service Type
               Text(
                 'Service Type',
-                style: Theme
-                    .of(context)
-                    .textTheme
-                    .titleMedium!
-                    .copyWith(
+                style: Theme.of(context).textTheme.titleMedium!.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.grey.shade800,
                 ),
@@ -506,33 +631,16 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                   fillColor: Colors.grey.shade50,
                 ),
                 isExpanded: true,
-                items: _servicePrices.entries.map((entry) {
+                items: _services.entries.map((entry) {
                   return DropdownMenuItem<String>(
                     value: entry.key,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            entry.key,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'KES ${entry.value.toStringAsFixed(0)}',
-                          style: TextStyle(
-                            color: Colors.green.shade700,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
+                    child: Text(entry.value),
                   );
                 }).toList(),
                 onChanged: (String? newValue) {
                   setState(() {
                     _selectedServiceType = newValue;
+                    _estimate = null;
                   });
                 },
                 validator: (value) {
@@ -544,14 +652,10 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Priority with surcharge info
+              // Priority Level
               Text(
                 'Priority Level',
-                style: Theme
-                    .of(context)
-                    .textTheme
-                    .titleMedium!
-                    .copyWith(
+                style: Theme.of(context).textTheme.titleMedium!.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.grey.shade800,
                 ),
@@ -560,7 +664,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               DropdownButtonFormField<String>(
                 value: _selectedPriority,
                 decoration: InputDecoration(
-                  hintText: 'Select priority',
+                  hintText: 'Select priority level',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -569,17 +673,17 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                 ),
                 isExpanded: true,
                 items: _priorities.map((String priority) {
-                  String surchargeInfo = '';
+                  String displayText = priority.toUpperCase();
                   Color? color;
 
-                  if (priority == 'Emergency') {
-                    surchargeInfo = ' (+50% surcharge)';
+                  if (priority == 'emergency') {
+                    displayText = 'EMERGENCY';
                     color = Colors.red;
-                  } else if (priority == 'Urgent') {
-                    surchargeInfo = ' (+25% surcharge)';
+                  } else if (priority == 'urgent') {
+                    displayText = 'URGENT';
                     color = Colors.orange;
                   } else {
-                    surchargeInfo = ' (No surcharge)';
+                    displayText = 'NORMAL';
                     color = Colors.green;
                   }
 
@@ -596,18 +700,8 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Text(priority),
+                        Text(displayText),
                         const SizedBox(width: 8),
-                        Flexible(
-                          child: Text(
-                            surchargeInfo,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade600,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
                       ],
                     ),
                   );
@@ -615,6 +709,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                 onChanged: (String? newValue) {
                   setState(() {
                     _selectedPriority = newValue;
+                    _estimate = null;
                   });
                 },
                 validator: (value) {
@@ -626,8 +721,45 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Billing Summary Card
-              if (_selectedServiceType != null || _selectedPriority != null)
+              // Get Estimate Button
+              if (_selectedServiceType != null && _selectedPriority != null)
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _isLoadingEstimate ? null : _getEstimate,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: _isLoadingEstimate
+                        ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation(Colors.white),
+                      ),
+                    )
+                        : const Icon(Icons.calculate, size: 20),
+                    label: Text(
+                      _isLoadingEstimate
+                          ? 'Getting Estimate...'
+                          : 'Get Cost Estimate',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              if (_selectedServiceType != null && _selectedPriority != null)
+                const SizedBox(height: 20),
+
+              // Estimate Display
+              if (_estimate != null) ...[
                 Card(
                   elevation: 0,
                   shape: RoundedRectangleBorder(
@@ -653,35 +785,28 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                           ],
                         ),
                         const SizedBox(height: 12),
-                        _buildCostItem('Consultation Fee:', _consultationFee),
-                        _buildCostItem('Service Fee:', _serviceFee),
-                        _buildCostItem(
-                          'Mileage Fee (${widget.vet.distance}):',
-                          _mileageFee,
-                          description: 'KES $_mileageRatePerKm/km, Min: KES $_minimumMileageFee',
-                        ),
-                        if (_prioritySurcharge > 0)
-                          _buildCostItem(
-                            '${_selectedPriority} Surcharge:',
-                            _prioritySurcharge,
+                        _buildEstimateItem('Consultation Fee:', _estimate!.consultationFee),
+                        _buildEstimateItem('Service Fee:', _estimate!.serviceFee),
+                        _buildEstimateItem('Mileage Fee:', _estimate!.mileageFee),
+                        if (_estimate!.prioritySurcharge > 0)
+                          _buildEstimateItem(
+                            'Priority Surcharge:',
+                            _estimate!.prioritySurcharge,
                             isSurcharge: true,
                           ),
                         const Divider(height: 24),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Flexible(
-                              child: Text(
-                                'Total Estimated Cost:',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                overflow: TextOverflow.ellipsis,
+                            const Text(
+                              'Total Estimated Cost:',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                             Text(
-                              'KES ${_totalCost.toStringAsFixed(0)}',
+                              '${_estimate!.currency} ${_estimate!.estimatedCost.toStringAsFixed(0)}',
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -690,30 +815,28 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '* This is an estimate. Final cost may vary based on actual requirements.',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade600,
-                            fontStyle: FontStyle.italic,
+                        if (_estimate!.notes != null) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            _estimate!.notes!,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                              fontStyle: FontStyle.italic,
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ),
                 ),
-              if (_selectedServiceType != null || _selectedPriority != null)
                 const SizedBox(height: 20),
+              ],
 
               // Preferred Date
               Text(
                 'Preferred Date',
-                style: Theme
-                    .of(context)
-                    .textTheme
-                    .titleMedium!
-                    .copyWith(
+                style: Theme.of(context).textTheme.titleMedium!.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.grey.shade800,
                 ),
@@ -736,8 +859,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                       Text(
                         _selectedDate == null
                             ? 'Select preferred date'
-                            : '${_selectedDate!.day}/${_selectedDate!
-                            .month}/${_selectedDate!.year}',
+                            : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
                         style: TextStyle(
                           color: _selectedDate == null
                               ? Colors.grey.shade600
@@ -753,11 +875,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               // Preferred Time
               Text(
                 'Preferred Time',
-                style: Theme
-                    .of(context)
-                    .textTheme
-                    .titleMedium!
-                    .copyWith(
+                style: Theme.of(context).textTheme.titleMedium!.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.grey.shade800,
                 ),
@@ -796,11 +914,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               // Reason for Visit
               Text(
                 'Reason for Visit',
-                style: Theme
-                    .of(context)
-                    .textTheme
-                    .titleMedium!
-                    .copyWith(
+                style: Theme.of(context).textTheme.titleMedium!.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.grey.shade800,
                 ),
@@ -809,7 +923,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               ReusableInput(
                 controller: _reasonController,
                 labelText: 'Reason',
-                hintText: 'Describe the reason for ordering veterinary service...',
+                hintText: 'Describe the reason for the veterinary visit...',
                 maxLines: 3,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -817,22 +931,35 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                   }
                   return null;
                 },
+                onChanged: (value) {
+                  setState(() {
+                    _estimate = null;
+                  });
+                },
               ),
               const SizedBox(height: 20),
 
               // Additional Notes
               Text(
                 'Additional Notes (Optional)',
-                style: Theme
-                    .of(context)
-                    .textTheme
-                    .titleMedium!
-                    .copyWith(
+                style: Theme.of(context).textTheme.titleMedium!.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.grey.shade800,
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 8),
+              ReusableInput(
+                controller: _additionalNotesController,
+                labelText: 'Additional Notes',
+                hintText: 'Any additional information or special requirements...',
+                maxLines: 2,
+                onChanged: (value) {
+                  setState(() {
+                    _estimate = null;
+                  });
+                },
+              ),
+              const SizedBox(height: 20),
 
               // Terms and Conditions
               Card(
@@ -849,8 +976,12 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                       Row(
                         children: [
                           Checkbox(
-                            value: true,
-                            onChanged: (value) {},
+                            value: _termsAgreed,
+                            onChanged: (value) {
+                              setState(() {
+                                _termsAgreed = value ?? false;
+                              });
+                            },
                             activeColor: Colors.green,
                           ),
                           const SizedBox(width: 8),
@@ -867,14 +998,11 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                       const SizedBox(height: 8),
                       Text(
                         'By submitting this order, you agree to:\n'
-                            '• Consultation fee of ${widget.vet
-                            .consultationFee}\n'
-                            '• Service fee based on selected service type\n'
-                            '• Mileage charges as per Kenya standard rates\n'
-                            '• Priority surcharges where applicable\n'
-                            '• Cancellation policy (24 hours notice required)\n'
-                            '• Payment terms (due upon service completion)\n'
-                            '• Privacy and data protection agreement',
+                            '• Payment terms and conditions\n'
+                            '• Service terms and conditions\n'
+                            '• Privacy and data protection agreement\n'
+                            '• Cancellation policy\n'
+                            '• All applicable laws and regulations',
                         style: TextStyle(
                           color: Colors.grey.shade600,
                           fontSize: 12,
@@ -890,7 +1018,9 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _submitOrder,
+                  onPressed: _isSubmittingOrder || !_termsAgreed || _estimate == null
+                      ? null
+                      : _submitOrder,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     padding: const EdgeInsets.symmetric(vertical: 18),
@@ -898,8 +1028,17 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'Submit Order Request',
+                  child: _isSubmittingOrder
+                      ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation(Colors.white),
+                    ),
+                  )
+                      : const Text(
+                    'Submit Booking Request',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -926,7 +1065,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                           Icon(Icons.info, color: Colors.green.shade600),
                           const SizedBox(width: 8),
                           const Text(
-                            'Request Process',
+                            'Booking Process',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -936,18 +1075,20 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                       ),
                       const SizedBox(height: 12),
                       _buildProcessStep(
-                          1, 'Submit Request', 'You fill out this form'),
-                      _buildProcessStep(2, 'Vet Review', 'Dr. ${widget.vet.name
-                          .split(' ')
-                          .last} reviews your request'),
-                      _buildProcessStep(3, 'Vet Accepts/Declines',
-                          'Vet responds within 24 hours'),
+                        1, 'Submit Request', 'Fill out this booking form',
+                      ),
                       _buildProcessStep(
-                          4, 'Schedule Visit', 'Date and time confirmed'),
+                        2, 'Get Estimate', 'Review estimated cost',
+                      ),
                       _buildProcessStep(
-                          5, 'Service Delivered', 'Vet visits your farm'),
+                        3, 'Vet Review', 'Vet reviews your request within 24 hours',
+                      ),
                       _buildProcessStep(
-                          6, 'Payment', 'Pay after service completion'),
+                        4, 'Confirmation', 'Receive booking confirmation',
+                      ),
+                      _buildProcessStep(
+                        5, 'Service Delivery', 'Vet visits your farm',
+                      ),
                     ],
                   ),
                 ),
@@ -960,44 +1101,28 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
     );
   }
 
-  Widget _buildCostItem(String label, double amount,
-      {String? description, bool isSurcharge = false}) {
+  Widget _buildEstimateItem(String label, double amount, {bool isSurcharge = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: isSurcharge ? Colors.orange.shade700 : Colors.grey
-                        .shade700,
-                    fontSize: 14,
-                  ),
-                ),
-                if (description != null)
-                  Text(
-                    description,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-              ],
+            child: Text(
+              label,
+              style: TextStyle(
+                color: isSurcharge ? Colors.orange.shade700 : Colors.grey.shade700,
+                fontSize: 14,
+              ),
             ),
           ),
           const SizedBox(width: 8),
           Text(
-            'KES ${amount.toStringAsFixed(0)}',
+            '${_estimate?.currency ?? 'KES'} ${amount.toStringAsFixed(0)}',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: isSurcharge ? Colors.orange.shade700 : Colors.green
-                  .shade700,
+              color: isSurcharge ? Colors.orange.shade700 : Colors.green.shade700,
             ),
           ),
         ],
@@ -1063,6 +1188,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
       case 'good production':
         return Colors.green;
       case 'under treatment':
+      case 'recently vaccinated':
         return Colors.orange;
       case 'sick':
       case 'critical':
@@ -1082,6 +1208,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
     if (picked != null && picked != _selectedDate) {
       setState(() {
         _selectedDate = picked;
+        _estimate = null;
       });
     }
   }
@@ -1094,59 +1221,48 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
     if (picked != null && picked != _selectedTime) {
       setState(() {
         _selectedTime = picked;
+        _estimate = null;
       });
-    }
-  }
-
-  void _submitOrder() {
-    if (_formKey.currentState!.validate()) {
-      // Create order summary
-      final orderSummary = OrderSummary(
-        vet: widget.vet,
-        house: _farmHouses.firstWhere((h) => h.id == _selectedHouse),
-        batch: _availableBatches.firstWhere((b) => b.id == _selectedBatch),
-        serviceType: _selectedServiceType!,
-        priority: _selectedPriority!,
-        date: _selectedDate!,
-        time: _selectedTime!,
-        reason: _reasonController.text,
-        consultationFee: _consultationFee,
-        serviceFee: _serviceFee,
-        mileageFee: _mileageFee,
-        prioritySurcharge: _prioritySurcharge,
-        totalCost: _totalCost,
-      );
-
-      // Process the order
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Order submitted for ${widget.vet.name}'),
-              Text('Total Cost: KES ${_totalCost.toStringAsFixed(0)}'),
-              Text('Service: $_selectedServiceType'),
-            ],
-          ),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 3),
-        ),
-      );
-
-      // You can pass the orderSummary to next screen or save it
-      print('Order Summary: $orderSummary');
-
-      // Navigate back to home
-      context.pop();
-      context.pop();
     }
   }
 
   @override
   void dispose() {
     _reasonController.dispose();
+    _additionalNotesController.dispose();
     super.dispose();
   }
+}
 
+// Keep your existing FarmHouse and FarmBatch models
+class FarmHouse {
+  final String id;
+  final String name;
+  final String location;
+  final List<FarmBatch> batches;
+
+  FarmHouse({
+    required this.id,
+    required this.name,
+    required this.location,
+    required this.batches,
+  });
+}
+
+class FarmBatch {
+  final String id;
+  final String name;
+  final int birdCount;
+  final int ageWeeks;
+  final String birdType;
+  final String healthStatus;
+
+  FarmBatch({
+    required this.id,
+    required this.name,
+    required this.birdCount,
+    required this.ageWeeks,
+    required this.birdType,
+    required this.healthStatus,
+  });
 }
