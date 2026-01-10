@@ -2,6 +2,8 @@ import 'package:agriflock360/core/constants/app_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 
 class LocationPickerStep extends StatefulWidget {
   final String? selectedAddress;
@@ -29,11 +31,11 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
   String? _selectedAddress;
   double? _latitude;
   double? _longitude;
+  bool _isLoadingLocation = false;
 
   @override
   void initState() {
     super.initState();
-    // Initialize controller and focus node ONCE
     _controller = TextEditingController(text: widget.selectedAddress ?? '');
     _focusNode = FocusNode();
 
@@ -41,14 +43,11 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
     _latitude = widget.latitude;
     _longitude = widget.longitude;
 
-    // Listen to focus changes
     _focusNode.addListener(_onFocusChange);
   }
 
   void _onFocusChange() {
-    // This helps prevent focus issues with other text fields
     if (!_focusNode.hasFocus) {
-      // When focus is lost, ensure the field is properly unfocused
       setState(() {});
     }
   }
@@ -56,7 +55,6 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
   @override
   void didUpdateWidget(LocationPickerStep oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Only update if the parent widget's values changed
     if (widget.selectedAddress != oldWidget.selectedAddress &&
         widget.selectedAddress != _selectedAddress) {
       _controller.text = widget.selectedAddress ?? '';
@@ -68,7 +66,6 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
 
   @override
   void dispose() {
-    // Properly dispose focus node and controller
     _focusNode.removeListener(_onFocusChange);
     _focusNode.dispose();
     _controller.dispose();
@@ -87,13 +84,9 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
         _longitude = lng;
       });
 
-      // Notify parent widget
       widget.onLocationSelected(address, lat, lng);
-
-      // CRITICAL: Unfocus this field immediately after selection
       _focusNode.unfocus();
 
-      // Extra safety: request focus removal from the entire scope
       Future.delayed(const Duration(milliseconds: 100), () {
         if (mounted) {
           FocusScope.of(context).unfocus();
@@ -109,9 +102,154 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
       _latitude = null;
       _longitude = null;
     });
-
-    // Unfocus when clearing
     _focusNode.unfocus();
+  }
+
+  Future<bool> _handleLocationPermission() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Location services are disabled. Please enable them.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return false;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Location permissions are denied'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return false;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      if (mounted) {
+        _showPermissionDialog();
+      }
+      return false;
+    }
+
+    return true;
+  }
+
+  void _showPermissionDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Location Permission Required'),
+        content: const Text(
+          'Location permissions are permanently denied. Please enable them in your device settings to use this feature.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Geolocator.openAppSettings();
+            },
+            child: const Text('Open Settings'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _getCurrentLocation() async {
+    setState(() {
+      _isLoadingLocation = true;
+    });
+
+    try {
+      final hasPermission = await _handleLocationPermission();
+      if (!hasPermission) {
+        setState(() {
+          _isLoadingLocation = false;
+        });
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 10),
+        ),
+      );
+
+      // Get address from coordinates using reverse geocoding
+      final placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+        final address = _formatAddress(place);
+
+        setState(() {
+          _selectedAddress = address;
+          _latitude = position.latitude;
+          _longitude = position.longitude;
+          _controller.text = address;
+        });
+
+        widget.onLocationSelected(address, position.latitude, position.longitude);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Current location detected successfully!'),
+              backgroundColor: widget.primaryColor,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error getting location: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      setState(() {
+        _isLoadingLocation = false;
+      });
+    }
+  }
+
+  String _formatAddress(Placemark place) {
+    final parts = <String>[];
+
+    if (place.street?.isNotEmpty == true) parts.add(place.street!);
+    if (place.subLocality?.isNotEmpty == true) parts.add(place.subLocality!);
+    if (place.locality?.isNotEmpty == true) parts.add(place.locality!);
+    if (place.administrativeArea?.isNotEmpty == true) parts.add(place.administrativeArea!);
+    if (place.country?.isNotEmpty == true) parts.add(place.country!);
+
+    return parts.join(', ');
   }
 
   @override
@@ -135,21 +273,77 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
             color: Colors.black54,
           ),
         ),
-        const SizedBox(height: 40),
+        const SizedBox(height: 24),
+
+        // Use Current Location Button
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: _isLoadingLocation ? null : _getCurrentLocation,
+            icon: _isLoadingLocation
+                ? SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(widget.primaryColor),
+              ),
+            )
+                : Icon(Icons.my_location, color: widget.primaryColor),
+            label: Text(
+              _isLoadingLocation ? 'Getting Location...' : 'Use My Current Location',
+              style: TextStyle(
+                color: _isLoadingLocation ? Colors.grey : widget.primaryColor,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              side: BorderSide(
+                color: _isLoadingLocation ? Colors.grey : widget.primaryColor,
+                width: 1.5,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 20),
+
+        // Divider with "OR"
+        Row(
+          children: [
+            Expanded(child: Divider(color: Colors.grey.shade300)),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                'OR',
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            Expanded(child: Divider(color: Colors.grey.shade300)),
+          ],
+        ),
+
+        const SizedBox(height: 20),
 
         // Google Places Autocomplete TextField
         Focus(
-          // Wrap in Focus widget for better focus control
           onFocusChange: (hasFocus) {
             if (!hasFocus) {
-              // Additional handling when focus is lost
               setState(() {});
             }
           },
           child: GooglePlaceAutoCompleteTextField(
             textEditingController: _controller,
             googleAPIKey: AppConstants.googleApiKey,
-            focusNode: _focusNode, // Explicitly provide focus node
+            focusNode: _focusNode,
             inputDecoration: InputDecoration(
               hintText: 'Search for your location',
               prefixIcon: Icon(
@@ -162,11 +356,8 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
                 onPressed: _clearLocation,
               )
                   : null,
-
               filled: true,
               fillColor: Colors.grey.shade50,
-
-              // REQUIRED to prevent the extra line
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide.none,
@@ -183,7 +374,6 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
                 ),
               ),
             ),
-
             debounceTime: 800,
             isLatLngRequired: true,
             getPlaceDetailWithLatLng: _handleLocationSelected,
@@ -265,6 +455,13 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
                   ),
                 ),
                 const SizedBox(height: 8),
+                Text(
+                  'Lat: ${_latitude!.toStringAsFixed(6)}, Lng: ${_longitude!.toStringAsFixed(6)}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
               ],
             ),
           ),
@@ -290,7 +487,7 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Start typing to search for your location. Select from the dropdown suggestions to set your exact location.',
+                  'Use your current location or search manually. Start typing to see location suggestions.',
                   style: TextStyle(
                     fontSize: 13,
                     color: Colors.blue.shade900,
