@@ -55,5 +55,9 @@
 		<string>This app needs access to your location to provide location-based services.</string>
 		<key>NSCameraUsageDescription</key>
 		<string>This app needs access to your camera to take photos.</string>
+		<key>NSLocationWhenInUseUsageDescription</key>
+        <string>We need your location to show your farm location on the map</string>
+        <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+        <string>We need your location to show your farm location on the map</string>
 	</dict>
 </plist>

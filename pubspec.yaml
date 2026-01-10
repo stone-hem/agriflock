@@ -49,6 +49,8 @@ dependencies:
   google_maps_flutter:
   flutter_riverpod:
   camera:
+  geocoding:
+  geolocator:
 
 dev_dependencies:
   flutter_test:
