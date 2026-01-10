@@ -134,13 +134,13 @@ class FeedingRepository {
   /// Create a new feeding record
   Future<Result> createFeedingRecord(
       String batchId,
-      CreateFeedingRecordRequest request,
+      Map<String, dynamic> request,
       ) async {
     try {
-      LogUtil.warning(request.toJson());
+      LogUtil.warning(request);
       final response = await apiClient.post(
         '/batches/$batchId/feeding/records',
-        body: jsonEncode(request.toJson()),
+        body: request,
       );
 
       final jsonResponse = jsonDecode(response.body);

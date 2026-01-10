@@ -225,7 +225,7 @@ class VaccinationRepository {
     try {
       final response = await apiClient.post(
         '/batches/$batchId/vaccinations',
-        body: jsonEncode(request.toJson()),
+        body: request.toJson(),
       );
 
       final jsonResponse = jsonDecode(response.body);

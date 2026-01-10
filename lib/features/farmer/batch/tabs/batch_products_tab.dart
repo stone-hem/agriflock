@@ -399,11 +399,6 @@ class _BatchProductsTabState extends State<BatchProductsTab> {
               title,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            if (_recentProducts.isNotEmpty && error == null && !isLoading)
-              TextButton(
-                onPressed: () => context.push('/products'),
-                child: const Text('View all'),
-              ),
           ],
         ),
         const SizedBox(height: 16),

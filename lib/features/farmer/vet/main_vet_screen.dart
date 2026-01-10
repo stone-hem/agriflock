@@ -342,9 +342,7 @@ class _MainVetScreenState extends State<MainVetScreen>
       body: TabBarView(
         controller: _tabController,
         children: [
-          BrowseVetsTab(
-            allVets: _allVets,
-          ),
+          BrowseVetsTab(),
           TrackOrdersTab(
             vetOrders: _vetOrders,
           ),

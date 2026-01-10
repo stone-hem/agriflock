@@ -28,6 +28,7 @@ import 'package:agriflock360/features/farmer/profile/congratulations_screen.dart
 import 'package:agriflock360/features/farmer/profile/help_support_screen.dart';
 import 'package:agriflock360/features/farmer/profile/settings_screen.dart';
 import 'package:agriflock360/features/farmer/profile/telemetry_data_screen.dart';
+import 'package:agriflock360/features/farmer/vet/models/vet_farmer_model.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_officer.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_order.dart';
 import 'package:agriflock360/features/farmer/vet/vet_details_screen.dart';
@@ -418,18 +419,23 @@ class AppRoutes {
         GoRoute(
           path: '/vet-details',
           builder: (context, state) {
-            final vet = state.extra as VetOfficer;
-            return VetDetailsScreen(vet: vet);
+            final id = state.extra as String;
+            return VetDetailsScreen(vetId: id);
           },
         ),
+
 
         GoRoute(
           path: vetOrderDetails,
           builder: (context, state) {
-            final vet = state.extra as VetOfficer;
+            final vet = state.extra;
+            if (vet is! VetFarmer) {
+              return const ErrorScreen(message: 'Could Not load the vet',); // or redirect
+            }
             return VetOrderScreen(vet: vet);
           },
         ),
+
         GoRoute(
           path: '/welcome-day1',
           builder: (context, state) => const Day1WelcomeScreen(),
