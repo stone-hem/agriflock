@@ -91,9 +91,9 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
   };
 
   final List<String> _priorities = [
-    'normal',
-    'urgent',
-    'emergency',
+    'NORMAL',
+    'URGENT',
+    'EMERGENCY',
   ];
 
   // Get filtered batches based on selected house
@@ -676,10 +676,10 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                   String displayText = priority.toUpperCase();
                   Color? color;
 
-                  if (priority == 'emergency') {
+                  if (priority == 'EMERGENCY') {
                     displayText = 'EMERGENCY';
                     color = Colors.red;
-                  } else if (priority == 'urgent') {
+                  } else if (priority == 'URGENT') {
                     displayText = 'URGENT';
                     color = Colors.orange;
                   } else {

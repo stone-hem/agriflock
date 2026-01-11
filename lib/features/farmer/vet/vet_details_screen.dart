@@ -478,7 +478,6 @@ class _VetDetailsScreenState extends State<VetDetailsScreen> {
                         ),
                       ),
 
-
                       // Main Content Container
                       Container(
                         width: double.infinity,
