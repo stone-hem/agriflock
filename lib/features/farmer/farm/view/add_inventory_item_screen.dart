@@ -1,3 +1,4 @@
+import 'package:agriflock360/app_routes.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/farm/models/inventory_models.dart';
 import 'package:agriflock360/features/farmer/farm/repositories/inventory_repository.dart';
@@ -171,7 +172,7 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
                   backgroundColor: Colors.green,
                 ),
               );
-              context.pop(true); // Return success
+              context.pushReplacement('${AppRoutes.farmsInventory}/${widget.farmId}');
             }
           case Failure<InventoryItem>(message: final message):
             if (mounted) {
@@ -282,7 +283,7 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
                     return 'Please enter item name';
                   }
                   return null;
-                }, labelText: '',
+                }, labelText: 'Name',
               ),
               const SizedBox(height: 20),
 
@@ -290,7 +291,7 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
               _buildSectionTitle('Item Code (Optional)'),
               ReusableInput(
                 controller: _itemCodeController,
-                hintText: 'e.g., FEED-001', labelText: '',
+                hintText: 'e.g., FEED-001', labelText: 'Code',
 
               ),
               const SizedBox(height: 20),
@@ -298,7 +299,7 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
               // Category
               _buildSectionTitle('Category'),
               DropdownButtonFormField<String>(
-                value: _selectedCategoryId,
+                initialValue: _selectedCategoryId,
                 decoration: InputDecoration(
                   hintText: 'Select category',
                   border: OutlineInputBorder(
@@ -330,7 +331,7 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
               ReusableInput(
                 controller: _descriptionController,
                 maxLines: 3,
-                hintText: 'Description of the item...', labelText: '',
+                hintText: 'Description of the item...', labelText: 'Description',
 
               ),
               const SizedBox(height: 20),
@@ -338,7 +339,7 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
               // Unit of Measurement
               _buildSectionTitle('Unit of Measurement'),
               DropdownButtonFormField<String>(
-                value: _selectedUnit,
+                initialValue: _selectedUnit,
                 decoration: InputDecoration(
                   hintText: 'Select unit',
                   border: OutlineInputBorder(
@@ -371,7 +372,6 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
                 controller: _currentStockController,
                 keyboardType: TextInputType.number,
                 hintText: 'e.g., 100.0',
-
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter current stock';
@@ -451,7 +451,7 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
               const SizedBox(height: 20),
 
               // Cost per Unit
-              _buildSectionTitle('Cost per Unit (₵)'),
+              _buildSectionTitle('Cost per Unit'),
               ReusableInput(
                 controller: _costController,
                 keyboardType: TextInputType.number,
@@ -474,10 +474,10 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
               const SizedBox(height: 20),
 
               // Supplier Information
-              _buildSectionTitle('Supplier Information'),
+              _buildSectionTitle('Supplier Information(Optional)'),
               ReusableInput(
                 controller: _supplierController,
-                labelText: 'Supplier Name',
+                labelText: 'Supplier Name(Optional)',
 
                 validator: (value) {
                   if (value == null || value.isEmpty) {

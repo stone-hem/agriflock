@@ -182,7 +182,7 @@ class VetFarmerRepository {
       );
 
       final jsonResponse = jsonDecode(response.body);
-      LogUtil.info('Vet Order Estimate API Response: $jsonResponse');
+      LogUtil.info(jsonResponse);
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return Success(VetEstimateResponse.fromJson(jsonResponse));

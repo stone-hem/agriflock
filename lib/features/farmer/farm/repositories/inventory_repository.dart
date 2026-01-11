@@ -157,7 +157,7 @@ class InventoryRepository {
 
       final response = await apiClient.post(
         endpoint,
-        body: jsonEncode(request.toJson()),
+        body: request.toJson(),
       );
 
       final jsonResponse = jsonDecode(response.body);

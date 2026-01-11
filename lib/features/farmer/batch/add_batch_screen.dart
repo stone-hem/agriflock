@@ -414,14 +414,14 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                   }
                   return null;
                 },
-                labelText: 'Initial Count',
+                labelText: 'initial count at hatching',
                 hintText: 'e.g., 1000',
               ),
               const SizedBox(height: 20),
 
               // Birds Alive
               Text(
-                'Birds Alive',
+                'Current Count',
                 style: Theme.of(context).textTheme.titleMedium!.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.grey.shade800,
@@ -445,14 +445,14 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                   }
                   return null;
                 },
-                labelText: 'Birds Alive',
+                labelText: 'Current count at the moment',
                 hintText: 'e.g., 1000',
               ),
               const SizedBox(height: 20),
 
               // Current Weight
               Text(
-                'Current Weight (kg)',
+                'Average weight (kg)',
                 style: Theme.of(context).textTheme.titleMedium!.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.grey.shade800,
@@ -471,14 +471,14 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                   }
                   return null;
                 },
-                labelText: 'Current Weight',
+                labelText: 'Current average weight ',
                 hintText: 'e.g., 0.0',
               ),
               const SizedBox(height: 20),
 
               // Expected Weight
               Text(
-                'Expected Weight (kg)',
+                'Expected Average Weight (kg)',
                 style: Theme.of(context).textTheme.titleMedium!.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.grey.shade800,
@@ -502,7 +502,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                   }
                   return null;
                 },
-                labelText: 'Expected Weight',
+                labelText: 'Expected average weight at removal/sale',
                 hintText: 'e.g., 2.5',
               ),
               const SizedBox(height: 20),

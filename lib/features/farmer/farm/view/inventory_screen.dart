@@ -232,7 +232,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   onPressed: () => Navigator.of(context).pop(),
                   child: const Text('Cancel'),
                 ),
-                ElevatedButton(
+                FilledButton(
                   onPressed: () async {
                     if (adjustmentController.text.isNotEmpty &&
                         double.tryParse(adjustmentController.text) != null &&
@@ -334,8 +334,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 _buildDetailRow('Current Stock', '${item.currentStock} ${item.unitOfMeasurement}'),
                 _buildDetailRow('Minimum Stock', '${item.minimumStockLevel} ${item.unitOfMeasurement}'),
                 _buildDetailRow('Reorder Point', '${item.reorderPoint} ${item.unitOfMeasurement}'),
-                _buildDetailRow('Cost per Unit', '₵${item.costPerUnit.toStringAsFixed(2)}'),
-                _buildDetailRow('Total Value', '₵${item.totalValue.toStringAsFixed(2)}'),
+                _buildDetailRow('Cost per Unit', item.costPerUnit.toStringAsFixed(2)),
+                _buildDetailRow('Total Value', item.totalValue.toStringAsFixed(2)),
                 _buildDetailRow('Supplier', item.supplier),
                 if (item.storageLocation != null)
                   _buildDetailRow('Location', item.storageLocation!),
@@ -356,7 +356,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('Close'),
             ),
-            ElevatedButton(
+            FilledButton(
               onPressed: () {
                 Navigator.of(context).pop();
                 _showAdjustStockDialog(item);
@@ -624,7 +624,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   Widget _buildSummaryCard(String title, String value, IconData icon, Color color) {
     return Card(
-      elevation: 2,
+      elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
@@ -659,7 +659,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
   Widget _buildInventoryItem(InventoryItem item) {
     return Card(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-      elevation: 1,
+      elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
@@ -733,7 +733,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              '₵${item.totalValue.toStringAsFixed(2)}',
+              item.totalValue.toStringAsFixed(2),
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
