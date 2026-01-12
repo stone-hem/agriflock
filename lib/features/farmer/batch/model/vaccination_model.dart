@@ -344,6 +344,7 @@ class VaccinationScheduleRequest {
   final String vaccineName;
   final String vaccineType;
   final DateTime scheduledDate;
+  final String scheduleTime;
   final String dosage;
   final String administrationMethod;
   final double cost;
@@ -359,12 +360,14 @@ class VaccinationScheduleRequest {
     required this.cost,
     this.notes,
     this.source = 'manual',
+    required this.scheduleTime,
   });
 
   Map<String, dynamic> toJson() => {
     'vaccine_name': vaccineName,
     'vaccine_type': vaccineType,
     'scheduled_date': scheduledDate.toIso8601String(),
+    'scheduled_time': scheduleTime,
     'dosage': dosage,
     'administration_method': administrationMethod,
     'cost': cost,
@@ -380,6 +383,7 @@ class QuickDoneVaccinationRequest {
   final String administrationMethod;
   final int birdsVaccinated;
   final DateTime completedDate;
+  final String completedTime;
   final double cost;
   final String? notes;
 
@@ -391,13 +395,14 @@ class QuickDoneVaccinationRequest {
     required this.birdsVaccinated,
     required this.completedDate,
     required this.cost,
-    this.notes,
+    this.notes, required this.completedTime,
   });
 
   Map<String, dynamic> toJson() => {
     'vaccine_name': vaccineName,
     'vaccine_type': vaccineType,
     'completed_date': completedDate.toIso8601String(),
+    'completed_time': completedTime,
     'dosage': dosage,
     'administration_method': administrationMethod,
     'cost': cost,

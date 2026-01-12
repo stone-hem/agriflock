@@ -1,3 +1,5 @@
+import 'package:agriflock360/core/utils/api_error_handler.dart';
+import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
@@ -112,52 +114,55 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
-          child: TabBar(
-            controller: _tabController,
-            indicatorSize: TabBarIndicatorSize.tab,
-            indicator: BoxDecoration(
-              color: Colors.green, // Light grey for active tab
-              borderRadius: BorderRadius.circular(8),
-            ),
-            labelColor: Colors.white, //  for active
-            unselectedLabelColor: Colors.grey.shade600,
-            labelStyle: const TextStyle(
-              fontSize: 11, // Smaller font
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.1,
-            ),
-            unselectedLabelStyle: const TextStyle(
-              fontSize: 11, // Smaller font
-              fontWeight: FontWeight.w500,
-              letterSpacing: 0.1,
-            ),
-            dividerColor: Colors.transparent,
-            splashFactory: NoSplash.splashFactory,
-            overlayColor: WidgetStateProperty.all(Colors.transparent),
-            tabs: [
-              Tab(
-                height: 36, // Smaller tab height
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.calendar_today, size: 16),
-                    SizedBox(width: 4),
-                    Text('Schedule'),
-                  ],
-                ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: TabBar(
+              controller: _tabController,
+              indicatorSize: TabBarIndicatorSize.tab,
+              indicator: BoxDecoration(
+                color: Colors.green, // Light grey for active tab
+                borderRadius: BorderRadius.circular(8),
               ),
-              Tab(
-                height: 36, // Smaller tab height
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.check_circle, size: 16),
-                    SizedBox(width: 4),
-                    Text('Quick Record'),
-                  ],
-                ),
+              labelColor: Colors.white, //  for active
+              unselectedLabelColor: Colors.grey.shade600,
+              labelStyle: const TextStyle(
+                fontSize: 11, // Smaller font
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.1,
               ),
-            ],
+              unselectedLabelStyle: const TextStyle(
+                fontSize: 11, // Smaller font
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.1,
+              ),
+              dividerColor: Colors.transparent,
+              splashFactory: NoSplash.splashFactory,
+              overlayColor: WidgetStateProperty.all(Colors.transparent),
+              tabs: [
+                Tab(
+                  height: 36, // Smaller tab height
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.calendar_today, size: 16),
+                      SizedBox(width: 4),
+                      Text('Schedule'),
+                    ],
+                  ),
+                ),
+                Tab(
+                  height: 36, // Smaller tab height
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.check_circle, size: 16),
+                      SizedBox(width: 4),
+                      Text('Quick Record'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -554,14 +559,10 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
               ),
             ),
             const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
+            ReusableDropdown<String>(
               value: _selectedVaccineType,
-              decoration: InputDecoration(
-                hintText: 'Select vaccine type',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
+              hintText: 'Select vaccine type',
+              labelText: 'Vaccine Type',
               items: _vaccineTypes.map((String type) {
                 return DropdownMenuItem<String>(
                   value: type,
@@ -591,14 +592,10 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
               ),
             ),
             const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
+            ReusableDropdown<String>(
               value: _selectedAdministration,
-              decoration: InputDecoration(
-                hintText: 'Select administration method',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
+              hintText: 'Select administration method',
+              labelText: 'Method',
               items: _administrationMethods.map((String method) {
                 return DropdownMenuItem<String>(
                   value: method,
@@ -868,6 +865,7 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
           vaccineName: _vaccineNameController.text,
           vaccineType: _selectedVaccineType!,
           scheduledDate: scheduledDateTime,
+          scheduleTime: _scheduledTime.toString(),
           dosage: _dosageController.text,
           administrationMethod: _selectedAdministration!,
           cost: _costController.text.isEmpty ? 0 : double.parse(_costController.text),
@@ -875,36 +873,32 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
           source: 'manual',
         );
 
-        await _repository.scheduleVaccination(widget.batchId, request);
+       final res= await _repository.scheduleVaccination(widget.batchId, request);
+       switch(res) {
+         case Success<Vaccination>():
+           if (mounted) {
+             ScaffoldMessenger.of(context).showSnackBar(
+               SnackBar(
+                 content: Column(
+                   crossAxisAlignment: CrossAxisAlignment.start,
+                   mainAxisSize: MainAxisSize.min,
+                   children: [
+                     const Text('Vaccination scheduled successfully'),
+                     Text('Scheduled for: ${_scheduledDate.day}/${_scheduledDate.month}/${_scheduledDate.year}'),
+                     const Text('Status: Scheduled'),
+                   ],
+                 ),
+                 backgroundColor: Colors.blue,
+               ),
+             );
+             _clearForm();
+             context.pop(true);
+           }
+         case Failure<Vaccination>(response:final response, message:final message, statusCode:final statusCode):
+           ApiErrorHandler.handle(response);
+       }
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('Vaccination scheduled successfully'),
-                  Text('Scheduled for: ${_scheduledDate.day}/${_scheduledDate.month}/${_scheduledDate.year}'),
-                  const Text('Status: Scheduled'),
-                ],
-              ),
-              backgroundColor: Colors.blue,
-            ),
-          );
-          _clearForm();
-          context.pop(true);
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to schedule vaccination: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      } finally {
+      }  finally {
         if (mounted) {
           setState(() {
             _isSaving = false;
@@ -936,6 +930,7 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
           administrationMethod: _selectedAdministration!,
           birdsVaccinated: int.parse(_birdsVaccinatedController.text),
           completedDate: completionDateTime,
+          completedTime: _completionTime.toString(),
           cost: _costController.text.isEmpty ? 0 : double.parse(_costController.text),
           notes: _notesController.text.isEmpty ? null : _notesController.text,
         );

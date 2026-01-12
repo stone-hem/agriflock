@@ -264,7 +264,7 @@ class VaccinationRepository {
       ) async {
     try {
       final response = await apiClient.post(
-        '/batches/$batchId/vaccinations',
+        '/batches/$batchId/vaccinations/quick-record',
         body: request.toJson(),
       );
 
@@ -308,7 +308,7 @@ class VaccinationRepository {
       ) async {
     try {
       final response = await apiClient.post(
-        '/batches/$batchId/vaccinations',
+        '/batches/$batchId/vaccinations/schedule',
         body: request.toJson(),
       );
 
