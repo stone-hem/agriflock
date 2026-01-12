@@ -1,6 +1,7 @@
 import 'package:agriflock360/core/utils/date_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
+import 'package:agriflock360/features/farmer/batch/model/scheduled_vaccination.dart';
 import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/recommended_vaccination_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/vaccination_repo.dart';
@@ -27,13 +28,17 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
 
   // State
   VaccinationDashboard? _dashboard;
+  VaccinationScheduleResponse? _scheduledVaccinations;
   VaccinationsResponse? _vaccinations;
   RecommendedVaccinationsResponse? _recommendations;
+
   bool _isDashboardLoading = true;
+  bool _isScheduledVaccinationsLoading = true;
   bool _isVaccinationsLoading = true;
   bool _isRecommendationsLoading = true;
   String? _dashboardError;
   String? _vaccinationsError;
+  String? _scheduledVaccinationsError;
   String? _recommendationsError;
 
   @override
@@ -52,7 +57,8 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
 
     // Load data
     _loadDashboard();
-    _loadVaccinations();
+    _loadScheduledVaccinations();
+    _loadVaccinationsHistory();
     _loadRecommendations();
   }
   Future<void> _loadDashboard() async {
@@ -90,10 +96,10 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
     }
   }
 
-  Future<void> _loadVaccinations() async {
+  Future<void> _loadVaccinationsHistory() async {
     setState(() {
       _isVaccinationsLoading = true;
-      _vaccinationsError = null;
+      _scheduledVaccinationsError = null;
     });
 
     try {
@@ -108,7 +114,7 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
           break;
         case Failure(message: final error, :final statusCode, :final response):
           setState(() {
-            _vaccinationsError = error;
+            _scheduledVaccinationsError = error;
             _isVaccinationsLoading = false;
           });
           // Optionally handle the error using ApiErrorHandler
@@ -124,6 +130,42 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
       }
     }
   }
+
+  Future<void> _loadScheduledVaccinations() async {
+    setState(() {
+      _isScheduledVaccinationsLoading = true;
+      _vaccinationsError = null;
+    });
+
+    try {
+      final result = await _repository.getScheduledVaccinations(widget.batch.id);
+
+      switch(result) {
+        case Success<VaccinationScheduleResponse>(data: final data):
+          setState(() {
+            _scheduledVaccinations = data;
+            _isScheduledVaccinationsLoading = false;
+          });
+          break;
+        case Failure(message: final error, :final statusCode, :final response):
+          setState(() {
+            _vaccinationsError = error;
+            _isScheduledVaccinationsLoading = false;
+          });
+          // Optionally handle the error using ApiErrorHandler
+          // ApiErrorHandler.handle(error);
+          break;
+      }
+    } finally {
+      // Ensure loading state is reset even if there's an unexpected error
+      if (_isScheduledVaccinationsLoading) {
+        setState(() {
+          _isScheduledVaccinationsLoading = false;
+        });
+      }
+    }
+  }
+
 
   Future<void> _loadRecommendations() async {
     setState(() {
@@ -163,7 +205,8 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
   Future<void> _onRefresh() async {
     await Future.wait([
       _loadDashboard(),
-      _loadVaccinations(),
+      _loadScheduledVaccinations(),
+      _loadVaccinationsHistory(),
       _loadRecommendations(),
     ]);
   }
@@ -377,21 +420,21 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
       onRefresh: _onRefresh,
       child: _isVaccinationsLoading
           ? const Center(child: CircularProgressIndicator())
-          : _vaccinationsError != null || _vaccinations == null
-          ? _buildErrorView(_vaccinationsError)
+          : _scheduledVaccinationsError != null || _scheduledVaccinations == null
+          ? _buildErrorView(_scheduledVaccinationsError)
           : _buildTodayContent(),
     );
   }
 
   Widget _buildTodayContent() {
-    final dueToday = _vaccinations!.vaccinations
-        .where((v) => v.isDueToday)
+    final dueToday = _scheduledVaccinations!.list
+        .where((v) => v.isToday)
         .toList();
-    final overdue = _vaccinations!.vaccinations
+    final overdue = _scheduledVaccinations!.list
         .where((v) => v.isOverdue)
         .toList();
-    final upcoming = _vaccinations!.vaccinations
-        .where((v) => v.isUpcoming)
+    final upcoming = _scheduledVaccinations!.list
+        .where((v) => !v.isToday && !v.isOverdue)
         .toList();
 
     return ListView(
@@ -468,7 +511,6 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
 
   Widget _buildHistoryContent() {
     final completed = _vaccinations!.vaccinations
-        .where((v) => v.vaccinationStatus == 'completed')
         .toList();
 
     if (completed.isEmpty) {
@@ -661,7 +703,7 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
     );
   }
 
-  void _navigateToUpdateStatus(Vaccination vaccination) async {
+  void _navigateToUpdateStatus(VaccinationSchedule vaccination) async {
     final result = await context.push(
       '/batches/${widget.batch.id}/update-status',
       extra: vaccination,
@@ -683,7 +725,7 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
 }
 
 class _VaccinationItem extends StatelessWidget {
-  final Vaccination vaccination;
+  final VaccinationSchedule vaccination;
   final VoidCallback onUpdateStatus;
 
   const _VaccinationItem({
@@ -737,7 +779,7 @@ class _VaccinationItem extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      vaccination.dosage,
+                      vaccination.dosagePerBird,
                       style: TextStyle(
                         color: Colors.grey.shade600,
                         fontSize: 12,
@@ -746,8 +788,8 @@ class _VaccinationItem extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       isOverdue
-                          ? 'Was due: ${DateUtil.toMMDDYYYY(vaccination.scheduledDate)}'
-                          : 'Due: ${DateUtil.toMMDDYYYY(vaccination.scheduledDate)}',
+                          ? 'Was due: ${vaccination.scheduledDate}'
+                          : 'Due: ${vaccination.scheduledDate}',
                       style: TextStyle(
                         color: isOverdue
                             ? Colors.red.shade700
