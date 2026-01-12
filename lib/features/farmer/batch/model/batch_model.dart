@@ -181,7 +181,7 @@ class House {
       houseName: json['house_name'] ?? json['name'] ?? '',
       farmId: json['farm_id']?.toString(),
       capacity: json['capacity'] ?? 0,
-      currentBirds: json['current_birds'] ?? 0,
+      currentBirds: json['current_birds'] ?? json['currentBirds'] ?? 0,
       utilization: (json['utilization'] ?? 0).toDouble(),
       batches: batchList,
       photoUrl: json['photo_url'] ?? json['house_avatar'],

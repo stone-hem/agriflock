@@ -4,7 +4,7 @@ import 'package:agriflock360/features/farmer/batch/batch_details_screen.dart';
 import 'package:agriflock360/features/farmer/batch/edit_batch_screen.dart';
 import 'package:agriflock360/features/farmer/batch/log_feeding_screen.dart';
 import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
-import 'package:agriflock360/features/farmer/batch/quick_done_today_screen.dart';
+import 'package:agriflock360/features/farmer/batch/record_vaccination_screen.dart';
 import 'package:agriflock360/features/farmer/batch/record_product_screen.dart';
 import 'package:agriflock360/features/farmer/batch/update_vaccination_status_screen.dart';
 import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
@@ -309,10 +309,10 @@ class AppRoutes {
                 },
             ),
             GoRoute(
-              path: ':id/quick-done',
+              path: ':id/record-vaccination',
               builder: (context, state) {
                 final batchId = state.pathParameters['id']!;
-                return QuickDoneTodayScreen(batchId: batchId,);}
+                return VaccinationRecordScreen(batchId: batchId,);}
             ),
             GoRoute(
               path: 'adopt-schedule',

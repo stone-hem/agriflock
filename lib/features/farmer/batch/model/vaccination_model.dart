@@ -342,6 +342,39 @@ class UpdateVaccinationStatusRequest {
   }
 }
 
+class VaccinationScheduleRequest {
+  final String vaccineName;
+  final String vaccineType;
+  final DateTime scheduledDate;
+  final String dosage;
+  final String administrationMethod;
+  final double cost;
+  final String? notes;
+  final String source;
+
+  VaccinationScheduleRequest({
+    required this.vaccineName,
+    required this.vaccineType,
+    required this.scheduledDate,
+    required this.dosage,
+    required this.administrationMethod,
+    required this.cost,
+    this.notes,
+    this.source = 'manual',
+  });
+
+  Map<String, dynamic> toJson() => {
+    'vaccine_name': vaccineName,
+    'vaccine_type': vaccineType,
+    'scheduled_date': scheduledDate.toIso8601String(),
+    'dosage': dosage,
+    'administration_method': administrationMethod,
+    'cost': cost,
+    'notes': notes,
+    'source': source,
+  };
+}
+
 class QuickDoneVaccinationRequest {
   final String vaccineName;
   final String vaccineType;
@@ -363,19 +396,15 @@ class QuickDoneVaccinationRequest {
     this.notes,
   });
 
-  Map<String, dynamic> toJson() {
-    return {
-      'vaccine_name': vaccineName,
-      'vaccine_type': vaccineType,
-      'scheduled_date': completedDate.toIso8601String().split('T')[0],
-      'dosage': dosage,
-      'administration_method': administrationMethod,
-      'cost': cost,
-      'source': 'manual',
-      'vaccination_status': 'completed',
-      'completed_date': completedDate.toIso8601String(),
-      'birds_vaccinated': birdsVaccinated,
-      if (notes != null) 'notes': notes,
-    };
-  }
+  Map<String, dynamic> toJson() => {
+    'vaccine_name': vaccineName,
+    'vaccine_type': vaccineType,
+    'completed_date': completedDate.toIso8601String(),
+    'dosage': dosage,
+    'administration_method': administrationMethod,
+    'cost': cost,
+    'notes': notes,
+    'source': 'manual',
+    'vaccination_status': 'completed',
+  };
 }
