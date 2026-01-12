@@ -1,5 +1,3 @@
-// lib/features/farmer/batch/model/vaccination_model.dart
-
 class VaccineCatalog {
   final String id;
   final String vaccineName;
