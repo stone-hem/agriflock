@@ -3,9 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class VetOrderTrackingScreen extends StatefulWidget {
-  final VetOrder order;
 
-  const VetOrderTrackingScreen({super.key, required this.order});
+  const VetOrderTrackingScreen({super.key});
 
   @override
   State<VetOrderTrackingScreen> createState() => _VetOrderTrackingScreenState();
@@ -15,6 +14,45 @@ class _VetOrderTrackingScreenState extends State<VetOrderTrackingScreen> {
   late GoogleMapController _mapController;
   final Set<Marker> _markers = {};
   final Set<Polyline> _polylines = {};
+
+  // Dummy data for demonstration when no order is passed
+  static final VetOrder dummyOrder = VetOrder(
+    id: 'ORDER-001',
+    vetId: 'VET-001',
+    vetName: 'Dr. Sarah Johnson',
+    serviceType: 'Routine Checkup',
+    priority: 'Standard',
+    scheduledDate: DateTime.now().add(const Duration(days: 1)),
+    scheduledTime: const TimeOfDay(hour: 10, minute: 30),
+    status: OrderStatus.enRoute,
+    totalCost: 12500,
+    consultationFee: 5000,
+    serviceFee: 5000,
+    mileageFee: 1500,
+    prioritySurcharge: 1000,
+    houseName: 'Green Valley Farm',
+    batchName: 'Dairy Batch #45',
+    reason: 'Regular health inspection',
+    notes: 'Please check milk production levels',
+    vetLocation: VetLocation(
+      latitude: 40.7128,
+      longitude: -74.0060,
+      address: '123 Vet Clinic, New York, NY',
+    ),
+    farmerLocation: FarmerLocation(
+      latitude: 40.7589,
+      longitude: -73.9851,
+      address: '456 Farm Road, Brooklyn, NY',
+    ),
+    estimatedArrivalTime: DateTime.now().add(const Duration(minutes: 25)),
+    serviceCompletedDate: null,
+    isPaid: false,
+    userRating: 0,
+    userComment: '',
+  );
+
+  // Get the order to use (use dummy if none is passed)
+  VetOrder get order => dummyOrder;
 
   @override
   void initState() {
@@ -27,13 +65,13 @@ class _VetOrderTrackingScreenState extends State<VetOrderTrackingScreen> {
     final vetMarker = Marker(
       markerId: const MarkerId('vet_location'),
       position: LatLng(
-        widget.order.vetLocation.latitude,
-        widget.order.vetLocation.longitude,
+        order.vetLocation.latitude,
+        order.vetLocation.longitude,
       ),
       icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
       infoWindow: InfoWindow(
         title: 'Vet Location',
-        snippet: widget.order.vetLocation.address,
+        snippet: order.vetLocation.address,
       ),
     );
 
@@ -41,13 +79,13 @@ class _VetOrderTrackingScreenState extends State<VetOrderTrackingScreen> {
     final farmerMarker = Marker(
       markerId: const MarkerId('farmer_location'),
       position: LatLng(
-        widget.order.farmerLocation.latitude,
-        widget.order.farmerLocation.longitude,
+        order.farmerLocation.latitude,
+        order.farmerLocation.longitude,
       ),
       icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
       infoWindow: InfoWindow(
         title: 'Your Farm',
-        snippet: widget.order.farmerLocation.address,
+        snippet: order.farmerLocation.address,
       ),
     );
 
@@ -58,12 +96,12 @@ class _VetOrderTrackingScreenState extends State<VetOrderTrackingScreen> {
       width: 4,
       points: [
         LatLng(
-          widget.order.vetLocation.latitude,
-          widget.order.vetLocation.longitude,
+          order.vetLocation.latitude,
+          order.vetLocation.longitude,
         ),
         LatLng(
-          widget.order.farmerLocation.latitude,
-          widget.order.farmerLocation.longitude,
+          order.farmerLocation.latitude,
+          order.farmerLocation.longitude,
         ),
       ],
     );
@@ -83,12 +121,12 @@ class _VetOrderTrackingScreenState extends State<VetOrderTrackingScreen> {
       CameraUpdate.newLatLngBounds(
         LatLngBounds(
           southwest: LatLng(
-            widget.order.vetLocation.latitude - 0.01,
-            widget.order.vetLocation.longitude - 0.01,
+            order.vetLocation.latitude - 0.01,
+            order.vetLocation.longitude - 0.01,
           ),
           northeast: LatLng(
-            widget.order.vetLocation.latitude + 0.01,
-            widget.order.vetLocation.longitude + 0.01,
+            order.vetLocation.latitude + 0.01,
+            order.vetLocation.longitude + 0.01,
           ),
         ),
         50, // padding
@@ -121,7 +159,7 @@ class _VetOrderTrackingScreenState extends State<VetOrderTrackingScreen> {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: statusColors[widget.order.status]!),
+        side: BorderSide(color: statusColors[order.status]!),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -143,14 +181,14 @@ class _VetOrderTrackingScreenState extends State<VetOrderTrackingScreen> {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: statusColors[widget.order.status]!.withOpacity(0.1),
+                    color: statusColors[order.status]!.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: statusColors[widget.order.status]!),
+                    border: Border.all(color: statusColors[order.status]!),
                   ),
                   child: Text(
-                    statusTexts[widget.order.status]!,
+                    statusTexts[order.status]!,
                     style: TextStyle(
-                      color: statusColors[widget.order.status],
+                      color: statusColors[order.status],
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -175,32 +213,32 @@ class _VetOrderTrackingScreenState extends State<VetOrderTrackingScreen> {
       ),
       _buildTimelineStep(
         'Vet Confirmed',
-        'Dr. ${widget.order.vetName.split(' ').last} accepted',
-        widget.order.status.index >= OrderStatus.confirmed.index,
+        'Dr. ${order.vetName.split(' ').last} accepted',
+        order.status.index >= OrderStatus.confirmed.index,
         Icons.check_circle,
       ),
       _buildTimelineStep(
         'En Route',
         'Vet is on the way to your farm',
-        widget.order.status.index >= OrderStatus.enRoute.index,
+        order.status.index >= OrderStatus.enRoute.index,
         Icons.directions_car,
       ),
       _buildTimelineStep(
         'Arrived',
         'Vet has arrived at your location',
-        widget.order.status.index >= OrderStatus.arrived.index,
+        order.status.index >= OrderStatus.arrived.index,
         Icons.location_on,
       ),
       _buildTimelineStep(
         'In Service',
         'Vet is providing service',
-        widget.order.status.index >= OrderStatus.inService.index,
+        order.status.index >= OrderStatus.inService.index,
         Icons.medical_services,
       ),
       _buildTimelineStep(
         'Completed',
         'Service has been completed',
-        widget.order.status.index >= OrderStatus.completed.index,
+        order.status.index >= OrderStatus.completed.index,
         Icons.done_all,
       ),
     ];
@@ -255,8 +293,8 @@ class _VetOrderTrackingScreenState extends State<VetOrderTrackingScreen> {
 
   Widget _buildArrivalInfo() {
     final now = DateTime.now();
-    final difference = widget.order.estimatedArrivalTime.difference(now);
-    final isVetEnRoute = widget.order.status == OrderStatus.enRoute;
+    final difference = order.estimatedArrivalTime.difference(now);
+    final isVetEnRoute = order.status == OrderStatus.enRoute;
 
     if (!isVetEnRoute || difference.inMinutes <= 0) {
       return const SizedBox();
@@ -301,7 +339,7 @@ class _VetOrderTrackingScreenState extends State<VetOrderTrackingScreen> {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                'Today at 10 Pm',
+                'Today at ${order.estimatedArrivalTime.hour}:${order.estimatedArrivalTime.minute.toString().padLeft(2, '0')}',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Colors.blue,
@@ -342,8 +380,8 @@ class _VetOrderTrackingScreenState extends State<VetOrderTrackingScreen> {
               onMapCreated: _onMapCreated,
               initialCameraPosition: CameraPosition(
                 target: LatLng(
-                  widget.order.vetLocation.latitude,
-                  widget.order.vetLocation.longitude,
+                  order.vetLocation.latitude,
+                  order.vetLocation.longitude,
                 ),
                 zoom: 12,
               ),
@@ -399,14 +437,14 @@ class _VetOrderTrackingScreenState extends State<VetOrderTrackingScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                widget.order.vetName,
+                                order.vetName,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
                                 ),
                               ),
                               Text(
-                                widget.order.serviceType,
+                                order.serviceType,
                                 style: TextStyle(
                                   color: Colors.grey.shade600,
                                 ),

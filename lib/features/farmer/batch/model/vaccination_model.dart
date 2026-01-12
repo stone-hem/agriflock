@@ -370,7 +370,7 @@ class VaccinationScheduleRequest {
     'scheduled_time': scheduleTime,
     'dosage': dosage,
     'administration_method': administrationMethod,
-    'cost': cost,
+    'estimated_cost': cost,
     'notes': notes,
     'source': source,
   };
@@ -405,7 +405,7 @@ class QuickDoneVaccinationRequest {
     'completed_time': completedTime,
     'dosage': dosage,
     'administration_method': administrationMethod,
-    'cost': cost,
+    'estimated_cost': cost,
     'notes': notes,
     'source': 'manual',
     'vaccination_status': 'completed',

@@ -28,9 +28,11 @@ import 'package:agriflock360/features/farmer/profile/congratulations_screen.dart
 import 'package:agriflock360/features/farmer/profile/help_support_screen.dart';
 import 'package:agriflock360/features/farmer/profile/settings_screen.dart';
 import 'package:agriflock360/features/farmer/profile/telemetry_data_screen.dart';
+import 'package:agriflock360/features/farmer/vet/models/my_order_list_item.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_farmer_model.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_officer.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_order.dart';
+import 'package:agriflock360/features/farmer/vet/my_orders_screen.dart';
 import 'package:agriflock360/features/farmer/vet/vet_details_screen.dart';
 import 'package:agriflock360/features/farmer/vet/vet_order_screen.dart';
 import 'package:agriflock360/features/farmer/vet/vet_order_tracking_screen.dart';
@@ -411,8 +413,8 @@ class AppRoutes {
         GoRoute(
           path: '/vet-order-tracking',
           builder: (context, state) {
-            final order = state.extra as VetOrder;
-            return VetOrderTrackingScreen(order: order);
+            final order = state.extra as MyOrderListItem;
+            return VetOrderTrackingScreen();
           },
         ),
 
@@ -423,6 +425,15 @@ class AppRoutes {
             return VetDetailsScreen(vetId: id);
           },
         ),
+
+         GoRoute(
+    path: '/my-vet-orders',
+    builder: (context, state) {
+    return MyVetOrdersScreen();
+    },
+    ),
+
+   
 
 
         GoRoute(

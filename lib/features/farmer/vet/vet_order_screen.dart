@@ -1,5 +1,4 @@
 import 'package:agriflock360/core/utils/api_error_handler.dart';
-import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/batch_house_repo.dart';
@@ -9,6 +8,7 @@ import 'package:agriflock360/features/farmer/vet/models/vet_order_model.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_service_type.dart';
 import 'package:agriflock360/features/farmer/vet/repo/vet_farmer_repository.dart';
 import 'package:agriflock360/features/farmer/vet/widgets/order_process.dart';
+import 'package:agriflock360/features/farmer/vet/widgets/vet_order_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:agriflock360/core/utils/result.dart';
@@ -27,7 +27,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
   final VetFarmerRepository _vetRepository = VetFarmerRepository();
   final _formKey = GlobalKey<FormState>();
   final _reasonController = TextEditingController();
-  final _selectedDateController = TextEditingController();
 
   // Selection states
   String? _selectedFarm;
@@ -35,17 +34,12 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
   String? _selectedBatch;
   String? _selectedServiceType;
   String? _selectedPriority;
-  DateTime? _selectedDate;
-  TimeOfDay? _selectedTime;
-  bool _termsAgreed = false;
 
   // Estimate state
-  VetEstimateResponse? _estimate;
   bool _isLoadingEstimate = false;
-  bool _isSubmittingOrder = false;
 
   // Service types - Dynamic from API
-  List<VetServiceType> _serviceTypes = []; // Replace the hardcoded map
+  List<VetServiceType> _serviceTypes = [];
   bool _isLoadingServices = false;
   String? _servicesError;
 
@@ -63,7 +57,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
   bool _isLoadingHouses = false;
   bool _hasError = false;
   String? _errorMessage;
-
 
   final List<String> _priorities = [
     'NORMAL',
@@ -154,7 +147,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
       _availableBatches = [];
       _selectedHouse = null;
       _selectedBatch = null;
-      _estimate = null;
     });
 
     try {
@@ -186,13 +178,14 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
     setState(() {
       _selectedHouse = houseId;
       _selectedBatch = null;
-      _estimate = null;
 
       // Update available batches based on selected house
       if (houseId != null) {
         final selectedHouse = _houses.firstWhere(
               (house) => house.id == houseId,
-          orElse: () => _houses.isNotEmpty ? _houses.first : House(
+          orElse: () => _houses.isNotEmpty
+              ? _houses.first
+              : House(
             id: '',
             houseName: '',
             capacity: 0,
@@ -217,9 +210,22 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
       return;
     }
 
+    if (_selectedFarm == null || _selectedHouse == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select farm and house'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
     setState(() {
       _isLoadingEstimate = true;
-      _estimate = null;
     });
 
     final request = VetEstimateRequest(
@@ -228,30 +234,28 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
       batchId: _selectedBatch,
       serviceId: _selectedServiceType,
       priorityLevel: _selectedPriority!,
-      preferredDate: _selectedDate?.toIso8601String().split('T').first ??
-          DateTime.now()
-              .add(const Duration(days: 1))
-              .toIso8601String()
-              .split('T')
-              .first,
-      preferredTime: _selectedTime?.format(context) ?? '09:00',
+      preferredDate: DateTime.now()
+          .add(const Duration(days: 1))
+          .toIso8601String()
+          .split('T')
+          .first,
+      preferredTime: '09:00',
       reasonForVisit: _reasonController.text,
-      termsAgreed: _termsAgreed,
+      termsAgreed: false,
     );
 
     final result = await _vetRepository.getVetOrderEstimate(request);
 
+    setState(() {
+      _isLoadingEstimate = false;
+    });
+
     switch (result) {
-      case Success<VetEstimateResponse>(data: final data):
-        setState(() {
-          _estimate = data;
-          _isLoadingEstimate = false;
-        });
+      case Success<VetEstimateResponse>(data: final estimate):
+      // Show bottom sheet with estimate
+        _showOrderBottomSheet(estimate,request);
         break;
       case Failure(message: final error):
-        setState(() {
-          _isLoadingEstimate = false;
-        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to get estimate: $error'),
@@ -262,150 +266,24 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
     }
   }
 
-  Future<void> _submitOrder() async {
-    if (!_formKey.currentState!.validate()) return;
-    if (!_termsAgreed) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please agree to the terms and conditions'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    if (_selectedDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a preferred date'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    if (_selectedTime == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a preferred time'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    setState(() {
-      _isSubmittingOrder = true;
-    });
-
-    final request = VetOrderRequest(
-      vetId: widget.vet.id,
-      houseId: _selectedHouse,
-      batchId: _selectedBatch,
-      serviceId: _selectedServiceType,
-      priorityLevel: _selectedPriority!,
-      preferredDate: _selectedDate!.toIso8601String().split('T').first,
-      preferredTime: _selectedTime!.format(context),
-      reasonForVisit: _reasonController.text,
-      termsAgreed: _termsAgreed,
+  void _showOrderBottomSheet(VetEstimateResponse estimate,VetEstimateRequest request) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => VetOrderBottomSheet(
+        estimate: estimate,
+        vet: widget.vet,
+        vetRepository: _vetRepository,
+        onOrderSuccess: () {
+          context.pop(); // Close bottom sheet
+          context.pop(); // Go back to vet details
+          context.pop(); // Go back to vet list
+        }, request:request ,
+      ),
     );
-
-    final result = await _vetRepository.submitVetOrder(request);
-
-    setState(() {
-      _isSubmittingOrder = false;
-    });
-
-    switch (result) {
-      case Success<VetOrderResponse>(data: final data):
-      // Show success dialog
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => AlertDialog(
-            title: const Icon(
-              Icons.check_circle,
-              color: Colors.green,
-              size: 60,
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Order Submitted Successfully!',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  data.message,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                if (data.referenceNumber != null)
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        children: [
-                          Text(
-                            'Reference Number',
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 12,
-                            ),
-                          ),
-                          Text(
-                            data.referenceNumber!,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                const SizedBox(height: 8),
-                Text(
-                  '${data.currency} ${data.totalCost.toStringAsFixed(0)}',
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  context.pop(); // Go back to vet details
-                  context.pop(); // Go back to vet list
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
-        break;
-      case Failure(message: final error):
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to submit order: $error'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        break;
-    }
   }
 
   @override
@@ -446,7 +324,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                           color: Colors.green.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Center(
+                        child: const Center(
                           child: Icon(
                             Icons.pets,
                             color: Colors.green,
@@ -509,14 +387,14 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                             color: Colors.green.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Row(
+                          child: const Row(
                             children: [
                               Icon(
                                 Icons.verified,
                                 size: 14,
                                 color: Colors.green,
                               ),
-                              const SizedBox(width: 4),
+                              SizedBox(width: 4),
                               Text(
                                 'Verified',
                                 style: TextStyle(
@@ -623,8 +501,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              _buildServiceTypeDropdown(), // Use the new widget
-
+              _buildServiceTypeDropdown(),
               const SizedBox(height: 20),
 
               // Priority Level
@@ -640,7 +517,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                 value: _selectedPriority,
                 hintText: 'Select priority level',
                 icon: Icons.priority_high,
-              labelText: 'Priority Level',
+                labelText: 'Priority Level',
                 isExpanded: true,
                 items: _priorities.map((String priority) {
                   String displayText = priority.toUpperCase();
@@ -678,7 +555,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                 onChanged: (String? newValue) {
                   setState(() {
                     _selectedPriority = newValue;
-                    _estimate = null;
                   });
                 },
                 validator: (value) {
@@ -688,8 +564,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 20),
-
               const SizedBox(height: 20),
 
               // Reason for Visit
@@ -712,199 +586,43 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                   }
                   return null;
                 },
-                onChanged: (value) {
-                  setState(() {
-                    _estimate = null;
-                  });
-                },
-              ),
-
-              // Get Estimate Button
-              if (_selectedServiceType != null && _selectedPriority != null && _reasonController.text.isNotEmpty)
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _isLoadingEstimate ? null : _getEstimate,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    icon: _isLoadingEstimate
-                        ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation(Colors.white),
-                      ),
-                    )
-                        : const Icon(Icons.calculate, size: 20,color: Colors.white,),
-                    label: Text(
-                      _isLoadingEstimate
-                          ? 'Getting Estimate...'
-                          : 'Get Cost Estimate',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white
-                      ),
-                    ),
-                  ),
-                ),
-              if (_selectedServiceType != null && _selectedPriority != null)
-                const SizedBox(height: 20),
-
-              // Estimate Display
-              if (_estimate != null) _buildEstimateCard(),
-              if (_estimate != null) const SizedBox(height: 20),
-
-
-              CustomDateTextField(
-                label: 'Preferred Date',
-                hintText: 'Enter your preferred date',
-                icon: Icons.calendar_today,
-                required: true,
-                minYear: DateTime.now().year - 1,
-                returnFormat: DateReturnFormat.dateTime,
-                maxYear: DateTime.now().year,
-                controller: _selectedDateController,
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _selectedDate = value;
-                      _estimate = null;
-                    });
-                  }
-                },
-              ),
-              const SizedBox(height: 20),
-
-              // Preferred Time
-              Text(
-                'Preferred Time',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
-              InkWell(
-                onTap: _selectTime,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade400),
-                    borderRadius: BorderRadius.circular(12),
-                    color: Colors.grey.shade50,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.access_time, color: Colors.grey.shade600),
-                      const SizedBox(width: 12),
-                      Text(
-                        _selectedTime == null
-                            ? 'Select preferred time'
-                            : _selectedTime!.format(context),
-                        style: TextStyle(
-                          color: _selectedTime == null
-                              ? Colors.grey.shade600
-                              : Colors.grey.shade800,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Terms and Conditions
-              Card(
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(color: Colors.grey.shade200),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Checkbox(
-                            value: _termsAgreed,
-                            onChanged: (value) {
-                              setState(() {
-                                _termsAgreed = value ?? false;
-                              });
-                            },
-                            activeColor: Colors.green,
-                          ),
-                          const SizedBox(width: 8),
-                          const Expanded(
-                            child: Text(
-                              'I agree to the terms and conditions',
-                              style: TextStyle(
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'By submitting this order, you agree to:\n'
-                            '• Payment terms and conditions\n'
-                            '• Service terms and conditions\n'
-                            '• Privacy and data protection agreement\n'
-                            '• Cancellation policy\n'
-                            '• All applicable laws and regulations',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               ),
               const SizedBox(height: 24),
 
-              // Submit Button
+              // Get Estimate Button
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isSubmittingOrder ||
-                      !_termsAgreed ||
-                      _estimate == null
-                      ? null
-                      : _submitOrder,
+                child: ElevatedButton.icon(
+                  onPressed: _isLoadingEstimate ? null : _getEstimate,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    backgroundColor: Colors.blue,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: _isSubmittingOrder
+                  icon: _isLoadingEstimate
                       ? const SizedBox(
-                    width: 24,
-                    height: 24,
+                    width: 16,
+                    height: 16,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation(Colors.white),
                     ),
                   )
-                      : const Text(
-                    'Submit Booking Request',
-                    style: TextStyle(
+                      : const Icon(
+                    Icons.calculate,
+                    size: 20,
+                    color: Colors.white,
+                  ),
+                  label: Text(
+                    _isLoadingEstimate
+                        ? 'loading...'
+                        : 'Next',
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -912,7 +630,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               const SizedBox(height: 32),
 
               // Process Info
-              OrderProcess(),
+              const OrderProcess(),
               const SizedBox(height: 20),
             ],
           ),
@@ -986,8 +704,8 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
       );
     }
 
-    // Filter only active services
-    final activeServices = _serviceTypes.where((service) => service.active).toList();
+    final activeServices =
+    _serviceTypes.where((service) => service.active).toList();
 
     if (activeServices.isEmpty) {
       return Container(
@@ -1047,7 +765,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
       onChanged: (String? newValue) {
         setState(() {
           _selectedServiceType = newValue;
-          _estimate = null;
         });
       },
       validator: (value) {
@@ -1165,7 +882,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
           _selectedBatch = null;
           _houses = [];
           _availableBatches = [];
-          _estimate = null;
         });
         if (newValue != null) {
           _loadHousesForSelectedFarm();
@@ -1342,7 +1058,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
       onChanged: (String? newValue) {
         setState(() {
           _selectedBatch = newValue;
-          _estimate = null;
         });
       },
       validator: (value) {
@@ -1354,131 +1069,10 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
     );
   }
 
-  Widget _buildEstimateCard() {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.green.shade200),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.receipt, color: Colors.green.shade600),
-                const SizedBox(width: 8),
-                const Text(
-                  'Cost Estimate',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            _buildEstimateItem('Consultation Fee:', _estimate!.consultationFee),
-            _buildEstimateItem('Service Fee:', _estimate!.serviceFee),
-            _buildEstimateItem('Mileage Fee:', _estimate!.mileageFee),
-            if (_estimate!.prioritySurcharge > 0)
-              _buildEstimateItem(
-                'Priority Surcharge:',
-                _estimate!.prioritySurcharge,
-                isSurcharge: true,
-              ),
-            const Divider(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Total Estimated Cost:',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  '${_estimate!.currency} ${_estimate!.totalEstimatedCost.toStringAsFixed(0)}',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
-                ),
-              ],
-            ),
-            if (_estimate!.notes != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                _estimate!.notes!,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-
-
-  Widget _buildEstimateItem(String label, double amount,
-      {bool isSurcharge = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                color:
-                isSurcharge ? Colors.orange.shade700 : Colors.grey.shade700,
-                fontSize: 14,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            '${_estimate?.currency ?? 'KES'} ${amount.toStringAsFixed(0)}',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color:
-              isSurcharge ? Colors.orange.shade700 : Colors.green.shade700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-
   Color _getMortalityColor(double mortalityRate) {
     if (mortalityRate < 2) return Colors.green;
     if (mortalityRate < 5) return Colors.orange;
     return Colors.red;
-  }
-
-  Future<void> _selectTime() async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: const TimeOfDay(hour: 9, minute: 0),
-    );
-    if (picked != null && picked != _selectedTime) {
-      setState(() {
-        _selectedTime = picked;
-        _estimate = null;
-      });
-    }
   }
 
   @override

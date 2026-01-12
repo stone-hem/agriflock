@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock360/features/farmer/vet/models/my_order_list_item.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_farmer_model.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_order_model.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_service_type.dart';
@@ -327,6 +328,189 @@ class VetFarmerRepository {
       page: page,
       limit: limit,
       search: search,
+    );
+  }
+
+
+  /// Get farmer's veterinary orders
+  Future<Result<List<MyOrderListItem>>> getFarmerVetOrders({
+    String? status,
+    int page = 1,
+    int limit = 10,
+    String? search,
+    String? sortBy,
+    String? sortOrder,
+  }) async {
+    try {
+      // Build query parameters
+      final queryParams = <String, String>{};
+
+      if (status != null && status.isNotEmpty) {
+        queryParams['status'] = status;
+      }
+
+      if (search != null && search.isNotEmpty) {
+        queryParams['search'] = search;
+      }
+
+      if (sortBy != null && sortBy.isNotEmpty) {
+        queryParams['sort_by'] = sortBy;
+      }
+
+      if (sortOrder != null && sortOrder.isNotEmpty) {
+        queryParams['sort_order'] = sortOrder;
+      }
+
+      queryParams['page'] = page.toString();
+      queryParams['limit'] = limit.toString();
+
+      // Build query string
+      final queryString = Uri(queryParameters: queryParams).query;
+      final endpoint = '/order-vet/farmer/my-orders${queryString.isNotEmpty ? '?$queryString' : ''}';
+
+      final response = await apiClient.get(endpoint);
+
+      final jsonResponse = jsonDecode(response.body);
+      LogUtil.info('Get Farmer Vet Orders API Response: $jsonResponse');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        List<MyOrderListItem> orders = [];
+
+        if (jsonResponse is List) {
+          orders = jsonResponse
+              .map((item) => MyOrderListItem.fromJson(item))
+              .toList();
+        } else if (jsonResponse['data'] != null) {
+          final data = jsonResponse['data'] as List;
+          orders = data
+              .map((item) => MyOrderListItem.fromJson(item))
+              .toList();
+        }
+
+        return Success(orders);
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to fetch vet orders',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in getFarmerVetOrders: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
+    } catch (e) {
+      LogUtil.error('Error in getFarmerVetOrders: $e');
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to fetch vet orders',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+
+      return Failure(message: e.toString());
+    }
+  }
+
+  /// Get single vet order by ID
+  Future<Result<MyOrderListItem>> getVetOrderById(String orderId) async {
+    try {
+      final response = await apiClient.get('/order-vet/$orderId');
+
+      final jsonResponse = jsonDecode(response.body);
+      LogUtil.info('Get Vet Order by ID API Response: $jsonResponse');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return Success(MyOrderListItem.fromJson(jsonResponse));
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to fetch order details',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in getVetOrderById: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
+    } catch (e) {
+      LogUtil.error('Error in getVetOrderById: $e');
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to fetch order details',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+
+      return Failure(message: e.toString());
+    }
+  }
+
+  /// Cancel a vet order
+  Future<Result<void>> cancelVetOrder(String orderId, String reason) async {
+    try {
+      final response = await apiClient.patch(
+        '/order-vet/$orderId/cancel',
+        body: {'cancellation_reason': reason},
+      );
+
+      final jsonResponse = jsonDecode(response.body);
+      LogUtil.info('Cancel Vet Order API Response: $jsonResponse');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return const Success(null);
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to cancel order',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in cancelVetOrder: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
+    } catch (e) {
+      LogUtil.error('Error in cancelVetOrder: $e');
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to cancel order',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+
+      return Failure(message: e.toString());
+    }
+  }
+
+  /// Refresh farmer vet orders (same as getFarmerVetOrders but semantically clearer for pull-to-refresh)
+  Future<Result<List<MyOrderListItem>>> refreshFarmerVetOrders({
+    String? status,
+    int page = 1,
+    int limit = 10,
+    String? search,
+    String? sortBy,
+    String? sortOrder,
+  }) async {
+    return getFarmerVetOrders(
+      status: status,
+      page: page,
+      limit: limit,
+      search: search,
+      sortBy: sortBy,
+      sortOrder: sortOrder,
     );
   }
 }

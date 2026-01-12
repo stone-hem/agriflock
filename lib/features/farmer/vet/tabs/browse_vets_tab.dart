@@ -36,6 +36,7 @@ class _BrowseVetsTabState extends State<BrowseVetsTab> {
   final int _limit = 10;
   int _totalVets = 0;
 
+
   @override
   void initState() {
     super.initState();
@@ -707,6 +708,65 @@ class _BrowseVetsTabState extends State<BrowseVetsTab> {
     );
   }
 
+  Widget _buildChipsSection() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Quick Actions'),
+        Wrap(
+          spacing: 10,
+          runSpacing: 8,
+          alignment: WrapAlignment.center,
+          children: [
+            ActionChip(
+              avatar: const Icon(Icons.list_alt, size: 16),
+              label: const Text('My Orders'),
+              onPressed: () {
+                context.push('/my-vet-orders');
+              },
+              backgroundColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: BorderSide(
+                  color: Colors.grey.shade400,
+                  width: 1.5,
+                ),
+              ),
+              labelStyle: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade700,
+              ),
+            ),
+
+            ActionChip(
+              avatar: const Icon(Icons.check_circle, size: 16),
+              label: const Text('Completed Orders'),
+              onPressed: () {
+                context.push('/my-completed-orders');
+              },
+              backgroundColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: BorderSide(
+                  color: Colors.grey.shade400,
+                  width: 1.5,
+                ),
+              ),
+              labelStyle: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade700,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+
   bool get _isLoading => _isLoadingAllVets || _isLoadingRecommended;
   bool get _hasError => _hasAllVetsError && _hasRecommendedError;
   bool get _hasAnyData => _allVets.isNotEmpty || _recommendedVets.isNotEmpty;
@@ -762,6 +822,9 @@ class _BrowseVetsTabState extends State<BrowseVetsTab> {
                 ),
               ),
               const SizedBox(height: 24),
+              _buildChipsSection(),
+              const SizedBox(height: 24),
+
 
               // Loading state
               if (_isLoading && !_hasAnyData)

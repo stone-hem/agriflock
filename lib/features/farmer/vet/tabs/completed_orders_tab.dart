@@ -16,8 +16,214 @@ class CompletedOrdersTab extends StatefulWidget {
 }
 
 class _CompletedOrdersTabState extends State<CompletedOrdersTab> {
-  List<VetOrder> get completedOrders =>
-      widget.vetOrders.where((order) => order.status == OrderStatus.completed).toList();
+  final now = DateTime.now();
+
+  late final List<VetOrder> _vetOrders = [
+    VetOrder(
+      id: 'ORD001',
+      vetId: '1',
+      vetName: 'Dr. Sarah Johnson',
+      serviceType: 'Vaccination Service',
+      priority: 'Normal',
+      scheduledDate: now.add(const Duration(days: 1)),
+      scheduledTime: const TimeOfDay(hour: 10, minute: 30),
+      status: OrderStatus.confirmed,
+      totalCost: 12500,
+      consultationFee: 5000,
+      serviceFee: 3500,
+      mileageFee: 1200,
+      prioritySurcharge: 0,
+      houseName: 'Main Poultry House',
+      batchName: 'Batch 123 - Broilers',
+      reason: 'Annual vaccination program',
+      notes: 'Please bring avian flu vaccines',
+      vetLocation: VetLocation(
+        latitude: -1.286389,
+        longitude: 36.817223,
+        address: '123 Farm Road, Agricultural Zone',
+      ),
+      farmerLocation: FarmerLocation(
+        latitude: -1.2921,
+        longitude: 36.8219,
+        address: 'My Farm, Kiambu Road',
+      ),
+      estimatedArrivalTime: now.add(const Duration(hours: 25)),
+      isPaid: true,
+      userRating: 5,
+      userComment: 'Noting',
+    ),
+    VetOrder(
+      id: 'ORD002',
+      vetId: '2',
+      vetName: 'Dr. Michael Chen',
+      serviceType: 'Emergency Visit',
+      priority: 'Emergency',
+      scheduledDate: now,
+      scheduledTime: const TimeOfDay(hour: 14, minute: 0),
+      status: OrderStatus.enRoute,
+      totalCost: 18200,
+      consultationFee: 5000,
+      serviceFee: 8000,
+      mileageFee: 1500,
+      prioritySurcharge: 3700,
+      houseName: 'Secondary Poultry House',
+      batchName: 'Batch 124 - Layers',
+      reason: 'Sudden mortality in layers',
+      notes: 'Birds showing respiratory symptoms',
+      vetLocation: VetLocation(
+        latitude: -1.300000,
+        longitude: 36.783333,
+        address: '456 Poultry Lane, Farm District',
+      ),
+      farmerLocation: FarmerLocation(
+        latitude: -1.2921,
+        longitude: 36.8219,
+        address: 'My Farm, Kiambu Road',
+      ),
+      estimatedArrivalTime: now.add(const Duration(minutes: 45)),
+      isPaid: true,
+      userRating: 3,
+      userComment: '',
+    ),
+    VetOrder(
+      id: 'ORD003',
+      vetId: '3',
+      vetName: 'Dr. Maria Rodriguez',
+      serviceType: 'Routine Check-up',
+      priority: 'Urgent',
+      scheduledDate: now.add(const Duration(days: 3)),
+      scheduledTime: const TimeOfDay(hour: 9, minute: 0),
+      status: OrderStatus.pending,
+      totalCost: 9600,
+      consultationFee: 5000,
+      serviceFee: 2000,
+      mileageFee: 2000,
+      prioritySurcharge: 600,
+      houseName: 'Main Poultry House',
+      batchName: 'Batch 125 - Broilers',
+      reason: 'Monthly health check',
+      notes: 'Focus on weight gain monitoring',
+      vetLocation: VetLocation(
+        latitude: -1.250000,
+        longitude: 36.850000,
+        address: '789 Ranch Street, Rural Area',
+      ),
+      farmerLocation: FarmerLocation(
+        latitude: -1.2921,
+        longitude: 36.8219,
+        address: 'My Farm, Kiambu Road',
+      ),
+      estimatedArrivalTime: now.add(const Duration(days: 3, hours: 1)),
+      isPaid: true,
+      userRating: 5,
+      userComment: 'yey',
+    ),
+    VetOrder(
+      id: 'ORD004',
+      vetId: '1',
+      vetName: 'Dr. Sarah Johnson',
+      serviceType: 'Consultation',
+      priority: 'Normal',
+      scheduledDate: now.subtract(const Duration(days: 5)),
+      scheduledTime: const TimeOfDay(hour: 11, minute: 0),
+      status: OrderStatus.completed,
+      totalCost: 8500,
+      consultationFee: 5000,
+      serviceFee: 1500,
+      mileageFee: 1200,
+      prioritySurcharge: 0,
+      houseName: 'Quarantine House',
+      batchName: 'Batch 127 - Recovery',
+      reason: 'Follow-up on treatment progress',
+      notes: 'All birds recovered well',
+      vetLocation: VetLocation(
+        latitude: -1.286389,
+        longitude: 36.817223,
+        address: '123 Farm Road, Agricultural Zone',
+      ),
+      farmerLocation: FarmerLocation(
+        latitude: -1.2921,
+        longitude: 36.8219,
+        address: 'My Farm, Kiambu Road',
+      ),
+      estimatedArrivalTime: now.subtract(const Duration(days: 5, hours: 1)),
+      serviceCompletedDate: now.subtract(const Duration(days: 5)),
+      isPaid: false,
+      userRating: 0,
+      userComment: '',
+    ),
+    VetOrder(
+      id: 'ORD005',
+      vetId: '2',
+      vetName: 'Dr. Michael Chen',
+      serviceType: 'Disease Diagnosis',
+      priority: 'Urgent',
+      scheduledDate: now.subtract(const Duration(days: 2)),
+      scheduledTime: const TimeOfDay(hour: 15, minute: 30),
+      status: OrderStatus.completed,
+      totalCost: 11200,
+      consultationFee: 5000,
+      serviceFee: 3500,
+      mileageFee: 1500,
+      prioritySurcharge: 1200,
+      houseName: 'Main Poultry House',
+      batchName: 'Batch 128 - Layers',
+      reason: 'Suspected Newcastle disease',
+      notes: 'Samples collected for lab testing',
+      vetLocation: VetLocation(
+        latitude: -1.300000,
+        longitude: 36.783333,
+        address: '456 Poultry Lane, Farm District',
+      ),
+      farmerLocation: FarmerLocation(
+        latitude: -1.2921,
+        longitude: 36.8219,
+        address: 'My Farm, Kiambu Road',
+      ),
+      estimatedArrivalTime: now.subtract(const Duration(days: 2, hours: 2)),
+      serviceCompletedDate: now.subtract(const Duration(days: 2)),
+      isPaid: true,
+      userRating: 5,
+      userComment: 'Excellent service! Quick diagnosis and helpful advice.',
+    ),
+    VetOrder(
+      id: 'ORD006',
+      vetId: '3',
+      vetName: 'Dr. Maria Rodriguez',
+      serviceType: 'Preventive Medicine',
+      priority: 'Normal',
+      scheduledDate: now.subtract(const Duration(days: 7)),
+      scheduledTime: const TimeOfDay(hour: 13, minute: 0),
+      status: OrderStatus.completed,
+      totalCost: 9700,
+      consultationFee: 5000,
+      serviceFee: 2000,
+      mileageFee: 2000,
+      prioritySurcharge: 700,
+      houseName: 'Secondary Poultry House',
+      batchName: 'Batch 129 - Broilers',
+      reason: 'Seasonal preventive treatment',
+      notes: 'Applied deworming and vitamin supplements',
+      vetLocation: VetLocation(
+        latitude: -1.250000,
+        longitude: 36.850000,
+        address: '789 Ranch Street, Rural Area',
+      ),
+      farmerLocation: FarmerLocation(
+        latitude: -1.2921,
+        longitude: 36.8219,
+        address: 'My Farm, Kiambu Road',
+      ),
+      estimatedArrivalTime: now.subtract(const Duration(days: 7, hours: 1)),
+      serviceCompletedDate: now.subtract(const Duration(days: 7)),
+      isPaid: true,
+      userRating: 4,
+      userComment: 'Good service but a bit late for the appointment.',
+    ),
+  ];
+  List<VetOrder> get completedOrders => _vetOrders
+      .where((order) => order.status == OrderStatus.completed)
+      .toList();
 
   void _showPaymentDialog(VetOrder order) {
     showDialog(
@@ -33,10 +239,7 @@ class _CompletedOrdersTabState extends State<CompletedOrdersTab> {
             const SizedBox(height: 16),
             Text(
               'Total Amount:',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey.shade700,
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey.shade700),
             ),
             Text(
               '\$${(order.totalCost / 100).toStringAsFixed(2)}',
@@ -53,10 +256,7 @@ class _CompletedOrdersTabState extends State<CompletedOrdersTab> {
             const SizedBox(height: 16),
             const Text(
               'Select Payment Method:',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             _buildPaymentMethodItem(
@@ -86,9 +286,7 @@ class _CompletedOrdersTabState extends State<CompletedOrdersTab> {
               _processPayment(order);
               Navigator.pop(context);
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
             child: const Text('Pay Now'),
           ),
         ],
@@ -119,9 +317,7 @@ class _CompletedOrdersTabState extends State<CompletedOrdersTab> {
                   ),
                   Text(
                     order.serviceType,
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(color: Colors.grey.shade600),
                   ),
                   const SizedBox(height: 24),
                   const Text(
@@ -142,14 +338,18 @@ class _CompletedOrdersTabState extends State<CompletedOrdersTab> {
                         icon: Icon(
                           Icons.star,
                           size: 30,
-                          color: index < rating ? Colors.amber : Colors.grey.shade400,
+                          color: index < rating
+                              ? Colors.amber
+                              : Colors.grey.shade400,
                         ),
                       );
                     }),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    rating == 0 ? 'Tap a star to rate' : '${rating.toStringAsFixed(1)} Stars',
+                    rating == 0
+                        ? 'Tap a star to rate'
+                        : '${rating.toStringAsFixed(1)} Stars',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -170,10 +370,7 @@ class _CompletedOrdersTabState extends State<CompletedOrdersTab> {
                   const SizedBox(height: 8),
                   Text(
                     'Your feedback helps improve our service and helps other farmers.',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
                 ],
               ),
@@ -187,12 +384,10 @@ class _CompletedOrdersTabState extends State<CompletedOrdersTab> {
                 onPressed: rating == 0
                     ? null
                     : () {
-                  _submitRating(order, rating, commentController.text);
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                ),
+                        _submitRating(order, rating, commentController.text);
+                        Navigator.pop(context);
+                      },
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                 child: const Text('Submit Rating'),
               ),
             ],
@@ -234,11 +429,7 @@ class _CompletedOrdersTabState extends State<CompletedOrdersTab> {
         if (order.prioritySurcharge > 0)
           _buildFeeItem('Priority Surcharge', order.prioritySurcharge),
         const Divider(),
-        _buildFeeItem(
-          'Total',
-          order.totalCost,
-          isTotal: true,
-        ),
+        _buildFeeItem('Total', order.totalCost, isTotal: true),
       ],
     );
   }
@@ -274,7 +465,9 @@ class _CompletedOrdersTabState extends State<CompletedOrdersTab> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Payment of \$${(order.totalCost / 100).toStringAsFixed(2)} completed!'),
+        content: Text(
+          'Payment of \$${(order.totalCost / 100).toStringAsFixed(2)} completed!',
+        ),
         backgroundColor: Colors.green,
       ),
     );
@@ -298,9 +491,7 @@ class _CompletedOrdersTabState extends State<CompletedOrdersTab> {
   Widget _buildOrderCard(VetOrder order) {
     return Card(
       elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       margin: const EdgeInsets.only(bottom: 16),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -358,14 +549,15 @@ class _CompletedOrdersTabState extends State<CompletedOrdersTab> {
             // Completed Date
             Row(
               children: [
-                Icon(Icons.check_circle, size: 16, color: Colors.green.shade600),
+                Icon(
+                  Icons.check_circle,
+                  size: 16,
+                  color: Colors.green.shade600,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Completed on ${order.serviceCompletedDate?.toLocal().toString().split(' ')[0] ?? 'N/A'}',
-                  style: TextStyle(
-                    color: Colors.grey.shade700,
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
                 ),
               ],
             ),
@@ -379,10 +571,7 @@ class _CompletedOrdersTabState extends State<CompletedOrdersTab> {
                 Expanded(
                   child: Text(
                     '${order.houseName} • ${order.batchName}',
-                    style: TextStyle(
-                      color: Colors.grey.shade700,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
                   ),
                 ),
               ],
@@ -392,7 +581,11 @@ class _CompletedOrdersTabState extends State<CompletedOrdersTab> {
             // Cost
             Row(
               children: [
-                Icon(Icons.monetization_on, size: 16, color: Colors.green.shade600),
+                Icon(
+                  Icons.monetization_on,
+                  size: 16,
+                  color: Colors.green.shade600,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Total Cost: \$${(order.totalCost / 100).toStringAsFixed(2)}',
@@ -470,7 +663,8 @@ class _CompletedOrdersTabState extends State<CompletedOrdersTab> {
                       ),
                     ),
                   ),
-                if (!order.isPaid && order.userRating == 0) const SizedBox(width: 12),
+                if (!order.isPaid && order.userRating == 0)
+                  const SizedBox(width: 12),
                 if (order.userRating == 0)
                   Expanded(
                     child: ElevatedButton(
@@ -581,7 +775,10 @@ class _CompletedOrdersTabState extends State<CompletedOrdersTab> {
               const SizedBox(width: 12),
               Expanded(
                 child: _buildStatCard(
-                  value: completedOrders.where((o) => o.isPaid).length.toString(),
+                  value: completedOrders
+                      .where((o) => o.isPaid)
+                      .length
+                      .toString(),
                   label: 'Paid',
                   icon: Icons.payment,
                   color: Colors.green,
@@ -590,7 +787,10 @@ class _CompletedOrdersTabState extends State<CompletedOrdersTab> {
               const SizedBox(width: 12),
               Expanded(
                 child: _buildStatCard(
-                  value: completedOrders.where((o) => o.userRating > 0).length.toString(),
+                  value: completedOrders
+                      .where((o) => o.userRating > 0)
+                      .length
+                      .toString(),
                   label: 'Rated',
                   icon: Icons.star,
                   color: Colors.amber,
@@ -660,18 +860,12 @@ class _CompletedOrdersTabState extends State<CompletedOrdersTab> {
           // Orders List
           Text(
             'Completed Orders',
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
             '${completedOrders.length} service${completedOrders.length == 1 ? '' : 's'} completed',
-            style: TextStyle(
-              color: Colors.grey.shade600,
-              fontSize: 14,
-            ),
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
           ),
           const SizedBox(height: 16),
 
@@ -718,10 +912,7 @@ class _CompletedOrdersTabState extends State<CompletedOrdersTab> {
             const SizedBox(height: 4),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
             ),
           ],
         ),
@@ -734,11 +925,7 @@ class _CompletedOrdersTabState extends State<CompletedOrdersTab> {
       padding: const EdgeInsets.symmetric(vertical: 32),
       child: Column(
         children: [
-          Icon(
-            Icons.history,
-            size: 64,
-            color: Colors.grey.shade400,
-          ),
+          Icon(Icons.history, size: 64, color: Colors.grey.shade400),
           const SizedBox(height: 16),
           const Text(
             'No Completed Orders',
@@ -751,10 +938,7 @@ class _CompletedOrdersTabState extends State<CompletedOrdersTab> {
           const SizedBox(height: 8),
           Text(
             'Your completed veterinary services will appear here',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             textAlign: TextAlign.center,
           ),
         ],

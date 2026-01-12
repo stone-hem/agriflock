@@ -935,26 +935,33 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
           notes: _notesController.text.isEmpty ? null : _notesController.text,
         );
 
-        await _repository.quickDoneVaccination(widget.batchId, request);
+        final res=await _repository.quickDoneVaccination(widget.batchId, request);
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('Vaccination recorded successfully'),
-                  Text('${_birdsVaccinatedController.text} birds vaccinated'),
-                  const Text('Status: Completed'),
-                ],
-              ),
-              backgroundColor: Colors.green,
-            ),
-          );
-          _clearForm();
-          context.pop(true);
+        switch(res) {
+          case Success<Vaccination>():
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('Vaccination recorded successfully'),
+                      Text('${_birdsVaccinatedController.text} birds vaccinated'),
+                      const Text('Status: Completed'),
+                    ],
+                  ),
+                  backgroundColor: Colors.green,
+                ),
+              );
+              _clearForm();
+            }
+          case Failure<Vaccination>():
+            // TODO: Handle this case.
+            throw UnimplementedError();
         }
+
+
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
