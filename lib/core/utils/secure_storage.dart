@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/model/user_model.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
 
@@ -84,12 +85,42 @@ class SecureStorage {
     await _storage.write(key: _userKey, value: jsonEncode(userData));
   }
 
-  Future<Map<String, dynamic>?> getUserData() async {
-    final data = await _storage.read(key: _userKey);
-    if (data != null) {
-      return jsonDecode(data) as Map<String, dynamic>;
+  Future<void> saveUser(User user) async {
+    try {
+      await saveUserData(user.toJson());
+    } catch (e) {
+      print('Error saving user object: $e');
+      rethrow;
     }
-    return null;
+  }
+
+  // CORRECTED: Get user data as User object
+  Future<User?> getUserData() async {
+    try {
+      final data = await _storage.read(key: _userKey);
+      if (data != null) {
+        final Map<String, dynamic> userMap = jsonDecode(data);
+        return User.fromJson(userMap);
+      }
+      return null;
+    } catch (e) {
+      print('Error retrieving user data: $e');
+      return null;
+    }
+  }
+
+  // Alternative: Get user data as Map for flexibility
+  Future<Map<String, dynamic>?> getUserDataAsMap() async {
+    try {
+      final data = await _storage.read(key: _userKey);
+      if (data != null) {
+        return jsonDecode(data) as Map<String, dynamic>;
+      }
+      return null;
+    } catch (e) {
+      print('Error retrieving user data as map: $e');
+      return null;
+    }
   }
 
   Future<void> deleteUserData() async {
