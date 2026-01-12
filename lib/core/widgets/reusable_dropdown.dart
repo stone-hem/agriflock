@@ -38,21 +38,33 @@ class ReusableDropdown<T> extends StatelessWidget {
       onChanged: enabled ? onChanged : null,
       validator: validator,
       isExpanded: isExpanded,
+      isDense: true, // Helps with vertical spacing
       decoration: InputDecoration(
         labelText: labelText,
         hintText: hintText,
-        // Conditionally show prefixIcon only when icon is not null
+        // Fixed prefixIcon with explicit constraints
         prefixIcon: icon != null
-            ? Container(
-          margin: const EdgeInsets.only(right: 12),
-          decoration: BoxDecoration(
-            color: backgroundColor ?? Colors.green.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
+            ? Padding(
+          padding: const EdgeInsets.only(left: 12, right: 8),
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: backgroundColor ?? Colors.green.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              size: 24,
+              color: iconColor ?? Colors.green.shade600,
+            ),
           ),
-          child: Icon(
-            icon,
-            color: iconColor ?? Colors.green.shade600,
-          ),
+        )
+            : null,
+        prefixIconConstraints: icon != null
+            ? const BoxConstraints(
+          minWidth: 60,
+          minHeight: 40,
         )
             : null,
         suffixIcon: suffixIcon,
@@ -83,7 +95,7 @@ class ReusableDropdown<T> extends StatelessWidget {
           ),
         ),
         contentPadding: EdgeInsets.symmetric(
-          horizontal: icon != null ? 16 : 10,
+          horizontal: icon != null ? 12 : 16,
           vertical: 16,
         ),
         floatingLabelBehavior: FloatingLabelBehavior.auto,

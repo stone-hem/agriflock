@@ -1010,7 +1010,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
     return ReusableDropdown<String>(
       value: _selectedFarm,
       hintText: 'Choose a farm',
-labelText: 'Farm',
+      labelText: 'Farm',
       icon: Icons.agriculture,
       isExpanded: true,
       items: _farmsResponse!.farms.map((farm) {
