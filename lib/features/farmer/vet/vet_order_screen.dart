@@ -4,7 +4,6 @@ import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/batch_house_repo.dart';
 import 'package:agriflock360/features/farmer/farm/repositories/farm_repository.dart';
-import 'package:agriflock360/features/farmer/vet/models/order_screen.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_farmer_model.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_order_model.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_service_type.dart';
@@ -28,7 +27,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
   final VetFarmerRepository _vetRepository = VetFarmerRepository();
   final _formKey = GlobalKey<FormState>();
   final _reasonController = TextEditingController();
-  final _additionalNotesController = TextEditingController();
   final _selectedDateController = TextEditingController();
 
   // Selection states
@@ -66,17 +64,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
   bool _hasError = false;
   String? _errorMessage;
 
-  // Service types - You might want to fetch these from API
-  final Map<String, String> _services = {
-    'routine_checkup': 'Routine Check-up',
-    'vaccination': 'Vaccination Service',
-    'emergency': 'Emergency Visit',
-    'diagnosis': 'Disease Diagnosis',
-    'consultation': 'Consultation',
-    'treatment': 'Treatment',
-    'post_mortem': 'Post-mortem Examination',
-    'certification': 'Health Certification',
-  };
 
   final List<String> _priorities = [
     'NORMAL',
@@ -249,9 +236,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               .first,
       preferredTime: _selectedTime?.format(context) ?? '09:00',
       reasonForVisit: _reasonController.text,
-      additionalNotes: _additionalNotesController.text.isNotEmpty
-          ? _additionalNotesController.text
-          : null,
       termsAgreed: _termsAgreed,
     );
 
@@ -323,9 +307,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
       preferredDate: _selectedDate!.toIso8601String().split('T').first,
       preferredTime: _selectedTime!.format(context),
       reasonForVisit: _reasonController.text,
-      additionalNotes: _additionalNotesController.text.isNotEmpty
-          ? _additionalNotesController.text
-          : null,
       termsAgreed: _termsAgreed,
     );
 
@@ -709,8 +690,37 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               ),
               const SizedBox(height: 20),
 
+              const SizedBox(height: 20),
+
+              // Reason for Visit
+              Text(
+                'Reason for Visit',
+                style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade800,
+                ),
+              ),
+              const SizedBox(height: 8),
+              ReusableInput(
+                controller: _reasonController,
+                labelText: 'Reason',
+                hintText: 'Describe the reason for the veterinary visit...',
+                maxLines: 3,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please describe the reason for visit';
+                  }
+                  return null;
+                },
+                onChanged: (value) {
+                  setState(() {
+                    _estimate = null;
+                  });
+                },
+              ),
+
               // Get Estimate Button
-              if (_selectedServiceType != null && _selectedPriority != null)
+              if (_selectedServiceType != null && _selectedPriority != null && _reasonController.text.isNotEmpty)
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
@@ -731,7 +741,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                         valueColor: AlwaysStoppedAnimation(Colors.white),
                       ),
                     )
-                        : const Icon(Icons.calculate, size: 20),
+                        : const Icon(Icons.calculate, size: 20,color: Colors.white,),
                     label: Text(
                       _isLoadingEstimate
                           ? 'Getting Estimate...'
@@ -739,6 +749,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
+                        color: Colors.white
                       ),
                     ),
                   ),
@@ -808,56 +819,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
 
-              // Reason for Visit
-              Text(
-                'Reason for Visit',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
-              ReusableInput(
-                controller: _reasonController,
-                labelText: 'Reason',
-                hintText: 'Describe the reason for the veterinary visit...',
-                maxLines: 3,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please describe the reason for visit';
-                  }
-                  return null;
-                },
-                onChanged: (value) {
-                  setState(() {
-                    _estimate = null;
-                  });
-                },
-              ),
-              const SizedBox(height: 20),
-
-              // Additional Notes
-              Text(
-                'Additional Notes (Optional)',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
-              ReusableInput(
-                controller: _additionalNotesController,
-                labelText: 'Additional Notes',
-                hintText: 'Any additional information or special requirements...',
-                maxLines: 2,
-                onChanged: (value) {
-                  setState(() {
-                    _estimate = null;
-                  });
-                },
-              ),
               const SizedBox(height: 20),
 
               // Terms and Conditions
@@ -1439,7 +1401,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                   ),
                 ),
                 Text(
-                  '${_estimate!.currency} ${_estimate!.estimatedCost.toStringAsFixed(0)}',
+                  '${_estimate!.currency} ${_estimate!.totalEstimatedCost.toStringAsFixed(0)}',
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -1522,7 +1484,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
   @override
   void dispose() {
     _reasonController.dispose();
-    _additionalNotesController.dispose();
     super.dispose();
   }
 }

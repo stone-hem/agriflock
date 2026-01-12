@@ -81,36 +81,45 @@ class VetEstimateRequest {
 }
 
 class VetEstimateResponse {
-  final double estimatedCost;
+  final double totalEstimatedCost;
   final double consultationFee;
   final double serviceFee;
   final double mileageFee;
+  final double distanceKm;
   final double prioritySurcharge;
   final String currency;
   final String? breakdown;
   final String? notes;
+  final String? serviceCode;
+  final String? mileageDetails;
 
   VetEstimateResponse({
-    required this.estimatedCost,
+    required this.totalEstimatedCost,
     required this.consultationFee,
     required this.serviceFee,
     required this.mileageFee,
+    required this.distanceKm,
     required this.prioritySurcharge,
     this.currency = 'KES',
     this.breakdown,
     this.notes,
+    this.serviceCode,
+    this.mileageDetails,
   });
 
   factory VetEstimateResponse.fromJson(Map<String, dynamic> json) {
     return VetEstimateResponse(
-      estimatedCost: (json['estimated_cost'] as num).toDouble(),
-      consultationFee: (json['consultation_fee'] as num).toDouble(),
-      serviceFee: (json['service_fee'] as num).toDouble(),
-      mileageFee: (json['mileage_fee'] as num).toDouble(),
-      prioritySurcharge: (json['priority_surcharge'] as num).toDouble(),
+      totalEstimatedCost: (json['totalEstimatedCost'] as num).toDouble(),
+      consultationFee: (json['consultationFee'] as num).toDouble(),
+      serviceFee: (json['serviceFee'] as num).toDouble(),
+      mileageFee: (json['mileageFee'] as num).toDouble(),
+      distanceKm: (json['distanceKm'] as num).toDouble(),
+      prioritySurcharge: (json['prioritySurcharge'] as num).toDouble(),
       currency: json['currency'] as String? ?? 'KES',
       breakdown: json['breakdown'] as String?,
       notes: json['notes'] as String?,
+      serviceCode: json['serviceCode'] as String?,
+      mileageDetails: json['mileageDetails'] as String?,
     );
   }
 }
