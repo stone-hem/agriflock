@@ -7,6 +7,7 @@ import 'package:agriflock360/features/farmer/farm/repositories/farm_repository.d
 import 'package:agriflock360/features/farmer/vet/models/order_screen.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_farmer_model.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_order_model.dart';
+import 'package:agriflock360/features/farmer/vet/models/vet_service_type.dart';
 import 'package:agriflock360/features/farmer/vet/repo/vet_farmer_repository.dart';
 import 'package:agriflock360/features/farmer/vet/widgets/order_process.dart';
 import 'package:flutter/material.dart';
@@ -45,6 +46,11 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
   bool _isLoadingEstimate = false;
   bool _isSubmittingOrder = false;
 
+  // Service types - Dynamic from API
+  List<VetServiceType> _serviceTypes = []; // Replace the hardcoded map
+  bool _isLoadingServices = false;
+  String? _servicesError;
+
   // Repositories
   final _farmRepository = FarmRepository();
   final _batchHouseRepository = BatchHouseRepository();
@@ -82,6 +88,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
   void initState() {
     super.initState();
     _loadFarms();
+    _loadServiceTypes();
   }
 
   Future<void> _loadFarms() async {
@@ -115,6 +122,38 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
         _hasError = true;
         _errorMessage = 'Failed to load farms: $e';
         _isLoadingFarms = false;
+      });
+    }
+  }
+
+  Future<void> _loadServiceTypes() async {
+    setState(() {
+      _isLoadingServices = true;
+      _servicesError = null;
+    });
+
+    try {
+      final result = await _vetRepository.getVetServiceTypes();
+
+      switch (result) {
+        case Success<VetServiceTypesResponse>(data: final data):
+          setState(() {
+            _serviceTypes = data.serviceTypes;
+            _isLoadingServices = false;
+          });
+          break;
+        case Failure(message: final error):
+          setState(() {
+            _isLoadingServices = false;
+            _servicesError = error;
+          });
+          ApiErrorHandler.handle(error);
+          break;
+      }
+    } catch (e) {
+      setState(() {
+        _isLoadingServices = false;
+        _servicesError = 'Failed to load service types: $e';
       });
     }
   }
@@ -603,30 +642,8 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              ReusableDropdown<String>(
-                value: _selectedServiceType,
-                labelText: 'Service Type',
-                hintText: 'Select type of service needed',
-                icon: Icons.medical_services,
-                items: _services.entries.map((entry) {
-                  return DropdownMenuItem<String>(
-                    value: entry.key,
-                    child: Text(entry.value),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedServiceType = newValue;
-                    _estimate = null;
-                  });
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please select service type';
-                  }
-                  return null;
-                },
-              ),
+              _buildServiceTypeDropdown(), // Use the new widget
+
               const SizedBox(height: 20),
 
               // Priority Level
@@ -939,6 +956,144 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildServiceTypeDropdown() {
+    if (_isLoadingServices) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(12),
+          color: Colors.grey.shade50,
+        ),
+        child: const Row(
+          children: [
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            SizedBox(width: 12),
+            Text('Loading service types...'),
+          ],
+        ),
+      );
+    }
+
+    if (_servicesError != null) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.red.shade300),
+          borderRadius: BorderRadius.circular(12),
+          color: Colors.red.shade50,
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.error, color: Colors.red.shade600),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                _servicesError!,
+                style: TextStyle(color: Colors.red.shade700),
+              ),
+            ),
+            TextButton(
+              onPressed: _loadServiceTypes,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_serviceTypes.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(12),
+          color: Colors.grey.shade50,
+        ),
+        child: const Text('No service types available'),
+      );
+    }
+
+    // Filter only active services
+    final activeServices = _serviceTypes.where((service) => service.active).toList();
+
+    if (activeServices.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(12),
+          color: Colors.grey.shade50,
+        ),
+        child: const Text('No active services available'),
+      );
+    }
+
+    return ReusableDropdown<String>(
+      value: _selectedServiceType,
+      labelText: 'Service Type',
+      hintText: 'Select type of service needed',
+      icon: Icons.medical_services,
+      items: activeServices.map((service) {
+        return DropdownMenuItem<String>(
+          value: service.id,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                service.serviceName,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                '${service.currency} ${service.basePrice.toStringAsFixed(2)}',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.green.shade700,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (service.description.isNotEmpty)
+                Text(
+                  service.description,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey.shade600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+            ],
+          ),
+        );
+      }).toList(),
+      onChanged: (String? newValue) {
+        setState(() {
+          _selectedServiceType = newValue;
+          _estimate = null;
+        });
+      },
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please select service type';
+        }
+        return null;
+      },
     );
   }
 

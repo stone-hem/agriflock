@@ -4,6 +4,7 @@ import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_farmer_model.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_order_model.dart';
+import 'package:agriflock360/features/farmer/vet/models/vet_service_type.dart';
 import 'package:agriflock360/main.dart';
 import 'package:http/http.dart' as http;
 
@@ -207,6 +208,48 @@ class VetFarmerRepository {
       if (e is http.Response) {
         return Failure(
           message: 'Failed to get estimate',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+
+      return Failure(message: e.toString());
+    }
+  }
+
+  /// Get all veterinary service types
+  Future<Result<VetServiceTypesResponse>> getVetServiceTypes() async {
+    try {
+      final response = await apiClient.get(
+        '/vet-services-types',
+      );
+
+      final jsonResponse = jsonDecode(response.body);
+      LogUtil.info('Vet Service Types API Response: $jsonResponse');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        // The response is a list, not a map
+        final List<dynamic> dataList = jsonResponse is List ? jsonResponse : [];
+        return Success(VetServiceTypesResponse.fromJson(dataList));
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to fetch vet service types',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in getVetServiceTypes: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
+    } catch (e) {
+      LogUtil.error('Error in getVetServiceTypes: $e');
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to fetch vet service types',
           response: e,
           statusCode: e.statusCode,
         );
