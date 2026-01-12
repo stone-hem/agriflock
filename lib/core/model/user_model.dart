@@ -42,6 +42,7 @@ class User {
   final String? phoneNumber;
   final bool is2faEnabled;
   final String? emailVerificationExpiresAt;
+  final String? lastVerificationSentAt; // This was missing
   final String? refreshTokenExpiresAt;
   final String? passwordResetExpiresAt;
   final String status;
@@ -53,14 +54,13 @@ class User {
   final Role role;
   final bool isActive;
   final String? lockedUntil;
+  final String? firstLogin;
+  final String? lastLogin;
   final String createdAt;
   final String updatedAt;
   final String? deletedAt;
   final bool agreedToTerms;
   final String? agreedToTermsAt;
-  final String? firstLogin;
-  final String? lastLogin;
-
 
   User({
     required this.id,
@@ -69,6 +69,7 @@ class User {
     this.phoneNumber,
     required this.is2faEnabled,
     this.emailVerificationExpiresAt,
+    this.lastVerificationSentAt,
     this.refreshTokenExpiresAt,
     this.passwordResetExpiresAt,
     required this.status,
@@ -80,11 +81,13 @@ class User {
     required this.role,
     required this.isActive,
     this.lockedUntil,
+    this.firstLogin,
+    this.lastLogin,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
     required this.agreedToTerms,
-    this.agreedToTermsAt, this.firstLogin, this.lastLogin,
+    this.agreedToTermsAt,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -93,26 +96,27 @@ class User {
       email: json['email'],
       name: json['name'] ?? "Not Provided",
       phoneNumber: json['phone_number'],
-      is2faEnabled: json['is_2fa_enabled'],
+      is2faEnabled: json['is_2fa_enabled'] ?? false,
       emailVerificationExpiresAt: json['email_verification_expires_at'],
+      lastVerificationSentAt: json['last_verification_sent_at'],
       refreshTokenExpiresAt: json['refresh_token_expires_at'],
       passwordResetExpiresAt: json['password_reset_expires_at'],
-      status: json['status'],
+      status: json['status'] ?? 'active',
       avatar: json['avatar'],
       googleId: json['google_id'],
       appleId: json['apple_id'],
-      oauthProvider: json['oauth_provider'],
+      oauthProvider: json['oauth_provider'] ?? 'email',
       roleId: json['role_id'],
       role: Role.fromJson(json['role']),
-      isActive: json['is_active'],
+      isActive: json['is_active'] ?? true,
       lockedUntil: json['locked_until'],
+      firstLogin: json['first_login'],
+      lastLogin: json['last_login'],
       createdAt: json['created_at'],
       updatedAt: json['updated_at'],
       deletedAt: json['deleted_at'],
-      agreedToTerms: json['agreed_to_terms'],
+      agreedToTerms: json['agreed_to_terms'] ?? false,
       agreedToTermsAt: json['agreed_to_terms_at'],
-      firstLogin: json['first_login'],
-      lastLogin: json['last_login'],
     );
   }
 
@@ -124,6 +128,7 @@ class User {
       'phone_number': phoneNumber,
       'is_2fa_enabled': is2faEnabled,
       'email_verification_expires_at': emailVerificationExpiresAt,
+      'last_verification_sent_at': lastVerificationSentAt,
       'refresh_token_expires_at': refreshTokenExpiresAt,
       'password_reset_expires_at': passwordResetExpiresAt,
       'status': status,
@@ -135,6 +140,8 @@ class User {
       'role': role.toJson(),
       'is_active': isActive,
       'locked_until': lockedUntil,
+      'first_login': firstLogin,
+      'last_login': lastLogin,
       'created_at': createdAt,
       'updated_at': updatedAt,
       'deleted_at': deletedAt,

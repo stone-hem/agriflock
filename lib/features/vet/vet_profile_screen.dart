@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/model/user_model.dart';
 import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:agriflock360/features/shared/widgets/profile_menu_item.dart';
 import 'package:flutter/material.dart';
@@ -31,27 +32,27 @@ class _VetProfileScreenState extends State<VetProfileScreen> {
   Future<void> _loadUserData() async {
     try {
       // Get user data from secure storage
-      final userData = await _secureStorage.getUserData();
+      final User? userData = await _secureStorage.getUserData();
 
       if (userData != null && mounted) {
         setState(() {
           // Extract user information
-          _userName = userData['name'] ?? 'Not Provided';
-          _userEmail = userData['email'] ?? 'Not Provided';
-          _userAvatar = userData['avatar'];
-          _userPhone = userData['phone_number'];
+          _userName = userData.name;
+          _userEmail = userData.email;
+          _userAvatar = userData.avatar;
+          _userPhone = userData.phoneNumber;
 
           // Extract role information
-          final role = userData['role'];
-          if (role != null && role is Map<String, dynamic>) {
-            _userRole = role['name'] ?? 'User';
+          final role = userData.role;
+          if (role is Map<String, dynamic>) {
+            _userRole = role.name;
           } else {
             _userRole = 'User';
           }
 
           // Check if user is premium (you can adjust this logic based on your criteria)
-          _isPremium = userData['status'] == 'active' &&
-              (userData['agreed_to_terms'] == true);
+          _isPremium = userData.status == 'active' &&
+              (userData.agreedToTerms == true);
 
           _isLoading = false;
         });

@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/model/user_model.dart';
 import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:agriflock360/features/farmer/farm/view/farms_home_screen.dart';
 import 'package:agriflock360/features/farmer/profile/profile_screen.dart';
@@ -34,14 +35,14 @@ class _MainDashboardState extends State<MainDashboard> {
   Future<void> _loadUserRole() async {
     try {
       // Get user data from secure storage
-      final userData = await _secureStorage.getUserData();
+      final User? userData = await _secureStorage.getUserData();
 
       // Check if widget is still mounted before calling setState
       if (!mounted) return;
 
-      if (userData != null && userData['role'] != null) {
-        final role = userData['role'] as Map<String, dynamic>;
-        final roleName = role['name'] as String;
+      if (userData != null) {
+        final Role role = userData.role;
+        final roleName = role.name;
 
         setState(() {
           _userRole = roleName.toLowerCase();

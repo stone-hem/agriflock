@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
+import 'package:agriflock360/core/model/user_model.dart';
 import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/features/shared/widgets/profile_menu_item.dart';
@@ -20,12 +21,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final SecureStorage _secureStorage = SecureStorage();
   final ImagePicker _imagePicker = ImagePicker();
 
-  // User data variables
-  String _userName = 'Loading...';
-  String _userEmail = 'Loading...';
-  String? _userAvatar;
-  String _userRole = 'Loading...';
-  String? _userPhone;
+  // User data variables - Now using User object
+  late User _user;
   bool _isLoading = true;
   bool _isUploading = false;
   double _profileCompletion = 65.0;
@@ -33,43 +30,71 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
+    _user = User(
+      id: '',
+      email: 'Loading...',
+      name: 'Loading...',
+      phoneNumber: null,
+      is2faEnabled: false,
+      status: '',
+      oauthProvider: '',
+      roleId: '',
+      role: Role(
+        id: '',
+        name: 'Loading...',
+        description: '',
+        isSystemRole: false,
+        isActive: true,
+        createdAt: '',
+        updatedAt: '',
+      ),
+      isActive: true,
+      createdAt: '',
+      updatedAt: '',
+      agreedToTerms: false,
+    );
     _loadUserData();
   }
 
   Future<void> _loadUserData() async {
     try {
-      // Get user data from secure storage
+      // Get user data from secure storage as User object
       final userData = await _secureStorage.getUserData();
 
       if (userData != null && mounted) {
         setState(() {
-          // Extract user information
-          _userName = userData['name'] ?? 'Not Provided';
-          _userEmail = userData['email'] ?? 'Not Provided';
-          _userAvatar = userData['avatar'];
-          _userPhone = userData['phone_number'];
-
-          // Extract role information
-          final role = userData['role'];
-          if (role != null && role is Map<String, dynamic>) {
-            _userRole = role['name'] ?? 'Farmer';
-          } else {
-            _userRole = 'Farmer';
-          }
-
-
+          _user = userData;
           // Calculate profile completion based on available data
           _profileCompletion = _calculateProfileCompletion(userData);
-
           _isLoading = false;
         });
       } else {
         // If no user data found, use default values
         if (mounted) {
           setState(() {
-            _userName = 'Guest Farmer';
-            _userEmail = 'guest@example.com';
-            _userRole = 'Farmer';
+            _user = User(
+              id: 'guest',
+              email: 'guest@example.com',
+              name: 'Guest Farmer',
+              phoneNumber: null,
+              is2faEnabled: false,
+              status: 'active',
+              oauthProvider: 'local',
+              roleId: '1',
+              role: Role(
+                id: '1',
+                name: 'Farmer',
+                description: 'Guest farmer role',
+                isSystemRole: false,
+                isActive: true,
+                createdAt: DateTime.now().toIso8601String(),
+                updatedAt: DateTime.now().toIso8601String(),
+              ),
+              isActive: true,
+              createdAt: DateTime.now().toIso8601String(),
+              updatedAt: DateTime.now().toIso8601String(),
+              agreedToTerms: false,
+            );
             _isLoading = false;
           });
         }
@@ -78,24 +103,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
       print('Error loading user data: $e');
       if (mounted) {
         setState(() {
-          _userName = 'Error Loading';
-          _userEmail = 'Error Loading';
-          _userRole = 'Farmer';
+          _user = User(
+            id: 'error',
+            email: 'Error Loading',
+            name: 'Error Loading',
+            phoneNumber: null,
+            is2faEnabled: false,
+            status: 'error',
+            oauthProvider: '',
+            roleId: '',
+            role: Role(
+              id: '',
+              name: 'Farmer',
+              description: '',
+              isSystemRole: false,
+              isActive: true,
+              createdAt: '',
+              updatedAt: '',
+            ),
+            isActive: false,
+            createdAt: '',
+            updatedAt: '',
+            agreedToTerms: false,
+          );
           _isLoading = false;
         });
       }
     }
   }
 
-  double _calculateProfileCompletion(Map<String, dynamic> userData) {
+  double _calculateProfileCompletion(User user) {
     int completedFields = 0;
     int totalFields = 5;
 
-    if (userData['name'] != null && userData['name'].toString().isNotEmpty) completedFields++;
-    if (userData['email'] != null && userData['email'].toString().isNotEmpty) completedFields++;
-    if (userData['phone_number'] != null && userData['phone_number'].toString().isNotEmpty) completedFields++;
-    if (userData['avatar'] != null && userData['avatar'].toString().isNotEmpty) completedFields++;
-    if (userData['agreed_to_terms'] == true) completedFields++;
+    if (user.name.isNotEmpty && user.name != 'Not Provided') completedFields++;
+    if (user.email.isNotEmpty) completedFields++;
+    if (user.phoneNumber != null && user.phoneNumber!.isNotEmpty) completedFields++;
+    if (user.avatar != null && user.avatar!.isNotEmpty) completedFields++;
+    if (user.agreedToTerms == true) completedFields++;
 
     return (completedFields / totalFields) * 100;
   }
@@ -181,18 +226,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final newAvatarUrl = responseData['avatar'] ?? responseData['data']?['avatar'];
 
         if (newAvatarUrl != null) {
+          // Update user object with new avatar
+          final updatedUser = User(
+            id: _user.id,
+            email: _user.email,
+            name: _user.name,
+            phoneNumber: _user.phoneNumber,
+            is2faEnabled: _user.is2faEnabled,
+            emailVerificationExpiresAt: _user.emailVerificationExpiresAt,
+            refreshTokenExpiresAt: _user.refreshTokenExpiresAt,
+            passwordResetExpiresAt: _user.passwordResetExpiresAt,
+            status: _user.status,
+            avatar: newAvatarUrl,
+            googleId: _user.googleId,
+            appleId: _user.appleId,
+            oauthProvider: _user.oauthProvider,
+            roleId: _user.roleId,
+            role: _user.role,
+            isActive: _user.isActive,
+            lockedUntil: _user.lockedUntil,
+            createdAt: _user.createdAt,
+            updatedAt: _user.updatedAt,
+            deletedAt: _user.deletedAt,
+            agreedToTerms: _user.agreedToTerms,
+            agreedToTermsAt: _user.agreedToTermsAt,
+            firstLogin: _user.firstLogin,
+            lastLogin: _user.lastLogin,
+          );
+
           // Update secure storage
-          final userData = await _secureStorage.getUserData();
-          if (userData != null) {
-            userData['avatar'] = newAvatarUrl;
-            await _secureStorage.saveUserData(userData);
-          }
+          await _secureStorage.saveUser(updatedUser);
 
           // Update UI
           if (mounted) {
             setState(() {
-              _userAvatar = newAvatarUrl;
-              _profileCompletion = _calculateProfileCompletion(userData ?? {});
+              _user = updatedUser;
+              _profileCompletion = _calculateProfileCompletion(updatedUser);
             });
           }
 
@@ -251,18 +320,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final response = await apiClient.delete('/users/profile/avatar');
 
       if (response.statusCode == 200 || response.statusCode == 204) {
-        // Update local storage
-        final userData = await _secureStorage.getUserData();
-        if (userData != null) {
-          userData['avatar'] = null;
-          await _secureStorage.saveUserData(userData);
-        }
+        // Update user object without avatar
+        final updatedUser = User(
+          id: _user.id,
+          email: _user.email,
+          name: _user.name,
+          phoneNumber: _user.phoneNumber,
+          is2faEnabled: _user.is2faEnabled,
+          emailVerificationExpiresAt: _user.emailVerificationExpiresAt,
+          refreshTokenExpiresAt: _user.refreshTokenExpiresAt,
+          passwordResetExpiresAt: _user.passwordResetExpiresAt,
+          status: _user.status,
+          avatar: null,
+          googleId: _user.googleId,
+          appleId: _user.appleId,
+          oauthProvider: _user.oauthProvider,
+          roleId: _user.roleId,
+          role: _user.role,
+          isActive: _user.isActive,
+          lockedUntil: _user.lockedUntil,
+          createdAt: _user.createdAt,
+          updatedAt: _user.updatedAt,
+          deletedAt: _user.deletedAt,
+          agreedToTerms: _user.agreedToTerms,
+          agreedToTermsAt: _user.agreedToTermsAt,
+          firstLogin: _user.firstLogin,
+          lastLogin: _user.lastLogin,
+        );
+
+        // Update secure storage
+        await _secureStorage.saveUser(updatedUser);
 
         // Update UI
         if (mounted) {
           setState(() {
-            _userAvatar = null;
-            _profileCompletion = _calculateProfileCompletion(userData ?? {});
+            _user = updatedUser;
+            _profileCompletion = _calculateProfileCompletion(updatedUser);
           });
         }
 
@@ -367,11 +460,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: CircleAvatar(
                             radius: 46,
                             backgroundColor: Colors.white,
-                            backgroundImage: _userAvatar != null
-                                ? NetworkImage(_userAvatar!)
+                            backgroundImage: _user.avatar != null
+                                ? NetworkImage(_user.avatar!)
                                 : const NetworkImage('https://i.pravatar.cc/300')
                             as ImageProvider,
-                            child: _userAvatar == null
+                            child: _user.avatar == null
                                 ? const Icon(
                               Icons.person,
                               size: 40,
@@ -409,7 +502,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                   const SizedBox(height: 16),
                   Text(
-                    _userName,
+                    _user.name,
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -418,7 +511,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     textAlign: TextAlign.center,
                   ),
                   Text(
-                    _userEmail,
+                    _user.email,
                     style: TextStyle(
                       color: Colors.black.withOpacity(0.7),
                       fontSize: 16,
@@ -427,10 +520,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
 
                   // Display phone number if available
-                  if (_userPhone != null && _userPhone!.isNotEmpty) ...[
+                  if (_user.phoneNumber != null && _user.phoneNumber!.isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Text(
-                      _userPhone!,
+                      _user.phoneNumber!,
                       style: TextStyle(
                         color: Colors.black.withOpacity(0.6),
                         fontSize: 14,
@@ -448,7 +541,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       border: Border.all(color: Colors.blue.shade300),
                     ),
                     child: Text(
-                      _userRole,
+                      _user.role.name,
                       style: TextStyle(
                         color: Colors.blue.shade800,
                         fontWeight: FontWeight.w600,
@@ -714,4 +807,3 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
-
