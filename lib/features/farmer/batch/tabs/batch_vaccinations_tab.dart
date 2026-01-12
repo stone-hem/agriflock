@@ -281,13 +281,13 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
           child: FloatingActionButton.extended(
             onPressed: () async {
               final result =
-              await context.push('/batches/${widget.batch.id}/quick-done');
+              await context.push('/batches/${widget.batch.id}/record-vaccination');
               if (result == true) {
                 _onRefresh();
               }
             },
             icon: const Icon(Icons.add),
-            label: const Text('Quick done'),
+            label: const Text('Record Vaccination'),
             foregroundColor: Colors.white,
             backgroundColor: Colors.green,
           ),

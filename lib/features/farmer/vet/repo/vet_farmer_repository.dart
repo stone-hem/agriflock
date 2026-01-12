@@ -176,6 +176,8 @@ class VetFarmerRepository {
       VetEstimateRequest request,
       ) async {
     try {
+      LogUtil.warning(request.toJson());
+
       final response = await apiClient.post(
         '/order-vet/estimate',
         body: request.toJson(),
@@ -219,6 +221,8 @@ class VetFarmerRepository {
       VetOrderRequest request,
       ) async {
     try {
+      LogUtil.warning(request);
+
       final response = await apiClient.post(
         '/order-vet',
         body: request.toJson(),

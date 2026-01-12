@@ -33,34 +33,3 @@ class FarmBatch {
   });
 }
 
-class OrderSummary {
-  final VetOfficer vet;
-  final FarmHouse house;
-  final FarmBatch batch;
-  final String serviceType;
-  final String priority;
-  final DateTime date;
-  final TimeOfDay time;
-  final String reason;
-  final double consultationFee;
-  final double serviceFee;
-  final double mileageFee;
-  final double prioritySurcharge;
-  final double totalCost;
-
-  OrderSummary({
-    required this.vet,
-    required this.house,
-    required this.batch,
-    required this.serviceType,
-    required this.priority,
-    required this.date,
-    required this.time,
-    required this.reason,
-    required this.consultationFee,
-    required this.serviceFee,
-    required this.mileageFee,
-    required this.prioritySurcharge,
-    required this.totalCost,
-  });
-}
