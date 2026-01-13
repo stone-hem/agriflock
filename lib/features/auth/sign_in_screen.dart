@@ -1,3 +1,6 @@
+import 'package:agriflock360/core/model/user_model.dart';
+import 'package:agriflock360/core/utils/first_login_util.dart';
+import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/features/auth/repo/manual_auth_repo.dart';
 import 'package:agriflock360/features/auth/shared/auth_text_field.dart';
@@ -353,7 +356,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (result['success'] == true) {
         ToastUtil.showSuccess("Login successful!");
-        context.go(AppRoutes.dashboard);
+
+        // Use the utility to get the redirect path
+        final redirectPath = await FirstLoginUtil.getRedirectPath();
+        context.go(redirectPath);
+
       } else if (result['needsOnboarding'] == true) {
         // Redirect to onboarding quiz
         final tempToken = result['tempToken'] ?? '';
@@ -380,15 +387,17 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      // This returns the BACKEND response, not just Google user data
       final response = await authService.signInWithGoogle();
-
 
       if (!mounted) return;
 
       if (response['success'] == true) {
         ToastUtil.showSuccess("Login successful!");
-        context.go(AppRoutes.dashboard);
+
+        // Use the utility to get the redirect path
+        final redirectPath = await FirstLoginUtil.getRedirectPath();
+        context.go(redirectPath);
+
       } else if (response['needsOnboarding'] == true) {
         // Redirect to onboarding quiz
         final tempToken = response['tempToken'] ?? '';
@@ -432,7 +441,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (response['success'] == true) {
         ToastUtil.showSuccess("Login successful!");
-        context.go(AppRoutes.dashboard);
+
+        // Use the utility to get the redirect path
+        final redirectPath = await FirstLoginUtil.getRedirectPath();
+        context.go(redirectPath);
+
       } else if (response['needsOnboarding'] == true) {
         // Redirect to onboarding quiz
         final tempToken = response['tempToken'] ?? '';
@@ -446,7 +459,6 @@ class _LoginScreenState extends State<LoginScreen> {
           '${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(email)}',
         );
       }
-
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -44,10 +44,7 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
         centerTitle: false,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.grey.shade700),
-          onPressed: () => context.pop(),
-        ),
+        leading: FilledButton(onPressed: (){context.go(AppRoutes.dashboard);}, child: Text('Cancel')),
         actions: [
           TextButton(
             onPressed: _isLoading ? null : _saveFarm,
@@ -224,7 +221,7 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
       final res=await _farmRepository.createFarm(farmData, photoFile: _farmPhotoFile);
 
       switch(res) {
-        case Success<FarmModel>():
+        case Success():
         // Success
           ToastUtil.showSuccess(
               'Farm "${_nameController.text}" created successfully!');
@@ -233,7 +230,7 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
           if (context.mounted) {
             context.pushReplacement(AppRoutes.farms);
           }
-        case Failure<FarmModel>(response:final response):
+        case Failure(response:final response):
           ApiErrorHandler.handle(response);
       }
 

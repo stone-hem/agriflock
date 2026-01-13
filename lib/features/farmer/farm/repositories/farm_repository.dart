@@ -148,7 +148,7 @@ class FarmRepository {
   }
 
   // Create new farm (with optional photo)
-  Future<Result<FarmModel>> createFarm(
+  Future<Result> createFarm(
       Map<String, dynamic> farmData, {
         File? photoFile,
       }) async {
@@ -184,16 +184,9 @@ class FarmRepository {
         final jsonResponse = jsonDecode(response.body);
 
         if (response.statusCode >= 200 && response.statusCode < 300) {
-          Map<String, dynamic> farmJson;
-          if (jsonResponse['data'] != null) {
-            farmJson = jsonResponse['data'];
-          } else if (jsonResponse['farm'] != null) {
-            farmJson = jsonResponse['farm'];
-          } else {
-            farmJson = jsonResponse;
-          }
 
-          return Success(FarmModel.fromJson(farmJson));
+
+          return Success(null);
         } else {
           LogUtil.error('Failed to create farm: $jsonResponse');
           return Failure(
@@ -210,16 +203,8 @@ class FarmRepository {
         final jsonResponse = jsonDecode(response.body);
 
         if (response.statusCode >= 200 && response.statusCode < 300) {
-          Map<String, dynamic> farmJson;
-          if (jsonResponse['data'] != null) {
-            farmJson = jsonResponse['data'];
-          } else if (jsonResponse['farm'] != null) {
-            farmJson = jsonResponse['farm'];
-          } else {
-            farmJson = jsonResponse;
-          }
 
-          return Success(FarmModel.fromJson(farmJson));
+          return Success(null);
         } else {
           LogUtil.error('Failed to create farm: $jsonResponse');
           return Failure(
@@ -272,8 +257,6 @@ class FarmRepository {
           }
         });
 
-        // Add _method field for Laravel-style PUT via POST
-        fields['_method'] = 'PATCH';
 
         // Create multipart file
         final multipartFile = await http.MultipartFile.fromPath(
@@ -285,7 +268,10 @@ class FarmRepository {
           '/farms/$farmId',
           fields: fields,
           files: [multipartFile],
+          method: 'PATCH'
         );
+
+        print(streamedResponse);
 
         final response = await http.Response.fromStream(streamedResponse);
         final jsonResponse = jsonDecode(response.body);
@@ -313,8 +299,11 @@ class FarmRepository {
         if (response.statusCode >= 200 && response.statusCode < 300) {
           return const Success(true);
         } else {
+          final message = jsonResponse['message'] is Map
+              ? jsonResponse['message']['message']
+              : jsonResponse['message'];
           return Failure(
-            message: jsonResponse['message'] ?? 'Failed to update farm',
+            message: message ?? 'Failed to update farm',
             response: response,
             statusCode: response.statusCode,
           );

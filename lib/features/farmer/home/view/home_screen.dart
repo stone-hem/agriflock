@@ -398,7 +398,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   // Show Value Confirmation Banner (Days 5-10)
                   if (_shouldShowValueConfirmationBanner)
                     ValueConfirmationBanner(
-                      onViewActivity: () => context.go('/activity'),
+                      onViewActivity: () => context.push('/activity'),
                     ),
 
                   // Show Future Framing Banner (Day 21+)
@@ -408,7 +408,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
 
                   // Welcome Section
-                  if (!_shouldShowValueConfirmationBanner || !_shouldShowFutureFramingBanner)
+                  if (!_shouldShowValueConfirmationBanner && !_shouldShowFutureFramingBanner)
                     WelcomeSection(
                     greeting: _getGreeting(),
                     summaryMsg: _getSummaryMessage(),

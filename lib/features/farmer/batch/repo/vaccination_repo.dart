@@ -219,9 +219,10 @@ class VaccinationRepository {
       UpdateVaccinationStatusRequest request,
       ) async {
     try {
+      LogUtil.info(request.toJson());
       final response = await apiClient.put(
         '/batches/$batchId/vaccinations/$vaccinationId',
-        body: jsonEncode(request.toJson()),
+        body: request.toJson(),
       );
 
       final jsonResponse = jsonDecode(response.body);
@@ -258,11 +259,13 @@ class VaccinationRepository {
   }
 
   /// Quick done - Create completed vaccination
-  Future<Result<Vaccination>> quickDoneVaccination(
+  Future<Result> quickDoneVaccination(
       String batchId,
       QuickDoneVaccinationRequest request,
       ) async {
     try {
+      LogUtil.info(request.toJson());
+
       final response = await apiClient.post(
         '/batches/$batchId/vaccinations/quick-record',
         body: request.toJson(),
@@ -272,7 +275,7 @@ class VaccinationRepository {
       LogUtil.info('Quick Done Vaccination API Response: $jsonResponse');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        return Success(Vaccination.fromJson(jsonResponse));
+        return Success(null);
       } else {
         return Failure(
           message: jsonResponse['message'] ?? 'Failed to create vaccination',
@@ -302,11 +305,13 @@ class VaccinationRepository {
   }
 
 
-  Future<Result<Vaccination>> scheduleVaccination(
+  Future<Result> scheduleVaccination(
       String batchId,
       VaccinationScheduleRequest request,
       ) async {
     try {
+      LogUtil.info(request.toJson());
+
       final response = await apiClient.post(
         '/batches/$batchId/vaccinations/schedule',
         body: request.toJson(),
@@ -316,7 +321,7 @@ class VaccinationRepository {
       LogUtil.info('Quick Done Vaccination API Response: $jsonResponse');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        return Success(Vaccination.fromJson(jsonResponse));
+        return Success(null);
       } else {
         return Failure(
           message: jsonResponse['message'] ?? 'Failed to create vaccination',
@@ -325,13 +330,13 @@ class VaccinationRepository {
         );
       }
     } on SocketException catch (e) {
-      LogUtil.error('Network error in quickDoneVaccination: $e');
+      LogUtil.error('Network error in scheduleVaccination: $e');
       return const Failure(
         message: 'No internet connection',
         statusCode: 0,
       );
     } catch (e) {
-      LogUtil.error('Error in quickDoneVaccination: $e');
+      LogUtil.error('Error in scheduleVaccination: $e');
 
       if (e is http.Response) {
         return Failure(

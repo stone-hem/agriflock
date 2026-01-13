@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:agriflock360/core/utils/result.dart';
 
-class BrowseVetsTab extends StatefulWidget {
-  const BrowseVetsTab({super.key});
+class BrowseVetsScreen extends StatefulWidget {
+  const BrowseVetsScreen({super.key});
 
   @override
-  State<BrowseVetsTab> createState() => _BrowseVetsTabState();
+  State<BrowseVetsScreen> createState() => _BrowseVetsScreenState();
 }
 
-class _BrowseVetsTabState extends State<BrowseVetsTab> {
+class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
   final VetFarmerRepository _vetRepository = VetFarmerRepository();
   final TextEditingController _searchController = TextEditingController();
 
@@ -203,10 +203,6 @@ class _BrowseVetsTabState extends State<BrowseVetsTab> {
     context.push('/vet-details', extra: id);
   }
 
-
-  void _navigateToOrderForm(VetFarmer vet) {
-    context.push('/vet-order-details', extra: vet);
-  }
 
   Widget _buildLoadingIndicator() {
     return const Center(
@@ -479,7 +475,6 @@ class _BrowseVetsTabState extends State<BrowseVetsTab> {
 
   Widget _buildRecommendedVetCard(VetFarmerRecommendation vet) {
     final rating = double.tryParse(vet.averageRating) ?? 0.0;
-    final isAvailable = vet.status == 'active' && vet.isVerified;
 
     return Card(
       elevation: 2,
@@ -714,6 +709,7 @@ class _BrowseVetsTabState extends State<BrowseVetsTab> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Quick Actions'),
+        const SizedBox(height: 8),
         Wrap(
           spacing: 10,
           runSpacing: 8,
@@ -774,6 +770,33 @@ class _BrowseVetsTabState extends State<BrowseVetsTab> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey.shade50,
+      appBar: AppBar(
+        title: Row(
+          children: [
+            Image.asset(
+              'assets/logos/Logo_0725.png',
+              fit: BoxFit.cover,
+              width: 40,
+              height: 40,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: Colors.green,
+                  child: const Icon(
+                    Icons.image,
+                    size: 100,
+                    color: Colors.white54,
+                  ),
+                );
+              },
+            ),
+            const Text('Agriflock 360'),
+          ],
+        ),
+        centerTitle: false,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
       body: RefreshIndicator(
         onRefresh: _refreshData,
         child: SingleChildScrollView(
@@ -821,9 +844,9 @@ class _BrowseVetsTabState extends State<BrowseVetsTab> {
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 14),
               _buildChipsSection(),
-              const SizedBox(height: 24),
+              const SizedBox(height: 18),
 
 
               // Loading state

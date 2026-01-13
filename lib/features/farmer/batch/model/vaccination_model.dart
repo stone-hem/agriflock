@@ -102,7 +102,7 @@ class Vaccination {
   final String? administeredBy;
   final DateTime? administeredAt;
   final int? birdsVaccinated;
-  final String cost;
+  final String? cost;
   final String? notes;
   final bool reminderSent;
   final String source;
@@ -124,7 +124,7 @@ class Vaccination {
     this.administeredBy,
     this.administeredAt,
     this.birdsVaccinated,
-    required this.cost,
+    this.cost,
     this.notes,
     required this.reminderSent,
     required this.source,
@@ -404,10 +404,10 @@ class QuickDoneVaccinationRequest {
     'completed_date': completedDate.toIso8601String(),
     'completed_time': completedTime,
     'dosage': dosage,
+    'birds_vaccinated':birdsVaccinated,
     'administration_method': administrationMethod,
-    'estimated_cost': cost,
+    'cost': cost,
     'notes': notes,
-    'source': 'manual',
-    'vaccination_status': 'completed',
+    'source': 'manual'
   };
 }

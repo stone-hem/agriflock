@@ -274,11 +274,12 @@ class ApiClient {
         Map<String, String>? fields,
         Map<String, String>? headers,
         List<http.MultipartFile>? files,
+        String method = 'POST', // Add method parameter with default value
       }) async {
     try {
       Future<http.StreamedResponse> makeRequest() async {
         final uri = Uri.parse('${AppConstants.baseUrl}$endpoint');
-        final request = http.MultipartRequest(fields?['_method'] ?? 'POST', uri);
+        final request = http.MultipartRequest(method, uri); // Use the method parameter
 
         final token = await storage.getToken();
         final authHeaders = {
@@ -293,7 +294,10 @@ class ApiClient {
         request.headers.addAll(authHeaders);
 
         if (fields != null) {
-          request.fields.addAll(fields);
+          // Remove _method if it exists in fields
+          final cleanFields = Map<String, String>.from(fields);
+          cleanFields.remove('_method');
+          request.fields.addAll(cleanFields);
         }
 
         if (files != null) {

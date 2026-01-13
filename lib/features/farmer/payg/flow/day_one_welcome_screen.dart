@@ -1,3 +1,4 @@
+import 'package:agriflock360/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -74,7 +75,7 @@ class Day1WelcomeScreen extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: () {
                     // Navigate to batch setup
-                    context.go('/batch-setup');
+                    context.go(AppRoutes.farmsAdd);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,

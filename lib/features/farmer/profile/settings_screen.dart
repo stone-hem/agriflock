@@ -92,57 +92,57 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 24),
 
             // App Preferences
-            _SettingsSection(
-              title: 'App Preferences',
-              children: [
-                _SettingsSwitchTile(
-                  icon: Icons.notifications_outlined,
-                  title: 'Push Notifications',
-                  subtitle: 'Receive important updates',
-                  value: _notificationsEnabled,
-                  onChanged: (value) {
-                    setState(() {
-                      _notificationsEnabled = value;
-                    });
-                  },
-                ),
-                // _SettingsSwitchTile(
-                //   icon: Icons.fingerprint_outlined,
-                //   title: 'Biometric Login',
-                //   subtitle: 'Use fingerprint or face ID',
-                //   value: _biometricEnabled,
-                //   onChanged: (value) {
-                //     setState(() {
-                //       _biometricEnabled = value;
-                //     });
-                //   },
-                // ),
-                _SettingsSwitchTile(
-                  icon: Icons.dark_mode_outlined,
-                  title: 'Dark Mode',
-                  subtitle: 'Switch to dark theme',
-                  value: _darkModeEnabled,
-                  onChanged: (value) {
-                    setState(() {
-                      _darkModeEnabled = value;
-                    });
-                  },
-                ),
-                // _SettingsDropdownTile(
-                //   icon: Icons.language_outlined,
-                //   title: 'Language',
-                //   subtitle: 'App language',
-                //   value: _selectedLanguage,
-                //   items: const ['English', 'Swahili', 'French', 'Spanish'],
-                //   onChanged: (value) {
-                //     setState(() {
-                //       _selectedLanguage = value!;
-                //     });
-                //   },
-                // ),
-              ],
-            ),
-            const SizedBox(height: 24),
+            // _SettingsSection(
+            //   title: 'App Preferences',
+            //   children: [
+            //     _SettingsSwitchTile(
+            //       icon: Icons.notifications_outlined,
+            //       title: 'Push Notifications',
+            //       subtitle: 'Receive important updates',
+            //       value: _notificationsEnabled,
+            //       onChanged: (value) {
+            //         setState(() {
+            //           _notificationsEnabled = value;
+            //         });
+            //       },
+            //     ),
+            //     // _SettingsSwitchTile(
+            //     //   icon: Icons.fingerprint_outlined,
+            //     //   title: 'Biometric Login',
+            //     //   subtitle: 'Use fingerprint or face ID',
+            //     //   value: _biometricEnabled,
+            //     //   onChanged: (value) {
+            //     //     setState(() {
+            //     //       _biometricEnabled = value;
+            //     //     });
+            //     //   },
+            //     // ),
+            //     _SettingsSwitchTile(
+            //       icon: Icons.dark_mode_outlined,
+            //       title: 'Dark Mode',
+            //       subtitle: 'Switch to dark theme',
+            //       value: _darkModeEnabled,
+            //       onChanged: (value) {
+            //         setState(() {
+            //           _darkModeEnabled = value;
+            //         });
+            //       },
+            //     ),
+            //     // _SettingsDropdownTile(
+            //     //   icon: Icons.language_outlined,
+            //     //   title: 'Language',
+            //     //   subtitle: 'App language',
+            //     //   value: _selectedLanguage,
+            //     //   items: const ['English', 'Swahili', 'French', 'Spanish'],
+            //     //   onChanged: (value) {
+            //     //     setState(() {
+            //     //       _selectedLanguage = value!;
+            //     //     });
+            //     //   },
+            //     // ),
+            //   ],
+            // ),
+            // const SizedBox(height: 24),
 
             // Data & Storage
             // _SettingsSection(

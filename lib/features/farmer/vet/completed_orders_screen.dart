@@ -1,123 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_order.dart';
 
-class CompletedOrdersTab extends StatefulWidget {
-  final List<VetOrder> vetOrders;
-  final Function(VetOrder) onOrderUpdated;
-
-  const CompletedOrdersTab({
-    super.key,
-    required this.vetOrders,
-    required this.onOrderUpdated,
-  });
+class CompletedOrdersScreen extends StatefulWidget {
+  const CompletedOrdersScreen({super.key});
 
   @override
-  State<CompletedOrdersTab> createState() => _CompletedOrdersTabState();
+  State<CompletedOrdersScreen> createState() => _CompletedOrdersScreenState();
 }
 
-class _CompletedOrdersTabState extends State<CompletedOrdersTab> {
+class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
   final now = DateTime.now();
 
   late final List<VetOrder> _vetOrders = [
-    VetOrder(
-      id: 'ORD001',
-      vetId: '1',
-      vetName: 'Dr. Sarah Johnson',
-      serviceType: 'Vaccination Service',
-      priority: 'Normal',
-      scheduledDate: now.add(const Duration(days: 1)),
-      scheduledTime: const TimeOfDay(hour: 10, minute: 30),
-      status: OrderStatus.confirmed,
-      totalCost: 12500,
-      consultationFee: 5000,
-      serviceFee: 3500,
-      mileageFee: 1200,
-      prioritySurcharge: 0,
-      houseName: 'Main Poultry House',
-      batchName: 'Batch 123 - Broilers',
-      reason: 'Annual vaccination program',
-      notes: 'Please bring avian flu vaccines',
-      vetLocation: VetLocation(
-        latitude: -1.286389,
-        longitude: 36.817223,
-        address: '123 Farm Road, Agricultural Zone',
-      ),
-      farmerLocation: FarmerLocation(
-        latitude: -1.2921,
-        longitude: 36.8219,
-        address: 'My Farm, Kiambu Road',
-      ),
-      estimatedArrivalTime: now.add(const Duration(hours: 25)),
-      isPaid: true,
-      userRating: 5,
-      userComment: 'Noting',
-    ),
-    VetOrder(
-      id: 'ORD002',
-      vetId: '2',
-      vetName: 'Dr. Michael Chen',
-      serviceType: 'Emergency Visit',
-      priority: 'Emergency',
-      scheduledDate: now,
-      scheduledTime: const TimeOfDay(hour: 14, minute: 0),
-      status: OrderStatus.enRoute,
-      totalCost: 18200,
-      consultationFee: 5000,
-      serviceFee: 8000,
-      mileageFee: 1500,
-      prioritySurcharge: 3700,
-      houseName: 'Secondary Poultry House',
-      batchName: 'Batch 124 - Layers',
-      reason: 'Sudden mortality in layers',
-      notes: 'Birds showing respiratory symptoms',
-      vetLocation: VetLocation(
-        latitude: -1.300000,
-        longitude: 36.783333,
-        address: '456 Poultry Lane, Farm District',
-      ),
-      farmerLocation: FarmerLocation(
-        latitude: -1.2921,
-        longitude: 36.8219,
-        address: 'My Farm, Kiambu Road',
-      ),
-      estimatedArrivalTime: now.add(const Duration(minutes: 45)),
-      isPaid: true,
-      userRating: 3,
-      userComment: '',
-    ),
-    VetOrder(
-      id: 'ORD003',
-      vetId: '3',
-      vetName: 'Dr. Maria Rodriguez',
-      serviceType: 'Routine Check-up',
-      priority: 'Urgent',
-      scheduledDate: now.add(const Duration(days: 3)),
-      scheduledTime: const TimeOfDay(hour: 9, minute: 0),
-      status: OrderStatus.pending,
-      totalCost: 9600,
-      consultationFee: 5000,
-      serviceFee: 2000,
-      mileageFee: 2000,
-      prioritySurcharge: 600,
-      houseName: 'Main Poultry House',
-      batchName: 'Batch 125 - Broilers',
-      reason: 'Monthly health check',
-      notes: 'Focus on weight gain monitoring',
-      vetLocation: VetLocation(
-        latitude: -1.250000,
-        longitude: 36.850000,
-        address: '789 Ranch Street, Rural Area',
-      ),
-      farmerLocation: FarmerLocation(
-        latitude: -1.2921,
-        longitude: 36.8219,
-        address: 'My Farm, Kiambu Road',
-      ),
-      estimatedArrivalTime: now.add(const Duration(days: 3, hours: 1)),
-      isPaid: true,
-      userRating: 5,
-      userComment: 'yey',
-    ),
     VetOrder(
       id: 'ORD004',
       vetId: '1',
@@ -221,6 +115,7 @@ class _CompletedOrdersTabState extends State<CompletedOrdersTab> {
       userComment: 'Good service but a bit late for the appointment.',
     ),
   ];
+
   List<VetOrder> get completedOrders => _vetOrders
       .where((order) => order.status == OrderStatus.completed)
       .toList();
@@ -384,9 +279,9 @@ class _CompletedOrdersTabState extends State<CompletedOrdersTab> {
                 onPressed: rating == 0
                     ? null
                     : () {
-                        _submitRating(order, rating, commentController.text);
-                        Navigator.pop(context);
-                      },
+                  _submitRating(order, rating, commentController.text);
+                  Navigator.pop(context);
+                },
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                 child: const Text('Submit Rating'),
               ),
@@ -461,7 +356,6 @@ class _CompletedOrdersTabState extends State<CompletedOrdersTab> {
   void _processPayment(VetOrder order) {
     // Simulate payment processing
     final updatedOrder = order.copyWith(isPaid: true);
-    widget.onOrderUpdated(updatedOrder);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -478,7 +372,6 @@ class _CompletedOrdersTabState extends State<CompletedOrdersTab> {
       userRating: rating.toInt(),
       userComment: comment,
     );
-    widget.onOrderUpdated(updatedOrder);
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -529,14 +422,14 @@ class _CompletedOrdersTabState extends State<CompletedOrdersTab> {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.1),
+                    color: Colors.green.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.grey),
+                    border: Border.all(color: Colors.green),
                   ),
                   child: const Text(
                     'Completed',
                     style: TextStyle(
-                      color: Colors.grey,
+                      color: Colors.green,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                     ),
@@ -715,165 +608,194 @@ class _CompletedOrdersTabState extends State<CompletedOrdersTab> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: Colors.amber.shade200),
+    return Scaffold(
+      appBar: AppBar(
+        title: Row(
+          children: [
+            Image.asset(
+              'assets/logos/Logo_0725.png',
+              fit: BoxFit.cover,
+              width: 40,
+              height: 40,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: Colors.green,
+                  child: const Icon(
+                    Icons.image,
+                    size: 100,
+                    color: Colors.white54,
+                  ),
+                );
+              },
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
+            const Text('Agriflock 360'),
+          ],
+        ),
+        centerTitle: false,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: Colors.amber.shade200),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Icon(Icons.history, color: Colors.amber.shade700),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Completed Services',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Review completed veterinary services, make payments, and rate your experience',
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+      
+            // Stats
+            Row(
+              children: [
+                Expanded(
+                  child: _buildStatCard(
+                    value: completedOrders.length.toString(),
+                    label: 'Total Services',
+                    icon: Icons.medical_services,
+                    color: Colors.blue,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildStatCard(
+                    value: completedOrders
+                        .where((o) => o.isPaid)
+                        .length
+                        .toString(),
+                    label: 'Paid',
+                    icon: Icons.payment,
+                    color: Colors.green,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildStatCard(
+                    value: completedOrders
+                        .where((o) => o.userRating > 0)
+                        .length
+                        .toString(),
+                    label: 'Rated',
+                    icon: Icons.star,
+                    color: Colors.amber,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+      
+            // Filter Chips
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  Icon(Icons.history, color: Colors.amber.shade700),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Completed Services',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Review completed veterinary services, make payments, and rate your experience',
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
+                  FilterChip(
+                    label: const Text('Needs Payment'),
+                    selected: false,
+                    onSelected: (selected) {},
+                    backgroundColor: Colors.red.shade50,
+                    selectedColor: Colors.red,
+                    labelStyle: const TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  FilterChip(
+                    label: const Text('Needs Rating'),
+                    selected: false,
+                    onSelected: (selected) {},
+                    backgroundColor: Colors.amber.shade50,
+                    selectedColor: Colors.amber,
+                    labelStyle: const TextStyle(
+                      color: Colors.amber,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  FilterChip(
+                    label: const Text('Paid & Rated'),
+                    selected: false,
+                    onSelected: (selected) {},
+                    backgroundColor: Colors.green.shade50,
+                    selectedColor: Colors.green,
+                    labelStyle: const TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  FilterChip(
+                    label: const Text('Recent'),
+                    selected: false,
+                    onSelected: (selected) {},
+                    backgroundColor: Colors.blue.shade50,
+                    selectedColor: Colors.blue,
+                    labelStyle: const TextStyle(
+                      color: Colors.blue,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: 24),
-
-          // Stats
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  value: completedOrders.length.toString(),
-                  label: 'Total Services',
-                  icon: Icons.medical_services,
-                  color: Colors.blue,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildStatCard(
-                  value: completedOrders
-                      .where((o) => o.isPaid)
-                      .length
-                      .toString(),
-                  label: 'Paid',
-                  icon: Icons.payment,
-                  color: Colors.green,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildStatCard(
-                  value: completedOrders
-                      .where((o) => o.userRating > 0)
-                      .length
-                      .toString(),
-                  label: 'Rated',
-                  icon: Icons.star,
-                  color: Colors.amber,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-
-          // Filter Chips
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                FilterChip(
-                  label: const Text('Needs Payment'),
-                  selected: false,
-                  onSelected: (selected) {},
-                  backgroundColor: Colors.red.shade50,
-                  selectedColor: Colors.red,
-                  labelStyle: const TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                FilterChip(
-                  label: const Text('Needs Rating'),
-                  selected: false,
-                  onSelected: (selected) {},
-                  backgroundColor: Colors.amber.shade50,
-                  selectedColor: Colors.amber,
-                  labelStyle: const TextStyle(
-                    color: Colors.amber,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                FilterChip(
-                  label: const Text('Paid & Rated'),
-                  selected: false,
-                  onSelected: (selected) {},
-                  backgroundColor: Colors.green.shade50,
-                  selectedColor: Colors.green,
-                  labelStyle: const TextStyle(
-                    color: Colors.green,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                FilterChip(
-                  label: const Text('Recent'),
-                  selected: false,
-                  onSelected: (selected) {},
-                  backgroundColor: Colors.blue.shade50,
-                  selectedColor: Colors.blue,
-                  labelStyle: const TextStyle(
-                    color: Colors.blue,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+            const SizedBox(height: 24),
+      
+            // Orders List
+            Text(
+              'Completed Orders',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-          ),
-          const SizedBox(height: 24),
-
-          // Orders List
-          Text(
-            'Completed Orders',
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '${completedOrders.length} service${completedOrders.length == 1 ? '' : 's'} completed',
-            style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-          ),
-          const SizedBox(height: 16),
-
-          if (completedOrders.isEmpty)
-            _buildEmptyState()
-          else
-            ...completedOrders.map(_buildOrderCard),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              '${completedOrders.length} service${completedOrders.length == 1 ? '' : 's'} completed',
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+      
+            if (completedOrders.isEmpty)
+              _buildEmptyState()
+            else
+              ...completedOrders.map(_buildOrderCard),
+          ],
+        ),
       ),
     );
   }

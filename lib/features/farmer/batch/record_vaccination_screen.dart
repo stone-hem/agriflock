@@ -1,5 +1,6 @@
 import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
@@ -853,19 +854,12 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
       });
 
       try {
-        final scheduledDateTime = DateTime(
-          _scheduledDate.year,
-          _scheduledDate.month,
-          _scheduledDate.day,
-          _scheduledTime.hour,
-          _scheduledTime.minute,
-        );
 
         final request = VaccinationScheduleRequest(
           vaccineName: _vaccineNameController.text,
           vaccineType: _selectedVaccineType!,
-          scheduledDate: scheduledDateTime,
-          scheduleTime: _scheduledTime.toString(),
+          scheduledDate: _scheduledDate,
+          scheduleTime: '${_scheduledTime.hour}:${_scheduledTime.minute}',
           dosage: _dosageController.text,
           administrationMethod: _selectedAdministration!,
           cost: _costController.text.isEmpty ? 0 : double.parse(_costController.text),
@@ -875,26 +869,13 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
 
        final res= await _repository.scheduleVaccination(widget.batchId, request);
        switch(res) {
-         case Success<Vaccination>():
+         case Success():
            if (mounted) {
-             ScaffoldMessenger.of(context).showSnackBar(
-               SnackBar(
-                 content: Column(
-                   crossAxisAlignment: CrossAxisAlignment.start,
-                   mainAxisSize: MainAxisSize.min,
-                   children: [
-                     const Text('Vaccination scheduled successfully'),
-                     Text('Scheduled for: ${_scheduledDate.day}/${_scheduledDate.month}/${_scheduledDate.year}'),
-                     const Text('Status: Scheduled'),
-                   ],
-                 ),
-                 backgroundColor: Colors.blue,
-               ),
-             );
+             ToastUtil.showSuccess('Vaccination scheduled successfully');
              _clearForm();
              context.pop(true);
            }
-         case Failure<Vaccination>(response:final response, message:final message, statusCode:final statusCode):
+         case Failure(response:final response):
            ApiErrorHandler.handle(response);
        }
 
@@ -915,13 +896,6 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
       });
 
       try {
-        final completionDateTime = DateTime(
-          _completionDate.year,
-          _completionDate.month,
-          _completionDate.day,
-          _completionTime.hour,
-          _completionTime.minute,
-        );
 
         final request = QuickDoneVaccinationRequest(
           vaccineName: _vaccineNameController.text,
@@ -929,8 +903,8 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
           dosage: _dosageController.text,
           administrationMethod: _selectedAdministration!,
           birdsVaccinated: int.parse(_birdsVaccinatedController.text),
-          completedDate: completionDateTime,
-          completedTime: _completionTime.toString(),
+          completedDate: _completionDate,
+          completedTime: '${_completionTime.hour}:${_completionTime.minute}',
           cost: _costController.text.isEmpty ? 0 : double.parse(_costController.text),
           notes: _notesController.text.isEmpty ? null : _notesController.text,
         );
@@ -938,27 +912,14 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
         final res=await _repository.quickDoneVaccination(widget.batchId, request);
 
         switch(res) {
-          case Success<Vaccination>():
+          case Success():
             if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('Vaccination recorded successfully'),
-                      Text('${_birdsVaccinatedController.text} birds vaccinated'),
-                      const Text('Status: Completed'),
-                    ],
-                  ),
-                  backgroundColor: Colors.green,
-                ),
-              );
+             ToastUtil.showSuccess('Vaccination recorded successfully');
               _clearForm();
+             context.pop(true);
             }
-          case Failure<Vaccination>():
-            // TODO: Handle this case.
-            throw UnimplementedError();
+          case Failure(response:final response):
+            ApiErrorHandler.handle(response);
         }
 
 

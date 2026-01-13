@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:agriflock360/app_routes.dart';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
+import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
@@ -200,10 +201,9 @@ class _EditFarmScreenState extends State<EditFarmScreen> {
     });
 
     try {
-      // Prepare farm data
-      final farmData = {
+      // Use Map<String, dynamic> instead of specific types
+      final Map<String, dynamic> farmData = {
         "farm_name": _nameController.text.trim(),
-        "location": _selectedAddress,
         "description": _descriptionController.text.trim().isNotEmpty
             ? _descriptionController.text.trim()
             : null,
@@ -211,40 +211,38 @@ class _EditFarmScreenState extends State<EditFarmScreen> {
 
       // Add GPS coordinates if location is selected
       if (_selectedAddress != null && _latitude != null && _longitude != null) {
-        farmData["location"] = jsonEncode({
+        // Pass as Map - dynamic type allows this
+        farmData["location"] = {
           "address": {
             "formatted_address": _selectedAddress,
           },
           "latitude": _latitude,
           "longitude": _longitude,
-        });
-
+        };
+      } else if (_selectedAddress != null) {
+        // If only address is available
+        farmData["location"] = _selectedAddress;
       }
 
+      LogUtil.warning('farmData before sending: ${jsonEncode(farmData)}');
+
       // Update farm using repository
-      final res=await _farmRepository.updateFarm(
+      final res = await _farmRepository.updateFarm(
         widget.farm.id,
         farmData,
         photoFile: _farmPhotoFile,
       );
 
-
       switch(res) {
         case Success<bool>():
-        // Success
-          ToastUtil.showSuccess(
-              'Farm  updated successfully!');
-
-          // Pop the screen with success result
+          ToastUtil.showSuccess('Farm updated successfully!');
           if (context.mounted) {
             context.pushReplacement(AppRoutes.farms);
           }
-        case Failure<bool>(response:final response):
+        case Failure<bool>(response: final response):
           ApiErrorHandler.handle(response);
       }
-
-
-    }  finally {
+    } finally {
       if (mounted) {
         setState(() {
           _isLoading = false;

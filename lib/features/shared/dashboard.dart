@@ -2,7 +2,7 @@ import 'package:agriflock360/core/model/user_model.dart';
 import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:agriflock360/features/farmer/farm/view/farms_home_screen.dart';
 import 'package:agriflock360/features/farmer/profile/profile_screen.dart';
-import 'package:agriflock360/features/farmer/vet/main_vet_screen.dart';
+import 'package:agriflock360/features/farmer/vet/browse_vets_screen.dart';
 import 'package:agriflock360/features/shared/nav_destination_item.dart';
 import 'package:agriflock360/features/vet/vet_home_screen.dart';
 import 'package:agriflock360/features/vet/vet_payments_screen.dart';
@@ -125,7 +125,7 @@ class _MainDashboardState extends State<MainDashboard> {
           icon: Icons.people_outline,
           selectedIcon: Icons.people,
           label: 'Vets',
-          screen: const MainVetScreen(),
+          screen: const BrowseVetsScreen(),
         ),
         NavConfig(
           icon: Icons.person_outlined,

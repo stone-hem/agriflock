@@ -28,15 +28,14 @@ import 'package:agriflock360/features/farmer/profile/congratulations_screen.dart
 import 'package:agriflock360/features/farmer/profile/help_support_screen.dart';
 import 'package:agriflock360/features/farmer/profile/settings_screen.dart';
 import 'package:agriflock360/features/farmer/profile/telemetry_data_screen.dart';
+import 'package:agriflock360/features/farmer/vet/completed_orders_screen.dart';
 import 'package:agriflock360/features/farmer/vet/models/my_order_list_item.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_farmer_model.dart';
-import 'package:agriflock360/features/farmer/vet/models/vet_officer.dart';
-import 'package:agriflock360/features/farmer/vet/models/vet_order.dart';
 import 'package:agriflock360/features/farmer/vet/my_orders_screen.dart';
 import 'package:agriflock360/features/farmer/vet/vet_details_screen.dart';
 import 'package:agriflock360/features/farmer/vet/vet_order_screen.dart';
-import 'package:agriflock360/features/farmer/vet/vet_order_tracking_screen.dart';
-import 'package:agriflock360/features/farmer/vet/main_vet_screen.dart';
+import 'package:agriflock360/features/farmer/vet/my_order_tracking_screen.dart';
+import 'package:agriflock360/features/farmer/vet/browse_vets_screen.dart';
 import 'package:agriflock360/features/shared/error_screen.dart';
 import 'package:agriflock360/features/vet/payments/vet_payments_history_screen.dart';
 import 'package:agriflock360/features/vet/payments/vet_service_payments_screen.dart';
@@ -262,7 +261,8 @@ class AppRoutes {
             if (state.extra is! FarmModel) {
               return const ErrorScreen(
                 title: 'Invalid navigation',
-                message: 'Farm not provided. Please select a farm and try again.',
+                message:
+                    'Farm not provided. Please select a farm and try again.',
               );
             }
             final farm = state.extra as FarmModel;
@@ -300,21 +300,22 @@ class AppRoutes {
                 return BatchDetailsScreen(
                   farmId: extra['farmId'],
                   batch: extra['batch'],
-              );
-              }
+                );
+              },
             ),
             GoRoute(
               path: ':id/feed',
               builder: (context, state) {
                 final batchId = state.pathParameters['id']!;
-                return LogFeedingScreen(batchId: batchId,);
-                },
+                return LogFeedingScreen(batchId: batchId);
+              },
             ),
             GoRoute(
               path: ':id/record-vaccination',
               builder: (context, state) {
                 final batchId = state.pathParameters['id']!;
-                return VaccinationRecordScreen(batchId: batchId,);}
+                return VaccinationRecordScreen(batchId: batchId);
+              },
             ),
             GoRoute(
               path: 'adopt-schedule',
@@ -327,9 +328,10 @@ class AppRoutes {
 
                 final extra = state.extra as Vaccination;
                 return UpdateVaccinationStatusScreen(
-                    vaccination: extra,
-                batchId: batchId,
-              );}
+                  vaccination: extra,
+                  batchId: batchId,
+                );
+              },
             ),
             GoRoute(
               path: ':id/record-product',
@@ -348,6 +350,10 @@ class AppRoutes {
         GoRoute(
           path: paygHistory,
           builder: (context, state) => const PaymentHistoryScreen(),
+        ),
+        GoRoute(
+          path: '/day1/welcome-msg-page',
+          builder: (context, state) => const Day1WelcomeScreen(),
         ),
         GoRoute(
           path: invoice,
@@ -379,15 +385,14 @@ class AppRoutes {
           builder: (context, state) {
             final farmId = state.pathParameters['id']!;
             return InventoryScreen(farmId: farmId);
-            },
+          },
         ),
         GoRoute(
           path: '$farmsInventoryAdd/:id',
           builder: (context, state) {
-    final farmId = state.pathParameters['id']!;
-    return AddInventoryItemScreen(farmId: farmId);
-    }
-
+            final farmId = state.pathParameters['id']!;
+            return AddInventoryItemScreen(farmId: farmId);
+          },
         ),
         GoRoute(
           path: activity,
@@ -407,14 +412,14 @@ class AppRoutes {
         ),
         GoRoute(
           path: '/vets',
-          builder: (context, state) => const MainVetScreen(),
+          builder: (context, state) => const BrowseVetsScreen(),
         ),
 
         GoRoute(
-          path: '/vet-order-tracking',
+          path: '/my-order-tracking',
           builder: (context, state) {
             final order = state.extra as MyOrderListItem;
-            return VetOrderTrackingScreen();
+            return MyOrderTrackingScreen(order: order);
           },
         ),
 
@@ -426,22 +431,27 @@ class AppRoutes {
           },
         ),
 
-         GoRoute(
-    path: '/my-vet-orders',
-    builder: (context, state) {
-    return MyVetOrdersScreen();
-    },
-    ),
-
-   
-
+        GoRoute(
+          path: '/my-vet-orders',
+          builder: (context, state) {
+            return MyVetOrdersScreen();
+          },
+        ),
+        GoRoute(
+          path: '/my-completed-orders',
+          builder: (context, state) {
+            return CompletedOrdersScreen();
+          },
+        ),
 
         GoRoute(
           path: vetOrderDetails,
           builder: (context, state) {
             final vet = state.extra;
             if (vet is! VetFarmer) {
-              return const ErrorScreen(message: 'Could Not load the vet',); // or redirect
+              return const ErrorScreen(
+                message: 'Could Not load the vet',
+              ); // or redirect
             }
             return VetOrderScreen(vet: vet);
           },
@@ -471,7 +481,6 @@ class AppRoutes {
           path: '/plans',
           builder: (context, state) => const PlansPreviewScreen(),
         ),
-
 
         //vet
         GoRoute(

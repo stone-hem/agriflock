@@ -318,7 +318,7 @@ class _MyVetOrdersScreenState extends State<MyVetOrdersScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          order.serviceName,
+                          order.serviceCode,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -450,7 +450,7 @@ class _MyVetOrdersScreenState extends State<MyVetOrdersScreen> {
                   const SizedBox(width: 8),
                   ElevatedButton(
                     onPressed: () {
-                      context.push('/vet-order-tracking', extra: order);
+                      context.push('/my-order-tracking', extra: order);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,

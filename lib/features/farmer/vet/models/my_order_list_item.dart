@@ -1,12 +1,16 @@
 // vet_order_list_item.dart
+import 'dart:convert';
+
 class MyOrderListItem {
   final String id;
   final String orderNumber;
   final String farmerId;
   final String farmerName;
   final String farmerPhone;
+  final dynamic farmerLocation; // Changed to dynamic since it's a JSON string
   final String vetId;
   final String vetName;
+  final dynamic vetLocation; // Changed to dynamic
   final String? vetCenter;
   final String houseId;
   final String houseName;
@@ -14,7 +18,7 @@ class MyOrderListItem {
   final String batchName;
   final int birdCount;
   final String serviceId;
-  final String serviceName;
+  final String serviceType; // Changed from serviceName
   final String serviceCode;
   final String priorityLevel;
   final DateTime preferredDate;
@@ -35,6 +39,7 @@ class MyOrderListItem {
   final DateTime? cancelledAt;
   final String? cancellationReason;
   final bool termsAgreed;
+  final bool isPaid; // Added this field
 
   MyOrderListItem({
     required this.id,
@@ -42,22 +47,24 @@ class MyOrderListItem {
     required this.farmerId,
     required this.farmerName,
     required this.farmerPhone,
+    required this.farmerLocation,
     required this.vetId,
     required this.vetName,
-    required this.vetCenter,
+    required this.vetLocation,
+    this.vetCenter,
     required this.houseId,
     required this.houseName,
     required this.batchId,
     required this.batchName,
     required this.birdCount,
     required this.serviceId,
-    required this.serviceName,
+    required this.serviceType,
     required this.serviceCode,
     required this.priorityLevel,
     required this.preferredDate,
     required this.preferredTime,
     required this.reasonForVisit,
-    required this.additionalNotes,
+    this.additionalNotes,
     required this.consultationFee,
     required this.serviceFee,
     required this.mileageFee,
@@ -66,12 +73,13 @@ class MyOrderListItem {
     required this.totalEstimatedCost,
     required this.status,
     required this.submittedAt,
-    required this.reviewedAt,
-    required this.scheduledAt,
-    required this.completedAt,
-    required this.cancelledAt,
-    required this.cancellationReason,
+    this.reviewedAt,
+    this.scheduledAt,
+    this.completedAt,
+    this.cancelledAt,
+    this.cancellationReason,
     required this.termsAgreed,
+    required this.isPaid,
   });
 
   factory MyOrderListItem.fromJson(Map<String, dynamic> json) {
@@ -81,22 +89,24 @@ class MyOrderListItem {
       farmerId: json['farmer_id'] as String,
       farmerName: json['farmer_name'] as String,
       farmerPhone: json['farmer_phone'] as String,
+      farmerLocation: json['farmer_location'], // Could be String or Map
       vetId: json['vet_id'] as String,
       vetName: json['vet_name'] as String,
-      vetCenter: json['vet_center'],
+      vetLocation: json['vet_location'], // Could be Map<String, dynamic>
+      vetCenter: json['vet_center'] as String?,
       houseId: json['house_id'] as String,
       houseName: json['house_name'] as String,
       batchId: json['batch_id'] as String,
       batchName: json['batch_name'] as String,
       birdCount: json['bird_count'] as int,
       serviceId: json['service_id'] as String,
-      serviceName: json['service_name'] as String,
+      serviceType: json['service_type'] as String, // Changed key
       serviceCode: json['service_code'] as String,
       priorityLevel: json['priority_level'] as String,
       preferredDate: DateTime.parse(json['preferred_date'] as String),
       preferredTime: json['preferred_time'] as String,
       reasonForVisit: json['reason_for_visit'] as String,
-      additionalNotes: json['additional_notes'],
+      additionalNotes: json['additional_notes'] as String?,
       consultationFee: (json['consultationFee'] as num).toDouble(),
       serviceFee: (json['serviceFee'] as num).toDouble(),
       mileageFee: (json['mileageFee'] as num).toDouble(),
@@ -117,8 +127,9 @@ class MyOrderListItem {
       cancelledAt: json['cancelled_at'] != null
           ? DateTime.parse(json['cancelled_at'] as String)
           : null,
-      cancellationReason: json['cancellation_reason'],
+      cancellationReason: json['cancellation_reason'] as String?,
       termsAgreed: json['terms_agreed'] as bool,
+      isPaid: json['is_paid'] as bool, // Added this
     );
   }
 
@@ -129,8 +140,10 @@ class MyOrderListItem {
       'farmer_id': farmerId,
       'farmer_name': farmerName,
       'farmer_phone': farmerPhone,
+      'farmer_location': farmerLocation,
       'vet_id': vetId,
       'vet_name': vetName,
+      'vet_location': vetLocation,
       'vet_center': vetCenter,
       'house_id': houseId,
       'house_name': houseName,
@@ -138,7 +151,7 @@ class MyOrderListItem {
       'batch_name': batchName,
       'bird_count': birdCount,
       'service_id': serviceId,
-      'service_name': serviceName,
+      'service_type': serviceType, // Changed key
       'service_code': serviceCode,
       'priority_level': priorityLevel,
       'preferred_date': preferredDate.toIso8601String().split('T')[0],
@@ -159,6 +172,45 @@ class MyOrderListItem {
       'cancelled_at': cancelledAt?.toIso8601String(),
       'cancellation_reason': cancellationReason,
       'terms_agreed': termsAgreed,
+      'is_paid': isPaid, // Added this
     };
+  }
+
+  // Helper methods to parse location data
+  Map<String, dynamic>? get parsedFarmerLocation {
+    if (farmerLocation is String) {
+      try {
+        return jsonDecode(farmerLocation as String) as Map<String, dynamic>;
+      } catch (e) {
+        return null;
+      }
+    } else if (farmerLocation is Map) {
+      return farmerLocation as Map<String, dynamic>;
+    }
+    return null;
+  }
+
+  String? get farmerAddress {
+    final location = parsedFarmerLocation;
+    if (location != null && location.containsKey('address')) {
+      return location['address'] as String;
+    }
+    return null;
+  }
+
+  // Parse vet location (should already be a Map based on your JSON)
+  Map<String, dynamic>? get parsedVetLocation {
+    if (vetLocation is Map) {
+      return vetLocation as Map<String, dynamic>;
+    }
+    return null;
+  }
+
+  String? get vetAddress {
+    final location = parsedVetLocation;
+    if (location != null && location.containsKey('address')) {
+      return location['address'] as String;
+    }
+    return null;
   }
 }

@@ -493,7 +493,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
             builder: (context) => VetOrderSuccessScreen(
               order: data,
               onClose: () {
-                context.go(AppRoutes.dashboard);
+                context.pushReplacement('/my-vet-orders');
               },
             ),
             fullscreenDialog: true,
