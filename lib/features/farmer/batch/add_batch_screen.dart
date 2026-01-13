@@ -61,9 +61,9 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
   ];
 
   final Map<String, List<String>> _feedingTimes = {
-    'Day': ['06:00', '11:00', '16:00'],
-    'Night': ['18:00', '22:00', '02:00', '06:00'],
-    'Both': ['06:00', '11:00', '16:00', '18:00', '22:00', '02:00'],
+    'Day': ['06:00AM','09:00AM', '12:00 Noon', '3:00PM', '6:00PM'],
+    'Night': ['9:00PM', '12:00 Midnight', '3:00AM', '06:00AM'],
+    'Both': ['06:00AM','09:00AM', '12:00 Noon', '3:00PM', '6:00PM','9:00PM', '12:00 Midnight', '3:00AM'],
   };
 
   @override
@@ -414,7 +414,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                   }
                   return null;
                 },
-                labelText: 'initial count at hatching',
+                labelText: 'initial count from hatchery',
                 hintText: 'e.g., 1000',
               ),
               const SizedBox(height: 20),

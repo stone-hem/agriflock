@@ -64,17 +64,20 @@ class _BatchesScreenState extends State<BatchesScreen>
           ),
         ],
         bottom: TabBar(
-          controller: _tabController,
           indicatorColor: Colors.green,
           labelColor: Colors.green,
           unselectedLabelColor: Colors.grey.shade600,
+          controller: _tabController,
+          labelStyle: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+          dividerColor: Colors.transparent,
           tabs: const [
             Tab(
-              icon: Icon(Icons.warehouse),
               text: 'Active Houses & Batches',
             ),
             Tab(
-              icon: Icon(Icons.archive),
               text: 'Archived Batches',
             ),
           ],

@@ -1,6 +1,7 @@
 import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
+import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/batch_house_repo.dart';
 import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
@@ -732,14 +733,10 @@ class _AddEditHouseDialogState extends State<_AddEditHouseDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextFormField(
+              ReusableInput(
                 controller: _nameController,
-                decoration: InputDecoration(
-                  labelText: 'House Name',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+                labelText: 'House Name',
+                hintText: 'Enter house name',
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter house name';
@@ -748,15 +745,11 @@ class _AddEditHouseDialogState extends State<_AddEditHouseDialog> {
                 },
               ),
               const SizedBox(height: 16),
-              TextFormField(
+              ReusableInput(
                 controller: _capacityController,
-                decoration: InputDecoration(
-                  labelText: 'Capacity',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  suffixText: 'birds',
-                ),
+                labelText: 'Capacity',
+                hintText: 'Enter capacity',
+                suffixText: 'birds',
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -769,14 +762,10 @@ class _AddEditHouseDialogState extends State<_AddEditHouseDialog> {
                 },
               ),
               const SizedBox(height: 16),
-              TextFormField(
+              ReusableInput(
                 controller: _descriptionController,
-                decoration: InputDecoration(
-                  labelText: 'Description (Optional)',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+                labelText: 'Description (Optional)',
+                hintText: 'Enter house description',
                 maxLines: 3,
               ),
             ],

@@ -6,6 +6,7 @@ class ReusableInput extends StatelessWidget {
   final String hintText;
   final IconData? icon; // Already nullable
   final bool obscureText;
+  final String? suffixText;
   final TextInputType keyboardType;
   final String? Function(String?)? validator;
   final VoidCallback? onTap;
@@ -27,6 +28,7 @@ class ReusableInput extends StatelessWidget {
     required this.hintText,
     this.icon, // Changed from required to optional
     this.obscureText = false,
+    this.suffixText,
     this.keyboardType = TextInputType.text,
     this.validator,
     this.onTap,
@@ -60,6 +62,7 @@ class ReusableInput extends StatelessWidget {
       decoration: InputDecoration(
         labelText: labelText,
         hintText: hintText,
+        suffixText: suffixText,
         // Conditionally show prefixIcon only when icon is not null
         prefixIcon: icon != null
             ? Container(

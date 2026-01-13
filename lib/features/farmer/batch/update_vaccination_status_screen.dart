@@ -1,3 +1,4 @@
+import 'package:agriflock360/features/farmer/batch/model/scheduled_vaccination.dart';
 import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/vaccination_repo.dart';
 import 'package:flutter/material.dart';
@@ -5,7 +6,7 @@ import 'package:go_router/go_router.dart';
 
 class UpdateVaccinationStatusScreen extends StatefulWidget {
   final String batchId;
-  final Vaccination vaccination;
+  final VaccinationSchedule vaccination;
 
   const UpdateVaccinationStatusScreen({
     super.key,

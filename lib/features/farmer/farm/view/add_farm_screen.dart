@@ -40,32 +40,45 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Add New Farm'),
-        centerTitle: false,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: FilledButton(onPressed: (){context.go(AppRoutes.dashboard);}, child: Text('Cancel')),
-        actions: [
-          TextButton(
-            onPressed: _isLoading ? null : _saveFarm,
-            child: _isLoading
-                ? const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
-              ),
-            )
-                : const Text(
-              'Save',
-              style: TextStyle(
-                color: Colors.green,
-                fontWeight: FontWeight.bold,
+        title:Row(
+          mainAxisAlignment: .spaceBetween,
+          children: [
+            IconButton(
+              onPressed: () {
+                context.go(AppRoutes.dashboard);
+              },
+              icon: const Icon(Icons.close),
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                shape: const CircleBorder(),
               ),
             ),
-          ),
-        ],
+            const Text('Add New Farm'),
+            TextButton(
+              onPressed: _isLoading ? null : _saveFarm,
+              child: _isLoading
+                  ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                ),
+              )
+                  : const Text(
+                'Save',
+                style: TextStyle(
+                  color: Colors.green,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        automaticallyImplyLeading: false,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -165,14 +178,11 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
                       SizedBox(height: 8),
                       Text(
                         'After creating your farm, you can:\n'
-                            '• Add multiple flocks\n'
-                            '• Set up IoT devices\n'
-                            '• Track performance metrics\n'
-                            '• Manage farm staff',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 14,
-                        ),
+                        '• Add multiple flocks\n'
+                        '• Set up IoT devices\n'
+                        '• Track performance metrics\n'
+                        '• Manage farm staff',
+                        style: TextStyle(color: Colors.grey, fontSize: 14),
                       ),
                     ],
                   ),
@@ -209,32 +219,32 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
       // Add GPS coordinates if location is selected
       if (_selectedAddress != null && _latitude != null && _longitude != null) {
         farmData["location"] = {
-          "address": {
-            "formatted_address": _selectedAddress,
-          },
+          "address": {"formatted_address": _selectedAddress},
           "latitude": _latitude,
           "longitude": _longitude,
         };
       }
 
       // Create farm using repository
-      final res=await _farmRepository.createFarm(farmData, photoFile: _farmPhotoFile);
+      final res = await _farmRepository.createFarm(
+        farmData,
+        photoFile: _farmPhotoFile,
+      );
 
-      switch(res) {
+      switch (res) {
         case Success():
-        // Success
+          // Success
           ToastUtil.showSuccess(
-              'Farm "${_nameController.text}" created successfully!');
+            'Farm "${_nameController.text}" created successfully!',
+          );
 
           // Pop the screen with success result
           if (context.mounted) {
             context.pushReplacement(AppRoutes.farms);
           }
-        case Failure(response:final response):
+        case Failure(response: final response):
           ApiErrorHandler.handle(response);
       }
-
-
     } finally {
       if (mounted) {
         setState(() {

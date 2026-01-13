@@ -3,7 +3,7 @@ import 'package:agriflock360/features/farmer/batch/adopt_schedule_screen.dart';
 import 'package:agriflock360/features/farmer/batch/batch_details_screen.dart';
 import 'package:agriflock360/features/farmer/batch/edit_batch_screen.dart';
 import 'package:agriflock360/features/farmer/batch/log_feeding_screen.dart';
-import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
+import 'package:agriflock360/features/farmer/batch/model/scheduled_vaccination.dart';
 import 'package:agriflock360/features/farmer/batch/record_vaccination_screen.dart';
 import 'package:agriflock360/features/farmer/batch/record_product_screen.dart';
 import 'package:agriflock360/features/farmer/batch/update_vaccination_status_screen.dart';
@@ -326,7 +326,7 @@ class AppRoutes {
               builder: (context, state) {
                 final batchId = state.pathParameters['id']!;
 
-                final extra = state.extra as Vaccination;
+                final extra = state.extra as VaccinationSchedule;
                 return UpdateVaccinationStatusScreen(
                   vaccination: extra,
                   batchId: batchId,
