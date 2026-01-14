@@ -1,5 +1,3 @@
-// lib/features/farmer/farm/screens/archived_batches_tab.dart
-
 import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
@@ -9,15 +7,15 @@ import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class ArchivedBatchesTab extends StatefulWidget {
+class CompletedBatchesScreen extends StatefulWidget {
   final FarmModel farm;
-  const ArchivedBatchesTab({super.key, required this.farm});
+  const CompletedBatchesScreen({super.key, required this.farm});
 
   @override
-  State<ArchivedBatchesTab> createState() => _ArchivedBatchesTabState();
+  State<CompletedBatchesScreen> createState() => _CompletedBatchesScreenState();
 }
 
-class _ArchivedBatchesTabState extends State<ArchivedBatchesTab> {
+class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
   final _repository = ArchivedBatchRepository();
   List<ArchivedBatchModel> _archivedBatches = [];
   ArchivedBatchPagination? _pagination;
@@ -74,42 +72,77 @@ class _ArchivedBatchesTabState extends State<ArchivedBatchesTab> {
       return _buildEmptyState();
     }
 
-    return RefreshIndicator(
-      onRefresh: _loadData,
-      child: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          // Header
-          Text(
-            'Archived Batches - ${widget.farm.farmName}',
-            style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Colors.grey.shade800,
+    return Scaffold(
+      backgroundColor: Colors.grey.shade50,
+      appBar: AppBar(
+        title: Row(
+          children: [
+            Image.asset(
+              'assets/logos/Logo_0725.png',
+              fit: BoxFit.cover,
+              width: 40,
+              height: 40,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: Colors.green,
+                  child: const Icon(
+                    Icons.image,
+                    size: 100,
+                    color: Colors.white54,
+                  ),
+                );
+              },
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'View and manage your completed batches',
-            style: TextStyle(
-              color: Colors.grey.shade600,
-              fontSize: 16,
-            ),
-          ),
-          const SizedBox(height: 24),
-          // Archived batches list
-          ..._archivedBatches.map((batch) => _ArchivedBatchCard(
-            batch: batch,
-            farmId: widget.farm.id,
-            onRestore: () => _confirmRestore(batch),
-            onDelete: () => _confirmDelete(batch),
-          )).toList(),
-
-          // Pagination Controls
-          if (_pagination != null && _pagination!.totalPages > 1) ...[
-            const SizedBox(height: 24),
-            _buildPaginationControls(),
+            const Text('Agriflock 360'),
           ],
+        ),
+        centerTitle: false,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.notifications_outlined, color: Colors.grey.shade700),
+            onPressed: () => context.push('/notifications'),
+          ),
         ],
+      ),
+      body: RefreshIndicator(
+        onRefresh: _loadData,
+        child: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            // Header
+            Text(
+              'Archived Batches - ${widget.farm.farmName}',
+              style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade800,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'View and manage your completed batches',
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Archived batches list
+            ..._archivedBatches.map((batch) => _ArchivedBatchCard(
+              batch: batch,
+              farmId: widget.farm.id,
+              onRestore: () => _confirmRestore(batch),
+              onDelete: () => _confirmDelete(batch),
+            )).toList(),
+
+            // Pagination Controls
+            if (_pagination != null && _pagination!.totalPages > 1) ...[
+              const SizedBox(height: 24),
+              _buildPaginationControls(),
+            ],
+          ],
+        ),
       ),
     );
   }

@@ -46,9 +46,7 @@
 		<true/>
 		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true/>
-		<key>UIStatusBarHidden</key>
-		<false/>
-		<!-- Permission for accessing Photo Library (file uploads) -->
+		<!-- Permissions -->
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>This app requires access to your photo library to allow you to upload images for poultry tracking.</string>
 		<key>NSLocationWhenInUseUsageDescription</key>
@@ -56,8 +54,10 @@
 		<key>NSCameraUsageDescription</key>
 		<string>This app needs access to your camera to take photos.</string>
 		<key>NSLocationWhenInUseUsageDescription</key>
-        <string>We need your location to show your farm location on the map</string>
-        <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-        <string>We need your location to show your farm location on the map</string>
+		<string>We need your location to show your farm location on the map</string>
+		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+		<string>We need your location to show your farm location on the map</string>
+		<key>UIStatusBarHidden</key>
+		<false/>
 	</dict>
 </plist>

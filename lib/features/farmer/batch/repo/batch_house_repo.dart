@@ -292,6 +292,41 @@ class BatchHouseRepository {
     }
   }
 
+  Future<Result<void>> completeBatch(String batchId, Map<String, dynamic> data) async {
+    try {
+      final response = await apiClient.post(
+        '/batches/$batchId/complete',
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return const Success(null);
+      } else {
+        final jsonResponse = jsonDecode(response.body);
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to delete batch',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in deleteBatch: $e');
+      return const Failure(message: 'No internet connection', statusCode: 0);
+    } catch (e) {
+      LogUtil.error('Error in deleteBatch: $e');
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to delete batch',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+
+      return Failure(message: e.toString());
+    }
+  }
+
+
   // ==================== HOUSE METHODS ====================
 
   // Get all houses for a farm

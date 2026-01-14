@@ -1,6 +1,6 @@
 # agriflock360
 
-A new AgriFlock360 project.
+Agriflock Project
 
 ## Getting Started
 

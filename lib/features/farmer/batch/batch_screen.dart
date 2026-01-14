@@ -1,6 +1,6 @@
 import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
-import 'package:agriflock360/features/farmer/batch/tabs/active_batches_tab.dart';
-import 'package:agriflock360/features/farmer/batch/tabs/archived_batches_tab.dart';
+import 'package:agriflock360/features/farmer/batch/houses_screen.dart';
+import 'package:agriflock360/features/farmer/batch/completed_batches_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -78,7 +78,7 @@ class _BatchesScreenState extends State<BatchesScreen>
               text: 'Active Houses & Batches',
             ),
             Tab(
-              text: 'Archived Batches',
+              text: 'Completed Batches',
             ),
           ],
         ),
@@ -86,8 +86,8 @@ class _BatchesScreenState extends State<BatchesScreen>
       body: TabBarView(
         controller: _tabController,
         children: [
-          ActiveBatchesTab(farm: widget.farm),
-          ArchivedBatchesTab(farm: widget.farm),
+          HousesScreen(farm: widget.farm),
+          CompletedBatchesScreen(farm: widget.farm),
         ],
       ),
     );

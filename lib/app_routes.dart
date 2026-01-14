@@ -1,7 +1,9 @@
 import 'package:agriflock360/features/farmer/batch/add_batch_screen.dart';
 import 'package:agriflock360/features/farmer/batch/adopt_schedule_screen.dart';
 import 'package:agriflock360/features/farmer/batch/batch_details_screen.dart';
+import 'package:agriflock360/features/farmer/batch/completed_batches_screen.dart';
 import 'package:agriflock360/features/farmer/batch/edit_batch_screen.dart';
+import 'package:agriflock360/features/farmer/batch/houses_screen.dart';
 import 'package:agriflock360/features/farmer/batch/log_feeding_screen.dart';
 import 'package:agriflock360/features/farmer/batch/model/scheduled_vaccination.dart';
 import 'package:agriflock360/features/farmer/batch/record_vaccination_screen.dart';
@@ -266,7 +268,7 @@ class AppRoutes {
               );
             }
             final farm = state.extra as FarmModel;
-            return BatchesScreen(farm: farm);
+            return HousesScreen(farm: farm);
           },
           routes: [
             GoRoute(
@@ -278,6 +280,16 @@ class AppRoutes {
                   farm: extra?['farm'] ?? '',
                   houseId: extra?['houseId'],
                   houses: extra?['houses'],
+                );
+              },
+            ),
+            GoRoute(
+              path: 'my-completed-batches',
+              name: 'completedBatches',
+              builder: (context, state) {
+                final extra = state.extra as FarmModel;
+                return CompletedBatchesScreen(
+                  farm: extra,
                 );
               },
             ),

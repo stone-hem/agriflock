@@ -584,6 +584,19 @@ class _FarmCard extends StatelessWidget {
                           ),
                         ),
                       ),
+                    const SizedBox(height: 2),
+                    if (farm.description != null)
+                      SizedBox(
+                        width: 150,
+                        child: Text(
+                          farm.description!,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
