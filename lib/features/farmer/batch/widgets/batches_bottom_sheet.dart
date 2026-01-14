@@ -28,11 +28,24 @@ class _BatchesBottomSheetState extends State<BatchesBottomSheet> {
   final _repository = BatchHouseRepository();
   late List<BatchModel> _batches;
   bool _isLoading = false;
+  bool _showAddButton = true;
+  double _scrollOffset = 0;
 
   @override
   void initState() {
     super.initState();
     _batches = List.from(widget.house.batches);
+  }
+
+  bool _onScrollNotification(ScrollNotification notification) {
+    if (notification is ScrollUpdateNotification) {
+      setState(() {
+        _scrollOffset = notification.metrics.pixels;
+        // Hide button when scrolled down more than 50 pixels
+        _showAddButton = _scrollOffset <= 50;
+      });
+    }
+    return false;
   }
 
   Future<void> _refreshBatches() async {
@@ -254,28 +267,34 @@ class _BatchesBottomSheetState extends State<BatchesBottomSheet> {
                 ),
               ),
 
-              // Add Batch Button (for larger screens)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _navigateToAddBatch,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+              // Add Batch Button (animated to hide on scroll)
+              AnimatedSize(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeInOut,
+                child: _showAddButton
+                    ? Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _navigateToAddBatch,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add New Batch'),
                     ),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add New Batch'),
                   ),
-                ),
+                )
+                    : const SizedBox.shrink(),
               ),
 
-              const SizedBox(height: 20),
+              SizedBox(height: _showAddButton ? 20 : 0),
 
               // Divider
               Divider(color: Colors.grey.shade200, thickness: 1),
@@ -333,22 +352,25 @@ class _BatchesBottomSheetState extends State<BatchesBottomSheet> {
                     ],
                   ),
                 )
-                    : RefreshIndicator(
-                  onRefresh: _refreshBatches,
-                  child: ListView.builder(
-                    controller: scrollController,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    itemCount: _batches.length,
-                    itemBuilder: (context, index) {
-                      final batch = _batches[index];
-                      return _BatchCard(
-                        batch: batch,
-                        onView: () => _navigateToBatchDetails(batch),
-                        onEdit: () => _navigateToEditBatch(batch),
-                        onComplete: () => _markBatchComplete(batch),
-                        onDelete: () => _deleteBatch(batch),
-                      );
-                    },
+                    : NotificationListener<ScrollNotification>(
+                  onNotification: _onScrollNotification,
+                  child: RefreshIndicator(
+                    onRefresh: _refreshBatches,
+                    child: ListView.builder(
+                      controller: scrollController,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      itemCount: _batches.length,
+                      itemBuilder: (context, index) {
+                        final batch = _batches[index];
+                        return _BatchCard(
+                          batch: batch,
+                          onView: () => _navigateToBatchDetails(batch),
+                          onEdit: () => _navigateToEditBatch(batch),
+                          onComplete: () => _markBatchComplete(batch),
+                          onDelete: () => _deleteBatch(batch),
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
