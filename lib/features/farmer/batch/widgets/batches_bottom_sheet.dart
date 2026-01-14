@@ -133,7 +133,7 @@ class _BatchesBottomSheetState extends State<BatchesBottomSheet> {
   Future<void> _navigateToAddBatch() async {
     final result = await context.push('/batches/add', extra: {
       'farm': widget.farm,
-      'houseId': widget.house.id,
+      'house': widget.house,
     });
 
     if (result == true) {
@@ -145,7 +145,7 @@ class _BatchesBottomSheetState extends State<BatchesBottomSheet> {
     final result = await context.push('/batches/edit', extra: {
       'batch': batch,
       'farm': widget.farm,
-      'houseId': widget.house.id,
+      'house': widget.house,
     });
 
     if (result == true) {

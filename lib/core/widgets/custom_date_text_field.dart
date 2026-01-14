@@ -206,6 +206,7 @@ class CustomDateTextField extends StatefulWidget {
   final bool required;
   final String? Function(String?)? customValidator;
   final DateReturnFormat returnFormat; // New parameter to specify return format
+  final DateTime? initialDate; // New parameter to set initial date
 
   const CustomDateTextField({
     super.key,
@@ -220,6 +221,7 @@ class CustomDateTextField extends StatefulWidget {
     this.required = false,
     this.customValidator,
     this.returnFormat = DateReturnFormat.string, // Default to string format
+    this.initialDate, // Optional initial date
   });
 
   @override
@@ -233,13 +235,46 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
   @override
   void initState() {
     super.initState();
-    // Initialize with mask if empty
-    if (widget.controller.text.isEmpty) {
+
+    // Initialize with initial date if provided
+    if (widget.initialDate != null) {
+      _initializeWithDate(widget.initialDate!);
+    } else if (widget.controller.text.isEmpty) {
+      // Initialize with mask if empty and no initial date
       widget.controller.text = 'DD/MM/YYYY';
       widget.controller.selection = const TextSelection.collapsed(offset: 0);
     }
 
     _focusNode.addListener(_handleFocusChange);
+  }
+
+  void _initializeWithDate(DateTime date) {
+    // Format date as "DD/MM/YYYY"
+    final day = date.day.toString().padLeft(2, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final year = date.year.toString();
+
+    widget.controller.text = '$day/$month/$year';
+
+    // Trigger onChanged with appropriate format if callback exists
+    if (widget.onChanged != null) {
+      _triggerOnChangedWithFormattedDate();
+    }
+  }
+
+  void _triggerOnChangedWithFormattedDate() {
+    final formattedValue = _parseDateToFormat(widget.controller.text);
+    widget.onChanged!(formattedValue);
+  }
+
+  @override
+  void didUpdateWidget(covariant CustomDateTextField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Update if initialDate changes
+    if (widget.initialDate != oldWidget.initialDate && widget.initialDate != null) {
+      _initializeWithDate(widget.initialDate!);
+    }
   }
 
   @override

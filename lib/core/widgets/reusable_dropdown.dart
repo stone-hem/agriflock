@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class ReusableDropdown<T> extends StatelessWidget {
   final T? value;
   final List<DropdownMenuItem<T>> items;
-  final String labelText;
+  final String? labelText;
   final String hintText;
   final IconData? icon;
   final String? Function(T?)? validator;
@@ -18,7 +18,7 @@ class ReusableDropdown<T> extends StatelessWidget {
     super.key,
     required this.value,
     required this.items,
-    required this.labelText,
+    this.labelText,
     required this.hintText,
     this.icon,
     this.validator,
@@ -33,7 +33,7 @@ class ReusableDropdown<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<T>(
-      value: value,
+      initialValue: value,
       items: items,
       onChanged: enabled ? onChanged : null,
       validator: validator,

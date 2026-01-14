@@ -278,8 +278,7 @@ class AppRoutes {
                 final extra = state.extra as Map<String, dynamic>?;
                 return AddBatchScreen(
                   farm: extra?['farm'] ?? '',
-                  houseId: extra?['houseId'],
-                  houses: extra?['houses'],
+                  house: extra?['house'],
                 );
               },
             ),
@@ -301,7 +300,7 @@ class AppRoutes {
                 return EditBatchScreen(
                   farm: extra['farm'],
                   batch: extra['batch'],
-                  houses: extra['houses'],
+                  house: extra['house'],
                 );
               },
             ),

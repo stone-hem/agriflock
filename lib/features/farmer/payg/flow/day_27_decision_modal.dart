@@ -34,22 +34,25 @@ class Day27DecisionModal extends StatelessWidget {
                     color: Colors.green,
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '4 days left',
-                    style: TextStyle(
-                      color: Colors.green[800],
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
               ],
             ),
+            const SizedBox(height: 10),
+
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                '4 days left',
+                style: TextStyle(
+                  color: Colors.green[800],
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+
 
             const SizedBox(height: 24),
 

@@ -45,6 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
   static const int VALUE_CONFIRMATION_START_DAY = 5;
   static const int VALUE_CONFIRMATION_END_DAY = 10;
   static const int FUTURE_FRAMING_DAY = 21;
+  static const int FUTURE_FRAMING_END_DAY = 27;
   static const int DECISION_MODAL_DAY = 27;
   static const int TRANSITION_DAY = 31;
 
@@ -174,7 +175,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   bool get _shouldShowFutureFramingBanner {
-    return _daysSinceFirstLogin >= FUTURE_FRAMING_DAY;
+    return _daysSinceFirstLogin >= FUTURE_FRAMING_DAY && _daysSinceFirstLogin <= FUTURE_FRAMING_END_DAY;
   }
 
   bool get _shouldNavigateToDay31Screen {

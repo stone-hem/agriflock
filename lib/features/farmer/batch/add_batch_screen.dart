@@ -13,18 +13,14 @@ import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-
-
 class AddBatchScreen extends StatefulWidget {
   final FarmModel farm;
-  final String? houseId;
-  final List<House>? houses;
+  final House house;
 
   const AddBatchScreen({
     super.key,
     required this.farm,
-    this.houseId,
-    this.houses,
+    required this.house,
   });
 
   @override
@@ -44,14 +40,12 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
 
   String? _selectedBirdTypeId;
   String? _selectedBatchType;
-  String? _selectedFeedingTime;
-  String? _selectedHouse;
+  String? _selectedFeedingTimeCategory;
   DateTime? _hatchDate;
   File? _batchPhotoFile;
   bool _isLoading = false;
   bool _isLoadingBirdTypes = false;
 
-  List<House> _houses = [];
   List<BirdType> _birdTypes = [];
   final List<String> _batchTypes = [
     'Meat Production',
@@ -60,53 +54,26 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
     'Dual Purpose',
   ];
 
-  final Map<String, List<String>> _feedingTimes = {
-    'Day': ['06:00AM','09:00AM', '12:00 Noon', '3:00PM', '6:00PM'],
+  final Map<String, List<String>> _feedingTimeOptions = {
+    'Day': ['06:00AM', '09:00AM', '12:00 Noon', '3:00PM', '6:00PM'],
     'Night': ['9:00PM', '12:00 Midnight', '3:00AM', '06:00AM'],
-    'Both': ['06:00AM','09:00AM', '12:00 Noon', '3:00PM', '6:00PM','9:00PM', '12:00 Midnight', '3:00AM'],
+    'Both': ['06:00AM', '09:00AM', '12:00 Noon', '3:00PM', '6:00PM', '9:00PM', '12:00 Midnight', '3:00AM'],
   };
+
+  // Track selected feeding times within each category
+  final Map<String, List<String>> _selectedFeedingTimes = {
+    'Day': [],
+    'Night': [],
+    'Both': [],
+  };
+
+  int _availableCapacity = 0;
 
   @override
   void initState() {
     super.initState();
-    _loadHouses();
-    _loadBirdTypes();
     _initializeForm();
-  }
-
-  Future<void> _loadHouses() async {
-    try {
-      if (widget.houses != null) {
-        setState(() {
-          _houses = widget.houses!;
-        });
-      } else {
-        final result = await _repository.getAllHouses(widget.farm.id);
-
-        switch (result) {
-          case Success(data: final houses):
-            setState(() {
-              _houses = houses;
-            });
-
-          case Failure(:final response, :final message):
-          // Handle with full response for detailed error handling
-            if (response != null) {
-              ApiErrorHandler.handle(response);
-            } else {
-              ToastUtil.showError(message);
-            }
-        }
-
-      }
-
-      // Pre-select house if provided
-      if (widget.houseId != null) {
-        _selectedHouse = widget.houseId;
-      }
-    } catch (e) {
-      ApiErrorHandler.handle(e);
-    }
+    _loadBirdTypes();
   }
 
   Future<void> _loadBirdTypes() async {
@@ -115,7 +82,6 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
         _isLoadingBirdTypes = true;
       });
 
-      // Assuming repository has a method to fetch bird types
       final result = await _repository.getBirdTypes();
 
       switch (result) {
@@ -126,15 +92,12 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
           });
 
         case Failure(:final response, :final message):
-        // Handle with full response for detailed error handling
           if (response != null) {
             ApiErrorHandler.handle(response);
           } else {
             ToastUtil.showError(message);
           }
       }
-
-
     } catch (e) {
       ApiErrorHandler.handle(e);
       setState(() {
@@ -144,10 +107,14 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
   }
 
   void _initializeForm() {
-    // Set default values for a new batch
-    _birdsAliveController.text = '0';
-    _currentWeightController.text = '0.0';
-    _expectedWeightController.text = '0.0';
+    // Auto-fill initial quantity with available capacity if it's reasonable
+    _availableCapacity=widget.house.capacity-widget.house.currentBirds;
+    setState(() {
+      if (_availableCapacity > 0) {
+        _initialQuantityController.text = _availableCapacity.toString();
+      }
+    });
+
   }
 
   @override
@@ -155,7 +122,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title:  Text('Add New Batch - ${widget.farm.farmName}'),
+        title: Text('Add New Batch - ${widget.farm.farmName}'),
         centerTitle: false,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -192,6 +159,93 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Card(
+                elevation: 0,
+                color: Colors.blue.shade50,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: Colors.blue.shade100),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'House ${widget.house.houseName}',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue,
+                            ),
+                          ),
+                          Chip(
+                            label: Text(
+                              '${widget.house.batches.length} batch(es)',
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            backgroundColor: Colors.blue,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildCapacityInfo(
+                            'Total Capacity',
+                            '${widget.house.capacity} birds',
+                            Icons.people,
+                            Colors.green,
+                          ),
+                          _buildCapacityInfo(
+                            'Current Birds',
+                            '${widget.house.currentBirds} birds',
+                            Icons.pets,
+                            Colors.orange,
+                          ),
+                          _buildCapacityInfo(
+                            'Available',
+                            '$_availableCapacity birds',
+                            Icons.event_available,
+                            _availableCapacity > 0 ? Colors.green : Colors.red,
+                          ),
+                        ],
+                      ),
+                      if (_availableCapacity <= 0) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.red.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.red.shade100),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.warning, color: Colors.red, size: 20),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'This house is at full capacity! Consider selecting a different house.',
+                                  style: TextStyle(
+                                    color: Colors.red.shade700,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
               // Batch Photo Upload
               PhotoUpload(
                 file: _batchPhotoFile,
@@ -227,44 +281,6 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                 hintText: 'e.g., Spring Broiler Batch 2024',
               ),
               const SizedBox(height: 20),
-
-              // House Selection
-              Text(
-                'House Assignment',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                initialValue: _selectedHouse,
-                decoration: InputDecoration(
-                  hintText: 'Select house',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                items: _houses.map((House house) {
-                  return DropdownMenuItem<String>(
-                    value: house.id,
-                    child: Text('${house.houseName} (${house.capacity} capacity)'),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedHouse = newValue;
-                  });
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please select a house';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-
               // Bird Type Selection
               Text(
                 'Bird Type',
@@ -364,33 +380,25 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Hatch Date
-              Text(
-                'Hatch Date',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
               CustomDateTextField(
-                label: 'Date of Birth *Required',
+                label: 'Date of Hatching',
                 hintText: 'Enter your date of birth',
                 icon: Icons.calendar_today,
                 required: true,
-                minYear: DateTime.now().year-1,
+                minYear: DateTime.now().year - 1,
                 returnFormat: DateReturnFormat.dateTime,
-                maxYear: DateTime.now().year, controller: _hatchController,
-                onChanged: (value){
+                initialDate: DateTime.now(),
+                maxYear: DateTime.now().year,
+                controller: _hatchController,
+                onChanged: (value) {
                   if (value != null) {
                     _hatchDate = value;
                   }
                 },
-
               ),
               const SizedBox(height: 20),
 
-              // Initial Count
+              // Initial Count with capacity validation
               Text(
                 'Initial Count',
                 style: Theme.of(context).textTheme.titleMedium!.copyWith(
@@ -409,13 +417,17 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                   if (int.tryParse(value) == null) {
                     return 'Please enter a valid number';
                   }
-                  if (int.parse(value) <= 0) {
+                  final count = int.parse(value);
+                  if (count <= 0) {
                     return 'Initial count must be greater than 0';
+                  }
+                  if (count > _availableCapacity) {
+                    return 'Initial count ($count) exceeds available capacity ($_availableCapacity)';
                   }
                   return null;
                 },
-                labelText: 'initial count from hatchery',
-                hintText: 'e.g., 1000',
+                labelText: 'Initial count from hatchery',
+                hintText: 'e.g., $_availableCapacity',
               ),
               const SizedBox(height: 20),
 
@@ -446,7 +458,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                   return null;
                 },
                 labelText: 'Current count at the moment',
-                hintText: 'e.g., 1000',
+                hintText: 'e.g., $_availableCapacity',
               ),
               const SizedBox(height: 20),
 
@@ -471,7 +483,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                   }
                   return null;
                 },
-                labelText: 'Current average weight ',
+                labelText: 'Current average weight',
                 hintText: 'e.g., 0.0',
               ),
               const SizedBox(height: 20),
@@ -516,78 +528,137 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                 ),
               ),
               const SizedBox(height: 8),
+
+              // Feeding Time Category Selection
               DropdownButtonFormField<String>(
-                initialValue: _selectedFeedingTime,
+                value: _selectedFeedingTimeCategory,
                 decoration: InputDecoration(
-                  hintText: 'Select feeding time',
+                  hintText: 'Select feeding time category',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                items: _feedingTimes.keys.map((String time) {
+                items: _feedingTimeOptions.keys.map((String category) {
                   return DropdownMenuItem<String>(
-                    value: time,
-                    child: Text(time),
+                    value: category,
+                    child: Text(category),
                   );
                 }).toList(),
                 onChanged: (String? newValue) {
                   setState(() {
-                    _selectedFeedingTime = newValue;
+                    _selectedFeedingTimeCategory = newValue;
                   });
                 },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please select feeding time';
+                    return 'Please select feeding time category';
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 16),
 
-              // Display Feeding Times
-              if (_selectedFeedingTime != null) ...[
+              // Specific Feeding Times Selection within Category
+              if (_selectedFeedingTimeCategory != null) ...[
                 Text(
-                  'Feeding Schedule:',
+                  'Select Specific Feeding Times:',
                   style: Theme.of(context).textTheme.titleMedium!.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Colors.grey.shade800,
                   ),
                 ),
                 const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.green.shade100),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '$_selectedFeedingTime Feeding Times:',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green,
+
+                // Display all options for the selected category
+                Column(
+                  children: _feedingTimeOptions[_selectedFeedingTimeCategory]!
+                      .map((time) {
+                    bool isSelected = _selectedFeedingTimes[_selectedFeedingTimeCategory]!.contains(time);
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            if (isSelected) {
+                              _selectedFeedingTimes[_selectedFeedingTimeCategory]!.remove(time);
+                            } else {
+                              _selectedFeedingTimes[_selectedFeedingTimeCategory]!.add(time);
+                            }
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: isSelected ? Colors.green.shade50 : Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isSelected ? Colors.green : Colors.grey.shade300,
+                              width: isSelected ? 2 : 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+                                color: isSelected ? Colors.green : Colors.grey,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  time,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    color: isSelected ? Colors.green.shade800 : Colors.grey.shade800,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 4,
-                        children: _feedingTimes[_selectedFeedingTime]!
-                            .map((time) => Chip(
-                          label: Text(
-                            time,
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                          backgroundColor: Colors.green,
-                        ))
-                            .toList(),
-                      ),
-                    ],
-                  ),
+                    );
+                  }).toList(),
                 ),
+
+                // Show selected times summary
+                if (_selectedFeedingTimes[_selectedFeedingTimeCategory]!.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.green.shade100),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Selected Feeding Times:',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          children: _selectedFeedingTimes[_selectedFeedingTimeCategory]!
+                              .map((time) => Chip(
+                            label: Text(
+                              time,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            backgroundColor: Colors.green,
+                          ))
+                              .toList(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 16),
               ],
 
@@ -651,6 +722,30 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
     );
   }
 
+  Widget _buildCapacityInfo(String title, String value, IconData icon, Color color) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 24),
+        const SizedBox(height: 4),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey.shade600,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
 
   Future<void> _createBatch() async {
     if (!_formKey.currentState!.validate()) {
@@ -662,14 +757,23 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
       return;
     }
 
+    // Validate feeding times selection
+    if (_selectedFeedingTimeCategory == null ||
+        _selectedFeedingTimes[_selectedFeedingTimeCategory]!.isEmpty) {
+      ToastUtil.showError('Please select at least one feeding time');
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
 
     try {
       // Prepare batch data according to API requirements
+      final selectedFeedingTimes = _selectedFeedingTimes[_selectedFeedingTimeCategory]!;
+
       final batchData = {
-        'house_id': _selectedHouse,
+        'house_id': widget.house.id,
         'batch_name': _nameController.text.trim(),
         'bird_type_id': _selectedBirdTypeId,
         'batch_type': _selectedBatchType,
@@ -678,13 +782,12 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
         'birds_alive': int.parse(_birdsAliveController.text.trim()),
         'current_weight': double.parse(_currentWeightController.text.trim()),
         'expected_weight': double.parse(_expectedWeightController.text.trim()),
-        'feeding_time': _selectedFeedingTime,
-        'feeding_schedule': _feedingTimes[_selectedFeedingTime!]?.join(','),
+        'feeding_time': _selectedFeedingTimeCategory,
+        'feeding_schedule': selectedFeedingTimes.join(','), // Send comma-separated times
         'notes': _notesController.text.trim().isNotEmpty
             ? _notesController.text.trim()
             : null,
       };
-
 
       final result = await _repository.createBatch(
         widget.farm.id,
@@ -696,11 +799,10 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
         case Success():
           ToastUtil.showSuccess('Batch created successfully!');
           if (context.mounted) {
-           context.pushReplacement('/batches', extra: widget.farm);
+            context.pushReplacement('/batches', extra: widget.farm);
           }
 
         case Failure(:final response, :final message):
-        // Handle with full response for detailed error handling
           if (response != null) {
             ApiErrorHandler.handle(response);
           } else {

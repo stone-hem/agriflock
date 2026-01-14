@@ -1,8 +1,11 @@
 import 'dart:io';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
+import 'package:agriflock360/core/utils/date_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
+import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/core/widgets/photo_upload.dart';
+import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/bird_type.dart';
@@ -14,13 +17,13 @@ import 'package:go_router/go_router.dart';
 class EditBatchScreen extends StatefulWidget {
   final FarmModel farm;
   final BatchModel batch;
-  final List<House>? houses;
+  final House house; // Changed to required house
 
   const EditBatchScreen({
     super.key,
     required this.farm,
     required this.batch,
-    this.houses,
+    required this.house, // Required house parameter
   });
 
   @override
@@ -30,6 +33,7 @@ class EditBatchScreen extends StatefulWidget {
 class _EditBatchScreenState extends State<EditBatchScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _hatchController = TextEditingController();
   final _initialQuantityController = TextEditingController();
   final _birdsAliveController = TextEditingController();
   final _currentWeightController = TextEditingController();
@@ -39,15 +43,12 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
 
   String? _selectedBirdTypeId;
   String? _selectedBatchType;
-  String? _selectedFeedingTime;
-  String? _selectedHouse;
+  String? _selectedFeedingTimeCategory;
   DateTime? _hatchDate;
   File? _batchPhotoFile;
   bool _isLoading = false;
   bool _isLoadingBirdTypes = false;
-  String? _existingPhotoUrl;
 
-  List<House> _houses = [];
   List<BirdType> _birdTypes = [];
   final List<String> _batchTypes = [
     'Meat Production',
@@ -57,45 +58,24 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
     'LAYERS'
   ];
 
-  final Map<String, List<String>> _feedingTimes = {
-    'Day': ['06:00', '11:00', '16:00'],
-    'Night': ['18:00', '22:00', '02:00', '06:00'],
-    'Both': ['06:00', '11:00', '16:00', '18:00', '22:00', '02:00'],
+  final Map<String, List<String>> _feedingTimeOptions = {
+    'Day': ['06:00AM', '09:00AM', '12:00 Noon', '3:00PM', '6:00PM'],
+    'Night': ['9:00PM', '12:00 Midnight', '3:00AM', '06:00AM'],
+    'Both': ['06:00AM', '09:00AM', '12:00 Noon', '3:00PM', '6:00PM', '9:00PM', '12:00 Midnight', '3:00AM'],
+  };
+
+  // Track selected feeding times within each category
+  final Map<String, List<String>> _selectedFeedingTimes = {
+    'Day': [],
+    'Night': [],
+    'Both': [],
   };
 
   @override
   void initState() {
     super.initState();
-    _loadHouses();
-    _loadBirdTypes();
     _initializeForm();
-  }
-
-  Future<void> _loadHouses() async {
-    try {
-      if (widget.houses != null) {
-        setState(() {
-          _houses = widget.houses!;
-        });
-      } else {
-        final result = await _repository.getAllHouses(widget.farm.id);
-        switch (result) {
-          case Success(data: final houses):
-            setState(() {
-              _houses = houses;
-            });
-
-          case Failure(:final response, :final message):
-            if (response != null) {
-              ApiErrorHandler.handle(response);
-            } else {
-              ToastUtil.showError(message);
-            }
-        }
-      }
-    } catch (e) {
-      ApiErrorHandler.handle(e);
-    }
+    _loadBirdTypes();
   }
 
   Future<void> _loadBirdTypes() async {
@@ -104,7 +84,6 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
         _isLoadingBirdTypes = true;
       });
 
-      // Fetch bird types from API
       final result = await _repository.getBirdTypes();
 
       switch (result) {
@@ -115,7 +94,6 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
           });
 
         case Failure(:final response, :final message):
-        // Handle with full response for detailed error handling
           if (response != null) {
             ApiErrorHandler.handle(response);
           } else {
@@ -135,27 +113,40 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
     final batch = widget.batch;
 
     _nameController.text = batch.batchName;
-    _selectedHouse = batch.houseId;
-    _selectedBirdTypeId = batch.birdTypeId; // Assuming BatchModel has this field
-    _selectedBatchType = batch.type; // Using type as batch_type
-    _hatchDate = batch.startDate; // Using startDate as hatch_date
+    _selectedBirdTypeId = batch.birdTypeId;
+    _selectedBatchType = batch.type;
+    _hatchDate = batch.startDate;
+
+    // Set hatch controller value
+    if (_hatchDate != null) {
+      _hatchController.text = DateUtil.toMMDDYYYY(_hatchDate!);
+    }
+
     _initialQuantityController.text = batch.initialQuantity.toString();
     _birdsAliveController.text = batch.birdsAlive.toString();
     _currentWeightController.text = batch.currentWeight.toString();
     _expectedWeightController.text = batch.expectedWeight.toString();
-    _selectedFeedingTime = batch.feedingTime;
+    _selectedFeedingTimeCategory = batch.feedingTime;
     _notesController.text = batch.description ?? '';
 
-    // Store existing photo URL if available
-    _existingPhotoUrl = batch.photoUrl;
+    // Parse existing feeding schedule if available
+    if (batch.feedingSchedule.isNotEmpty) {
+      final times = batch.feedingSchedule;
+      _selectedFeedingTimes[_selectedFeedingTimeCategory ?? 'Day'] = times;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Calculate capacity excluding current batch
+    final totalCapacity = widget.house.capacity ?? 0;
+    final currentBirds = (widget.house.currentBirds ?? 0) - widget.batch.birdsAlive;
+    final availableCapacity = totalCapacity - currentBirds + widget.batch.birdsAlive;
+
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Edit Batch'),
+        title: Text('Edit Batch - ${widget.farm.farmName}'),
         centerTitle: false,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -192,19 +183,77 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Batch Photo Upload with existing photo preview
-              PhotoUpload(
-                file: _batchPhotoFile,
-                onFileSelected: (File? file) {
-                  setState(() {
-                    _batchPhotoFile = file;
-                  });
-                },
-                title: 'Batch Photo',
-                description: 'Update batch photo (optional)',
-                primaryColor: Colors.green,
+              // House Information (Display only)
+              Card(
+                elevation: 0,
+                color: Colors.blue.shade50,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: Colors.blue.shade100),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'House ${widget.house.houseName}',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue,
+                            ),
+                          ),
+                          Chip(
+                            label: Text(
+                              '${widget.house.batches.length} batch(es)',
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            backgroundColor: Colors.blue,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildCapacityInfo(
+                            'Total Capacity',
+                            '$totalCapacity birds',
+                            Icons.people,
+                            Colors.green,
+                          ),
+                          _buildCapacityInfo(
+                            'Current Birds',
+                            '$currentBirds birds',
+                            Icons.pets,
+                            Colors.orange,
+                          ),
+                          _buildCapacityInfo(
+                            'Available*',
+                            '$availableCapacity birds',
+                            Icons.event_available,
+                            availableCapacity > 0 ? Colors.green : Colors.red,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '*Includes current batch count adjustment',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 20),
 
               // Batch Name
               Text(
@@ -225,43 +274,6 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
                 },
                 labelText: 'Name',
                 hintText: 'e.g., Spring Broiler Batch 2024',
-              ),
-              const SizedBox(height: 20),
-
-              // House Selection
-              Text(
-                'House Assignment',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                value: _selectedHouse,
-                decoration: InputDecoration(
-                  hintText: 'Select house',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                items: _houses.map((House house) {
-                  return DropdownMenuItem<String>(
-                    value: house.id,
-                    child: Text('${house.houseName} (${house.capacity} capacity)'),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedHouse = newValue;
-                  });
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please select a house';
-                  }
-                  return null;
-                },
               ),
               const SizedBox(height: 20),
 
@@ -299,14 +311,9 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
                   ],
                 ),
               )
-                  : DropdownButtonFormField<String>(
-                initialValue: _selectedBirdTypeId,
-                decoration: InputDecoration(
-                  hintText: 'Select bird type',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+                  : ReusableDropdown<String>(
+                value: _selectedBirdTypeId,
+                hintText: 'Select bird type',
                 items: _birdTypes.map((BirdType type) {
                   return DropdownMenuItem<String>(
                     value: type.id,
@@ -336,14 +343,9 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                initialValue: _selectedBatchType,
-                decoration: InputDecoration(
-                  hintText: 'Select batch type',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+              ReusableDropdown<String>(
+                value: _selectedBatchType,
+                hintText: 'Select batch type',
                 items: _batchTypes.map((String type) {
                   return DropdownMenuItem<String>(
                     value: type,
@@ -365,40 +367,23 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
               const SizedBox(height: 20),
 
               // Hatch Date
-              Text(
-                'Hatch Date',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
-              InkWell(
-                onTap: _selectHatchDate,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade400),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.calendar_today, color: Colors.grey.shade600),
-                      const SizedBox(width: 12),
-                      Text(
-                        _hatchDate == null
-                            ? 'Select hatch date'
-                            : '${_hatchDate!.day}/${_hatchDate!.month}/${_hatchDate!.year}',
-                        style: TextStyle(
-                          color: _hatchDate == null
-                              ? Colors.grey.shade600
-                              : Colors.grey.shade800,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              CustomDateTextField(
+                label: 'Date of Hatching',
+                hintText: 'Select hatch date',
+                icon: Icons.calendar_today,
+                required: true,
+                minYear: DateTime.now().year - 2,
+                returnFormat: DateReturnFormat.dateTime,
+                maxYear: DateTime.now().year,
+                controller: _hatchController,
+                initialDate: _hatchDate,
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _hatchDate = value;
+                    });
+                  }
+                },
               ),
               const SizedBox(height: 20),
 
@@ -421,17 +406,21 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
                   if (int.tryParse(value) == null) {
                     return 'Please enter a valid number';
                   }
-                  if (int.parse(value) <= 0) {
+                  final count = int.parse(value);
+                  if (count <= 0) {
                     return 'Initial count must be greater than 0';
+                  }
+                  if (count > availableCapacity) {
+                    return 'Initial count ($count) exceeds available capacity ($availableCapacity)';
                   }
                   return null;
                 },
-                labelText: 'initial count from hatchery',
+                labelText: 'Initial count from hatchery',
                 hintText: 'e.g., 1000',
               ),
               const SizedBox(height: 20),
 
-              // Birds Alive
+              // Current Count (Birds Alive)
               Text(
                 'Current Count',
                 style: Theme.of(context).textTheme.titleMedium!.copyWith(
@@ -445,7 +434,7 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter number of birds alive';
+                    return 'Please enter current count';
                   }
                   if (int.tryParse(value) == null) {
                     return 'Please enter a valid number';
@@ -453,7 +442,7 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
                   final alive = int.parse(value);
                   final initial = int.tryParse(_initialQuantityController.text) ?? 0;
                   if (alive > initial) {
-                    return 'Birds alive cannot exceed initial count';
+                    return 'Current count cannot exceed initial count';
                   }
                   return null;
                 },
@@ -462,7 +451,7 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Current Weight
+              // Current Average Weight
               Text(
                 'Average weight (kg)',
                 style: Theme.of(context).textTheme.titleMedium!.copyWith(
@@ -476,19 +465,19 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter current weight';
+                    return 'Please enter current average weight';
                   }
                   if (double.tryParse(value) == null) {
                     return 'Please enter a valid weight';
                   }
                   return null;
                 },
-                labelText: 'Current average weight ',
+                labelText: 'Current average weight',
                 hintText: 'e.g., 1.5',
               ),
               const SizedBox(height: 20),
 
-              // Expected Weight
+              // Expected Average Weight
               Text(
                 'Expected Average Weight (kg)',
                 style: Theme.of(context).textTheme.titleMedium!.copyWith(
@@ -502,7 +491,7 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter expected weight';
+                    return 'Please enter expected average weight';
                   }
                   if (double.tryParse(value) == null) {
                     return 'Please enter a valid weight';
@@ -528,78 +517,136 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                value: _selectedFeedingTime,
-                decoration: InputDecoration(
-                  hintText: 'Select feeding time',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                items: _feedingTimes.keys.map((String time) {
+
+              // Feeding Time Category Selection
+              ReusableDropdown<String>(
+                value: _selectedFeedingTimeCategory,
+                hintText: 'Select feeding time category',
+                items: _feedingTimeOptions.keys.map((String category) {
                   return DropdownMenuItem<String>(
-                    value: time,
-                    child: Text(time),
+                    value: category,
+                    child: Text(category),
                   );
                 }).toList(),
                 onChanged: (String? newValue) {
                   setState(() {
-                    _selectedFeedingTime = newValue;
+                    _selectedFeedingTimeCategory = newValue;
+                    // Clear previous selections when category changes
+                    if (newValue != null && newValue != _selectedFeedingTimeCategory) {
+                      _selectedFeedingTimes[_selectedFeedingTimeCategory ?? 'Day']?.clear();
+                    }
                   });
                 },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please select feeding time';
+                    return 'Please select feeding time category';
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 16),
 
-              // Display Feeding Times
-              if (_selectedFeedingTime != null) ...[
+              // Specific Feeding Times Selection within Category
+              if (_selectedFeedingTimeCategory != null) ...[
                 Text(
-                  'Feeding Schedule:',
+                  'Select Specific Feeding Times:',
                   style: Theme.of(context).textTheme.titleMedium!.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Colors.grey.shade800,
                   ),
                 ),
                 const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.green.shade100),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '$_selectedFeedingTime Feeding Times:',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green,
+
+                // Display all options for the selected category
+                Column(
+                  children: _feedingTimeOptions[_selectedFeedingTimeCategory]!
+                      .map((time) {
+                    bool isSelected = _selectedFeedingTimes[_selectedFeedingTimeCategory]!.contains(time);
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            if (isSelected) {
+                              _selectedFeedingTimes[_selectedFeedingTimeCategory]!.remove(time);
+                            } else {
+                              _selectedFeedingTimes[_selectedFeedingTimeCategory]!.add(time);
+                            }
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: isSelected ? Colors.green.shade50 : Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isSelected ? Colors.green : Colors.grey.shade300,
+                              width: isSelected ? 2 : 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+                                color: isSelected ? Colors.green : Colors.grey,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  time,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    color: isSelected ? Colors.green.shade800 : Colors.grey.shade800,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 4,
-                        children: _feedingTimes[_selectedFeedingTime]!
-                            .map((time) => Chip(
-                          label: Text(
-                            time,
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                          backgroundColor: Colors.green,
-                        ))
-                            .toList(),
-                      ),
-                    ],
-                  ),
+                    );
+                  }).toList(),
                 ),
+
+                // Show selected times summary
+                if (_selectedFeedingTimes[_selectedFeedingTimeCategory]!.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.green.shade100),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Selected Feeding Times:',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          children: _selectedFeedingTimes[_selectedFeedingTimeCategory]!
+                              .map((time) => Chip(
+                            label: Text(
+                              time,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            backgroundColor: Colors.green,
+                          ))
+                              .toList(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 16),
               ],
 
@@ -663,18 +710,29 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
     );
   }
 
-  Future<void> _selectHatchDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _hatchDate ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
+  Widget _buildCapacityInfo(String title, String value, IconData icon, Color color) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 24),
+        const SizedBox(height: 4),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey.shade600,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
     );
-    if (picked != null && picked != _hatchDate) {
-      setState(() {
-        _hatchDate = picked;
-      });
-    }
   }
 
   Future<void> _updateBatch() async {
@@ -687,30 +745,39 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
       return;
     }
 
+    // Validate feeding times selection
+    if (_selectedFeedingTimeCategory == null ||
+        _selectedFeedingTimes[_selectedFeedingTimeCategory]!.isEmpty) {
+      ToastUtil.showError('Please select at least one feeding time');
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
 
     try {
       // Prepare batch data according to API requirements
+      final selectedFeedingTimes = _selectedFeedingTimes[_selectedFeedingTimeCategory]!;
+
       final batchData = {
-        'house_id': _selectedHouse,
+        'house_id': widget.house.id,
         'batch_name': _nameController.text.trim(),
         'bird_type_id': _selectedBirdTypeId,
         'batch_type': _selectedBatchType,
         'initial_count': int.parse(_initialQuantityController.text.trim()),
-        'hatch_date': _hatchDate!.toIso8601String().split('T')[0], // Date only
+        'hatch_date': DateUtil.toISO8601(_hatchDate!),
         'birds_alive': int.parse(_birdsAliveController.text.trim()),
         'current_weight': double.parse(_currentWeightController.text.trim()),
         'expected_weight': double.parse(_expectedWeightController.text.trim()),
-        'feeding_time': _selectedFeedingTime,
-        'feeding_schedule': _feedingTimes[_selectedFeedingTime!]?.join(','),
+        'feeding_time': _selectedFeedingTimeCategory,
+        'feeding_schedule': selectedFeedingTimes.join(','),
         'notes': _notesController.text.trim().isNotEmpty
             ? _notesController.text.trim()
             : null,
       };
 
-      final result=await _repository.updateBatch(
+      final result = await _repository.updateBatch(
         widget.farm.id,
         widget.batch.id,
         batchData,
@@ -719,16 +786,15 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
 
       switch (result) {
         case Success():
-          ToastUtil.showSuccess('Batch edited successfully!');
+          ToastUtil.showSuccess('Batch updated successfully!');
           if (context.mounted) {
-             context.pushReplacement('/batches/details', extra: {
+            context.pushReplacement('/batches/details', extra: {
               'batch': widget.batch,
               'farm': widget.farm,
             });
           }
 
         case Failure(:final response, :final message):
-        // Handle with full response for detailed error handling
           if (response != null) {
             ApiErrorHandler.handle(response);
           } else {
@@ -745,8 +811,6 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
       }
     }
   }
-
-
 
   @override
   void dispose() {

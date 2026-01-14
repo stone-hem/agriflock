@@ -180,7 +180,7 @@ class _HousesScreenState extends State<HousesScreen> {
       floatingActionButton: _showFab
           ? FloatingActionButton.extended(
         onPressed: () => _showAddHouseDialog(context),
-        backgroundColor: Colors.teal,
+        backgroundColor: Colors.orange,
         foregroundColor: Colors.white,
         elevation: 4,
         icon: const Icon(Icons.add),
