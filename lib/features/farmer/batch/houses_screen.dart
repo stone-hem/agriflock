@@ -4,7 +4,7 @@ import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/batch_house_repo.dart';
-import 'package:agriflock360/features/farmer/batch/tabs/widgets/batches_bottom_sheet.dart';
+import 'package:agriflock360/features/farmer/batch/widgets/batches_bottom_sheet.dart';
 import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -136,7 +136,7 @@ class _HousesScreenState extends State<HousesScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) => BatchesBottomSheet(
         house: house,
-        farmId: widget.farm.id,
+        farm: widget.farm,
         onDataChanged: _loadData,
       ),
     );
@@ -478,9 +478,11 @@ class _HouseCard extends StatelessWidget {
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        Icon(Icons.remove_red_eye_outlined, size: 20),
+                        SizedBox(width: 6),
                         Flexible(
                           child: Text(
-                            'View Batches',
+                            'View',
                             style: TextStyle(fontWeight: FontWeight.w500),
                             overflow: TextOverflow.ellipsis,
                           ),

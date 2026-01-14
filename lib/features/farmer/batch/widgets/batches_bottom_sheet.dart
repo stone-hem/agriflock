@@ -1,5 +1,6 @@
 import 'package:agriflock360/core/utils/date_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
@@ -9,13 +10,13 @@ import 'package:agriflock360/features/farmer/batch/repo/batch_house_repo.dart';
 
 class BatchesBottomSheet extends StatefulWidget {
   final House house;
-  final String farmId;
+  final FarmModel farm;
   final VoidCallback onDataChanged;
 
   const BatchesBottomSheet({
     super.key,
     required this.house,
-    required this.farmId,
+    required this.farm,
     required this.onDataChanged,
   });
 
@@ -37,7 +38,7 @@ class _BatchesBottomSheetState extends State<BatchesBottomSheet> {
   Future<void> _refreshBatches() async {
     setState(() => _isLoading = true);
     try {
-      final result = await _repository.getAllHouses(widget.farmId);
+      final result = await _repository.getAllHouses(widget.farm.id);
       switch(result){
         case Success<List<House>>(data: final houses):
           final updatedHouse = houses.firstWhere(
@@ -118,7 +119,7 @@ class _BatchesBottomSheetState extends State<BatchesBottomSheet> {
     if (confirmed == true) {
       try {
         setState(() => _isLoading = true);
-        await _repository.deleteBatch(widget.farmId, batch.id);
+        await _repository.deleteBatch(widget.farm.id, batch.id);
         ToastUtil.showSuccess('Batch deleted successfully');
         await _refreshBatches();
       } catch (e) {
@@ -131,7 +132,7 @@ class _BatchesBottomSheetState extends State<BatchesBottomSheet> {
 
   Future<void> _navigateToAddBatch() async {
     final result = await context.push('/batches/add', extra: {
-      'farmId': widget.farmId,
+      'farm': widget.farm,
       'houseId': widget.house.id,
     });
 
@@ -143,7 +144,7 @@ class _BatchesBottomSheetState extends State<BatchesBottomSheet> {
   Future<void> _navigateToEditBatch(BatchModel batch) async {
     final result = await context.push('/batches/edit', extra: {
       'batch': batch,
-      'farmId': widget.farmId,
+      'farm': widget.farm,
       'houseId': widget.house.id,
     });
 
@@ -155,7 +156,7 @@ class _BatchesBottomSheetState extends State<BatchesBottomSheet> {
   Future<void> _navigateToBatchDetails(BatchModel batch) async {
     final result = await context.push('/batches/details', extra: {
       'batch': batch,
-      'farmId': widget.farmId,
+      'farm': widget.farm,
     });
 
     if (result == true) {

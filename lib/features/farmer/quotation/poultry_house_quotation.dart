@@ -79,13 +79,6 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
       'recommendedHouseSize': '4m x 5m (20 sqm)',
       'estimatedCost': '26,250 - 35,000 KSh',
       'constructionTime': '1-2 weeks',
-      'keySpecifications': [
-        'Galvanized plate G-16 roofing',
-        'Angleline 1.5" support structure',
-        'Tube 1.5"x1.5" framing',
-        'Wiremesh heavy gauge walls',
-        'Plainsheet G-32 finishing',
-      ],
       'materials': [
         {'item': 'Plate G-16', 'qty': '1 piece (2.5m x 1m)', 'cost': '4,500'},
         {'item': 'Angleline 1.5"', 'qty': '2 pieces (6m each)', 'cost': '2,000'},
@@ -105,31 +98,11 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
         {'item': 'Construction labor', 'cost': '5,000'},
         {'item': 'Painting & branding', 'cost': '1,900'},
       ],
-      'equipmentRecommendations': [
-        '2 manual feeders (KSh 1,500)',
-        '2 drinkers (KSh 1,000)',
-        '1 brooder lamp (KSh 800)',
-        '1 thermometer (KSh 500)',
-      ],
-      'recommendedSuppliers': [
-        {'name': 'Jambo Steel Ltd', 'type': 'Steel Materials', 'rating': '4.3/5', 'location': 'Nairobi'},
-        {'name': 'Farmers Choice Hardware', 'type': 'Poultry Equipment', 'rating': '4.2/5', 'location': 'Nakuru'},
-      ],
       'biosecurityFeatures': [
         'Wiremesh door for ventilation',
         'Elevated floor design',
         'Easy cleaning surface',
       ],
-      'estimatedMonthlyCosts': [
-        'Feed: 4,000 - 6,000 KSh',
-        'Medication: 800 - 1,200 KSh',
-        'Utilities: 500 - 800 KSh',
-      ],
-      'profitability': {
-        'breakEven': '3-4 months',
-        'estimatedMonthlyProfit': '8,000 - 15,000 KSh',
-        'roi': '6-8 months',
-      },
       'materialCostSubtotal': '19,350',
       'laborCostSubtotal': '6,900',
       'grandTotal': '26,250',
@@ -138,13 +111,6 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
       'recommendedHouseSize': '6m x 8m (48 sqm)',
       'estimatedCost': '75,000 - 100,000 KSh',
       'constructionTime': '2-3 weeks',
-      'keySpecifications': [
-        'Plate G-16 roofing doubled',
-        'Angleline 1.5" reinforced structure',
-        'Tube 1.5"x1.5" double framing',
-        'Wiremesh heavy gauge on all sides',
-        'Additional ventilation pipes',
-      ],
       'materials': [
         {'item': 'Plate G-16', 'qty': '3 pieces', 'cost': '13,500'},
         {'item': 'Angleline 1.5"', 'qty': '6 pieces', 'cost': '6,000'},
@@ -164,33 +130,12 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
         {'item': 'Construction labor', 'cost': '12,000'},
         {'item': 'Painting & branding', 'cost': '3,500'},
       ],
-      'equipmentRecommendations': [
-        '4 feeders (KSh 3,000)',
-        '4 drinkers (KSh 2,000)',
-        '2 brooders (KSh 3,500)',
-        '2 thermometers (KSh 1,000)',
-      ],
-      'recommendedSuppliers': [
-        {'name': 'Mabati Rolling Mills', 'type': 'Steel & Roofing', 'rating': '4.5/5', 'location': 'Nairobi'},
-        {'name': 'Steel Structures Kenya', 'type': 'Construction', 'rating': '4.3/5', 'location': 'Mombasa'},
-      ],
       'biosecurityFeatures': [
         'Double entry system',
         'Wiremesh windows',
         'Proper drainage',
         'Disinfection area',
       ],
-      'estimatedMonthlyCosts': [
-        'Feed: 12,000 - 18,000 KSh',
-        'Medication: 2,500 - 3,500 KSh',
-        'Utilities: 1,500 - 2,000 KSh',
-        'Labor: 5,000 - 8,000 KSh',
-      ],
-      'profitability': {
-        'breakEven': '4-5 months',
-        'estimatedMonthlyProfit': '25,000 - 40,000 KSh',
-        'roi': '8-10 months',
-      },
       'materialCostSubtotal': '42,200',
       'laborCostSubtotal': '15,500',
       'grandTotal': '57,700',
@@ -199,13 +144,6 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
       'recommendedHouseSize': '10m x 12m (120 sqm)',
       'estimatedCost': '180,000 - 250,000 KSh',
       'constructionTime': '4-5 weeks',
-      'keySpecifications': [
-        'Industrial Plate G-16 roofing',
-        'Reinforced Angleline structure',
-        'Heavy-duty Tube framing',
-        'Double wiremesh layers',
-        'Professional finishing',
-      ],
       'materials': [
         {'item': 'Plate G-16', 'qty': '8 pieces', 'cost': '36,000'},
         {'item': 'Angleline 1.5"', 'qty': '15 pieces', 'cost': '15,000'},
@@ -225,33 +163,12 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
         {'item': 'Construction labor', 'cost': '30,000'},
         {'item': 'Painting & branding', 'cost': '8,000'},
       ],
-      'equipmentRecommendations': [
-        '8 auto-feeders (KSh 12,000)',
-        '8 drinkers (KSh 6,000)',
-        '4 brooders (KSh 8,000)',
-        'Climate monitor (KSh 5,000)',
-      ],
-      'recommendedSuppliers': [
-        {'name': 'Steel Structures Africa', 'type': 'Industrial Materials', 'rating': '4.6/5', 'location': 'Nairobi'},
-        {'name': 'Poultry Masters Ltd', 'type': 'Complete Packages', 'rating': '4.5/5', 'location': 'Kisumu'},
-      ],
       'biosecurityFeatures': [
         'Proper ventilation system',
         'Rodent-proof base',
         'Visitor control area',
         'Waste management system',
       ],
-      'estimatedMonthlyCosts': [
-        'Feed: 35,000 - 50,000 KSh',
-        'Medication: 7,000 - 10,000 KSh',
-        'Utilities: 4,000 - 6,000 KSh',
-        'Labor: 15,000 - 20,000 KSh',
-      ],
-      'profitability': {
-        'breakEven': '5-6 months',
-        'estimatedMonthlyProfit': '70,000 - 100,000 KSh',
-        'roi': '10-12 months',
-      },
       'materialCostSubtotal': '101,700',
       'laborCostSubtotal': '38,000',
       'grandTotal': '139,700',
@@ -260,13 +177,6 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
       'recommendedHouseSize': '15m x 20m (300 sqm)',
       'estimatedCost': '450,000 - 600,000 KSh',
       'constructionTime': '6-8 weeks',
-      'keySpecifications': [
-        'Commercial Plate G-16 roofing',
-        'Industrial Angleline framework',
-        'Professional Tube structure',
-        'High-quality wiremesh',
-        'Premium finishing',
-      ],
       'materials': [
         {'item': 'Plate G-16', 'qty': '20 pieces', 'cost': '90,000'},
         {'item': 'Angleline 1.5"', 'qty': '40 pieces', 'cost': '40,000'},
@@ -286,33 +196,12 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
         {'item': 'Construction labor', 'cost': '80,000'},
         {'item': 'Painting & branding', 'cost': '20,000'},
       ],
-      'equipmentRecommendations': [
-        'Auto-feeders system (KSh 40,000)',
-        'Automatic drinkers (KSh 25,000)',
-        'Brooder system (KSh 20,000)',
-        'Climate control (KSh 30,000)',
-      ],
-      'recommendedSuppliers': [
-        {'name': 'Big Dutchman Kenya', 'type': 'Commercial Systems', 'rating': '4.8/5', 'location': 'Nairobi'},
-        {'name': 'Poultry Pro Africa', 'type': 'Turnkey Solutions', 'rating': '4.6/5', 'location': 'Nairobi'},
-      ],
       'biosecurityFeatures': [
         'Complete biosecurity protocol',
         'Air filtration system',
         'Staff changing area',
         'Vehicle disinfection',
       ],
-      'estimatedMonthlyCosts': [
-        'Feed: 90,000 - 120,000 KSh',
-        'Medication: 20,000 - 30,000 KSh',
-        'Utilities: 10,000 - 15,000 KSh',
-        'Labor: 30,000 - 40,000 KSh',
-      ],
-      'profitability': {
-        'breakEven': '6-8 months',
-        'estimatedMonthlyProfit': '150,000 - 200,000 KSh',
-        'roi': '15-18 months',
-      },
       'materialCostSubtotal': '261,000',
       'laborCostSubtotal': '100,000',
       'grandTotal': '361,000',
@@ -597,32 +486,6 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
         ),
         const SizedBox(height: 20),
 
-        // Key Specifications
-        _buildInfoCard(
-          title: 'House Specifications',
-          icon: Icons.list_alt,
-          color: secondaryColor,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: (_selectedQuotation!['keySpecifications'] as List)
-                  .map((spec) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.check_circle, color: secondaryColor, size: 16),
-                    const SizedBox(width: 8),
-                    Expanded(child: Text(spec)),
-                  ],
-                ),
-              ))
-                  .toList(),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-
         // Labor Cost Breakdown
         _buildInfoCard(
           title: 'Labor Cost Breakdown',
@@ -671,105 +534,6 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
         ),
         const SizedBox(height: 20),
 
-        // Equipment Recommendations
-        _buildInfoCard(
-          title: 'Equipment Recommendations',
-          icon: Icons.build,
-          color: Colors.purple,
-          children: [
-            Column(
-              children: (_selectedQuotation!['equipmentRecommendations'] as List)
-                  .map((equipment) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  children: [
-                    Icon(Icons.check, size: 16, color: Colors.purple),
-                    const SizedBox(width: 8),
-                    Expanded(child: Text(equipment)),
-                  ],
-                ),
-              ))
-                  .toList(),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-
-        // Recommended Suppliers
-        _buildInfoCard(
-          title: 'Recommended Suppliers in Kenya',
-          icon: Icons.store,
-          color: Colors.blue,
-          children: [
-            Column(
-              children: (_selectedQuotation!['recommendedSuppliers'] as List)
-                  .map((supplier) => ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 0),
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.business, size: 20, color: Colors.blue),
-                ),
-                title: Text(supplier['name']),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(supplier['type']),
-                    Text(
-                      'Location: ${supplier['location']}',
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                    ),
-                  ],
-                ),
-                trailing: Chip(
-                  label: Text(supplier['rating']),
-                  backgroundColor: Colors.blue.withOpacity(0.1),
-                ),
-              ))
-                  .toList(),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-
-        // Monthly Cost Estimates
-        _buildInfoCard(
-          title: 'Estimated Monthly Running Costs',
-          icon: Icons.attach_money,
-          color: Colors.orange,
-          children: [
-            Column(
-              children: (_selectedQuotation!['estimatedMonthlyCosts'] as List)
-                  .map((cost) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Row(
-                  children: [
-                    Icon(Icons.circle, size: 8, color: Colors.orange),
-                    const SizedBox(width: 12),
-                    Expanded(child: Text(cost)),
-                  ],
-                ),
-              ))
-                  .toList(),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-
-        // Profitability Analysis
-        _buildInfoCard(
-          title: 'Profitability Analysis',
-          icon: Icons.trending_up,
-          color: Colors.green,
-          children: [
-            _buildProfitabilityItem('Break-even Period', _selectedQuotation!['profitability']['breakEven']),
-            _buildProfitabilityItem('Estimated Monthly Profit', _selectedQuotation!['profitability']['estimatedMonthlyProfit']),
-            _buildProfitabilityItem('ROI Period', _selectedQuotation!['profitability']['roi']),
-          ],
-        ),
 
         MarketDisclaimerWidget()
       ],

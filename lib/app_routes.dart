@@ -299,7 +299,7 @@ class AppRoutes {
               builder: (context, state) {
                 final extra = state.extra as Map<String, dynamic>;
                 return EditBatchScreen(
-                  farmId: extra['farmId'],
+                  farm: extra['farm'],
                   batch: extra['batch'],
                   houses: extra['houses'],
                 );
@@ -310,7 +310,7 @@ class AppRoutes {
               builder: (context, state) {
                 final extra = state.extra as Map<String, dynamic>;
                 return BatchDetailsScreen(
-                  farmId: extra['farmId'],
+                  farm: extra['farm'],
                   batch: extra['batch'],
                 );
               },

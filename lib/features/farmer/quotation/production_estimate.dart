@@ -33,7 +33,7 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
     ),
     BreedType(
       id: 'kienyeji',
-      name: 'Improved Kienyeji',
+      name: 'Improved Indigenous Kienyeji',
       description: 'Dual-purpose local breed (meat & eggs)',
       icon: Icons.nature,
       color: Colors.green.shade400,
@@ -63,7 +63,7 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
       'initialBudget': [30920, 53330, 85220, 115400, 138310, 238550, 343810, 446800, 929200],
       'sellingPricePerBird': 430,
       'productionCycle': '6-8 weeks',
-      'mortalityRate': '5%',
+      'mortalityRate': '3%',
       'feedConversionRatio': '1.8:1',
       'materials': [
         'Starter crumbs (0-3 weeks)',
@@ -82,7 +82,7 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
       'sellingPricePerBird': 700,
       'sellingPricePerEgg': 15,
       'productionCycle': '72 weeks',
-      'mortalityRate': '8%',
+      'mortalityRate': '3%',
       'peakProduction': '85-90%',
       'eggProduction': '280-320 eggs/year',
       'materials': [
@@ -101,7 +101,7 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
       'initialBudget': [30280, 50750, 88800, 111400, 136350, 227200, 331450, 439100, 541850, 712200],
       'sellingPricePerBird': 700,
       'productionCycle': '5-6 months',
-      'mortalityRate': '10-15%',
+      'mortalityRate': '3%',
       'dualPurpose': 'Meat and eggs',
       'marketDemand': 'High for local markets',
       'materials': [
@@ -609,7 +609,7 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
           color: primaryColor,
           children: [
             _buildSummaryItem('Total Birds', '$capacity'),
-            _buildSummaryItem('Cost per Bird', 'KSh ${estimate['costPerBird']}'),
+            _buildSummaryItem('Cost per Bird from hatchery', 'KSh ${estimate['costPerBird']}'),
             _buildSummaryItem('Production Cycle', '${estimate['productionCycle']}'),
             _buildSummaryItem('Mortality Rate', '${estimate['mortalityRate']}'),
             if (breed == 'layer') ...[
@@ -845,7 +845,7 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Cost per Bird: KSh ${estimate['costPerBird']}',
+                          'Cost per Bird from hatchery: KSh ${estimate['costPerBird']}',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             color: primaryColor,

@@ -41,8 +41,7 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
         limit: _limit,
       );
 
-      switch(response){
-
+      switch (response) {
         case Success<ArchivedBatchesResponse>(data: final res):
           setState(() {
             _archivedBatches = res.batches;
@@ -50,12 +49,10 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
             _currentPage = page;
             _isLoading = false;
           });
-        case Failure<ArchivedBatchesResponse>(message:final error):
+        case Failure<ArchivedBatchesResponse>(message: final error):
           ApiErrorHandler.handle(error);
       }
-
-
-    } finally  {
+    } finally {
       setState(() {
         _isLoading = false;
       });
@@ -64,16 +61,7 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_archivedBatches.isEmpty) {
-      return _buildEmptyState();
-    }
-
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: Row(
           children: [
@@ -101,7 +89,10 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: Icon(Icons.notifications_outlined, color: Colors.grey.shade700),
+            icon: Icon(
+              Icons.notifications_outlined,
+              color: Colors.grey.shade700,
+            ),
             onPressed: () => context.push('/notifications'),
           ),
         ],
@@ -113,7 +104,7 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
           children: [
             // Header
             Text(
-              'Archived Batches - ${widget.farm.farmName}',
+              'Completed Batches - ${widget.farm.farmName}',
               style: Theme.of(context).textTheme.headlineSmall!.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Colors.grey.shade800,
@@ -122,25 +113,33 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
             const SizedBox(height: 8),
             Text(
               'View and manage your completed batches',
-              style: TextStyle(
-                color: Colors.grey.shade600,
-                fontSize: 16,
-              ),
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
             ),
             const SizedBox(height: 24),
+
+            if (_isLoading) const Center(child: CircularProgressIndicator()),
+
+            if (_archivedBatches.isEmpty) _buildEmptyState(),
+
             // Archived batches list
-            ..._archivedBatches.map((batch) => _ArchivedBatchCard(
-              batch: batch,
-              farmId: widget.farm.id,
-              onRestore: () => _confirmRestore(batch),
-              onDelete: () => _confirmDelete(batch),
-            )).toList(),
+            if (_archivedBatches.isNotEmpty)
+              ..._archivedBatches
+                  .map(
+                    (batch) => _ArchivedBatchCard(
+                      batch: batch,
+                      farmId: widget.farm.id,
+                      onRestore: () => _confirmRestore(batch),
+                      onDelete: () => _confirmDelete(batch),
+                    ),
+                  )
+                  .toList(),
 
             // Pagination Controls
-            if (_pagination != null && _pagination!.totalPages > 1) ...[
-              const SizedBox(height: 24),
-              _buildPaginationControls(),
-            ],
+            if (_archivedBatches.isNotEmpty)
+              if (_pagination != null && _pagination!.totalPages > 1) ...[
+                const SizedBox(height: 24),
+                _buildPaginationControls(),
+              ],
           ],
         ),
       ),
@@ -168,7 +167,9 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.green,
               side: BorderSide(
-                color: _currentPage > 1 ? Colors.green.shade300 : Colors.grey.shade300,
+                color: _currentPage > 1
+                    ? Colors.green.shade300
+                    : Colors.grey.shade300,
               ),
             ),
           ),
@@ -210,20 +211,15 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
     );
   }
 
-
   Widget _buildEmptyState() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.archive,
-            size: 80,
-            color: Colors.grey.shade300,
-          ),
+          Icon(Icons.archive, size: 80, color: Colors.grey.shade300),
           const SizedBox(height: 24),
           Text(
-            'No Archived Batches',
+            'No Completed Batches',
             style: TextStyle(
               fontSize: 20,
               color: Colors.grey.shade600,
@@ -232,10 +228,8 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            'Archived batches will appear here',
-            style: TextStyle(
-              color: Colors.grey.shade500,
-            ),
+            'Completed batches will appear here',
+            style: TextStyle(color: Colors.grey.shade500),
             textAlign: TextAlign.center,
           ),
         ],
@@ -261,9 +255,7 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
               Navigator.pop(context);
               await _restoreBatch(batch);
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
             child: const Text('Restore'),
           ),
         ],
@@ -274,7 +266,9 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
   Future<void> _restoreBatch(ArchivedBatchModel batch) async {
     try {
       await _repository.restoreBatch(widget.farm.id, batch.id);
-      ToastUtil.showSuccess('"${batch.name}" has been restored to active batches');
+      ToastUtil.showSuccess(
+        '"${batch.name}" has been restored to active batches',
+      );
       _loadData(); // Refresh the list
     } catch (e) {
       ApiErrorHandler.handle(e);
@@ -299,9 +293,7 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
               Navigator.pop(context);
               await _deleteBatch(batch);
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Delete'),
           ),
         ],
@@ -335,7 +327,6 @@ class _ArchivedBatchCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return Card(
       elevation: 0,
       margin: const EdgeInsets.only(bottom: 16),
@@ -346,10 +337,10 @@ class _ArchivedBatchCard extends StatelessWidget {
       child: InkWell(
         onTap: () {
           // Navigate to view archived batch details
-          context.push('/batches/archived/details', extra: {
-            'batch': batch,
-            'farmId': farmId,
-          });
+          context.push(
+            '/batches/archived/details',
+            extra: {'batch': batch, 'farmId': farmId},
+          );
         },
         borderRadius: BorderRadius.circular(16),
         child: Padding(
@@ -384,7 +375,10 @@ class _ArchivedBatchCard extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.orange.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
@@ -403,10 +397,7 @@ class _ArchivedBatchCard extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 batch.breed,
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
               ),
               const SizedBox(height: 16),
               Row(
@@ -431,7 +422,10 @@ class _ArchivedBatchCard extends StatelessWidget {
               const SizedBox(height: 12),
               // Mortality Rate Badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: batch.mortalityRate < 5
                       ? Colors.green.shade50
@@ -482,7 +476,11 @@ class _ArchivedBatchCard extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.check_circle, color: Colors.green.shade600, size: 18),
+                    Icon(
+                      Icons.check_circle,
+                      color: Colors.green.shade600,
+                      size: 18,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Final Birds Alive: ',
@@ -532,7 +530,11 @@ class _ArchivedBatchCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    Icon(Icons.arrow_forward, size: 16, color: Colors.grey.shade400),
+                    Icon(
+                      Icons.arrow_forward,
+                      size: 16,
+                      color: Colors.grey.shade400,
+                    ),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
@@ -636,14 +638,10 @@ class _ArchivedStat extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             label,
-            style: TextStyle(
-              color: Colors.grey.shade500,
-              fontSize: 10,
-            ),
+            style: TextStyle(color: Colors.grey.shade500, fontSize: 10),
           ),
         ],
       ),
     );
   }
 }
-

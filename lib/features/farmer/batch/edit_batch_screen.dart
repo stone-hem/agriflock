@@ -7,17 +7,18 @@ import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/bird_type.dart';
 import 'package:agriflock360/features/farmer/batch/repo/batch_house_repo.dart';
+import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class EditBatchScreen extends StatefulWidget {
-  final String farmId;
+  final FarmModel farm;
   final BatchModel batch;
   final List<House>? houses;
 
   const EditBatchScreen({
     super.key,
-    required this.farmId,
+    required this.farm,
     required this.batch,
     this.houses,
   });
@@ -77,7 +78,7 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
           _houses = widget.houses!;
         });
       } else {
-        final result = await _repository.getAllHouses(widget.farmId);
+        final result = await _repository.getAllHouses(widget.farm.id);
         switch (result) {
           case Success(data: final houses):
             setState(() {
@@ -619,25 +620,6 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
               ),
               const SizedBox(height: 32),
 
-              // Delete Button
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: _confirmDelete,
-                  icon: const Icon(Icons.delete),
-                  label: const Text('Delete Batch'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.red,
-                    side: const BorderSide(color: Colors.red),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
               // Additional Information
               Card(
                 elevation: 0,
@@ -729,7 +711,7 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
       };
 
       final result=await _repository.updateBatch(
-        widget.farmId,
+        widget.farm.id,
         widget.batch.id,
         batchData,
         photoFile: _batchPhotoFile,
@@ -741,7 +723,7 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
           if (context.mounted) {
              context.pushReplacement('/batches/details', extra: {
               'batch': widget.batch,
-              'farmId': widget.farmId,
+              'farm': widget.farm,
             });
           }
 
@@ -764,59 +746,7 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
     }
   }
 
-  void _confirmDelete() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Batch'),
-        content: Text('Are you sure you want to delete "${widget.batch.batchName}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await _deleteBatch();
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Future<void> _deleteBatch() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      final res=await _repository.deleteBatch(widget.farmId, widget.batch.id);
-      switch(res) {
-        case Success<void>():
-          ToastUtil.showSuccess('Batch deleted successfully');
-          if (context.mounted) {
-            context.pushReplacement('/batches/details', extra: {
-              'batch': widget.batch,
-              'farmId': widget.farmId,
-            });
-          }
-        case Failure<void>(message:final e):
-          ApiErrorHandler.handle(e);
-      }
-
-
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
 
   @override
   void dispose() {
