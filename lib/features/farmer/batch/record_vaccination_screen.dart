@@ -382,7 +382,10 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
 
             ReusableInput(
               controller: _costController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+                signed: false,
+              ),
               labelText: 'Estimated Cost - Optional',
               hintText: 'e.g., 150.00',
             ),
@@ -691,7 +694,10 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
 
             ReusableInput(
               controller: _costController,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+                signed: false,
+              ),
               labelText: 'Total Cost - Optional',
               hintText: 'e.g., 150.00',
             ),

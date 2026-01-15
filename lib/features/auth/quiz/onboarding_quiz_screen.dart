@@ -832,11 +832,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
                   const SizedBox(height: 16),
                   _buildSummaryItem('Role', isFarmer ? 'Farmer' : 'Veterinary Doctor'),
                   _buildSummaryItem('Location', _selectedAddress ?? 'Not provided'),
-                  if (_latitude != null && _longitude != null)
-                    _buildSummaryItem(
-                      'Coordinates',
-                      'Lat: ${_latitude!.toStringAsFixed(4)}, Lng: ${_longitude!.toStringAsFixed(4)}',
-                    ),
                   if (isFarmer) ...[
                     _buildSummaryItem('Chicken Number', _chickenNumberController.text),
                     _buildSummaryItem('Experience', '${_farmerExperienceController.text} years'),

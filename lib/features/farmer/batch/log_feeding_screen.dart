@@ -1,6 +1,7 @@
 import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
+import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/batch/model/feeding_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/feeding_repo.dart';
@@ -29,13 +30,17 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
   final _mortalityTodayController = TextEditingController();
   final _currentWeightController = TextEditingController();
   final _expectedWeightController = TextEditingController();
+  final _selectedDateController = TextEditingController();
+
+  TimeOfDay _selectedTime = TimeOfDay.now();
+
 
   // State
   FeedingRecommendationsResponse? _recommendations;
   bool _isLoading = true;
   bool _isSaving = false;
   String? _error;
-  DateTime _selectedFeedingTime = DateTime.now();
+  DateTime _selectedFeedingDate = DateTime.now();
 
   @override
   void initState() {
@@ -71,6 +76,8 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
       });
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -304,57 +311,42 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        InkWell(
-          onTap: () async {
-            final date = await showDatePicker(
-              context: context,
-              initialDate: _selectedFeedingTime,
-              firstDate: DateTime(2020),
-              lastDate: DateTime.now(),
-            );
+        // Date & Time
 
-            if (date != null && mounted) {
-              final time = await showTimePicker(
-                context: context,
-                initialTime: TimeOfDay.fromDateTime(_selectedFeedingTime),
-              );
-
-              if (time != null) {
-                setState(() {
-                  _selectedFeedingTime = DateTime(
-                    date.year,
-                    date.month,
-                    date.day,
-                    time.hour,
-                    time.minute,
-                  );
-                });
-              }
+        CustomDateTextField(
+          label: 'Date & Time',
+          hintText: 'Select date',
+          icon: Icons.calendar_today,
+          required: true,
+          minYear: DateTime.now().year - 1,
+          returnFormat: DateReturnFormat.dateTime,
+          initialDate: DateTime.now(),
+          maxYear: DateTime.now().year,
+          controller: _selectedDateController,
+          onChanged: (value) {
+            if (value != null) {
+              _selectedFeedingDate = value;
             }
           },
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '${_selectedFeedingTime.day}/${_selectedFeedingTime.month}/${_selectedFeedingTime.year} ${_selectedFeedingTime.hour.toString().padLeft(2, '0')}:${_selectedFeedingTime.minute.toString().padLeft(2, '0')}',
-                  style: const TextStyle(fontSize: 16),
-                ),
-                const Icon(Icons.calendar_today),
-              ],
-            ),
+        ),
+        const SizedBox(height: 12),
+        InkWell(
+          onTap: _selectTime,
+          child: _dateTimeTile(
+            icon: Icons.access_time,
+            label: 'Time',
+            value: _selectedTime.format(context),
           ),
         ),
+
         const SizedBox(height: 20),
 
         ReusableInput(
           controller: _quantityController,
-          keyboardType: TextInputType.number,
+          keyboardType: const TextInputType.numberWithOptions(
+            decimal: true,
+            signed: false,
+          ),
           hintText: 'Recommended: ${currentRec.dailyFeedRequiredKg?.toStringAsFixed(2) ?? "N/A"} kg',
           validator: (value) {
             if (value == null || value.isEmpty) {
@@ -364,13 +356,16 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
               return 'Please enter a valid number';
             }
             return null;
-          }, labelText: 'Quantity',
+          }, labelText: 'Quantity in Kgs',
         ),
         const SizedBox(height: 20),
 
         ReusableInput(
           controller: _costController,
-          keyboardType: TextInputType.number,
+          keyboardType: const TextInputType.numberWithOptions(
+            decimal: true,
+            signed: false,
+          ),
           hintText: 'e.g., 2.50',
           labelText: 'Feed Cost per kg',
           validator: (value) {
@@ -387,14 +382,8 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
 
         ReusableInput(
           controller: _supplierController,
-          hintText: 'e.g., Agrimart Ltd.',
-          labelText: 'Feed Supplier',
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter feed supplier';
-            }
-            return null;
-          },
+          hintText: 'e.g., Agrimart Ltd. (Optional)',
+          labelText: 'Feed Supplier(Optional)',
         ),
         const SizedBox(height: 20),
         ReusableInput(
@@ -439,7 +428,10 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
         // Current Total Weight
         ReusableInput(
           controller: _currentWeightController,
-          keyboardType: TextInputType.number,
+          keyboardType: const TextInputType.numberWithOptions(
+            decimal: true,
+            signed: false,
+          ),
           hintText: 'e.g., 310',
           labelText: 'Current Average Weight (kg)',
         ),
@@ -451,6 +443,39 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
         //   labelText: 'Expected Weight (kg)',
         // ),
       ],
+    );
+  }
+
+  Widget _dateTimeTile({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade400),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.grey.shade600),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+              ),
+              Text(
+                value,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -492,11 +517,29 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
     );
   }
 
+  Future<void> _selectTime() async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _selectedTime,
+    );
+    if (picked != null) {
+      setState(() => _selectedTime = picked);
+    }
+  }
+
   Future<void> _logFeeding() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isSaving = true;
       });
+
+      DateTime _selectedFeedingTime=DateTime(
+        _selectedFeedingDate.year,
+        _selectedFeedingDate.month,
+        _selectedFeedingDate.day,
+        _selectedTime.hour,
+        _selectedTime.minute,
+      );
 
       try {
         final request= {
@@ -506,10 +549,10 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
           'supplier': _supplierController.text,
           'fed_at': _selectedFeedingTime.toIso8601String(),
           'notes': _notesController.text,
-          'birds_alive_before': int.parse(_birdsAliveBeforeController.text),
-          'mortality_today': int.parse(_mortalityTodayController.text),
-          'current_total_weight': double.parse(_currentWeightController.text),
-          'expected_weight': double.parse(_expectedWeightController.text)
+          'birds_alive_before': _birdsAliveBeforeController.text.isEmpty ? null : int.parse(_birdsAliveBeforeController.text),
+          'mortality_today': _mortalityTodayController.text.isEmpty ? null : int.parse(_mortalityTodayController.text),
+          'current_total_weight': _currentWeightController.text.isEmpty ? null : double.parse(_currentWeightController.text),
+          'expected_weight':_currentWeightController.text.isEmpty ? null : double.parse(_expectedWeightController.text)
         };
 
         final res=await _feedingRepository.createFeedingRecord(widget.batchId, request);

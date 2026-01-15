@@ -473,7 +473,10 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
               const SizedBox(height: 8),
               ReusableInput(
                 controller: _currentWeightController,
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                  signed: false,
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter current weight';
@@ -499,7 +502,10 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
               const SizedBox(height: 8),
               ReusableInput(
                 controller: _expectedWeightController,
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                  signed: false,
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter expected weight';
