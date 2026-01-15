@@ -19,6 +19,8 @@ class _BatchOverviewState extends State<BatchOverview> {
   BatchMgtResponse? _batchData;
   bool _isLoading = true;
   String? _error;
+  String _selectedPeriod = 'today'; // 'today', 'weekly', 'monthly', 'yearly', 'all_time'
+  bool _showAllTime = false;
 
   @override
   void initState() {
@@ -55,23 +57,57 @@ class _BatchOverviewState extends State<BatchOverview> {
   }
 
   Future<void> _onRefresh() async {
-      final res = await _repository.refreshBatchDetails(widget.batchId);
-      switch(res) {
-        case Success<BatchMgtResponse>(data:final data):
-          setState(() {
-            _batchData = data;
-          });
-        case Failure<BatchMgtResponse>(message:final message):
-          setState(() {
-            _error = message;
-          });
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
+    final res = await _repository.refreshBatchDetails(widget.batchId);
+    switch(res) {
+      case Success<BatchMgtResponse>(data:final data):
+        setState(() {
+          _batchData = data;
+        });
+      case Failure<BatchMgtResponse>(message:final message):
+        setState(() {
+          _error = message;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(message),)
-            );
-          }
-      }
+          );
+        }
+    }
 
+  }
+
+  FinancialPeriodStats _getSelectedStats() {
+    switch (_selectedPeriod) {
+      case 'today':
+        return _batchData!.financialStats.today;
+      case 'weekly':
+        return _batchData!.financialStats.weekly;
+      case 'monthly':
+        return _batchData!.financialStats.monthly;
+      case 'yearly':
+        return _batchData!.financialStats.yearly;
+      case 'all_time':
+        return _batchData!.financialStats.allTime;
+      default:
+        return _batchData!.financialStats.today;
+    }
+  }
+
+  String _getPeriodLabel(String period) {
+    switch (period) {
+      case 'today':
+        return 'Today';
+      case 'weekly':
+        return 'This Week';
+      case 'monthly':
+        return 'This Month';
+      case 'yearly':
+        return 'This Year';
+      case 'all_time':
+        return 'All Time';
+      default:
+        return 'Today';
+    }
   }
 
   @override
@@ -113,28 +149,15 @@ class _BatchOverviewState extends State<BatchOverview> {
             Card(
               elevation: 0,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(12),
                 side: BorderSide(color: Colors.grey.shade200),
               ),
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(12),
                 child: Column(
                   children: [
                     Row(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.green.withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.agriculture,
-                            color: Colors.green,
-                            size: 32,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -241,6 +264,10 @@ class _BatchOverviewState extends State<BatchOverview> {
             ),
             const SizedBox(height: 32),
 
+            // Financial Stats Section
+            _buildFinancialStatsSection(context),
+            const SizedBox(height: 32),
+
             // Recent Activity
             _buildSection(
               title: 'Recent Activity',
@@ -276,6 +303,493 @@ class _BatchOverviewState extends State<BatchOverview> {
     );
   }
 
+  Widget _buildFinancialStatsSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Financial Overview',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            TextButton(
+              onPressed: () => context.push('/financial-details'),
+              child: const Text('Detailed Report'),
+            )
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // Period Selection Buttons
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _buildPeriodButton('today', 'Today'),
+              const SizedBox(width: 8),
+              _buildPeriodButton('weekly', 'Week'),
+              const SizedBox(width: 8),
+              _buildPeriodButton('monthly', 'Month'),
+              const SizedBox(width: 8),
+              _buildPeriodButton('yearly', 'Year'),
+              const SizedBox(width: 8),
+              _buildPeriodButton('all_time', 'All Time'),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Selected Period Stats
+        Card(
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: Colors.grey.shade200),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                // Period Header
+                Row(
+                  children: [
+                    Icon(
+                      _getPeriodIcon(_selectedPeriod),
+                      size: 24,
+                      color: _getPeriodColor(_selectedPeriod),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      _getPeriodLabel(_selectedPeriod),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _getSelectedStats().netProfit >= 0
+                            ? Colors.green.withOpacity(0.1)
+                            : Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        _getSelectedStats().netProfit >= 0
+                            ? 'Profit: \$${_getSelectedStats().netProfit.toStringAsFixed(2)}'
+                            : 'Loss: \$${_getSelectedStats().netProfit.abs().toStringAsFixed(2)}',
+                        style: TextStyle(
+                          color: _getSelectedStats().netProfit >= 0
+                              ? Colors.green
+                              : Colors.red,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // Expandable Cost Breakdown
+                _buildCostBreakdown(),
+                const SizedBox(height: 16),
+
+                // Income vs Expenditure Summary
+                _buildIncomeExpenditureSummary(),
+              ],
+            ),
+          ),
+        ),
+
+        // Quick Comparison Section
+        if (_showAllTime)
+          _buildAllTimeComparison(),
+      ],
+    );
+  }
+
+  Widget _buildPeriodButton(String period, String label) {
+    final isSelected = _selectedPeriod == period;
+    return OutlinedButton(
+      onPressed: () {
+        setState(() {
+          _selectedPeriod = period;
+        });
+      },
+      style: OutlinedButton.styleFrom(
+        backgroundColor: isSelected
+            ? _getPeriodColor(period).withOpacity(0.1)
+            : Colors.transparent,
+        foregroundColor: isSelected
+            ? _getPeriodColor(period)
+            : Colors.grey.shade600,
+        side: BorderSide(
+          color: isSelected
+              ? _getPeriodColor(period)
+              : Colors.grey.shade300,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+      child: Text(label),
+    );
+  }
+
+  Widget _buildCostBreakdown() {
+    final stats = _getSelectedStats();
+    final totalExpenditure = stats.totalExpenditure;
+
+    if (totalExpenditure == 0) {
+      return const Text(
+        'No expenses recorded for this period',
+        style: TextStyle(color: Colors.grey),
+      );
+    }
+
+    return ExpansionTile(
+      title: const Text(
+        'Cost Breakdown',
+        style: TextStyle(fontWeight: FontWeight.w600),
+      ),
+      initiallyExpanded: true,
+      children: [
+        const SizedBox(height: 8),
+        _buildCostItemRow(
+          label: 'Feeding Cost',
+          amount: stats.feedingCost,
+          percentage: totalExpenditure > 0
+              ? (stats.feedingCost / totalExpenditure * 100)
+              : 0,
+          color: Colors.orange,
+        ),
+        _buildCostItemRow(
+          label: 'Vaccination Cost',
+          amount: stats.vaccinationCost,
+          percentage: totalExpenditure > 0
+              ? (stats.vaccinationCost / totalExpenditure * 100)
+              : 0,
+          color: Colors.purple,
+        ),
+        _buildCostItemRow(
+          label: 'Inventory Cost',
+          amount: stats.inventoryCost,
+          percentage: totalExpenditure > 0
+              ? (stats.inventoryCost / totalExpenditure * 100)
+              : 0,
+          color: Colors.blue,
+        ),
+        const Divider(height: 24),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Total Expenditure',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            Text(
+              '\$${totalExpenditure.toStringAsFixed(2)}',
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCostItemRow({
+    required String label,
+    required double amount,
+    required double percentage,
+    required Color color,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 24,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      label,
+                      style: const TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                    Text(
+                      '\$${amount.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: color,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                LinearProgressIndicator(
+                  value: percentage / 100,
+                  backgroundColor: Colors.grey.shade200,
+                  color: color,
+                  minHeight: 4,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${percentage.toStringAsFixed(1)}% of total expenditure',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIncomeExpenditureSummary() {
+    final stats = _getSelectedStats();
+
+    return Card(
+      elevation: 0,
+      color: Colors.grey.shade50,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildSummaryItem(
+                  label: 'Income',
+                  value: '\$${stats.productIncome.toStringAsFixed(2)}',
+                  icon: Icons.arrow_upward,
+                  color: Colors.green,
+                ),
+                Container(
+                  width: 1,
+                  height: 40,
+                  color: Colors.grey.shade300,
+                ),
+                _buildSummaryItem(
+                  label: 'Expenditure',
+                  value: '\$${stats.totalExpenditure.toStringAsFixed(2)}',
+                  icon: Icons.arrow_downward,
+                  color: Colors.red,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  stats.netProfit >= 0 ? Icons.trending_up : Icons.trending_down,
+                  size: 20,
+                  color: stats.netProfit >= 0 ? Colors.green : Colors.red,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  stats.netProfit >= 0
+                      ? 'Net Profit'
+                      : 'Net Loss',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: stats.netProfit >= 0 ? Colors.green : Colors.red,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryItem({
+    required String label,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Expanded(
+      child: Column(
+        children: [
+          Icon(icon, size: 20, color: color),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAllTimeComparison() {
+    final allTime = _batchData!.financialStats.allTime;
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'All Time Summary',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _showAllTime = !_showAllTime;
+                    });
+                  },
+                  icon: Icon(
+                    _showAllTime ? Icons.expand_less : Icons.expand_more,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _buildComparisonItem(
+              label: 'Total Income',
+              value: '\$${allTime.productIncome.toStringAsFixed(2)}',
+            ),
+            _buildComparisonItem(
+              label: 'Total Feeding Cost',
+              value: '\$${allTime.feedingCost.toStringAsFixed(2)}',
+            ),
+            _buildComparisonItem(
+              label: 'Total Vaccination Cost',
+              value: '\$${allTime.vaccinationCost.toStringAsFixed(2)}',
+            ),
+            _buildComparisonItem(
+              label: 'Overall Net',
+              value: '\$${allTime.netProfit.toStringAsFixed(2)}',
+              isNet: true,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildComparisonItem({
+    required String label,
+    required String value,
+    bool isNet = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.grey.shade700,
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: isNet
+                  ? (double.tryParse(value.replaceAll('\$', '')) ?? 0) >= 0
+                  ? Colors.green
+                  : Colors.red
+                  : Colors.grey.shade800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  IconData _getPeriodIcon(String period) {
+    switch (period) {
+      case 'today':
+        return Icons.today;
+      case 'weekly':
+        return Icons.date_range;
+      case 'monthly':
+        return Icons.calendar_month;
+      case 'yearly':
+        return Icons.calendar_today;
+      case 'all_time':
+        return Icons.history;
+      default:
+        return Icons.today;
+    }
+  }
+
+  Color _getPeriodColor(String period) {
+    switch (period) {
+      case 'today':
+        return Colors.blue;
+      case 'weekly':
+        return Colors.purple;
+      case 'monthly':
+        return Colors.green;
+      case 'yearly':
+        return Colors.orange;
+      case 'all_time':
+        return Colors.indigo;
+      default:
+        return Colors.blue;
+    }
+  }
+
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'active':
@@ -301,6 +815,14 @@ class _BatchOverviewState extends State<BatchOverview> {
         return Icons.monitor_weight;
       case 'bird_sale':
         return Icons.sell;
+      case 'vaccination':
+        return Icons.medical_services;
+      case 'feeding':
+        return Icons.restaurant_menu;
+      case 'batch_updated':
+        return Icons.edit;
+      case 'batch_created':
+        return Icons.add_circle;
       default:
         return Icons.assignment;
     }
@@ -311,6 +833,7 @@ class _BatchOverviewState extends State<BatchOverview> {
       case 'product_recorded':
         return Colors.purple;
       case 'feed_recorded':
+      case 'feeding':
         return Colors.green;
       case 'egg_collection':
         return Colors.orange;
@@ -318,6 +841,12 @@ class _BatchOverviewState extends State<BatchOverview> {
         return Colors.blue;
       case 'bird_sale':
         return Colors.indigo;
+      case 'vaccination':
+        return Colors.pink;
+      case 'batch_updated':
+        return Colors.amber;
+      case 'batch_created':
+        return Colors.teal;
       default:
         return Colors.grey;
     }

@@ -75,78 +75,42 @@ class _BatchDetailsScreenState extends State<BatchDetailsScreen>
           ),
         ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(48), // Reduced height
+          preferredSize: const Size.fromHeight(48),
           child: Padding(
-            padding: const EdgeInsets.only(left: 12),
+            padding: const EdgeInsets.only(left: 12, right: 12),
             child: TabBar(
               controller: _tabController,
               isScrollable: true,
               tabAlignment: TabAlignment.start,
-              indicatorSize: TabBarIndicatorSize.tab,
+              indicatorSize: TabBarIndicatorSize.label,
               indicator: BoxDecoration(
-                color: Colors.green, // Light grey for active tab
+                color: Colors.green.shade50, // Light green background
                 borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Colors.green, // Green border for active
+                  width: 1.5,
+                ),
               ),
-              labelColor: Colors.white, //  for active
+              labelColor: Colors.green.shade700,
               unselectedLabelColor: Colors.grey.shade600,
               labelStyle: const TextStyle(
-                fontSize: 11, // Smaller font
+                fontSize: 11,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.1,
               ),
               unselectedLabelStyle: const TextStyle(
-                fontSize: 11, // Smaller font
+                fontSize: 11,
                 fontWeight: FontWeight.w500,
                 letterSpacing: 0.1,
               ),
               dividerColor: Colors.transparent,
               splashFactory: NoSplash.splashFactory,
               overlayColor: WidgetStateProperty.all(Colors.transparent),
-              tabs: const [
-                Tab(
-                  height: 36, // Smaller tab height
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.dashboard, size: 16), // Smaller icon
-                      SizedBox(width: 4),
-                      Text('Overview'),
-                    ],
-                  ),
-                ),
-                Tab(
-                  height: 36,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.fastfood, size: 16),
-                      SizedBox(width: 4),
-                      Text('Feed'),
-                    ],
-                  ),
-                ),
-                Tab(
-                  height: 36,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.medical_services, size: 16),
-                      SizedBox(width: 4),
-                      Text('Vaccinations'),
-                    ],
-                  ),
-                ),
-                Tab(
-                  height: 36,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.inventory, size: 16),
-                      SizedBox(width: 4),
-                      Text('Products'),
-                    ],
-                  ),
-                ),
+              tabs: [
+                _buildTab(Icons.dashboard, 'Overview', false),
+                _buildTab(Icons.fastfood, 'Feed', false),
+                _buildTab(Icons.medical_services, 'Vaccinations', false),
+                _buildTab(Icons.inventory, 'Products', false),
               ],
             ),
           ),
@@ -159,6 +123,29 @@ class _BatchDetailsScreenState extends State<BatchDetailsScreen>
           BatchFeedTab(batch: widget.batch),
           BatchVaccinationsTab(batch: widget.batch),
           BatchProductsTab(batch: widget.batch),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTab(IconData icon, String label, bool isActive) {
+    return Container(
+      height: 36,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: Colors.grey.shade300, // Grey border for inactive
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 16),
+          const SizedBox(width: 4),
+          Text(label),
         ],
       ),
     );

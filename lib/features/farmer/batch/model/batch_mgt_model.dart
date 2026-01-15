@@ -1,14 +1,14 @@
-// lib/features/farmer/batch/model/batch_mgt_model.dart
-
 class BatchMgtResponse {
   final BatchInfo batch;
   final List<RecentActivity> recentActivities;
   final BatchStats stats;
+  final FinancialStats financialStats;
 
   const BatchMgtResponse({
     required this.batch,
     required this.recentActivities,
     required this.stats,
+    required this.financialStats,
   });
 
   factory BatchMgtResponse.fromJson(Map<String, dynamic> json) {
@@ -19,6 +19,7 @@ class BatchMgtResponse {
           .toList() ??
           [],
       stats: BatchStats.fromJson(json['stats']),
+      financialStats: FinancialStats.fromJson(json['financial_stats']),
     );
   }
 
@@ -27,6 +28,7 @@ class BatchMgtResponse {
       'batch': batch.toJson(),
       'recent_activities': recentActivities.map((a) => a.toJson()).toList(),
       'stats': stats.toJson(),
+      'financial_stats': financialStats.toJson(),
     };
   }
 }
@@ -199,6 +201,82 @@ class BatchStats {
       'live_birds': liveBirds,
       'mortality': mortality,
       'age_days': ageDays,
+    };
+  }
+}
+
+class FinancialStats {
+  final FinancialPeriodStats today;
+  final FinancialPeriodStats weekly;
+  final FinancialPeriodStats monthly;
+  final FinancialPeriodStats yearly;
+  final FinancialPeriodStats allTime;
+
+  const FinancialStats({
+    required this.today,
+    required this.weekly,
+    required this.monthly,
+    required this.yearly,
+    required this.allTime,
+  });
+
+  factory FinancialStats.fromJson(Map<String, dynamic> json) {
+    return FinancialStats(
+      today: FinancialPeriodStats.fromJson(json['today'] ?? {}),
+      weekly: FinancialPeriodStats.fromJson(json['weekly'] ?? {}),
+      monthly: FinancialPeriodStats.fromJson(json['monthly'] ?? {}),
+      yearly: FinancialPeriodStats.fromJson(json['yearly'] ?? {}),
+      allTime: FinancialPeriodStats.fromJson(json['all_time'] ?? {}),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'today': today.toJson(),
+      'weekly': weekly.toJson(),
+      'monthly': monthly.toJson(),
+      'yearly': yearly.toJson(),
+      'all_time': allTime.toJson(),
+    };
+  }
+}
+
+class FinancialPeriodStats {
+  final double feedingCost;
+  final double vaccinationCost;
+  final double inventoryCost;
+  final double totalExpenditure;
+  final double productIncome;
+  final double netProfit;
+
+  const FinancialPeriodStats({
+    required this.feedingCost,
+    required this.vaccinationCost,
+    required this.inventoryCost,
+    required this.totalExpenditure,
+    required this.productIncome,
+    required this.netProfit,
+  });
+
+  factory FinancialPeriodStats.fromJson(Map<String, dynamic> json) {
+    return FinancialPeriodStats(
+      feedingCost: (json['feeding_cost'] ?? 0).toDouble(),
+      vaccinationCost: (json['vaccination_cost'] ?? 0).toDouble(),
+      inventoryCost: (json['inventory_cost'] ?? 0).toDouble(),
+      totalExpenditure: (json['total_expenditure'] ?? 0).toDouble(),
+      productIncome: (json['product_income'] ?? 0).toDouble(),
+      netProfit: (json['net_profit'] ?? 0).toDouble(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'feeding_cost': feedingCost,
+      'vaccination_cost': vaccinationCost,
+      'inventory_cost': inventoryCost,
+      'total_expenditure': totalExpenditure,
+      'product_income': productIncome,
+      'net_profit': netProfit,
     };
   }
 }

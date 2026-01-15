@@ -57,28 +57,28 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadActivities();
   }
 
+  @override
+  void dispose() {
+    // Clean up any resources if needed
+    super.dispose();
+  }
+
   Future<void> _loadUserData() async {
     try {
-      // Get user data from secure storage
       final User? userData = await _secureStorage.getUserData();
 
       if (userData != null && mounted) {
         LogUtil.warning(userData.toJson());
 
-        setState(() {
-          // Extract user first login date
-          _userFirstLoginDate = _parseDateTime(userData.firstLogin);
-
-          // Calculate days since first login
-          _calculateDaysSinceFirstLogin();
-
-          // Check if we should show day 27 modal
-          _checkDay27Modal();
-
-          _isLoadingUser = false;
-        });
+        if (mounted) {
+          setState(() {
+            _userFirstLoginDate = _parseDateTime(userData.firstLogin);
+            _calculateDaysSinceFirstLogin();
+            _checkDay27Modal();
+            _isLoadingUser = false;
+          });
+        }
       } else {
-        // If no user data found
         if (mounted) {
           setState(() {
             _userFirstLoginDate = null;
@@ -120,18 +120,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _checkDay27Modal() {
     if (_daysSinceFirstLogin >= DECISION_MODAL_DAY) {
-      // Check if we've already shown this modal
       final lastShown = SharedPrefs.getInt('day27_modal_last_shown') ?? 0;
       final today = DateTime.now();
       final todayDate = DateTime(today.year, today.month, today.day);
 
-      // Show modal if:
-      // 1. User is exactly on day 27 OR
-      // 2. User is past day 27 but we haven't shown it today
       if (_daysSinceFirstLogin == DECISION_MODAL_DAY ||
-          (_daysSinceFirstLogin > DECISION_MODAL_DAY && lastShown != todayDate.millisecondsSinceEpoch)) {
-
-        // Show modal after a delay
+          (_daysSinceFirstLogin > DECISION_MODAL_DAY &&
+              lastShown != todayDate.millisecondsSinceEpoch)) {
         Future.delayed(const Duration(seconds: 2), () {
           if (mounted) {
             setState(() {
@@ -144,38 +139,38 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onDay27ModalContinue() {
-    // Mark as shown today
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
     SharedPrefs.setInt('day27_modal_last_shown', todayDate.millisecondsSinceEpoch);
 
-    setState(() {
-      _showDay27Modal = false;
-    });
-
-    // Navigate to plans page
-    context.push('/plans');
+    if (mounted) {
+      setState(() {
+        _showDay27Modal = false;
+      });
+      context.push('/plans');
+    }
   }
 
   void _onDay27ModalDismiss() {
-    // Mark as shown today
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
     SharedPrefs.setInt('day27_modal_last_shown', todayDate.millisecondsSinceEpoch);
 
-    setState(() {
-      _showDay27Modal = false;
-    });
+    if (mounted) {
+      setState(() {
+        _showDay27Modal = false;
+      });
+    }
   }
 
-  // Helper methods to determine what to show
   bool get _shouldShowValueConfirmationBanner {
     return _daysSinceFirstLogin >= VALUE_CONFIRMATION_START_DAY &&
         _daysSinceFirstLogin <= VALUE_CONFIRMATION_END_DAY;
   }
 
   bool get _shouldShowFutureFramingBanner {
-    return _daysSinceFirstLogin >= FUTURE_FRAMING_DAY && _daysSinceFirstLogin <= FUTURE_FRAMING_END_DAY;
+    return _daysSinceFirstLogin >= FUTURE_FRAMING_DAY &&
+        _daysSinceFirstLogin <= FUTURE_FRAMING_END_DAY;
   }
 
   bool get _shouldNavigateToDay31Screen {
@@ -186,10 +181,10 @@ class _HomeScreenState extends State<HomeScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    // Check if we need to navigate to day 31 screen
     if (_shouldNavigateToDay31Screen && !_isLoadingUser) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        // Check if we've already shown this today to prevent infinite loops
+        if (!mounted) return;
+
         final lastShown = SharedPrefs.getInt('day31_last_shown') ?? 0;
         final today = DateTime.now();
         final todayDate = DateTime(today.year, today.month, today.day);
@@ -197,7 +192,6 @@ class _HomeScreenState extends State<HomeScreen> {
         if (lastShown != todayDate.millisecondsSinceEpoch) {
           SharedPrefs.setInt('day31_last_shown', todayDate.millisecondsSinceEpoch);
 
-          // Navigate to day 31 transition screen
           final planDetails = {
             'features': [
               'Basic farm management',
@@ -209,16 +203,20 @@ class _HomeScreenState extends State<HomeScreen> {
             'period': '/month',
           };
 
-          context.push('/day-31-transition', extra: {
-            'recommendedPlan': 'Starter Plan',
-            'planDetails': planDetails,
-          });
+          if (mounted) {
+            context.push('/day-31-transition', extra: {
+              'recommendedPlan': 'Starter Plan',
+              'planDetails': planDetails,
+            });
+          }
         }
       });
     }
   }
 
   Future<void> _loadSummary() async {
+    if (!mounted) return;
+
     setState(() {
       _isSummaryLoading = true;
       _summaryError = null;
@@ -227,6 +225,8 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final result = await _repository.getDashboardSummary();
 
+      if (!mounted) return;
+
       switch (result) {
         case Success<DashboardSummary>(data: final data):
           setState(() {
@@ -234,16 +234,17 @@ class _HomeScreenState extends State<HomeScreen> {
             _isSummaryLoading = false;
           });
           break;
-        case Failure<DashboardSummary>(message: final error,):
+        case Failure<DashboardSummary>(message: final error):
           setState(() {
             _summaryError = error;
             _isSummaryLoading = false;
           });
           break;
       }
-    } finally {
-      if (_isSummaryLoading) {
+    } catch (e) {
+      if (mounted) {
         setState(() {
+          _summaryError = e.toString();
           _isSummaryLoading = false;
         });
       }
@@ -251,6 +252,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadActivities() async {
+    if (!mounted) return;
+
     setState(() {
       _isActivitiesLoading = true;
       _activitiesError = null;
@@ -258,6 +261,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       final result = await _repository.getRecentActivities(limit: 5);
+
+      if (!mounted) return;
 
       switch (result) {
         case Success<List<DashboardActivity>>(data: final data):
@@ -273,9 +278,10 @@ class _HomeScreenState extends State<HomeScreen> {
           });
           break;
       }
-    } finally {
-      if (_isActivitiesLoading) {
+    } catch (e) {
+      if (mounted) {
         setState(() {
+          _activitiesError = e.toString();
           _isActivitiesLoading = false;
         });
       }
@@ -283,8 +289,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _onRefresh() async {
+    if (!mounted) return;
+
     try {
       final result = await _repository.refreshDashboard(activityLimit: 5);
+
+      if (!mounted) return;
 
       switch (result) {
         case Success<Map<String, dynamic>>(data: final data):
@@ -396,47 +406,39 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Show Value Confirmation Banner (Days 5-10)
                   if (_shouldShowValueConfirmationBanner)
                     ValueConfirmationBanner(
                       onViewActivity: () => context.push('/activity'),
                     ),
 
-                  // Show Future Framing Banner (Day 21+)
                   if (_shouldShowFutureFramingBanner)
                     FutureFramingBanner(
                       onSeePlans: () => context.push('/plans'),
                     ),
 
-                  // Welcome Section
                   if (!_shouldShowValueConfirmationBanner && !_shouldShowFutureFramingBanner)
                     WelcomeSection(
-                    greeting: _getGreeting(),
-                    summaryMsg: _getSummaryMessage(),
-                    daysSinceLogin: _userFirstLoginDate != null ? _daysSinceFirstLogin : null,
-                  ),
+                      greeting: _getGreeting(),
+                      summaryMsg: _getSummaryMessage(),
+                      daysSinceLogin: _userFirstLoginDate != null ? _daysSinceFirstLogin : null,
+                    ),
                   const SizedBox(height: 20),
 
-                  // Stats Overview
                   _buildStatsOverview(),
                   const SizedBox(height: 20),
 
-                  // Quick Actions
                   _buildQuickActions(context),
                   const SizedBox(height: 20),
 
-                  // Performance Overview (Placeholder for later)
                   HomePerformanceGraph(),
                   const SizedBox(height: 20),
 
-                  // Recent Activity - Show loading/error state if needed
                   _buildRecentActivitySection(context),
                 ],
               ),
             ),
           ),
 
-          // Day 27 Modal Overlay
           if (_showDay27Modal)
             GestureDetector(
               onTap: _onDay27ModalDismiss,
