@@ -347,7 +347,7 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
             decimal: true,
             signed: false,
           ),
-          hintText: 'Recommended: ${currentRec.dailyFeedRequiredKg?.toStringAsFixed(2) ?? "N/A"} kg',
+          hintText: 'Eg: ${currentRec.dailyFeedRequiredKg?.toStringAsFixed(2) ?? "10"} kg',
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'Please enter feed quantity';

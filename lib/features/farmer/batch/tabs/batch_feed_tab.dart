@@ -3,6 +3,8 @@ import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/feeding_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/feeding_repo.dart';
 import 'package:agriflock360/features/farmer/batch/shared/stat_card.dart';
+import 'package:agriflock360/features/farmer/batch/tabs/widgets/feeding_record_item.dart';
+import 'package:agriflock360/features/farmer/batch/tabs/widgets/recommended_feeding_tem.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -15,40 +17,30 @@ class BatchFeedTab extends StatefulWidget {
   State<BatchFeedTab> createState() => _BatchFeedTabState();
 }
 
-class _BatchFeedTabState extends State<BatchFeedTab>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _BatchFeedTabState extends State<BatchFeedTab> {
   final FeedingRepository _repository = FeedingRepository();
+  final ScrollController _scrollController = ScrollController();
 
   bool _isFabVisible = true;
-  final Map<int, ScrollController> _scrollControllers = {};
+  bool _isRecommendationsExpanded = false;
+  bool _isRecentFeedingsExpanded = false;
 
-  // State for each tab
+  // State for dashboard (always loaded for stats)
   FeedDashboard? _dashboard;
-  FeedingRecommendationsResponse? _recommendations;
   bool _isDashboardLoading = true;
-  bool _isRecommendationsLoading = true;
   String? _dashboardError;
+
+  // State for recommendations (lazy loaded)
+  FeedingRecommendationsResponse? _recommendations;
+  bool _isRecommendationsLoading = false;
   String? _recommendationsError;
+  bool _hasLoadedRecommendations = false;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-
-    // Initialize scroll controllers
-    for (int i = 0; i < _tabController.length; i++) {
-      _scrollControllers[i] = ScrollController();
-      _scrollControllers[i]!.addListener(() {
-        _handleScroll(_scrollControllers[i]!);
-      });
-    }
-
-    _tabController.addListener(_handleTabChange);
-
-    // Load data for both tabs independently
+    _scrollController.addListener(_handleScroll);
     _loadDashboard();
-    _loadRecommendations();
   }
 
   Future<void> _loadDashboard() async {
@@ -60,7 +52,7 @@ class _BatchFeedTabState extends State<BatchFeedTab>
     try {
       final result = await _repository.getFeedDashboard(widget.batch.id);
 
-      switch(result) {
+      switch (result) {
         case Success<FeedDashboard>(data: final data):
           setState(() {
             _dashboard = data;
@@ -72,12 +64,9 @@ class _BatchFeedTabState extends State<BatchFeedTab>
             _dashboardError = error;
             _isDashboardLoading = false;
           });
-          // Optionally handle the error using ApiErrorHandler
-          // ApiErrorHandler.handle(error);
           break;
       }
     } finally {
-      // Ensure loading state is reset even if there's an unexpected error
       if (_isDashboardLoading) {
         setState(() {
           _isDashboardLoading = false;
@@ -87,19 +76,25 @@ class _BatchFeedTabState extends State<BatchFeedTab>
   }
 
   Future<void> _loadRecommendations() async {
+    if (_hasLoadedRecommendations && _recommendations != null) {
+      return; // Already loaded
+    }
+
     setState(() {
       _isRecommendationsLoading = true;
       _recommendationsError = null;
     });
 
     try {
-      final result = await _repository.getFeedingRecommendations(widget.batch.id);
+      final result =
+      await _repository.getFeedingRecommendations(widget.batch.id);
 
-      switch(result) {
+      switch (result) {
         case Success<FeedingRecommendationsResponse>(data: final data):
           setState(() {
             _recommendations = data;
             _isRecommendationsLoading = false;
+            _hasLoadedRecommendations = true;
           });
           break;
         case Failure(message: final error):
@@ -107,12 +102,9 @@ class _BatchFeedTabState extends State<BatchFeedTab>
             _recommendationsError = error;
             _isRecommendationsLoading = false;
           });
-          // Optionally handle the error using ApiErrorHandler
-          // ApiErrorHandler.handle(error);
           break;
       }
     } finally {
-      // Ensure loading state is reset even if there's an unexpected error
       if (_isRecommendationsLoading) {
         setState(() {
           _isRecommendationsLoading = false;
@@ -125,7 +117,7 @@ class _BatchFeedTabState extends State<BatchFeedTab>
     try {
       final result = await _repository.refreshFeedDashboard(widget.batch.id);
 
-      switch(result) {
+      switch (result) {
         case Success<FeedDashboard>(data: final data):
           setState(() {
             _dashboard = data;
@@ -144,7 +136,6 @@ class _BatchFeedTabState extends State<BatchFeedTab>
           break;
       }
     } catch (e) {
-      // Handle any unexpected errors
       setState(() {
         _dashboardError = e.toString();
       });
@@ -158,13 +149,15 @@ class _BatchFeedTabState extends State<BatchFeedTab>
 
   Future<void> _onRefreshRecommendations() async {
     try {
-      final result = await _repository.refreshFeedingRecommendations(widget.batch.id);
+      final result =
+      await _repository.refreshFeedingRecommendations(widget.batch.id);
 
-      switch(result) {
+      switch (result) {
         case Success<FeedingRecommendationsResponse>(data: final data):
           setState(() {
             _recommendations = data;
             _recommendationsError = null;
+            _hasLoadedRecommendations = true;
           });
           break;
         case Failure(message: final error):
@@ -179,7 +172,6 @@ class _BatchFeedTabState extends State<BatchFeedTab>
           break;
       }
     } catch (e) {
-      // Handle any unexpected errors
       setState(() {
         _recommendationsError = e.toString();
       });
@@ -191,13 +183,13 @@ class _BatchFeedTabState extends State<BatchFeedTab>
     }
   }
 
-  void _handleScroll(ScrollController controller) {
-    if (controller.hasClients) {
-      if (controller.position.pixels > 0 && _isFabVisible) {
+  void _handleScroll() {
+    if (_scrollController.hasClients) {
+      if (_scrollController.position.pixels > 0 && _isFabVisible) {
         setState(() {
           _isFabVisible = false;
         });
-      } else if (controller.position.pixels <= 0 && !_isFabVisible) {
+      } else if (_scrollController.position.pixels <= 0 && !_isFabVisible) {
         setState(() {
           _isFabVisible = true;
         });
@@ -205,32 +197,25 @@ class _BatchFeedTabState extends State<BatchFeedTab>
     }
   }
 
-  void _handleTabChange() {
-    final currentTab = _tabController.index;
-    final currentController = _scrollControllers[currentTab];
+  void _toggleRecommendations() {
+    setState(() {
+      _isRecommendationsExpanded = !_isRecommendationsExpanded;
+    });
 
-    if (currentController != null && currentController.hasClients) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (currentController.position.pixels > 0 && _isFabVisible) {
-          setState(() {
-            _isFabVisible = false;
-          });
-        } else if (currentController.position.pixels <= 0 && !_isFabVisible) {
-          setState(() {
-            _isFabVisible = true;
-          });
-        }
-      });
+    if (_isRecommendationsExpanded && !_hasLoadedRecommendations) {
+      _loadRecommendations();
     }
+  }
+
+  void _toggleRecentFeedings() {
+    setState(() {
+      _isRecentFeedingsExpanded = !_isRecentFeedingsExpanded;
+    });
   }
 
   @override
   void dispose() {
-    _tabController.removeListener(_handleTabChange);
-    _tabController.dispose();
-    for (var controller in _scrollControllers.values) {
-      controller.dispose();
-    }
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -238,63 +223,33 @@ class _BatchFeedTabState extends State<BatchFeedTab>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Feed Summary Cards
-            _buildDashboardStats(),
-            const SizedBox(height: 32),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await _loadDashboard();
+          if (_hasLoadedRecommendations) {
+            await _onRefreshRecommendations();
+          }
+        },
+        child: SingleChildScrollView(
+          controller: _scrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Feed Summary Cards
+                _buildDashboardStats(),
+                const SizedBox(height: 32),
 
-            // Tabs
-            Expanded(
-              child: Column(
-                children: [
-                  TabBar(
-                    controller: _tabController,
-                    isScrollable: true,
-                    tabAlignment: TabAlignment.start,
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.all(1),
-                    dividerColor: Colors.transparent,
-                    indicator: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    labelColor: Colors.black,
-                    unselectedLabelColor: Colors.grey.shade600,
-                    labelStyle: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.5,
-                    ),
-                    unselectedLabelStyle: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    splashFactory: NoSplash.splashFactory,
-                    overlayColor: WidgetStateProperty.all(Colors.transparent),
-                    tabs: [
-                      _buildTabWithIcon(Icons.history, 'Recent Feedings'),
-                      _buildTabWithIcon(Icons.schedule, 'Recommended Schedule'),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: TabBarView(
-                      controller: _tabController,
-                      children: [
-                        _buildRecentFeedingsTab(),
-                        _buildRecommendedScheduleTab(),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                // Expandable Sections
+                _buildRecommendedScheduleSection(),
+                const SizedBox(height: 16),
+                _buildRecentFeedingsSection(),
+                const SizedBox(height: 80), // Extra padding for FAB
+              ],
             ),
-          ],
+          ),
         ),
       ),
       floatingActionButton: AnimatedSlide(
@@ -305,8 +260,8 @@ class _BatchFeedTabState extends State<BatchFeedTab>
           opacity: _isFabVisible ? 1 : 0,
           child: FloatingActionButton.extended(
             onPressed: () async {
-              final result = await context.push('/batches/${widget.batch.id}/feed');
-              // Refresh data if feeding was logged
+              final result =
+              await context.push('/batches/${widget.batch.id}/feed');
               if (result == true) {
                 _loadDashboard();
               }
@@ -337,7 +292,8 @@ class _BatchFeedTabState extends State<BatchFeedTab>
           children: [
             const Icon(Icons.error_outline, color: Colors.red),
             const SizedBox(height: 8),
-            Text('Error loading dashboard', style: TextStyle(color: Colors.grey.shade600)),
+            Text('Error loading dashboard',
+                style: TextStyle(color: Colors.grey.shade600)),
             TextButton(
               onPressed: _loadDashboard,
               child: const Text('Retry'),
@@ -396,159 +352,221 @@ class _BatchFeedTabState extends State<BatchFeedTab>
     );
   }
 
-  Widget _buildRecentFeedingsTab() {
-    return RefreshIndicator(
-      onRefresh: _onRefreshDashboard,
-      child: _isDashboardLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _dashboardError != null || _dashboard == null
-          ? Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
-            const SizedBox(height: 16),
-            Text('Error: $_dashboardError'),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadDashboard,
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      )
-          : _dashboard!.recentFeedings.isEmpty
-          ? Center(
-        child: Text(
-          'No recent feedings',
-          style: TextStyle(color: Colors.grey.shade500),
-        ),
-      )
-          : ListView.builder(
-        controller: _scrollControllers[0],
-        itemCount: _dashboard!.recentFeedings.length,
-        itemBuilder: (context, index) {
-          final feeding = _dashboard!.recentFeedings[index];
-          return _FeedingRecordItem(
-            date: feeding.dayLabel,
-            amount: '${feeding.amountKg}kg',
-            type: '${feeding.date} at ${feeding.time}',
-            efficiency: '${feeding.compliancePercentage}%',
-          );
-        },
+  Widget _buildRecommendedScheduleSection() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-    );
-  }
-
-  Widget _buildRecommendedScheduleTab() {
-    return RefreshIndicator(
-      onRefresh: _onRefreshRecommendations,
-      child: _isRecommendationsLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _recommendationsError != null || _recommendations == null
-          ? Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
-            const SizedBox(height: 16),
-            Text('Error: $_recommendationsError'),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadRecommendations,
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      )
-          : ListView(
-        controller: _scrollControllers[1],
+      child: Column(
         children: [
-          // Current recommendation highlight
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16),
+          InkWell(
+            onTap: _toggleRecommendations,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
             child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue.shade200),
-              ),
+              padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline,
-                      color: Colors.blue.shade700, size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Current Stage: ${_recommendations!.currentRecommendation.stageName} (${_recommendations!.batchInfo.ageDays} days old)',
-                      style: TextStyle(
-                        color: Colors.blue.shade900,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.schedule,
+                      color: Colors.blue.shade700,
+                      size: 22,
                     ),
                   ),
-                ],
-              ),
-            ),
-          ),
-
-          // All recommendations
-          ..._recommendations!.allRecommendations.map((rec) {
-            final isCurrent = rec.id == _recommendations!.currentRecommendation.id;
-            return _RecommendedFeedingItem(
-              stage: rec.stageName,
-              feedType: rec.feedType,
-              amount: '${double.parse(rec.quantityPerBirdPerDay) * 1000}g per bird/day',
-              frequency: '${rec.timesPerDay} times daily',
-              protein: '${rec.proteinPercentage}% CP',
-              feedingTimes: rec.feedingTimes.slots,
-              notes: rec.notes,
-              isCurrent: isCurrent,
-            );
-          }).toList(),
-
-          // Feeding Tips
-          Padding(
-            padding: const EdgeInsets.only(top: 16, bottom: 8),
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.green.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.green.shade200),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.lightbulb_outline,
-                      color: Colors.green.shade700, size: 20),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Feeding Tips',
+                          'Recommended Feeding Schedule',
                           style: TextStyle(
-                            color: Colors.green.shade900,
-                            fontSize: 13,
+                            fontSize: 15,
                             fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade900,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 2),
                         Text(
-                          '• Provide fresh water at all times\n• Clean feeders regularly\n• Avoid sudden feed changes\n• Monitor feed consumption daily',
+                          _isRecommendationsExpanded
+                              ? 'Tap to collapse'
+                              : 'Tap to view feeding guidelines',
                           style: TextStyle(
-                            color: Colors.green.shade800,
-                            fontSize: 11,
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
                           ),
                         ),
                       ],
                     ),
                   ),
+                  Icon(
+                    _isRecommendationsExpanded
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
+                    color: Colors.grey.shade600,
+                    size: 24,
+                  ),
                 ],
               ),
+            ),
+          ),
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: Colors.grey.shade200),
+                ),
+              ),
+              child: _buildRecommendedScheduleContent(),
+            ),
+            crossFadeState: _isRecommendationsExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 300),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecommendedScheduleContent() {
+    if (_isRecommendationsLoading) {
+      return const Padding(
+        padding: EdgeInsets.all(32.0),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_recommendationsError != null || _recommendations == null) {
+      return Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Center(
+          child: Column(
+            children: [
+              Icon(Icons.error_outline, size: 48, color: Colors.red.shade300),
+              const SizedBox(height: 12),
+              Text(
+                _recommendationsError ?? 'Failed to load recommendations',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadRecommendations,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Current recommendation highlight
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue.shade200),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline,
+                    color: Colors.blue.shade700, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Current Stage: ${_recommendations!.currentRecommendation.stageName} (${_recommendations!.batchInfo.ageDays} days old)',
+                    style: TextStyle(
+                      color: Colors.blue.shade900,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // All recommendations
+          ..._recommendations!.allRecommendations.map((rec) {
+            final isCurrent =
+                rec.id == _recommendations!.currentRecommendation.id;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: RecommendedFeedingItem(
+                stage: rec.stageName,
+                feedType: rec.feedType,
+                amount:
+                '${double.parse(rec.quantityPerBirdPerDay) * 1000}g per bird/day',
+                frequency: '${rec.timesPerDay} times daily',
+                protein: '${rec.proteinPercentage}% CP',
+                feedingTimes: rec.feedingTimes.slots,
+                notes: rec.notes,
+                isCurrent: isCurrent,
+              ),
+            );
+          }).toList(),
+
+          // Feeding Tips
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.green.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.green.shade200),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.lightbulb_outline,
+                    color: Colors.green.shade700, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Feeding Tips',
+                        style: TextStyle(
+                          color: Colors.green.shade900,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '• Provide fresh water at all times\n• Clean feeders regularly\n• Avoid sudden feed changes\n• Monitor feed consumption daily',
+                        style: TextStyle(
+                          color: Colors.green.shade800,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -556,317 +574,167 @@ class _BatchFeedTabState extends State<BatchFeedTab>
     );
   }
 
-  Widget _buildTabWithIcon(IconData icon, String label) {
-    return Tab(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 16),
-          const SizedBox(width: 4),
-          Text(label),
-        ],
-      ),
-    );
-  }
-}
-
-class _FeedingRecordItem extends StatelessWidget {
-  final String date;
-  final String amount;
-  final String type;
-  final String efficiency;
-
-  const _FeedingRecordItem({
-    required this.date,
-    required this.amount,
-    required this.type,
-    required this.efficiency,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildRecentFeedingsSection() {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.restaurant, size: 18, color: Colors.orange),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  amount,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  type,
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                date,
-                style: TextStyle(
-                  color: Colors.grey.shade500,
-                  fontSize: 11,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  efficiency,
-                  style: TextStyle(
-                    color: Colors.green.shade800,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _RecommendedFeedingItem extends StatelessWidget {
-  final String stage;
-  final String feedType;
-  final String amount;
-  final String frequency;
-  final String protein;
-  final List<String> feedingTimes;
-  final String? notes;
-  final bool isCurrent;
-
-  const _RecommendedFeedingItem({
-    required this.stage,
-    required this.feedType,
-    required this.amount,
-    required this.frequency,
-    required this.protein,
-    required this.feedingTimes,
-    this.notes,
-    this.isCurrent = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isCurrent ? Colors.green.shade300 : Colors.grey.shade200,
-          width: isCurrent ? 2 : 1,
-        ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: (isCurrent ? Colors.green : Colors.orange).withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.restaurant_menu,
-                  size: 18,
-                  color: isCurrent ? Colors.green : Colors.orange,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+          InkWell(
+            onTap: _toggleRecentFeedings,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade50,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.history,
+                      color: Colors.orange.shade700,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          stage,
-                          style: const TextStyle(
+                          'Recent Feedings',
+                          style: TextStyle(
+                            fontSize: 15,
                             fontWeight: FontWeight.w600,
-                            fontSize: 14,
+                            color: Colors.grey.shade900,
                           ),
                         ),
-                        if (isCurrent) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.green,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Text(
-                              'CURRENT',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _isRecentFeedingsExpanded
+                              ? 'Tap to collapse'
+                              : 'Tap to view feeding history',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
                           ),
-                        ],
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      feedType,
-                      style: TextStyle(
-                        color: (isCurrent ? Colors.green : Colors.orange).shade700,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Feeding times
-          Wrap(
-            spacing: 4,
-            runSpacing: 4,
-            children: feedingTimes
-                .map((time) => Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 8,
-                vertical: 4,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade100,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                time,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: Colors.blue.shade800,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ))
-                .toList(),
-          ),
-          const SizedBox(height: 12),
-
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              children: [
-                _FeedInfoRow(
-                  icon: Icons.scale,
-                  label: 'Amount',
-                  value: amount,
-                ),
-                const SizedBox(height: 6),
-                _FeedInfoRow(
-                  icon: Icons.schedule,
-                  label: 'Frequency',
-                  value: frequency,
-                ),
-                const SizedBox(height: 6),
-                _FeedInfoRow(
-                  icon: Icons.health_and_safety_outlined,
-                  label: 'Protein',
-                  value: protein,
-                ),
-                if (notes != null) ...[
-                  const SizedBox(height: 6),
-                  _FeedInfoRow(
-                    icon: Icons.note,
-                    label: 'Notes',
-                    value: notes!,
+                  ),
+                  Icon(
+                    _isRecentFeedingsExpanded
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
+                    color: Colors.grey.shade600,
+                    size: 24,
                   ),
                 ],
-              ],
+              ),
             ),
+          ),
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: Colors.grey.shade200),
+                ),
+              ),
+              child: _buildRecentFeedingsContent(),
+            ),
+            crossFadeState: _isRecentFeedingsExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 300),
           ),
         ],
       ),
     );
   }
-}
 
-class _FeedInfoRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
+  Widget _buildRecentFeedingsContent() {
+    if (_isDashboardLoading) {
+      return const Padding(
+        padding: EdgeInsets.all(32.0),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
 
-  const _FeedInfoRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 14, color: Colors.grey.shade600),
-        const SizedBox(width: 6),
-        Text(
-          '$label: ',
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey.shade700,
+    if (_dashboardError != null || _dashboard == null) {
+      return Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Center(
+          child: Column(
+            children: [
+              Icon(Icons.error_outline, size: 48, color: Colors.red.shade300),
+              const SizedBox(height: 12),
+              Text(
+                _dashboardError ?? 'Failed to load recent feedings',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadDashboard,
+                child: const Text('Retry'),
+              ),
+            ],
           ),
         ),
-        Expanded(
-          child: Text(
-            value,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.grey.shade600,
+      );
+    }
+
+    if (_dashboard!.recentFeedings.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Center(
+          child: Column(
+            children: [
+              Icon(Icons.feed_outlined,
+                  size: 48, color: Colors.grey.shade300),
+              const SizedBox(height: 12),
+              Text(
+                'No recent feedings',
+                style: TextStyle(
+                  color: Colors.grey.shade500,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: _dashboard!.recentFeedings.map((feeding) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: FeedingRecordItem(
+              date: feeding.dayLabel,
+              amount: '${feeding.amountKg}kg',
+              type: '${feeding.date} at ${feeding.time}',
+              efficiency: '${feeding.compliancePercentage}%',
             ),
-          ),
-        ),
-      ],
+          );
+        }).toList(),
+      ),
     );
   }
 }
