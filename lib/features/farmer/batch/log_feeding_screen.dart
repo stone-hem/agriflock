@@ -441,15 +441,15 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
           controller: _currentWeightController,
           keyboardType: TextInputType.number,
           hintText: 'e.g., 310',
-          labelText: 'Current Total Weight (kg)',
+          labelText: 'Current Average Weight (kg)',
         ),
         const SizedBox(height: 20),
-        ReusableInput(
-          controller: _expectedWeightController,
-          keyboardType: TextInputType.number,
-          hintText: 'e.g., 330',
-          labelText: 'Expected Weight (kg)',
-        ),
+        // ReusableInput(
+        //   controller: _expectedWeightController,
+        //   keyboardType: TextInputType.number,
+        //   hintText: 'e.g., 330',
+        //   labelText: 'Expected Weight (kg)',
+        // ),
       ],
     );
   }

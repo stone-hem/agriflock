@@ -335,90 +335,90 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
               const SizedBox(height: 20),
 
               // Batch Type Selection
-              Text(
-                'Batch Type',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
-              ReusableDropdown<String>(
-                value: _selectedBatchType,
-                hintText: 'Select batch type',
-                items: _batchTypes.map((String type) {
-                  return DropdownMenuItem<String>(
-                    value: type,
-                    child: Text(type),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedBatchType = newValue;
-                  });
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please select a batch type';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
+              // Text(
+              //   'Batch Type',
+              //   style: Theme.of(context).textTheme.titleMedium!.copyWith(
+              //     fontWeight: FontWeight.bold,
+              //     color: Colors.grey.shade800,
+              //   ),
+              // ),
+              // const SizedBox(height: 8),
+              // ReusableDropdown<String>(
+              //   value: _selectedBatchType,
+              //   hintText: 'Select batch type',
+              //   items: _batchTypes.map((String type) {
+              //     return DropdownMenuItem<String>(
+              //       value: type,
+              //       child: Text(type),
+              //     );
+              //   }).toList(),
+              //   onChanged: (String? newValue) {
+              //     setState(() {
+              //       _selectedBatchType = newValue;
+              //     });
+              //   },
+              //   validator: (value) {
+              //     if (value == null || value.isEmpty) {
+              //       return 'Please select a batch type';
+              //     }
+              //     return null;
+              //   },
+              // ),
+              // const SizedBox(height: 20),
 
-              // Hatch Date
-              CustomDateTextField(
-                label: 'Date of Hatching',
-                hintText: 'Select hatch date',
-                icon: Icons.calendar_today,
-                required: true,
-                minYear: DateTime.now().year - 2,
-                returnFormat: DateReturnFormat.dateTime,
-                maxYear: DateTime.now().year,
-                controller: _hatchController,
-                initialDate: _hatchDate,
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _hatchDate = value;
-                    });
-                  }
-                },
-              ),
-              const SizedBox(height: 20),
+              // // Hatch Date
+              // CustomDateTextField(
+              //   label: 'Date of Hatching',
+              //   hintText: 'Select hatch date',
+              //   icon: Icons.calendar_today,
+              //   required: true,
+              //   minYear: DateTime.now().year - 2,
+              //   returnFormat: DateReturnFormat.dateTime,
+              //   maxYear: DateTime.now().year,
+              //   controller: _hatchController,
+              //   initialDate: _hatchDate,
+              //   onChanged: (value) {
+              //     if (value != null) {
+              //       setState(() {
+              //         _hatchDate = value;
+              //       });
+              //     }
+              //   },
+              // ),
+              // const SizedBox(height: 20),
 
               // Initial Count
-              Text(
-                'Initial Count',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
-              ReusableInput(
-                controller: _initialQuantityController,
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter initial count';
-                  }
-                  if (int.tryParse(value) == null) {
-                    return 'Please enter a valid number';
-                  }
-                  final count = int.parse(value);
-                  if (count <= 0) {
-                    return 'Initial count must be greater than 0';
-                  }
-                  if (count > availableCapacity) {
-                    return 'Initial count ($count) exceeds available capacity ($availableCapacity)';
-                  }
-                  return null;
-                },
-                labelText: 'Initial count from hatchery',
-                hintText: 'e.g., 1000',
-              ),
-              const SizedBox(height: 20),
+              // Text(
+              //   'Initial Count',
+              //   style: Theme.of(context).textTheme.titleMedium!.copyWith(
+              //     fontWeight: FontWeight.bold,
+              //     color: Colors.grey.shade800,
+              //   ),
+              // ),
+              // const SizedBox(height: 8),
+              // ReusableInput(
+              //   controller: _initialQuantityController,
+              //   keyboardType: TextInputType.number,
+              //   validator: (value) {
+              //     if (value == null || value.isEmpty) {
+              //       return 'Please enter initial count';
+              //     }
+              //     if (int.tryParse(value) == null) {
+              //       return 'Please enter a valid number';
+              //     }
+              //     final count = int.parse(value);
+              //     if (count <= 0) {
+              //       return 'Initial count must be greater than 0';
+              //     }
+              //     if (count > availableCapacity) {
+              //       return 'Initial count ($count) exceeds available capacity ($availableCapacity)';
+              //     }
+              //     return null;
+              //   },
+              //   labelText: 'Initial count from hatchery',
+              //   hintText: 'e.g., 1000',
+              // ),
+              // const SizedBox(height: 20),
 
               // Current Count (Birds Alive)
               Text(
@@ -439,216 +439,211 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
                   if (int.tryParse(value) == null) {
                     return 'Please enter a valid number';
                   }
-                  final alive = int.parse(value);
-                  final initial = int.tryParse(_initialQuantityController.text) ?? 0;
-                  if (alive > initial) {
-                    return 'Current count cannot exceed initial count';
-                  }
                   return null;
                 },
                 labelText: 'Current count at the moment',
                 hintText: 'e.g., 980',
               ),
               const SizedBox(height: 20),
-
-              // Current Average Weight
-              Text(
-                'Average weight (kg)',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
-              ReusableInput(
-                controller: _currentWeightController,
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter current average weight';
-                  }
-                  if (double.tryParse(value) == null) {
-                    return 'Please enter a valid weight';
-                  }
-                  return null;
-                },
-                labelText: 'Current average weight',
-                hintText: 'e.g., 1.5',
-              ),
-              const SizedBox(height: 20),
-
-              // Expected Average Weight
-              Text(
-                'Expected Average Weight (kg)',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
-              ReusableInput(
-                controller: _expectedWeightController,
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter expected average weight';
-                  }
-                  if (double.tryParse(value) == null) {
-                    return 'Please enter a valid weight';
-                  }
-                  final expected = double.parse(value);
-                  final current = double.tryParse(_currentWeightController.text) ?? 0.0;
-                  if (expected < current) {
-                    return 'Expected weight should be greater than current weight';
-                  }
-                  return null;
-                },
-                labelText: 'Expected average weight at removal/sale',
-                hintText: 'e.g., 2.5',
-              ),
-              const SizedBox(height: 20),
-
-              // Feeding Time Selection
-              Text(
-                'Feeding Time',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              // Feeding Time Category Selection
-              ReusableDropdown<String>(
-                value: _selectedFeedingTimeCategory,
-                hintText: 'Select feeding time category',
-                items: _feedingTimeOptions.keys.map((String category) {
-                  return DropdownMenuItem<String>(
-                    value: category,
-                    child: Text(category),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedFeedingTimeCategory = newValue;
-                    // Clear previous selections when category changes
-                    if (newValue != null && newValue != _selectedFeedingTimeCategory) {
-                      _selectedFeedingTimes[_selectedFeedingTimeCategory ?? 'Day']?.clear();
-                    }
-                  });
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please select feeding time category';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
+              //
+              // // Current Average Weight
+              // Text(
+              //   'Average weight (kg)',
+              //   style: Theme.of(context).textTheme.titleMedium!.copyWith(
+              //     fontWeight: FontWeight.bold,
+              //     color: Colors.grey.shade800,
+              //   ),
+              // ),
+              // const SizedBox(height: 8),
+              // ReusableInput(
+              //   controller: _currentWeightController,
+              //   keyboardType: TextInputType.number,
+              //   validator: (value) {
+              //     if (value == null || value.isEmpty) {
+              //       return 'Please enter current average weight';
+              //     }
+              //     if (double.tryParse(value) == null) {
+              //       return 'Please enter a valid weight';
+              //     }
+              //     return null;
+              //   },
+              //   labelText: 'Current average weight',
+              //   hintText: 'e.g., 1.5',
+              // ),
+              // const SizedBox(height: 20),
+              //
+              // // Expected Average Weight
+              // Text(
+              //   'Expected Average Weight (kg)',
+              //   style: Theme.of(context).textTheme.titleMedium!.copyWith(
+              //     fontWeight: FontWeight.bold,
+              //     color: Colors.grey.shade800,
+              //   ),
+              // ),
+              // const SizedBox(height: 8),
+              // ReusableInput(
+              //   controller: _expectedWeightController,
+              //   keyboardType: TextInputType.number,
+              //   validator: (value) {
+              //     if (value == null || value.isEmpty) {
+              //       return 'Please enter expected average weight';
+              //     }
+              //     if (double.tryParse(value) == null) {
+              //       return 'Please enter a valid weight';
+              //     }
+              //     final expected = double.parse(value);
+              //     final current = double.tryParse(_currentWeightController.text) ?? 0.0;
+              //     if (expected < current) {
+              //       return 'Expected weight should be greater than current weight';
+              //     }
+              //     return null;
+              //   },
+              //   labelText: 'Expected average weight at removal/sale',
+              //   hintText: 'e.g., 2.5',
+              // ),
+              // const SizedBox(height: 20),
+              //
+              // // Feeding Time Selection
+              // Text(
+              //   'Feeding Time',
+              //   style: Theme.of(context).textTheme.titleMedium!.copyWith(
+              //     fontWeight: FontWeight.bold,
+              //     color: Colors.grey.shade800,
+              //   ),
+              // ),
+              // const SizedBox(height: 8),
+              //
+              // // Feeding Time Category Selection
+              // ReusableDropdown<String>(
+              //   value: _selectedFeedingTimeCategory,
+              //   hintText: 'Select feeding time category',
+              //   items: _feedingTimeOptions.keys.map((String category) {
+              //     return DropdownMenuItem<String>(
+              //       value: category,
+              //       child: Text(category),
+              //     );
+              //   }).toList(),
+              //   onChanged: (String? newValue) {
+              //     setState(() {
+              //       _selectedFeedingTimeCategory = newValue;
+              //       // Clear previous selections when category changes
+              //       if (newValue != null && newValue != _selectedFeedingTimeCategory) {
+              //         _selectedFeedingTimes[_selectedFeedingTimeCategory ?? 'Day']?.clear();
+              //       }
+              //     });
+              //   },
+              //   validator: (value) {
+              //     if (value == null || value.isEmpty) {
+              //       return 'Please select feeding time category';
+              //     }
+              //     return null;
+              //   },
+              // ),
+              // const SizedBox(height: 16),
 
               // Specific Feeding Times Selection within Category
-              if (_selectedFeedingTimeCategory != null) ...[
-                Text(
-                  'Select Specific Feeding Times:',
-                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade800,
-                  ),
-                ),
-                const SizedBox(height: 8),
-
-                // Display all options for the selected category
-                Column(
-                  children: _feedingTimeOptions[_selectedFeedingTimeCategory]!
-                      .map((time) {
-                    bool isSelected = _selectedFeedingTimes[_selectedFeedingTimeCategory]!.contains(time);
-
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            if (isSelected) {
-                              _selectedFeedingTimes[_selectedFeedingTimeCategory]!.remove(time);
-                            } else {
-                              _selectedFeedingTimes[_selectedFeedingTimeCategory]!.add(time);
-                            }
-                          });
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: isSelected ? Colors.green.shade50 : Colors.grey.shade50,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isSelected ? Colors.green : Colors.grey.shade300,
-                              width: isSelected ? 2 : 1,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
-                                color: isSelected ? Colors.green : Colors.grey,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  time,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    color: isSelected ? Colors.green.shade800 : Colors.grey.shade800,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-
-                // Show selected times summary
-                if (_selectedFeedingTimes[_selectedFeedingTimeCategory]!.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.green.shade50,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.green.shade100),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Selected Feeding Times:',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 4,
-                          children: _selectedFeedingTimes[_selectedFeedingTimeCategory]!
-                              .map((time) => Chip(
-                            label: Text(
-                              time,
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                            backgroundColor: Colors.green,
-                          ))
-                              .toList(),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 16),
-              ],
+              // if (_selectedFeedingTimeCategory != null) ...[
+              //   Text(
+              //     'Select Specific Feeding Times:',
+              //     style: Theme.of(context).textTheme.titleMedium!.copyWith(
+              //       fontWeight: FontWeight.bold,
+              //       color: Colors.grey.shade800,
+              //     ),
+              //   ),
+              //   const SizedBox(height: 8),
+              //
+              //   // Display all options for the selected category
+              //   Column(
+              //     children: _feedingTimeOptions[_selectedFeedingTimeCategory]!
+              //         .map((time) {
+              //       bool isSelected = _selectedFeedingTimes[_selectedFeedingTimeCategory]!.contains(time);
+              //
+              //       return Padding(
+              //         padding: const EdgeInsets.only(bottom: 8),
+              //         child: GestureDetector(
+              //           onTap: () {
+              //             setState(() {
+              //               if (isSelected) {
+              //                 _selectedFeedingTimes[_selectedFeedingTimeCategory]!.remove(time);
+              //               } else {
+              //                 _selectedFeedingTimes[_selectedFeedingTimeCategory]!.add(time);
+              //               }
+              //             });
+              //           },
+              //           child: Container(
+              //             padding: const EdgeInsets.all(12),
+              //             decoration: BoxDecoration(
+              //               color: isSelected ? Colors.green.shade50 : Colors.grey.shade50,
+              //               borderRadius: BorderRadius.circular(12),
+              //               border: Border.all(
+              //                 color: isSelected ? Colors.green : Colors.grey.shade300,
+              //                 width: isSelected ? 2 : 1,
+              //               ),
+              //             ),
+              //             child: Row(
+              //               children: [
+              //                 Icon(
+              //                   isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+              //                   color: isSelected ? Colors.green : Colors.grey,
+              //                 ),
+              //                 const SizedBox(width: 12),
+              //                 Expanded(
+              //                   child: Text(
+              //                     time,
+              //                     style: TextStyle(
+              //                       fontWeight: FontWeight.w500,
+              //                       color: isSelected ? Colors.green.shade800 : Colors.grey.shade800,
+              //                     ),
+              //                   ),
+              //                 ),
+              //               ],
+              //             ),
+              //           ),
+              //         ),
+              //       );
+              //     }).toList(),
+              //   ),
+              //
+              //   // Show selected times summary
+              //   if (_selectedFeedingTimes[_selectedFeedingTimeCategory]!.isNotEmpty) ...[
+              //     const SizedBox(height: 16),
+              //     Container(
+              //       padding: const EdgeInsets.all(16),
+              //       decoration: BoxDecoration(
+              //         color: Colors.green.shade50,
+              //         borderRadius: BorderRadius.circular(12),
+              //         border: Border.all(color: Colors.green.shade100),
+              //       ),
+              //       child: Column(
+              //         crossAxisAlignment: CrossAxisAlignment.start,
+              //         children: [
+              //           Text(
+              //             'Selected Feeding Times:',
+              //             style: const TextStyle(
+              //               fontWeight: FontWeight.bold,
+              //               color: Colors.green,
+              //             ),
+              //           ),
+              //           const SizedBox(height: 8),
+              //           Wrap(
+              //             spacing: 8,
+              //             runSpacing: 4,
+              //             children: _selectedFeedingTimes[_selectedFeedingTimeCategory]!
+              //                 .map((time) => Chip(
+              //               label: Text(
+              //                 time,
+              //                 style: const TextStyle(color: Colors.white),
+              //               ),
+              //               backgroundColor: Colors.green,
+              //             ))
+              //                 .toList(),
+              //           ),
+              //         ],
+              //       ),
+              //     ),
+              //   ],
+              //   const SizedBox(height: 16),
+              // ],
 
               // Notes
               Text(
@@ -764,21 +759,21 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
         'house_id': widget.house.id,
         'batch_name': _nameController.text.trim(),
         'bird_type_id': _selectedBirdTypeId,
-        'batch_type': _selectedBatchType,
-        'initial_count': int.parse(_initialQuantityController.text.trim()),
-        'hatch_date': DateUtil.toISO8601(_hatchDate!),
-        'birds_alive': int.parse(_birdsAliveController.text.trim()),
-        'current_weight': double.parse(_currentWeightController.text.trim()),
-        'expected_weight': double.parse(_expectedWeightController.text.trim()),
-        'feeding_time': _selectedFeedingTimeCategory,
-        'feeding_schedule': selectedFeedingTimes.join(','),
+        // 'batch_type': _selectedBatchType,
+        // 'initial_count': int.parse(_initialQuantityController.text.trim()),
+        'current_count': int.parse(_birdsAliveController.text.trim()),
+        // 'hatch_date': DateUtil.toISO8601(_hatchDate!),
+        // 'birds_alive': int.parse(_birdsAliveController.text.trim()),
+        // 'current_weight': double.parse(_currentWeightController.text.trim()),
+        // 'expected_weight': double.parse(_expectedWeightController.text.trim()),
+        // 'feeding_time': _selectedFeedingTimeCategory,
+        // 'feeding_schedule': selectedFeedingTimes.join(','),
         'notes': _notesController.text.trim().isNotEmpty
             ? _notesController.text.trim()
             : null,
       };
 
       final result = await _repository.updateBatch(
-        widget.farm.id,
         widget.batch.id,
         batchData,
         photoFile: _batchPhotoFile,

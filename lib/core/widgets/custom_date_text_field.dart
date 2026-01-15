@@ -257,9 +257,9 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
     widget.controller.text = '$day/$month/$year';
 
     // Trigger onChanged with appropriate format if callback exists
-    if (widget.onChanged != null) {
-      _triggerOnChangedWithFormattedDate();
-    }
+    // if (widget.onChanged != null) {
+    //   _triggerOnChangedWithFormattedDate();
+    // }
   }
 
   void _triggerOnChangedWithFormattedDate() {

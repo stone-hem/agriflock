@@ -166,7 +166,6 @@ class BatchHouseRepository {
   }
 
   Future<Result> updateBatch(
-    String farmId,
     String batchId,
     Map<String, dynamic> batchData, {
     File? photoFile,
@@ -185,7 +184,6 @@ class BatchHouseRepository {
           }
         });
 
-        fields['_method'] = 'PATCH';
 
         final multipartFile = await http.MultipartFile.fromPath(
           'batch_avatar',
@@ -196,6 +194,7 @@ class BatchHouseRepository {
           '/batches/$batchId',
           fields: fields,
           files: [multipartFile],
+          method: 'PATCH'
         );
 
         final response = await http.Response.fromStream(streamedResponse);

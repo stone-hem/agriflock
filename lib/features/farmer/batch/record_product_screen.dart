@@ -1,4 +1,5 @@
 import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/batch/model/product_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/batch_mgt_repo.dart';
@@ -35,6 +36,8 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
   final _weightController = TextEditingController();
   final _priceController = TextEditingController();
   final _notesController = TextEditingController();
+  final _selectedDateController = TextEditingController();
+
 
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay.now();
@@ -444,39 +447,33 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
               const SizedBox(height: 24),
 
               // Date & Time
-              Text(
-                'Date & Time',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: InkWell(
-                      onTap: _selectDate,
-                      child: _dateTimeTile(
-                        icon: Icons.calendar_today,
-                        label: 'Date',
-                        value: '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-                      ),
+
+                  CustomDateTextField(
+                    label: 'Date & Time',
+                    hintText: 'Select date',
+                    icon: Icons.calendar_today,
+                    required: true,
+                    minYear: DateTime.now().year - 1,
+                    returnFormat: DateReturnFormat.dateTime,
+                    initialDate: DateTime.now(),
+                    maxYear: DateTime.now().year,
+                    controller: _selectedDateController,
+                    onChanged: (value) {
+                      if (value != null) {
+                        _selectedDate = value;
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  InkWell(
+                    onTap: _selectTime,
+                    child: _dateTimeTile(
+                      icon: Icons.access_time,
+                      label: 'Time',
+                      value: _selectedTime.format(context),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: InkWell(
-                      onTap: _selectTime,
-                      child: _dateTimeTile(
-                        icon: Icons.access_time,
-                        label: 'Time',
-                        value: _selectedTime.format(context),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+
 
               const SizedBox(height: 24),
 
@@ -516,7 +513,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
     required String value,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey.shade400),
         borderRadius: BorderRadius.circular(12),
@@ -550,6 +547,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
     _weightController.dispose();
     _priceController.dispose();
     _notesController.dispose();
+    _selectedDateController.dispose();
     super.dispose();
   }
 }

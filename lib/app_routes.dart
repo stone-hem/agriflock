@@ -12,7 +12,6 @@ import 'package:agriflock360/features/farmer/batch/update_vaccination_status_scr
 import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
 import 'package:agriflock360/features/farmer/farm/view/add_farm_screen.dart';
 import 'package:agriflock360/features/farmer/farm/view/add_inventory_item_screen.dart';
-import 'package:agriflock360/features/farmer/batch/batch_screen.dart';
 import 'package:agriflock360/features/farmer/farm/view/farms_home_screen.dart';
 import 'package:agriflock360/features/farmer/farm/view/inventory_screen.dart';
 import 'package:agriflock360/features/farmer/more/notifications_screen.dart';

@@ -44,6 +44,36 @@ class BatchModel {
   });
 
   factory BatchModel.fromJson(Map<String, dynamic> json) {
+    // Parse feeding schedule - handle both List and comma-separated string
+    List<String> parsedFeedingSchedule = [];
+    if (json['feeding_schedule'] != null) {
+      if (json['feeding_schedule'] is String) {
+        String scheduleString = json['feeding_schedule'];
+        // Split by comma and trim whitespace
+        parsedFeedingSchedule = scheduleString
+            .split(',')
+            .map((time) => time.trim())
+            .where((time) => time.isNotEmpty)
+            .toList();
+      } else if (json['feeding_schedule'] is List) {
+        parsedFeedingSchedule = List<String>.from(json['feeding_schedule']);
+      }
+    }
+
+    // Parse feeding time - handle null case with default
+    String feedingTime = json['feeding_time']?.toString() ?? 'Day';
+    // Ensure feeding time is one of the expected values if needed
+    if (!['Day', 'Night', 'Both'].contains(feedingTime)) {
+      // Map other values to valid ones, or keep as is if flexible
+      if (feedingTime.toLowerCase().contains('both')) {
+        feedingTime = 'Both';
+      } else if (feedingTime.toLowerCase().contains('night')) {
+        feedingTime = 'Night';
+      } else {
+        feedingTime = 'Day'; // Default
+      }
+    }
+
     return BatchModel(
       id: json['id'].toString(),
       batchName: json['batch_name'] ?? json['name'] ?? '',
@@ -61,12 +91,10 @@ class BatchModel {
       mortality: json['mortality'] ?? 0,
       currentWeight: (json['current_weight'] ?? 0).toDouble(),
       expectedWeight: (json['expected_weight'] ?? 0).toDouble(),
-      feedingTime: json['feeding_time'] ?? 'Day',
-      feedingSchedule: json['feeding_schedule'] != null
-          ? List<String>.from(json['feeding_schedule'])
-          : [],
+      feedingTime: feedingTime,
+      feedingSchedule: parsedFeedingSchedule,
       photoUrl: json['photo_url'] ?? json['batch_avatar'],
-      description: json['description'],
+      description: json['description'] ?? json['notes'], // Also handle notes field
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
           : null,
@@ -81,6 +109,7 @@ class BatchModel {
       'id': id,
       'batch_name': batchName,
       'house_id': houseId,
+      'bird_type_id': birdTypeId,
       'breed': breed,
       'type': type,
       'start_date': startDate.toIso8601String(),
@@ -91,16 +120,69 @@ class BatchModel {
       'current_weight': currentWeight,
       'expected_weight': expectedWeight,
       'feeding_time': feedingTime,
-      'feeding_schedule': feedingSchedule,
+      'feeding_schedule': feedingSchedule.join(','), // Convert back to comma-separated string
       'photo_url': photoUrl,
       'description': description,
     };
+  }
+
+  // Helper method to get feeding times as DateTime for easier scheduling
+  List<DateTime> getFeedingTimes(DateTime referenceDate) {
+    final times = <DateTime>[];
+    final now = referenceDate;
+
+    for (final timeString in feedingSchedule) {
+      try {
+        // Parse time string - handle various formats
+        String normalizedTime = timeString.toLowerCase();
+
+        // Remove AM/PM indicators and extra text
+        normalizedTime = normalizedTime
+            .replaceAll('am', '')
+            .replaceAll('pm', '')
+            .replaceAll('noon', '12:00')
+            .replaceAll('midnight', '00:00')
+            .trim();
+
+        // Extract hour and minute
+        final parts = normalizedTime.split(':');
+        if (parts.length >= 2) {
+          int hour = int.tryParse(parts[0]) ?? 0;
+          int minute = int.tryParse(parts[1]) ?? 0;
+
+          // Handle PM times (add 12 hours)
+          if (timeString.toLowerCase().contains('pm') && hour < 12) {
+            hour += 12;
+          }
+
+          // Handle midnight/noon special cases
+          if (timeString.toLowerCase().contains('midnight') && hour == 12) {
+            hour = 0;
+          }
+
+          final time = DateTime(
+            now.year,
+            now.month,
+            now.day,
+            hour,
+            minute,
+          );
+          times.add(time);
+        }
+      } catch (e) {
+        // Skip invalid time formats
+        continue;
+      }
+    }
+
+    return times;
   }
 
   BatchModel copyWith({
     String? id,
     String? batchName,
     String? houseId,
+    String? birdTypeId,
     String? houseName,
     String? breed,
     String? type,
@@ -120,7 +202,7 @@ class BatchModel {
       id: id ?? this.id,
       batchName: batchName ?? this.batchName,
       houseId: houseId ?? this.houseId,
-      birdTypeId: birdTypeId,
+      birdTypeId: birdTypeId ?? this.birdTypeId,
       houseName: houseName ?? this.houseName,
       breed: breed ?? this.breed,
       type: type ?? this.type,
@@ -203,6 +285,7 @@ class House {
       'capacity': capacity,
       'current_birds': currentBirds,
       'utilization': utilization,
+      'batches': batches.map((b) => b.toJson()).toList(),
       'photo_url': photoUrl,
       'description': description,
     };

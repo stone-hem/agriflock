@@ -1,6 +1,7 @@
 import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
+import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
@@ -29,6 +30,9 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
   final _birdsVaccinatedController = TextEditingController();
   final _costController = TextEditingController();
   final _notesController = TextEditingController();
+  final _scheduledDateController = TextEditingController();
+  final _completedDateController = TextEditingController();
+
 
   // Common dropdowns
   String? _selectedVaccineType;
@@ -76,6 +80,8 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
     _birdsVaccinatedController.dispose();
     _costController.dispose();
     _notesController.dispose();
+    _scheduledDateController.dispose();
+    _completedDateController.dispose();
     super.dispose();
   }
 
@@ -324,35 +330,21 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
             ),
             const SizedBox(height: 20),
 
-            // Scheduled Date
-            Text(
-              'Scheduled Date',
-              style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
-              ),
-            ),
-            const SizedBox(height: 8),
-            InkWell(
-              onTap: () => _selectDate(context, true),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade400),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.calendar_today, color: Colors.grey.shade600),
-                    const SizedBox(width: 12),
-                    Text(
-                      '${_scheduledDate.day}/${_scheduledDate.month}/${_scheduledDate.year}',
-                      style: TextStyle(color: Colors.grey.shade800),
-                    ),
-                  ],
-                ),
-              ),
+            CustomDateTextField(
+              label: 'Scheduled Date',
+              hintText: 'Select date',
+              icon: Icons.calendar_today,
+              required: true,
+              minYear: DateTime.now().year - 1,
+              returnFormat: DateReturnFormat.dateTime,
+              initialDate: DateTime.now(),
+              maxYear: DateTime.now().year,
+              controller: _scheduledDateController,
+              onChanged: (value) {
+                if (value != null) {
+                  _scheduledDate = value;
+                }
+              },
             ),
             const SizedBox(height: 20),
 
@@ -646,36 +638,22 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
               },
             ),
             const SizedBox(height: 20),
-
             // Completion Date
-            Text(
-              'Completion Date',
-              style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
-              ),
-            ),
-            const SizedBox(height: 8),
-            InkWell(
-              onTap: () => _selectDate(context, false),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade400),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.calendar_today, color: Colors.grey.shade600),
-                    const SizedBox(width: 12),
-                    Text(
-                      '${_completionDate.day}/${_completionDate.month}/${_completionDate.year}',
-                      style: TextStyle(color: Colors.grey.shade800),
-                    ),
-                  ],
-                ),
-              ),
+            CustomDateTextField(
+              label: 'Completion Date',
+              hintText: 'Select date',
+              icon: Icons.calendar_today,
+              required: true,
+              minYear: DateTime.now().year - 1,
+              returnFormat: DateReturnFormat.dateTime,
+              initialDate: DateTime.now(),
+              maxYear: DateTime.now().year,
+              controller: _completedDateController,
+              onChanged: (value) {
+                if (value != null) {
+                  _completionDate = value;
+                }
+              },
             ),
             const SizedBox(height: 20),
 
@@ -811,24 +789,6 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
         ),
       ),
     );
-  }
-
-  Future<void> _selectDate(BuildContext context, bool isSchedule) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: isSchedule ? _scheduledDate : _completionDate,
-      firstDate: isSchedule ? DateTime.now() : DateTime(2020),
-      lastDate: isSchedule ? DateTime.now().add(const Duration(days: 365)) : DateTime.now(),
-    );
-    if (picked != null) {
-      setState(() {
-        if (isSchedule) {
-          _scheduledDate = picked;
-        } else {
-          _completionDate = picked;
-        }
-      });
-    }
   }
 
   Future<void> _selectTime(BuildContext context, bool isSchedule) async {
