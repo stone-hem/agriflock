@@ -51,10 +51,20 @@ class FirstLoginUtil {
     return false;
   }
 
+  static bool isVetLogin(User? user) {
+    if (user == null) return false;
+    return true;
+  }
+
+
   /// Get the appropriate redirect path based on login status
   static Future<String> getRedirectPath() async {
     final SecureStorage secureStorage = SecureStorage();
     final User? user = await secureStorage.getUserData();
+
+    if(isVetLogin(user)){
+      return AppRoutes.dashboard;
+    }
 
     if (isFirstLogin(user)) {
       return '/day1/welcome-msg-page';

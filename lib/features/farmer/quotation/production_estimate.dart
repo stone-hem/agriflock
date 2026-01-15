@@ -11,8 +11,6 @@ class ProductionEstimateScreen extends StatefulWidget {
 class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
   // Color scheme
   static const Color primaryColor = Color(0xFF2E7D32);
-  static const Color secondaryColor = Color(0xFF4CAF50);
-  static const Color accentColor = Color(0xFFFF9800);
   static const Color backgroundColor = Color(0xFFF8F9FA);
 
   // Breed types
@@ -148,7 +146,7 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
                               child: Text(
                                 'Production Cost Estimator',
                                 style: TextStyle(
-                                  fontSize: 20,
+                                  fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -286,7 +284,7 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
       },
       child: Container(
         width: 150,
-        margin: const EdgeInsets.only(right: 12),
+        margin: const EdgeInsets.only(right: 10),
         child: Card(
           elevation: isSelected ? 2 : 0,
           shape: RoundedRectangleBorder(
@@ -298,7 +296,7 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
           ),
           color: isSelected ? breed.color.withOpacity(0.1) : Colors.white,
           child: Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(10),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -308,13 +306,13 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
                     color: breed.color.withOpacity(0.2),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(breed.icon, color: breed.color, size: 24),
+                  child: Icon(breed.icon, color: breed.color, size: 18),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Text(
                   breed.name,
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: breed.color,
                   ),

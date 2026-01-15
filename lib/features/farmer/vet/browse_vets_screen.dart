@@ -261,7 +261,7 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
 
   Widget _buildVetCard(VetFarmer vet) {
     final rating = double.tryParse(vet.averageRating) ?? 0.0;
-    final isAvailable = vet.status == 'active' && vet.isVerified;
+    final isAvailable = vet.status == 'active';
     final yearsExp = vet.yearsOfExperience;
 
     return Card(
@@ -329,7 +329,7 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                             ),
                           ),
                           child: Text(
-                            isAvailable ? 'Available' : 'Busy',
+                            vet.status,
                             style: TextStyle(
                               color: isAvailable ? Colors.green : Colors.red,
                               fontSize: 10,
