@@ -249,6 +249,8 @@ class VetFarmerListResponse {
 
 }
 
+
+
 class VetFarmerRecommendation {
   final String id;
   final String name;

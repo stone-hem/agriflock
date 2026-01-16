@@ -1,3 +1,4 @@
+import 'package:agriflock360/features/farmer/quotation/widgets/image_with_desc.dart';
 import 'package:agriflock360/features/farmer/quotation/widgets/market_disclaimer.dart';
 import 'package:flutter/material.dart';
 
@@ -46,7 +47,7 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
   String? _selectedCapacity;
   Map<String, dynamic>? _selectedQuotation;
 
-  // Exact quotation data from the table
+  // Corrected quotation data from the table image
   final Map<String, Map<String, dynamic>> _quotationsData = {
     '100': {
       'recommendedHouseSize': 'Small-scale house for 100 birds',
@@ -54,44 +55,44 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
       'tableData': {
         'headers': ['NO', 'MATERIAL', 'UNIT', '@', 'QUANTITY', 'AMOUNT'],
         'rows': [
-          ['1', 'Roofing Sheets 32 gauge 10ft', 'pcs', '740', '14', '2,960'],
-          ['2', 'Roofing sheets 32gauge 8ft', 'pcs', '640', '12', '7,680'],
-          ['3', 'Wall sheets 32 gauge 10 ft', 'pcs', '740', '38', '28,120'],
-          ['4', 'Wire mesh', 'pcs', '800', '10', '8,000'],
+          ['1', 'Roofing Sheets 32 gauge 10ft', 'pcs', '740', '4', '2,960'],
+          ['2', 'Roofing sheets 32gauge 8ft', 'pcs', '640', '', ''],
+          ['3', 'Wall sheets 32 gauge 10 ft', 'pcs', '740', '9', '6,660'],
+          ['4', 'Wire mesh', 'pcs', '800', '2', '1,600'],
           ['5', 'Chicken mesh 6ft', 'pc', '4,000', '1', '4,000'],
-          ['6', 'Fito for wall', 'pcs', '30', '180', '5,400'],
-          ['7', 'Cedar Posts', 'pcs', '500', '32', '16,000'],
-          ['8', 'Round poles for roof', 'pcs', '250', '45', '11,250'],
-          ['9', 'King posts', 'pcs', '350', '10', '3,500'],
-          ['10', 'Assorted nails', 'kg', '140', '18', '2,520'],
-          ['11', 'Roofing nails', 'kg', '200', '16', '3,200'],
+          ['6', 'Fito for wall', 'pcs', '30', '50', '1,500'],
+          ['7', 'Cedar Posts', 'pcs', '500', '7', '3,500'],
+          ['8', 'Round poles for roof', 'pcs', '250', '11', '2,750'],
+          ['9', 'King posts', 'pcs', '350', '2', '700'],
+          ['10', 'Assorted nails', 'kg', '140', '6', '840'],
+          ['11', 'Roofing nails', 'kg', '200', '4', '800'],
           ['12', 'Door', 'pc', '3,500', '1', '3,500'],
-          ['13', 'Cement', 'pcs', '720', '20', '14,400'],
-          ['14', 'Sand', 'Tones', '1,000', '12', '12,000'],
+          ['13', 'Cement', 'pcs', '720', '4', '2,880'],
+          ['14', 'Sand', 'Tones', '1,000', '2', '2,000'],
           ['15', 'Power installation', '', '15,000', '1', '15,000'],
           ['16', 'Polythine Roll', 'pc', '4,500', '1', '4,500'],
           ['17', 'Gladiator', 'pc', '1,000', '1', '1,000'],
-          ['18', 'Marram', 'Tones', '7,000', '1', '7,000'],
+          ['18', 'Marram', 'Tones', '7,000', '1', '5,000'],
           ['19', 'Shatter', 'pcs', '250', '2', '500'],
           ['20', 'Hinges', 'pcs', '200', '2', '400'],
-          ['21', 'Ballast', 'Tones', '1,857', '7', '13,000'],
-          ['22', 'Waterproof cement', 'pc', '200', '2', '400'],
+          ['21', 'Ballast', 'Tones', '1,857', '1', '1,857'],
+          ['22', 'Waterproof cement', 'pc', '200', '1', '200'],
           ['23', 'Plywood', 'pcs', '750', '2', '1,500'],
-          ['24', 'Padlock', 'pcs', '500', '2', '1,000'],
-          ['25', 'Edge strip', 'ft', '30', '100', '3,000'],
-          ['26', 'Transport', '', '10,000', '1', '10,000'],
-          ['27', 'Cedar posts for fencing', 'pcs', '500', '20', '10,000'],
-          ['28', 'Trashes', 'pcs', '250', '18', '4,500'],
-          ['29', 'Chain Link', 'rolls', '3,300', '1', '3,300'],
-          ['30', 'U Nail', 'kg', '200', '1', '200'],
-          ['31', 'Barbed Wire (610 mtr)', 'rolls', '5,500', '1', '5,500'],
-          ['', 'SUB TOTAL', '', '', '', '231,450'],
-          ['32', 'Labour (26%)', '', '', '', '60,177'],
-          ['', 'GRAND TOTAL', '', '', '', '291,627'],
+          ['24', 'Padlock', 'pcs', '500', '1', '500'],
+          ['25', 'Edge strip', 'ft', '30', '32', '960'],
+          ['26', 'Transport', '', '10,000', '', '3,000'],
+          ['27', 'Cedar posts for fencing', 'pcs', '500', '', ''],
+          ['28', 'Trashes', 'pcs', '250', '7', '1,750'],
+          ['29', 'Chain Link', 'rolls', '3,300', '', ''],
+          ['30', 'U Nail', 'kg', '200', '', ''],
+          ['31', 'Barbed Wire (610 mtr)', 'rolls', '5,500', '', ''],
+          ['', 'SUB TOTAL', '', '', '', '59,357'],
+          ['32', 'Labour (26%)', '', '', '', '17,807'],
+          ['', 'GRAND TOTAL', '', '', '', '77,164'],
         ]
       },
-      'labourCost': '60,177',
-      'materialCostSubtotal': '231,450',
+      'labourCost': '17,807',
+      'materialCostSubtotal': '59,357',
     },
     '300': {
       'recommendedHouseSize': 'Medium-scale house for 300 birds',
@@ -99,8 +100,53 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
       'tableData': {
         'headers': ['NO', 'MATERIAL', 'UNIT', '@', 'QUANTITY', 'AMOUNT'],
         'rows': [
-          ['1', 'Roofing Sheets 32 gauge 10ft', 'pcs', '740', '24', '10,360'],
-          ['2', 'Roofing sheets 32gauge 8ft', 'pcs', '640', '12', '7,680'],
+          ['1', 'Roofing Sheets 32 gauge 10ft', 'pcs', '740', '14', '10,360'],
+          ['2', 'Roofing sheets 32gauge 8ft', 'pcs', '640', '', ''],
+          ['3', 'Wall sheets 32 gauge 10 ft', 'pcs', '740', '18', '13,320'],
+          ['4', 'Wire mesh', 'pcs', '800', '5', '4,000'],
+          ['5', 'Chicken mesh 6ft', 'pc', '4,000', '1', '4,000'],
+          ['6', 'Fito for wall', 'pcs', '30', '80', '2,400'],
+          ['7', 'Cedar Posts', 'pcs', '500', '14', '7,000'],
+          ['8', 'Round poles for roof', 'pcs', '250', '14', '3,500'],
+          ['9', 'King posts', 'pcs', '350', '4', '1,400'],
+          ['10', 'Assorted nails', 'kg', '140', '9', '1,260'],
+          ['11', 'Roofing nails', 'kg', '200', '5', '1,000'],
+          ['12', 'Door', 'pc', '3,500', '1', '3,500'],
+          ['13', 'Cement', 'pcs', '720', '7', '5,040'],
+          ['14', 'Sand', 'Tones', '1,000', '5', '5,000'],
+          ['15', 'Power installation', '', '15,000', '1', '15,000'],
+          ['16', 'Polythine Roll', 'pc', '4,500', '1', '4,500'],
+          ['17', 'Gladiator', 'pc', '1,000', '1', '1,000'],
+          ['18', 'Marram', 'Tones', '7,000', '1', '5,600'],
+          ['19', 'Shatter', 'pcs', '250', '2', '500'],
+          ['20', 'Hinges', 'pcs', '200', '2', '400'],
+          ['21', 'Ballast', 'Tones', '1,857', '5', '9,286'],
+          ['22', 'Waterproof cement', 'pc', '200', '2', '400'],
+          ['23', 'Plywood', 'pcs', '750', '2', '1,500'],
+          ['24', 'Padlock', 'pcs', '500', '2', '1,000'],
+          ['25', 'Edge strip', 'ft', '30', '40', '1,200'],
+          ['26', 'Transport', '', '10,000', '', '4,000'],
+          ['27', 'Cedar posts for fencing', 'pcs', '500', '', ''],
+          ['28', 'Trashes', 'pcs', '250', '12', '3,000'],
+          ['29', 'Chain Link', 'rolls', '3,300', '', ''],
+          ['30', 'U Nail', 'kg', '200', '1', '200'],
+          ['31', 'Barbed Wire (610 mtr)', 'rolls', '5,500', '', ''],
+          ['', 'SUB TOTAL', '', '', '', '112,666'],
+          ['32', 'Labour (26%)', '', '', '', '33,800'],
+          ['', 'GRAND TOTAL', '', '', '', '146,465'],
+        ]
+      },
+      'labourCost': '33,800',
+      'materialCostSubtotal': '112,666',
+    },
+    '500': {
+      'recommendedHouseSize': 'Commercial house for 500 birds',
+      'grandTotal': '201,455',
+      'tableData': {
+        'headers': ['NO', 'MATERIAL', 'UNIT', '@', 'QUANTITY', 'AMOUNT'],
+        'rows': [
+          ['1', 'Roofing Sheets 32 gauge 10ft', 'pcs', '740', '24', '17,760'],
+          ['2', 'Roofing sheets 32gauge 8ft', 'pcs', '640', '', ''],
           ['3', 'Wall sheets 32 gauge 10 ft', 'pcs', '740', '28', '20,720'],
           ['4', 'Wire mesh', 'pcs', '800', '6', '4,800'],
           ['5', 'Chicken mesh 6ft', 'pc', '4,000', '1', '4,000'],
@@ -124,7 +170,7 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
           ['23', 'Plywood', 'pcs', '750', '2', '1,500'],
           ['24', 'Padlock', 'pcs', '500', '2', '1,000'],
           ['25', 'Edge strip', 'ft', '30', '50', '1,500'],
-          ['26', 'Transport', '', '10,000', '1', '10,000'],
+          ['26', 'Transport', '', '10,000', '1', '5,000'],
           ['27', 'Cedar posts for fencing', 'pcs', '500', '15', '7,500'],
           ['28', 'Trashes', 'pcs', '250', '16', '4,000'],
           ['29', 'Chain Link', 'rolls', '3,300', '1', '3,300'],
@@ -138,54 +184,9 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
       'labourCost': '46,490',
       'materialCostSubtotal': '154,966',
     },
-    '500': {
-      'recommendedHouseSize': 'Commercial house for 500 birds',
-      'grandTotal': '201,455',
-      'tableData': {
-        'headers': ['NO', 'MATERIAL', 'UNIT', '@', 'QUANTITY', 'AMOUNT'],
-        'rows': [
-          ['1', 'Roofing Sheets 32 gauge 10ft', 'pcs', '740', '42', '17,760'],
-          ['2', 'Roofing sheets 32gauge 8ft', 'pcs', '640', '12', '7,680'],
-          ['3', 'Wall sheets 32 gauge 10 ft', 'pcs', '740', '38', '28,120'],
-          ['4', 'Wire mesh', 'pcs', '800', '10', '8,000'],
-          ['5', 'Chicken mesh 6ft', 'pc', '4,000', '1', '4,000'],
-          ['6', 'Fito for wall', 'pcs', '30', '180', '5,400'],
-          ['7', 'Cedar Posts', 'pcs', '500', '32', '16,000'],
-          ['8', 'Round poles for roof', 'pcs', '250', '45', '11,250'],
-          ['9', 'King posts', 'pcs', '350', '10', '3,500'],
-          ['10', 'Assorted nails', 'kg', '140', '18', '2,520'],
-          ['11', 'Roofing nails', 'kg', '200', '16', '3,200'],
-          ['12', 'Door', 'pc', '3,500', '1', '3,500'],
-          ['13', 'Cement', 'pcs', '720', '20', '14,400'],
-          ['14', 'Sand', 'Tones', '1,000', '12', '12,000'],
-          ['15', 'Power installation', '', '15,000', '1', '15,000'],
-          ['16', 'Polythine Roll', 'pc', '4,500', '1', '4,500'],
-          ['17', 'Gladiator', 'pc', '1,000', '1', '1,000'],
-          ['18', 'Marram', 'Tones', '7,000', '1', '7,000'],
-          ['19', 'Shatter', 'pcs', '250', '2', '500'],
-          ['20', 'Hinges', 'pcs', '200', '2', '400'],
-          ['21', 'Ballast', 'Tones', '1,857', '7', '13,000'],
-          ['22', 'Waterproof cement', 'pc', '200', '2', '400'],
-          ['23', 'Plywood', 'pcs', '750', '2', '1,500'],
-          ['24', 'Padlock', 'pcs', '500', '2', '1,000'],
-          ['25', 'Edge strip', 'ft', '30', '100', '3,000'],
-          ['26', 'Transport', '', '10,000', '1', '10,000'],
-          ['27', 'Cedar posts for fencing', 'pcs', '500', '20', '10,000'],
-          ['28', 'Trashes', 'pcs', '250', '18', '4,500'],
-          ['29', 'Chain Link', 'rolls', '3,300', '1', '3,300'],
-          ['30', 'U Nail', 'kg', '200', '1', '200'],
-          ['31', 'Barbed Wire (610 mtr)', 'rolls', '5,500', '1', '5,500'],
-          ['', 'SUB TOTAL', '', '', '', '231,450'],
-          ['32', 'Labour (26%)', '', '', '', '60,177'],
-          ['', 'GRAND TOTAL', '', '', '', '291,627'],
-        ]
-      },
-      'labourCost': '60,177',
-      'materialCostSubtotal': '231,450',
-    },
     '1000': {
       'recommendedHouseSize': 'Large-scale house for 1000 birds',
-      'grandTotal': '291,627',
+      'grandTotal': '287,465',
       'tableData': {
         'headers': ['NO', 'MATERIAL', 'UNIT', '@', 'QUANTITY', 'AMOUNT'],
         'rows': [
@@ -220,13 +221,13 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
           ['29', 'Chain Link', 'rolls', '3,300', '1', '3,300'],
           ['30', 'U Nail', 'kg', '200', '1', '200'],
           ['31', 'Barbed Wire (610 mtr)', 'rolls', '5,500', '1', '5,500'],
-          ['', 'SUB TOTAL', '', '', '', '231,450'],
-          ['32', 'Labour (26%)', '', '', '', '60,177'],
-          ['', 'GRAND TOTAL', '', '', '', '291,627'],
+          ['', 'SUB TOTAL', '', '', '', '228,150'],
+          ['32', 'Labour (26%)', '', '', '', '59,319'],
+          ['', 'GRAND TOTAL', '', '', '', '287,465'],
         ]
       },
-      'labourCost': '60,177',
-      'materialCostSubtotal': '231,450',
+      'labourCost': '59,319',
+      'materialCostSubtotal': '228,150',
     },
   };
 
@@ -615,7 +616,20 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
             ),
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 10),
+
+        Text('Visual Representations'),
+
+        const SizedBox(height: 10),
+
+        ImageWithDescriptionWidget(imageAssetPath: 'assets/quotation/img.png', description: 'This is the first image description'),
+        ImageWithDescriptionWidget(imageAssetPath: 'assets/quotation/img_1.png', description: 'This is the first image description'),
+        ImageWithDescriptionWidget(imageAssetPath: 'assets/quotation/img_2.png', description: 'This is the first image description'),
+        ImageWithDescriptionWidget(imageAssetPath: 'assets/quotation/img_3.png', description: 'This is the first image description'),
+        ImageWithDescriptionWidget(imageAssetPath: 'assets/quotation/img_4.png', description: 'This is the first image description'),
+        ImageWithDescriptionWidget(imageAssetPath: 'assets/quotation/img_5.png', description: 'This is the first image description'),
+
+        const SizedBox(height: 10),
 
         // Important Notes
         Card(
@@ -654,7 +668,7 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
                 Text(
                   '• Prices are estimates and may vary based on location and market conditions\n'
                       '• Labour cost is calculated at 26% of material cost\n'
-                      '• "-" indicates item not required for this capacity\n'
+                      '• Blank cells indicate item not required for this capacity\n'
                       '• All prices are in Kenyan Shillings (KSh)',
                   style: TextStyle(
                     fontSize: 12,

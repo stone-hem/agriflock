@@ -472,6 +472,37 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Expanded(
               child: HomeStatCard(
+                value: '${_summary!.numberOfFarms}',
+                label: 'Farms',
+                color: Colors.red.shade100,
+                textColor: Colors.red.shade800,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: HomeStatCard(
+                value: '${_summary!.numberOfHouses}',
+                label: 'Houses',
+                color: Colors.teal.shade100,
+                textColor: Colors.teal.shade800,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: HomeStatCard(
+                value: '${_summary!.totalBatches}',
+                label: 'All Batches',
+                color: Colors.purple.shade100,
+                textColor: Colors.purple.shade800,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: HomeStatCard(
                 value: _summary!.totalBirds.toString(),
                 label: 'Total Birds',
                 color: Colors.blue.shade100,
@@ -487,52 +518,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 textColor: Colors.orange.shade800,
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: HomeStatCard(
-                value: _summary!.activeBatches.toString(),
-                label: 'Active Batches',
-                color: Colors.green.shade100,
-                textColor: Colors.green.shade800,
-              ),
-            ),
+            // const SizedBox(width: 12),
+            // Expanded(
+            //   child: HomeStatCard(
+            //     value: _summary!.activeBatches.toString(),
+            //     label: 'Active Batches',
+            //     color: Colors.green.shade100,
+            //     textColor: Colors.green.shade800,
+            //   ),
+            // ),
           ],
         ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: HomeStatCard(
-                value: '${_summary!.mortalityRate.toStringAsFixed(1)}%',
-                label: 'Mortality Rate',
-                color: Colors.red.shade100,
-                textColor: Colors.red.shade800,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: HomeStatCard(
-                value: _summary!.feedEfficiencyFcr > 0
-                    ? _summary!.feedEfficiencyFcr.toStringAsFixed(2)
-                    : 'N/A',
-                label: 'Feed Efficiency (FCR)',
-                color: Colors.purple.shade100,
-                textColor: Colors.purple.shade800,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: HomeStatCard(
-                value: _summary!.averageWeightKg > 0
-                    ? '${_summary!.averageWeightKg.toStringAsFixed(1)} kg'
-                    : 'N/A',
-                label: 'Average Weight',
-                color: Colors.teal.shade100,
-                textColor: Colors.teal.shade800,
-              ),
-            ),
-          ],
-        ),
+
       ],
     );
   }
@@ -716,8 +713,6 @@ class _HomeScreenState extends State<HomeScreen> {
     switch (activityType) {
       case 'product_recorded':
         return Colors.purple;
-      case 'feed_recorded':
-        return Colors.green;
       case 'egg_collection':
         return Colors.orange;
       case 'weight_check':
@@ -726,6 +721,15 @@ class _HomeScreenState extends State<HomeScreen> {
         return Colors.indigo;
       case 'health_check':
         return Colors.blue;
+      case 'feed_recorded':
+      case 'feeding':
+        return Colors.green;
+      case 'vaccination':
+        return Colors.pink;
+      case 'batch_updated':
+        return Colors.amber;
+      case 'batch_created':
+        return Colors.teal;
       default:
         return Colors.grey;
     }

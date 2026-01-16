@@ -108,7 +108,7 @@ class _BatchDetailsScreenState extends State<BatchDetailsScreen>
               overlayColor: WidgetStateProperty.all(Colors.transparent),
               tabs: [
                 _buildTab(Icons.dashboard, 'Overview', false),
-                _buildTab(Icons.fastfood, 'Feed', false),
+                _buildTab(Icons.fastfood, 'Feeding', false),
                 _buildTab(Icons.medical_services, 'Vaccinations', false),
                 _buildTab(Icons.inventory, 'Products', false),
               ],

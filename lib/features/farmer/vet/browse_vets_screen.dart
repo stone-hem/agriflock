@@ -190,7 +190,6 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
         _filteredVets = _allVets.where((vet) {
           return vet.name.toLowerCase().contains(query) ||
               vet.educationLevel.toLowerCase().contains(query) ||
-              vet.profileBio.toLowerCase().contains(query) ||
               (vet.region?.toLowerCase().contains(query) ?? false) ||
               (vet.specializations != null &&
                   vet.specializations.toString().toLowerCase().contains(query));
@@ -372,7 +371,7 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            vet.location.address,
+                            '${vet.region}, ${vet.location!.address}',
                             style: TextStyle(
                               color: Colors.grey.shade600,
                               fontSize: 12,
@@ -447,22 +446,6 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                           ),
                       ],
                     ),
-                    if (vet.profileBio.isNotEmpty)
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 8),
-                          Text(
-                            vet.profileBio,
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 12,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
                   ],
                 ),
               ),

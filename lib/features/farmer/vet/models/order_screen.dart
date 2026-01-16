@@ -1,6 +1,3 @@
-import 'package:agriflock360/features/farmer/vet/models/vet_officer.dart';
-import 'package:flutter/material.dart';
-
 class FarmHouse {
   final String id;
   final String name;

@@ -2,17 +2,25 @@ class DashboardSummary {
   final num totalBirds;
   final num eggsToday;
   final num activeBatches;
+  final num completedBatches;
+  final num totalBatches;
   final num mortalityRate;
   final num feedEfficiencyFcr;
   final num averageWeightKg;
+  final num numberOfHouses;
+  final num numberOfFarms;
 
   const DashboardSummary({
     required this.totalBirds,
     required this.eggsToday,
     required this.activeBatches,
+    required this.completedBatches,
+    required this.totalBatches,
     required this.mortalityRate,
     required this.feedEfficiencyFcr,
     required this.averageWeightKg,
+    required this.numberOfHouses,
+    required this.numberOfFarms,
   });
 
   factory DashboardSummary.fromJson(Map<String, dynamic> json) {
@@ -20,9 +28,13 @@ class DashboardSummary {
       totalBirds: json['total_birds'] ?? 0,
       eggsToday: json['eggs_today'] ?? 0,
       activeBatches: json['active_batches'] ?? 0,
+      completedBatches: json['completed_batches'] ?? 0,
+      totalBatches: json['total_batches'] ?? 0,
       mortalityRate: json['mortality_rate'] ?? 0,
       feedEfficiencyFcr: json['feed_efficiency_fcr'] ?? 0,
       averageWeightKg: json['average_weight_kg'] ?? 0,
+      numberOfHouses: json['number_of_houses'] ?? 0,
+      numberOfFarms: json['number_of_farms'] ?? 0,
     );
   }
 
@@ -31,9 +43,13 @@ class DashboardSummary {
       'total_birds': totalBirds,
       'eggs_today': eggsToday,
       'active_batches': activeBatches,
+      'completed_batches': completedBatches,
+      'total_batches': totalBatches,
       'mortality_rate': mortalityRate,
       'feed_efficiency_fcr': feedEfficiencyFcr,
       'average_weight_kg': averageWeightKg,
+      'number_of_houses': numberOfHouses,
+      'number_of_farms': numberOfFarms,
     };
   }
 }
