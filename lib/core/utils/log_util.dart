@@ -10,7 +10,6 @@ class LogUtil {
   static const _blue = '\x1B[34m';
   static const _magenta = '\x1B[35m';
   static const _cyan = '\x1B[36m';
-  static const _white = '\x1B[37m';
 
   /// Print in red
   static void error(Object message, {String? tag}) {

@@ -23,17 +23,12 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
 
   // Controllers
   final _quantityController = TextEditingController();
-  final _costController = TextEditingController();
-  final _supplierController = TextEditingController();
   final _notesController = TextEditingController();
-  final _birdsAliveBeforeController = TextEditingController();
   final _mortalityTodayController = TextEditingController();
   final _currentWeightController = TextEditingController();
-  final _expectedWeightController = TextEditingController();
   final _selectedDateController = TextEditingController();
 
   TimeOfDay _selectedTime = TimeOfDay.now();
-
 
   // State
   FeedingRecommendationsResponse? _recommendations;
@@ -41,6 +36,18 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
   bool _isSaving = false;
   String? _error;
   DateTime _selectedFeedingDate = DateTime.now();
+  String? _selectedFeedType;
+
+  // List of available feed types
+  final List<String> _feedTypes = [
+    'Starter Mash',
+    'Grower Mash',
+    'Finisher Mash',
+    'Layer Mash',
+    'Broiler Starter',
+    'Broiler Finisher',
+    'Custom Feed'
+  ];
 
   @override
   void initState() {
@@ -66,14 +73,17 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
         case Failure<FeedingRecommendationsResponse>(message: final e):
           setState(() {
             _error = e.toString();
+            _isLoading = false;
           });
       }
 
 
     } finally  {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted && _isLoading) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -158,7 +168,7 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
             children: [
               _buildBatchInfoCard(),
               const SizedBox(height: 24),
-              _buildFeedingTimesCard(),
+              _buildRecommendationsDisplay(),
               const SizedBox(height: 24),
               _buildFeedingInformationSection(),
               const SizedBox(height: 32),
@@ -174,7 +184,6 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
 
   Widget _buildBatchInfoCard() {
     final batchInfo = _recommendations!.batchInfo;
-    final currentRec = _recommendations!.currentRecommendation;
 
     return Card(
       elevation: 0,
@@ -214,73 +223,307 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.green.shade50,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Current Stage: ${currentRec.stageName}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.green.shade800,
-                    ),
-                  ),
-                  Text(
-                    'Recommended: ${currentRec.feedType} (${currentRec.proteinPercentage}% CP)',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade700,
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildFeedingTimesCard() {
-    final feedingTimes = _recommendations!.currentRecommendation.feedingTimes.slots;
+  Widget _buildRecommendationsDisplay() {
+    final currentRec = _recommendations?.currentRecommendation;
+    final allRecs = _recommendations?.allRecommendations;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.blue.shade50,
+    // Check if there are any recommendations
+    final hasCurrentRec = currentRec != null &&
+        (currentRec.stageName != null && currentRec.stageName!.isNotEmpty);
+
+    final hasAllRecs = allRecs != null && allRecs.isNotEmpty;
+
+    if (!hasCurrentRec && !hasAllRecs) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.orange.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.orange.shade100),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.orange.shade600),
+                const SizedBox(width: 8),
+                Text(
+                  'No Recommendations Available',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange.shade800,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'No feeding recommendations found for ${_recommendations!.batchInfo.ageDays} days old birds.',
+              style: TextStyle(
+                color: Colors.orange.shade700,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (hasCurrentRec) _buildCurrentRecommendationCard(),
+        if (hasAllRecs) ...[
+          const SizedBox(height: 16),
+          _buildAllRecommendationsCard(),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildCurrentRecommendationCard() {
+    final currentRec = _recommendations!.currentRecommendation!;
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue.shade100),
+        side: BorderSide(color: Colors.blue.shade200),
       ),
-      child: Column(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.lightbulb_outline, color: Colors.blue.shade600),
+                const SizedBox(width: 8),
+                Text(
+                  'Current Stage Recommendation',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue.shade800,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Stage Name
+            if (currentRec.stageName.isNotEmpty)
+              _buildRecommendationRow(
+                label: 'Stage',
+                value: currentRec.stageName,
+                icon: Icons.flag,
+                color: Colors.blue,
+              ),
+
+            // Feed Type
+            if (currentRec.feedType.isNotEmpty)
+              _buildRecommendationRow(
+                label: 'Recommended Feed',
+                value: currentRec.feedType!,
+                icon: Icons.restaurant,
+                color: Colors.green,
+              ),
+
+            // Protein Percentage
+            _buildRecommendationRow(
+              label: 'Protein Content',
+              value: '${currentRec.proteinPercentage}% CP',
+              icon: Icons.bar_chart,
+              color: Colors.purple,
+            ),
+
+            // Daily Feed Required
+            if (currentRec.dailyFeedRequiredKg != null)
+              _buildRecommendationRow(
+                label: 'Daily Feed Required',
+                value: '${currentRec.dailyFeedRequiredKg!.toStringAsFixed(2)} kg',
+                icon: Icons.scale,
+                color: Colors.orange,
+              ),
+
+            // Feeding Times
+            if (currentRec.feedingTimes.slots.isNotEmpty)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.access_time, size: 18, color: Colors.red.shade600),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Feeding Times:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    children: currentRec.feedingTimes!.slots!
+                        .map((time) => Chip(
+                      label: Text(
+                        time,
+                        style: const TextStyle(fontSize: 12, color: Colors.white),
+                      ),
+                      backgroundColor: Colors.red,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    ))
+                        .toList(),
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAllRecommendationsCard() {
+    final allRecs = _recommendations!.allRecommendations!;
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.green.shade200),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.list_alt, color: Colors.green.shade600),
+                const SizedBox(width: 8),
+                Text(
+                  'All Stage Recommendations',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green.shade800,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            ...allRecs.map((rec) {
+              return Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Stage Name
+                        if (rec.stageName.isNotEmpty)
+                          Text(
+                            rec.stageName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+
+                        // Age Range
+                          Text(
+                            'Age: ${rec.ageStart} - ${rec.ageEnd} days',
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 12,
+                            ),
+                          ),
+
+                        const SizedBox(height: 4),
+
+                        // Feed Type
+                        if (rec.feedType.isNotEmpty)
+                          Text(
+                            'Feed: ${rec.feedType}',
+                            style: TextStyle(
+                              color: Colors.grey.shade700,
+                              fontSize: 13,
+                            ),
+                          ),
+
+                        // Protein Percentage
+                        Text(
+                          'Protein: ${rec.proteinPercentage}%',
+                          style: TextStyle(
+                            color: Colors.grey.shade700,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (rec != allRecs.last) const SizedBox(height: 8),
+                ],
+              );
+            }).toList(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecommendationRow({
+    required String label,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Recommended Feeding Times:',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.blue,
+          Icon(icon, size: 18, color: color),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 4,
-            children: feedingTimes
-                .map((time) => Chip(
-              label: Text(
-                time,
-                style: const TextStyle(color: Colors.white),
-              ),
-              backgroundColor: Colors.blue,
-            ))
-                .toList(),
           ),
         ],
       ),
@@ -288,8 +531,6 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
   }
 
   Widget _buildFeedingInformationSection() {
-    final currentRec = _recommendations!.currentRecommendation;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -302,17 +543,57 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
         ),
         const SizedBox(height: 16),
 
-        // Feeding Time
+        // Feed Type Select
         Text(
-          'Feeding Time',
+          'Feed Type',
           style: Theme.of(context).textTheme.titleMedium!.copyWith(
             fontWeight: FontWeight.bold,
             color: Colors.grey.shade800,
           ),
         ),
         const SizedBox(height: 8),
-        // Date & Time
-
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade400),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: DropdownButtonFormField<String>(
+            value: _selectedFeedType,
+            onChanged: (value) {
+              setState(() {
+                _selectedFeedType = value;
+              });
+            },
+            items: [
+              const DropdownMenuItem<String>(
+                value: null,
+                child: Text(
+                  'Select feed type',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+              ..._feedTypes.map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+            ],
+            decoration: InputDecoration(
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              hintText: 'Choose feed type',
+              prefixIcon: const Icon(Icons.restaurant),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please select feed type';
+              }
+              return null;
+            },
+          ),
+        ),
+        const SizedBox(height: 20),
         CustomDateTextField(
           label: 'Date & Time',
           hintText: 'Select date',
@@ -347,7 +628,7 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
             decimal: true,
             signed: false,
           ),
-          hintText: 'Eg: ${currentRec.dailyFeedRequiredKg?.toStringAsFixed(2) ?? "10"} kg',
+          hintText: 'Enter feed quantity in kg',
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'Please enter feed quantity';
@@ -356,34 +637,8 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
               return 'Please enter a valid number';
             }
             return null;
-          }, labelText: 'Quantity in Kgs',
-        ),
-        const SizedBox(height: 20),
-
-        ReusableInput(
-          controller: _costController,
-          keyboardType: const TextInputType.numberWithOptions(
-            decimal: true,
-            signed: false,
-          ),
-          hintText: 'e.g., 2.50',
-          labelText: 'Feed Cost per kg',
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter feed cost';
-            }
-            if (double.tryParse(value) == null) {
-              return 'Please enter a valid number';
-            }
-            return null;
           },
-        ),
-        const SizedBox(height: 20),
-
-        ReusableInput(
-          controller: _supplierController,
-          hintText: 'e.g., Agrimart Ltd. (Optional)',
-          labelText: 'Feed Supplier(Optional)',
+          labelText: 'Quantity in Kgs',
         ),
         const SizedBox(height: 20),
         ReusableInput(
@@ -408,14 +663,6 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
           ),
         ),
         const SizedBox(height: 16),
-
-        ReusableInput(
-          controller: _birdsAliveBeforeController,
-          keyboardType: TextInputType.number,
-          hintText: 'Current: ${_recommendations!.batchInfo.currentCount}',
-          labelText: 'Birds Alive Before Feeding',
-        ),
-        const SizedBox(height: 20),
 
         ReusableInput(
           controller: _mortalityTodayController,
@@ -543,16 +790,12 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
 
       try {
         final request= {
-          'feed_type': 'somthing',
+          'feed_type': _selectedFeedType,
           'quantity': double.parse(_quantityController.text),
-          'cost': double.parse(_costController.text),
-          'supplier': _supplierController.text,
           'fed_at': _selectedFeedingTime.toIso8601String(),
           'notes': _notesController.text,
-          'birds_alive_before': _birdsAliveBeforeController.text.isEmpty ? null : int.parse(_birdsAliveBeforeController.text),
           'mortality_today': _mortalityTodayController.text.isEmpty ? null : int.parse(_mortalityTodayController.text),
           'current_total_weight': _currentWeightController.text.isEmpty ? null : double.parse(_currentWeightController.text),
-          'expected_weight':_currentWeightController.text.isEmpty ? null : double.parse(_expectedWeightController.text)
         };
 
         final res=await _feedingRepository.createFeedingRecord(widget.batchId, request);
@@ -579,13 +822,9 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
   @override
   void dispose() {
     _quantityController.dispose();
-    _costController.dispose();
-    _supplierController.dispose();
     _notesController.dispose();
-    _birdsAliveBeforeController.dispose();
     _mortalityTodayController.dispose();
     _currentWeightController.dispose();
-    _expectedWeightController.dispose();
     super.dispose();
   }
 }

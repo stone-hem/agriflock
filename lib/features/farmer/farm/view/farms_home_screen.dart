@@ -177,7 +177,7 @@ class _FarmsHomeScreenState extends State<FarmsHomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    _buildStatsSection(),
+                    // _buildStatsSection(),
                     const SizedBox(height: 24),
                   ],
                 ),

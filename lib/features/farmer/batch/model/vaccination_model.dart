@@ -347,7 +347,6 @@ class VaccinationScheduleRequest {
   final String scheduleTime;
   final String dosage;
   final String administrationMethod;
-  final double cost;
   final String? notes;
   final String source;
 
@@ -357,7 +356,6 @@ class VaccinationScheduleRequest {
     required this.scheduledDate,
     required this.dosage,
     required this.administrationMethod,
-    required this.cost,
     this.notes,
     this.source = 'manual',
     required this.scheduleTime,
@@ -370,7 +368,6 @@ class VaccinationScheduleRequest {
     'scheduled_time': scheduleTime,
     'dosage': dosage,
     'administration_method': administrationMethod,
-    'estimated_cost': cost,
     'notes': notes,
     'source': source,
   };
@@ -384,7 +381,6 @@ class QuickDoneVaccinationRequest {
   final int birdsVaccinated;
   final DateTime completedDate;
   final String completedTime;
-  final double cost;
   final String? notes;
 
   QuickDoneVaccinationRequest({
@@ -394,7 +390,6 @@ class QuickDoneVaccinationRequest {
     required this.administrationMethod,
     required this.birdsVaccinated,
     required this.completedDate,
-    required this.cost,
     this.notes, required this.completedTime,
   });
 
@@ -406,7 +401,6 @@ class QuickDoneVaccinationRequest {
     'dosage': dosage,
     'birds_vaccinated':birdsVaccinated,
     'administration_method': administrationMethod,
-    'cost': cost,
     'notes': notes,
     'source': 'manual'
   };

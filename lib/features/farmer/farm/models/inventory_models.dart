@@ -258,37 +258,29 @@ class CreateInventoryItemRequest {
   final String categoryId;
   final String? farmId;
   final String itemName;
-  final String itemCode;
   final String description;
   final String unitOfMeasurement;
   final double currentStock;
   final double minimumStockLevel;
   final double reorderPoint;
-  final double costPerUnit;
+  final double cost;
   final String supplier;
-  final String? supplierContact;
-  final String? storageLocation;
   final DateTime? expiryDate;
   final String notes;
-  final Map<String, dynamic>? metadata;
 
   CreateInventoryItemRequest({
     required this.categoryId,
     this.farmId,
     required this.itemName,
-    required this.itemCode,
     required this.description,
     required this.unitOfMeasurement,
     required this.currentStock,
     required this.minimumStockLevel,
     required this.reorderPoint,
-    required this.costPerUnit,
+    required this.cost,
     required this.supplier,
-    this.supplierContact,
-    this.storageLocation,
     this.expiryDate,
     required this.notes,
-    this.metadata,
   });
 
   Map<String, dynamic> toJson() {
@@ -296,19 +288,15 @@ class CreateInventoryItemRequest {
       'category_id': categoryId,
       if (farmId != null) 'farm_id': farmId,
       'item_name': itemName,
-      'item_code': itemCode,
       'description': description,
       'unit_of_measurement': unitOfMeasurement,
       'current_stock': currentStock,
       'minimum_stock_level': minimumStockLevel,
       'reorder_point': reorderPoint,
-      'cost_per_unit': costPerUnit,
+      'cost': cost,
       'supplier': supplier,
-      if (supplierContact != null) 'supplier_contact': supplierContact,
-      if (storageLocation != null) 'storage_location': storageLocation,
       if (expiryDate != null) 'expiry_date': expiryDate!.toUtc().toIso8601String(),
       'notes': notes,
-      if (metadata != null) 'metadata': metadata,
     };
   }
 }

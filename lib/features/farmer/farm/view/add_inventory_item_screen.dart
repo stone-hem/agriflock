@@ -18,15 +18,12 @@ class AddInventoryItemScreen extends StatefulWidget {
 class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final _itemCodeController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _currentStockController = TextEditingController(text: '0');
   final _minStockController = TextEditingController(text: '10');
   final _reorderPointController = TextEditingController(text: '20');
   final _costController = TextEditingController();
   final _supplierController = TextEditingController();
-  final _supplierContactController = TextEditingController();
-  final _storageLocationController = TextEditingController();
   final _notesController = TextEditingController();
 
   final InventoryRepository _repository = InventoryRepository();
@@ -141,20 +138,13 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
           categoryId: _selectedCategoryId!,
           farmId: widget.farmId,
           itemName: _nameController.text,
-          itemCode: _itemCodeController.text,
           description: _descriptionController.text,
           unitOfMeasurement: _selectedUnit!,
           currentStock: double.parse(_currentStockController.text),
           minimumStockLevel: double.parse(_minStockController.text),
           reorderPoint: double.parse(_reorderPointController.text),
-          costPerUnit: double.parse(_costController.text),
+          cost: double.parse(_costController.text),
           supplier: _supplierController.text,
-          supplierContact: _supplierContactController.text.isNotEmpty
-              ? _supplierContactController.text
-              : null,
-          storageLocation: _storageLocationController.text.isNotEmpty
-              ? _storageLocationController.text
-              : null,
           expiryDate: _selectedExpiryDate,
           notes: _notesController.text,
         );
@@ -284,15 +274,6 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
                   }
                   return null;
                 }, labelText: 'Name',
-              ),
-              const SizedBox(height: 20),
-
-              // Item Code
-              _buildSectionTitle('Item Code (Optional)'),
-              ReusableInput(
-                controller: _itemCodeController,
-                hintText: 'e.g., FEED-001', labelText: 'Code',
-
               ),
               const SizedBox(height: 20),
 
@@ -479,28 +460,9 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
                 controller: _supplierController,
                 labelText: 'Supplier Name(Optional)',
 
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter supplier name';
-                  }
-                  return null;
-                }, hintText: '',
+                hintText: '',
               ),
               const SizedBox(height: 12),
-              ReusableInput(
-                controller: _supplierContactController,
-                labelText: 'Supplier Contact (Optional)',
-                keyboardType: TextInputType.phone, hintText: '',
-              ),
-              const SizedBox(height: 20),
-
-              // Storage Location
-              _buildSectionTitle('Storage Location (Optional)'),
-              ReusableInput(
-                controller: _storageLocationController,
-                hintText: 'e.g., Warehouse A, Shelf 3', labelText: '',
-              ),
-              const SizedBox(height: 20),
 
               // Expiry Date
               _buildSectionTitle('Expiry Date (Optional)'),
@@ -615,15 +577,12 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
   @override
   void dispose() {
     _nameController.dispose();
-    _itemCodeController.dispose();
     _descriptionController.dispose();
     _currentStockController.dispose();
     _minStockController.dispose();
     _reorderPointController.dispose();
     _costController.dispose();
     _supplierController.dispose();
-    _supplierContactController.dispose();
-    _storageLocationController.dispose();
     _notesController.dispose();
     super.dispose();
   }

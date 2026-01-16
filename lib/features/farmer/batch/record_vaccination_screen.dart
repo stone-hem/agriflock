@@ -20,23 +20,21 @@ class VaccinationRecordScreen extends StatefulWidget {
 
 class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final _scheduleFormKey= GlobalKey<FormState>();
-  final _quickRecordFormKey= GlobalKey<FormState>();
+  final _scheduleFormKey = GlobalKey<FormState>();
+  final _quickRecordFormKey = GlobalKey<FormState>();
   final _repository = VaccinationRepository();
 
   // Common controllers
-  final _vaccineNameController = TextEditingController();
-  final _dosageController = TextEditingController();
+  final _dosageAmountController = TextEditingController();
   final _birdsVaccinatedController = TextEditingController();
-  final _costController = TextEditingController();
   final _notesController = TextEditingController();
   final _scheduledDateController = TextEditingController();
   final _completedDateController = TextEditingController();
 
-
   // Common dropdowns
-  String? _selectedVaccineType;
+  String? _selectedVaccineName;
   String? _selectedAdministration;
+  String? _selectedDosageUnit;
 
   // Tab-specific controllers
   DateTime _scheduledDate = DateTime.now();
@@ -47,7 +45,7 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
 
   bool _isSaving = false;
 
-  final List<String> _vaccineTypes = [
+  final List<String> _vaccineNames = [
     'Newcastle Disease',
     'Infectious Bronchitis',
     'Gumboro Disease',
@@ -66,6 +64,14 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
     'Wing Web Stab'
   ];
 
+  final List<String> _dosageUnits = [
+    'ml',
+    'drops',
+    'units',
+    'mg',
+    'doses'
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -75,10 +81,8 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
   @override
   void dispose() {
     _tabController.dispose();
-    _vaccineNameController.dispose();
-    _dosageController.dispose();
+    _dosageAmountController.dispose();
     _birdsVaccinatedController.dispose();
-    _costController.dispose();
     _notesController.dispose();
     _scheduledDateController.dispose();
     _completedDateController.dispose();
@@ -127,18 +131,18 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
               controller: _tabController,
               indicatorSize: TabBarIndicatorSize.tab,
               indicator: BoxDecoration(
-                color: Colors.green, // Light grey for active tab
+                color: Colors.green,
                 borderRadius: BorderRadius.circular(8),
               ),
-              labelColor: Colors.white, //  for active
+              labelColor: Colors.white,
               unselectedLabelColor: Colors.grey.shade600,
               labelStyle: const TextStyle(
-                fontSize: 11, // Smaller font
+                fontSize: 11,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.1,
               ),
               unselectedLabelStyle: const TextStyle(
-                fontSize: 11, // Smaller font
+                fontSize: 11,
                 fontWeight: FontWeight.w500,
                 letterSpacing: 0.1,
               ),
@@ -147,7 +151,7 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
               overlayColor: WidgetStateProperty.all(Colors.transparent),
               tabs: [
                 Tab(
-                  height: 36, // Smaller tab height
+                  height: 36,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -158,7 +162,7 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
                   ),
                 ),
                 Tab(
-                  height: 36, // Smaller tab height
+                  height: 36,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -239,22 +243,9 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
             ),
             const SizedBox(height: 24),
 
-            ReusableInput(
-              controller: _vaccineNameController,
-              labelText: 'Vaccine Name',
-              hintText: 'e.g., Newcastle Disease Vaccine',
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter vaccine name';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 20),
-
-            // Vaccine Type
+            // Vaccine Name Selection
             Text(
-              'Vaccine Type',
+              'Vaccine Name',
               style: Theme.of(context).textTheme.titleMedium!.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Colors.grey.shade800,
@@ -262,23 +253,23 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
             ),
             const SizedBox(height: 8),
             ReusableDropdown<String>(
-              value: _selectedVaccineType,
-              labelText: 'Vaccine Type',
-              hintText: 'Select vaccine type',
-              items: _vaccineTypes.map((String type) {
+              value: _selectedVaccineName,
+              labelText: 'Vaccine Name',
+              hintText: 'Select vaccine name',
+              items: _vaccineNames.map((String name) {
                 return DropdownMenuItem<String>(
-                  value: type,
-                  child: Text(type),
+                  value: name,
+                  child: Text(name),
                 );
               }).toList(),
               onChanged: (String? newValue) {
                 setState(() {
-                  _selectedVaccineType = newValue;
+                  _selectedVaccineName = newValue;
                 });
               },
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please select vaccine type';
+                  return 'Please select vaccine name';
                 }
                 return null;
               },
@@ -313,20 +304,97 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
                   return 'Please select administration method';
                 }
                 return null;
-              }, labelText: 'Method',
+              },
+              labelText: 'Method',
             ),
             const SizedBox(height: 20),
 
-            ReusableInput(
-              controller: _dosageController,
-              labelText: 'Dosage',
-              hintText: 'e.g., 1ml per bird',
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter dosage';
-                }
-                return null;
-              },
+            // Dosage with unit
+            Text(
+              'Dosage',
+              style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade800,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: TextFormField(
+                    controller: _dosageAmountController,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      labelText: 'Amount',
+                      hintText: 'e.g., 1.5',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade400),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade400),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Colors.blue),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter dosage amount';
+                      }
+                      if (double.tryParse(value) == null) {
+                        return 'Please enter a valid number';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 3,
+                  child: DropdownButtonFormField<String>(
+                    initialValue: _selectedDosageUnit,
+                    decoration: InputDecoration(
+                      labelText: 'Unit',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade400),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade400),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Colors.blue),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    ),
+                    hint: const Text('Select unit'),
+                    items: _dosageUnits.map((String unit) {
+                      return DropdownMenuItem<String>(
+                        value: unit,
+                        child: Text(unit),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _selectedDosageUnit = newValue;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Select unit';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
 
@@ -377,17 +445,6 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
                   ],
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-
-            ReusableInput(
-              controller: _costController,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-                signed: false,
-              ),
-              labelText: 'Estimated Cost - Optional',
-              hintText: 'e.g., 150.00',
             ),
             const SizedBox(height: 20),
 
@@ -533,22 +590,9 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
             ),
             const SizedBox(height: 24),
 
-            ReusableInput(
-              controller: _vaccineNameController,
-              labelText: 'Vaccine Name',
-              hintText: 'e.g., Newcastle Disease Vaccine',
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter vaccine name';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 20),
-
-            // Vaccine Type
+            // Vaccine Name Selection
             Text(
-              'Vaccine Type',
+              'Vaccine Name',
               style: Theme.of(context).textTheme.titleMedium!.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Colors.grey.shade800,
@@ -556,23 +600,23 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
             ),
             const SizedBox(height: 8),
             ReusableDropdown<String>(
-              value: _selectedVaccineType,
-              hintText: 'Select vaccine type',
-              labelText: 'Vaccine Type',
-              items: _vaccineTypes.map((String type) {
+              value: _selectedVaccineName,
+              hintText: 'Select vaccine name',
+              labelText: 'Vaccine name',
+              items: _vaccineNames.map((String name) {
                 return DropdownMenuItem<String>(
-                  value: type,
-                  child: Text(type),
+                  value: name,
+                  child: Text(name),
                 );
               }).toList(),
               onChanged: (String? newValue) {
                 setState(() {
-                  _selectedVaccineType = newValue;
+                  _selectedVaccineName = newValue;
                 });
               },
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please select vaccine type';
+                  return 'Please select vaccine name';
                 }
                 return null;
               },
@@ -612,16 +656,92 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
             ),
             const SizedBox(height: 20),
 
-            ReusableInput(
-              controller: _dosageController,
-              labelText: 'Dosage',
-              hintText: 'e.g., 1ml per bird',
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter dosage';
-                }
-                return null;
-              },
+            // Dosage with unit
+            Text(
+              'Dosage',
+              style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade800,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: TextFormField(
+                    controller: _dosageAmountController,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      labelText: 'Amount',
+                      hintText: 'e.g., 1.5',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade400),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade400),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Colors.green),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter dosage amount';
+                      }
+                      if (double.tryParse(value) == null) {
+                        return 'Please enter a valid number';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 2,
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedDosageUnit,
+                    decoration: InputDecoration(
+                      labelText: 'Unit',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade400),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade400),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Colors.green),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    ),
+                    hint: const Text('Select unit'),
+                    items: _dosageUnits.map((String unit) {
+                      return DropdownMenuItem<String>(
+                        value: unit,
+                        child: Text(unit),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _selectedDosageUnit = newValue;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Select unit';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
 
@@ -641,6 +761,7 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
               },
             ),
             const SizedBox(height: 20),
+
             // Completion Date
             CustomDateTextField(
               label: 'Completion Date',
@@ -689,17 +810,6 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
                   ],
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-
-            ReusableInput(
-              controller: _costController,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-                signed: false,
-              ),
-              labelText: 'Total Cost - Optional',
-              hintText: 'e.g., 150.00',
             ),
             const SizedBox(height: 20),
 
@@ -820,32 +930,32 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
       });
 
       try {
+        // Create dosage string from amount and unit
+        final dosage = '${_dosageAmountController.text} ${_selectedDosageUnit}';
 
         final request = VaccinationScheduleRequest(
-          vaccineName: _vaccineNameController.text,
-          vaccineType: _selectedVaccineType!,
+          vaccineName: _selectedVaccineName!,
+          vaccineType: _selectedVaccineName!, // Using the same as name for type
           scheduledDate: _scheduledDate,
           scheduleTime: '${_scheduledTime.hour}:${_scheduledTime.minute}',
-          dosage: _dosageController.text,
+          dosage: dosage,
           administrationMethod: _selectedAdministration!,
-          cost: _costController.text.isEmpty ? 0 : double.parse(_costController.text),
           notes: _notesController.text.isEmpty ? null : _notesController.text,
           source: 'manual',
         );
 
-       final res= await _repository.scheduleVaccination(widget.batchId, request);
-       switch(res) {
-         case Success():
-           if (mounted) {
-             ToastUtil.showSuccess('Vaccination scheduled successfully');
-             _clearForm();
-             context.pop(true);
-           }
-         case Failure(response:final response):
-           ApiErrorHandler.handle(response);
-       }
-
-      }  finally {
+        final res = await _repository.scheduleVaccination(widget.batchId, request);
+        switch (res) {
+          case Success():
+            if (mounted) {
+              ToastUtil.showSuccess('Vaccination scheduled successfully');
+              _clearForm();
+              context.pop(true);
+            }
+          case Failure(response: final response):
+            ApiErrorHandler.handle(response);
+        }
+      } finally {
         if (mounted) {
           setState(() {
             _isSaving = false;
@@ -862,33 +972,32 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
       });
 
       try {
+        // Create dosage string from amount and unit
+        final dosage = '${_dosageAmountController.text} ${_selectedDosageUnit}';
 
         final request = QuickDoneVaccinationRequest(
-          vaccineName: _vaccineNameController.text,
-          vaccineType: _selectedVaccineType!,
-          dosage: _dosageController.text,
+          vaccineName: _selectedVaccineName!,
+          vaccineType: _selectedVaccineName!, // Using the same as name for type
+          dosage: dosage,
           administrationMethod: _selectedAdministration!,
           birdsVaccinated: int.parse(_birdsVaccinatedController.text),
           completedDate: _completionDate,
           completedTime: '${_completionTime.hour}:${_completionTime.minute}',
-          cost: _costController.text.isEmpty ? 0 : double.parse(_costController.text),
           notes: _notesController.text.isEmpty ? null : _notesController.text,
         );
 
-        final res=await _repository.quickDoneVaccination(widget.batchId, request);
+        final res = await _repository.quickDoneVaccination(widget.batchId, request);
 
-        switch(res) {
+        switch (res) {
           case Success():
             if (mounted) {
-             ToastUtil.showSuccess('Vaccination recorded successfully');
+              ToastUtil.showSuccess('Vaccination recorded successfully');
               _clearForm();
-             context.pop(true);
+              context.pop(true);
             }
-          case Failure(response:final response):
+          case Failure(response: final response):
             ApiErrorHandler.handle(response);
         }
-
-
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -909,14 +1018,13 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
   }
 
   void _clearForm() {
-    _vaccineNameController.clear();
-    _dosageController.clear();
+    _dosageAmountController.clear();
     _birdsVaccinatedController.clear();
-    _costController.clear();
     _notesController.clear();
     setState(() {
-      _selectedVaccineType = null;
+      _selectedVaccineName = null;
       _selectedAdministration = null;
+      _selectedDosageUnit = null;
       _scheduledDate = DateTime.now();
       _scheduledTime = TimeOfDay.now();
       _completionDate = DateTime.now();
