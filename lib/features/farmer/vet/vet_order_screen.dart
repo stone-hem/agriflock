@@ -664,7 +664,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                   ),
                 ),
                 Text(
-                  '${service.currency} ${service.basePrice.toStringAsFixed(2)}',
+                  '${service.currency} ${service.basePrice}',
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -768,7 +768,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                                 const SizedBox(width: 4),
                                 Expanded(
                                   child: Text(
-                                    widget.vet.location.address,
+                                    widget.vet.location.address.formattedAddress,
                                     style: TextStyle(
                                       color: Colors.grey.shade600,
                                       fontSize: 12,

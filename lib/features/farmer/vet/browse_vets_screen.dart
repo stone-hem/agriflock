@@ -572,7 +572,7 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            vet.location.address,
+                            vet.location.address.formattedAddress,
                             style: TextStyle(
                               color: Colors.grey.shade600,
                               fontSize: 12,

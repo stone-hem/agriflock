@@ -107,7 +107,7 @@ class _VetDetailsScreenState extends State<VetDetailsScreen> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: _vet!.status == 'active' ? () => _orderVet(context) : null,
+        onPressed: _vet!.isAvailable ? () => _orderVet(context) : null,
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryGreen,
           foregroundColor: Colors.white,
@@ -347,12 +347,12 @@ class _VetDetailsScreenState extends State<VetDetailsScreen> {
                     fit: StackFit.expand,
                     children: [
                       // Background Image
-                      _vet!.faceSelfieUrl.isNotEmpty
-                          ? Image.network(
-                        _vet!.faceSelfieUrl,
+                     if(_vet?.faceSelfieUrl != null)Image.network(
+                        _vet!.faceSelfieUrl!,
                         fit: BoxFit.cover,
                       )
-                          : Container(
+                      else
+                        Container(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
@@ -527,11 +527,11 @@ class _VetDetailsScreenState extends State<VetDetailsScreen> {
                             const SizedBox(height: 10),
                             Wrap(
                               children: [
-                                _buildServiceChip('Consultation'),
-                                _buildServiceChip('Treatment'),
-                                _buildServiceChip('Vaccination'),
-                                _buildServiceChip('Check-up'),
-                                _buildServiceChip('Emergency'),
+                                _buildServiceChip('Advisory Call (Remote) Transport'),
+                                _buildServiceChip('Disease Investigation'),
+                                _buildServiceChip('Farm Visit & Assessment'),
+                                _buildServiceChip('Training / Group Session'),
+                                _buildServiceChip('Vaccination')
                               ],
                             ),
 
@@ -550,7 +550,7 @@ class _VetDetailsScreenState extends State<VetDetailsScreen> {
                             _buildInfoCard(
                               icon: Icons.location_on,
                               label: 'Location',
-                              value: _vet!.location.address,
+                              value: _vet!.location.address.formattedAddress,
                             ),
                             _buildInfoCard(
                               icon: Icons.email,

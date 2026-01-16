@@ -15,6 +15,7 @@ class FarmModel {
   final String? imageUrl;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final num? batchCount;
 
   const FarmModel({
     required this.id,
@@ -28,7 +29,7 @@ class FarmModel {
     this.activeBatches,
     this.imageUrl,
     this.createdAt,
-    this.updatedAt,
+    this.updatedAt, this.batchCount,
   });
 
   factory FarmModel.fromJson(Map<String, dynamic> json) {
@@ -94,6 +95,7 @@ class FarmModel {
       totalArea: _parseDouble(json['total_area']),
       farmType: json['farm_type'],
       description: json['description'],
+      batchCount: json['batch_count'],
       gpsCoordinates: gpsCoords,
       totalBirds: json['total_birds'] is int ? json['total_birds'] : null,
       activeBatches: json['active_batches'] is int ? json['active_batches'] : null,

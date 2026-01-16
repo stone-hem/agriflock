@@ -607,10 +607,10 @@ class _FarmCard extends StatelessWidget {
                             label: 'Birds',
                           ),
                         const SizedBox(width: 2),
-                        if (farm.activeBatches != null)
+                        if (farm.batchCount != null)
                           _FarmStat(
                             icon: Icons.egg_outlined,
-                            value: '${farm.activeBatches}',
+                            value: '${farm.batchCount}',
                             label: 'Batches',
                           ),
                       ],
