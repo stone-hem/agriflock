@@ -1,4 +1,3 @@
-import 'package:agriflock360/features/farmer/quotation/widgets/market_disclaimer.dart';
 import 'package:flutter/material.dart';
 
 class ProductionEstimateScreen extends StatefulWidget {
@@ -38,23 +37,51 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
     ),
   ];
 
-  // Production capacities
-  final List<ProductionCapacity> _capacityOptions = [
-    ProductionCapacity(id: '50', label: '50 Birds', value: 50, icon: Icons.agriculture),
-    ProductionCapacity(id: '100', label: '100 Birds', value: 100, icon: Icons.business),
-    ProductionCapacity(id: '200', label: '200 Birds', value: 200, icon: Icons.home_work),
-    ProductionCapacity(id: '250', label: '250 Birds', value: 250, icon: Icons.factory),
-    ProductionCapacity(id: '300', label: '300 Birds', value: 300, icon: Icons.warehouse),
-    ProductionCapacity(id: '500', label: '500 Birds', value: 500, icon: Icons.domain),
-    ProductionCapacity(id: '750', label: '750 Birds', value: 750, icon: Icons.apartment),
-    ProductionCapacity(id: '1000', label: '1,000 Birds', value: 1000, icon: Icons.factory),
-    ProductionCapacity(id: '2000', label: '2,000 Birds', value: 2000, icon: Icons.factory_outlined),
-  ];
+  // BREED-SPECIFIC CAPACITY OPTIONS
+  final Map<String, List<ProductionCapacity>> _breedCapacities = {
+    'broiler': [
+      ProductionCapacity(id: '50', label: '50 Birds', value: 50, icon: Icons.agriculture),
+      ProductionCapacity(id: '100', label: '100 Birds', value: 100, icon: Icons.business),
+      ProductionCapacity(id: '200', label: '200 Birds', value: 200, icon: Icons.home_work),
+      ProductionCapacity(id: '250', label: '250 Birds', value: 250, icon: Icons.factory),
+      ProductionCapacity(id: '300', label: '300 Birds', value: 300, icon: Icons.warehouse),
+      ProductionCapacity(id: '500', label: '500 Birds', value: 500, icon: Icons.domain),
+      ProductionCapacity(id: '750', label: '750 Birds', value: 750, icon: Icons.apartment),
+      ProductionCapacity(id: '1000', label: '1,000 Birds', value: 1000, icon: Icons.factory),
+      ProductionCapacity(id: '2000', label: '2,000 Birds', value: 2000, icon: Icons.factory_outlined),
+    ],
+    'layer': [
+      ProductionCapacity(id: '50', label: '50 Birds', value: 50, icon: Icons.agriculture),
+      ProductionCapacity(id: '100', label: '100 Birds', value: 100, icon: Icons.business),
+      ProductionCapacity(id: '200', label: '200 Birds', value: 200, icon: Icons.home_work),
+      ProductionCapacity(id: '250', label: '250 Birds', value: 250, icon: Icons.factory),
+      ProductionCapacity(id: '300', label: '300 Birds', value: 300, icon: Icons.warehouse),
+      ProductionCapacity(id: '500', label: '500 Birds', value: 500, icon: Icons.domain),
+      ProductionCapacity(id: '750', label: '750 Birds', value: 750, icon: Icons.apartment),
+      ProductionCapacity(id: '1000', label: '1,000 Birds', value: 1000, icon: Icons.factory),
+      ProductionCapacity(id: '1500', label: '1,500 Birds', value: 1500, icon: Icons.factory),
+      ProductionCapacity(id: '2000', label: '2,000 Birds', value: 2000, icon: Icons.factory_outlined),
+    ],
+    'kienyeji': [
+      ProductionCapacity(id: '50', label: '50 Birds', value: 50, icon: Icons.agriculture),
+      ProductionCapacity(id: '100', label: '100 Birds', value: 100, icon: Icons.business),
+      ProductionCapacity(id: '200', label: '200 Birds', value: 200, icon: Icons.home_work),
+      ProductionCapacity(id: '250', label: '250 Birds', value: 250, icon: Icons.factory),
+      ProductionCapacity(id: '300', label: '300 Birds', value: 300, icon: Icons.warehouse),
+      ProductionCapacity(id: '500', label: '500 Birds', value: 500, icon: Icons.domain),
+      ProductionCapacity(id: '750', label: '750 Birds', value: 750, icon: Icons.apartment),
+      ProductionCapacity(id: '1000', label: '1,000 Birds', value: 1000, icon: Icons.factory),
+      ProductionCapacity(id: '1500', label: '1,500 Birds', value: 1500, icon: Icons.factory),
+      ProductionCapacity(id: '2000', label: '2,000 Birds', value: 2000, icon: Icons.factory_outlined),
+    ],
+  };
 
-  // Data for each breed type (arrays have different lengths)
+  // ACCURATE PRODUCTION DATA FROM YOUR TABLES
   final Map<String, Map<String, dynamic>> _productionData = {
     'broiler': {
-      'costPerBird': [450, 425, 363, 404, 405, 396, 394, 391, 394], // 9 items
+      // 9 capacities
+      'capacities': [50, 100, 200, 250, 300, 500, 750, 1000, 2000],
+      'costPerBird': [450, 425, 363, 404, 405, 396, 394, 391, 394],
       'feedMedCost': [22520, 42530, 72520, 101100, 121610, 197950, 295410, 390600, 788600],
       'equipmentCost': [6400, 8800, 10700, 12300, 14700, 38600, 46400, 54200, 138600],
       'adminFee': 2000,
@@ -63,6 +90,9 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
       'productionCycle': '6-8 weeks',
       'mortalityRate': '3%',
       'feedConversionRatio': '1.8:1',
+      'poultryHouseCostWithinKsm': [70252, 141011, 180973, 259787, 259787],
+      'poultryHouseCostOutsideKsm': [77164, 146465, 201455, 291627, 291627],
+      'poultryHouseCapacities': [50, 200, 300, 750, 1000],
       'materials': [
         'Starter crumbs (0-3 weeks)',
         'Finisher pellets (3-8 weeks)',
@@ -72,17 +102,23 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
       ],
     },
     'layer': {
-      'costPerBird': [1123, 1013, 990, 1013, 1008, 993, 997, 995, 988, 1055], // 10 items
+      // 10 capacities
+      'capacities': [50, 100, 200, 250, 300, 500, 750, 1000, 1500, 2000],
+      'costPerBird': [1123, 1013, 990, 1013, 1008, 993, 997, 995, 988, 1055],
       'feedMedCost': [56150, 101250, 198000, 253150, 302500, 496550, 747800, 995450, 1482250, 2109250],
       'equipmentCost': [7600, 7600, 10000, 12300, 13500, 32600, 40400, 48200, 62000, 77600],
       'adminFee': 2000,
-      'initialBudget': [63750, 108850, 208000, 265450, 316000, 529150, 788200, 1043650, 1544250, 2186850],
+      'initialBudget': [65750, 110850, 210000, 265450, 316000, 529150, 788200, 1043650, 1544250, 2186850],
       'sellingPricePerBird': 700,
       'sellingPricePerEgg': 15,
       'productionCycle': '72 weeks',
-      'mortalityRate': '3%',
+      'mortalityRate': '5%',
       'peakProduction': '85-90%',
       'eggProduction': '280-320 eggs/year',
+      'monthlyLoss': [6043, 8929, 16571, 22329, 26429, 41871, 63657, 94414, 138500, 222643],
+      'totalSales': [35000, 70000, 140000, 175000, 210000, 350000, 525000, 665000, 997500, 1330000],
+      'birdsSold': [50, 100, 200, 250, 300, 500, 750, 950, 1425, 1900],
+      'profitPerBird': [-423, -313, -290, -313, -308, -293, -297, -348, -340, -410],
       'materials': [
         'Chick mash (0-8 weeks)',
         'Growers mash (9-18 weeks)',
@@ -92,16 +128,22 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
       ],
     },
     'kienyeji': {
-      'costPerBird': [454, 432, 394, 396, 410, 389, 388, 391, 320, 317], // 10 items
+      // 10 capacities
+      'capacities': [50, 100, 200, 250, 300, 500, 750, 1000, 1500, 2000],
+      'costPerBird': [454, 432, 394, 396, 410, 389, 388, 391, 320, 317],
       'feedMedCost': [22680, 43150, 78800, 99100, 122850, 194600, 291050, 390900, 479850, 634600],
       'equipmentCost': [7600, 7600, 10000, 12300, 13500, 32600, 40400, 48200, 62000, 77600],
       'adminFee': 2000,
       'initialBudget': [30280, 50750, 88800, 111400, 136350, 227200, 331450, 439100, 541850, 712200],
       'sellingPricePerBird': 700,
       'productionCycle': '5-6 months',
-      'mortalityRate': '3%',
+      'mortalityRate': '5%',
       'dualPurpose': 'Meat and eggs',
       'marketDemand': 'High for local markets',
+      'monthlyIncome': [3520, 7671, 17486, 21686, 24900, 44400, 66843, 78314, 147900, 198686],
+      'totalSales': [35000, 70000, 140000, 175000, 210000, 350000, 525000, 665000, 997500, 1330000],
+      'birdsSold': [50, 100, 200, 250, 300, 500, 750, 950, 1425, 1900],
+      'profitPerBird': [246, 269, 306, 304, 291, 311, 312, 289, 363, 366],
       'materials': [
         'Chick & Duck mash',
         'Kienyeji mash',
@@ -126,7 +168,7 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
             padding: const EdgeInsets.all(16),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                // Header Card
+                // Header
                 Card(
                   elevation: 0,
                   shape: RoundedRectangleBorder(
@@ -155,7 +197,7 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Select your breed type and flock size to get detailed production cost estimates, profitability analysis, and equipment requirements.',
+                          'Select your breed type and flock size to get accurate production cost estimates.',
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey.shade600,
@@ -220,27 +262,29 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                // Capacity Grid - Only show capacities that have data for selected breed
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    childAspectRatio: 1.2,
+                // Capacity Grid
+                if (_selectedBreed != null) ...[
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 1.2,
+                    ),
+                    itemCount: _breedCapacities[_selectedBreed]!.length,
+                    itemBuilder: (context, index) {
+                      final capacity = _breedCapacities[_selectedBreed]![index];
+                      return _buildCapacityCard(capacity);
+                    },
                   ),
-                  itemCount: _getAvailableCapacities().length,
-                  itemBuilder: (context, index) {
-                    final capacity = _getAvailableCapacities()[index];
-                    return _buildCapacityCard(capacity);
-                  },
-                ),
-                const SizedBox(height: 32),
+                  const SizedBox(height: 32),
+                ],
 
                 // Estimate Display
                 if (_selectedEstimate != null) ...[
-                  _buildEstimateSection(),
+                  _buildEstimateTables(),
                   const SizedBox(height: 40),
                 ] else if (_selectedBreed != null && _selectedCapacity != null) ...[
                   const Center(
@@ -249,26 +293,14 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
                   const SizedBox(height: 40),
                 ],
 
-                MarketDisclaimerWidget()
+                // Disclaimer
+                _buildDisclaimer(),
               ]),
             ),
           ),
         ],
       ),
     );
-  }
-
-  // Get capacities that have data for the selected breed
-  List<ProductionCapacity> _getAvailableCapacities() {
-    if (_selectedBreed == null) return _capacityOptions;
-
-    final data = _productionData[_selectedBreed]!;
-    final costPerBirdList = (data['costPerBird'] as List);
-
-    // Return only capacities that have corresponding data
-    return _capacityOptions
-        .where((capacity) => _capacityOptions.indexOf(capacity) < costPerBirdList.length)
-        .toList();
   }
 
   Widget _buildBreedCard(BreedType breed) {
@@ -344,12 +376,7 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
         if (_selectedBreed != null) {
           setState(() {
             _selectedCapacity = capacity.value;
-            // Simulate loading delay
-            Future.delayed(const Duration(milliseconds: 300), () {
-              setState(() {
-                _selectedEstimate = _calculateEstimate(capacity.value);
-              });
-            });
+            _selectedEstimate = _getEstimateForCapacity(capacity.value);
           });
         }
       },
@@ -362,21 +389,6 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
             color: isSelected ? primaryColor : Colors.grey.shade300,
             width: isSelected ? 2 : 1,
           ),
-          boxShadow: isSelected
-              ? [
-            BoxShadow(
-              color: primaryColor.withOpacity(0.2),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ]
-              : [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 5,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
         child: Padding(
           padding: const EdgeInsets.all(8),
@@ -413,147 +425,56 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
     );
   }
 
-  Map<String, dynamic> _calculateEstimate(int capacity) {
+  Map<String, dynamic> _getEstimateForCapacity(int capacity) {
     if (_selectedBreed == null) return {};
 
     final data = _productionData[_selectedBreed]!;
+    final capacities = data['capacities'] as List<int>;
+    final index = capacities.indexOf(capacity);
 
-    // Find which capacity option matches the selected value
-    final capacityIndex = _capacityOptions.indexWhere((c) => c.value == capacity);
-
-    if (capacityIndex == -1) return {};
-
-    // Since different breeds have different data array lengths,
-    // we need to check if this capacity has data
-    final costPerBirdList = (data['costPerBird'] as List);
-    if (capacityIndex >= costPerBirdList.length) {
-      // This capacity doesn't have data for this breed
-      return _getFallbackEstimate(capacity, data);
-    }
-
-    // We have data for this capacity
-    final feedMedCost = (data['feedMedCost'] as List)[capacityIndex] as int;
-    final equipmentCost = (data['equipmentCost'] as List)[capacityIndex] as int;
-    final costPerBird = costPerBirdList[capacityIndex] as int;
-    final initialBudget = (data['initialBudget'] as List)[capacityIndex] as int;
-    final adminFee = data['adminFee'] as int;
-
-    // Calculate sales revenue
-    double salesRevenue;
-    if (_selectedBreed == 'layer') {
-      // For layers, calculate egg revenue
-      final sellingPricePerEgg = (data['sellingPricePerEgg'] ?? 15) as int;
-      const annualEggs = 300; // Conservative estimate
-      salesRevenue = (capacity * annualEggs * sellingPricePerEgg).toDouble();
-    } else {
-      final sellingPricePerBird = (data['sellingPricePerBird'] ?? 430) as int;
-      salesRevenue = (capacity * sellingPricePerBird).toDouble();
-    }
-
-    final netProfit = salesRevenue - initialBudget;
-    final roiMonths = _calculateROI(netProfit, initialBudget.toDouble());
+    if (index == -1) return {};
 
     return {
       'breed': _selectedBreed,
       'capacity': capacity,
-      'feedMedCost': feedMedCost,
-      'equipmentCost': equipmentCost,
-      'costPerBird': costPerBird,
-      'initialBudget': initialBudget,
-      'adminFee': adminFee,
-      'salesRevenue': salesRevenue.toInt(),
-      'netProfit': netProfit.toInt(),
-      'roiMonths': roiMonths,
+      'costPerBird': (data['costPerBird'] as List)[index],
+      'feedMedCost': (data['feedMedCost'] as List)[index],
+      'equipmentCost': (data['equipmentCost'] as List)[index],
+      'adminFee': data['adminFee'],
+      'initialBudget': (data['initialBudget'] as List)[index],
       'productionCycle': data['productionCycle'],
       'mortalityRate': data['mortalityRate'],
       'materials': data['materials'],
-      if (_selectedBreed == 'layer') 'eggProduction': data['eggProduction'],
-      if (_selectedBreed == 'layer') 'peakProduction': data['peakProduction'],
+      if (_selectedBreed == 'broiler') 'sellingPricePerBird': data['sellingPricePerBird'],
+      if (_selectedBreed == 'broiler') 'feedConversionRatio': data['feedConversionRatio'],
+      if (_selectedBreed == 'layer') 'sellingPricePerBird': data['sellingPricePerBird'],
       if (_selectedBreed == 'layer') 'sellingPricePerEgg': data['sellingPricePerEgg'],
+      if (_selectedBreed == 'layer') 'peakProduction': data['peakProduction'],
+      if (_selectedBreed == 'layer') 'eggProduction': data['eggProduction'],
+      if (_selectedBreed == 'layer') 'monthlyLoss': (data['monthlyLoss'] as List)[index],
+      if (_selectedBreed == 'layer') 'totalSales': (data['totalSales'] as List)[index],
+      if (_selectedBreed == 'layer') 'birdsSold': (data['birdsSold'] as List)[index],
+      if (_selectedBreed == 'layer') 'profitPerBird': (data['profitPerBird'] as List)[index],
+      if (_selectedBreed == 'kienyeji') 'sellingPricePerBird': data['sellingPricePerBird'],
       if (_selectedBreed == 'kienyeji') 'dualPurpose': data['dualPurpose'],
       if (_selectedBreed == 'kienyeji') 'marketDemand': data['marketDemand'],
-      if (_selectedBreed == 'broiler') 'feedConversionRatio': data['feedConversionRatio'],
+      if (_selectedBreed == 'kienyeji') 'monthlyIncome': (data['monthlyIncome'] as List)[index],
+      if (_selectedBreed == 'kienyeji') 'totalSales': (data['totalSales'] as List)[index],
+      if (_selectedBreed == 'kienyeji') 'birdsSold': (data['birdsSold'] as List)[index],
+      if (_selectedBreed == 'kienyeji') 'profitPerBird': (data['profitPerBird'] as List)[index],
     };
   }
 
-  // Fallback estimate when no specific data exists for a capacity
-  Map<String, dynamic> _getFallbackEstimate(int capacity, Map<String, dynamic> data) {
-    final costPerBirdList = (data['costPerBird'] as List);
-    final lastIndex = costPerBirdList.length - 1;
-
-    // Use the last available data point and scale it
-    final lastFeedMedCost = (data['feedMedCost'] as List)[lastIndex] as int;
-    final lastEquipmentCost = (data['equipmentCost'] as List)[lastIndex] as int;
-    final lastCostPerBird = costPerBirdList[lastIndex] as int;
-    final lastInitialBudget = (data['initialBudget'] as List)[lastIndex] as int;
-    final adminFee = data['adminFee'] as int;
-
-    // Get the last capacity value that has data
-    final lastCapacityValue = _capacityOptions[lastIndex].value;
-
-    // Scale factors based on capacity ratio
-    final scaleFactor = capacity / lastCapacityValue;
-
-    final scaledFeedMedCost = (lastFeedMedCost * scaleFactor).toInt();
-    final scaledEquipmentCost = (lastEquipmentCost * scaleFactor).toInt();
-    final scaledInitialBudget = (lastInitialBudget * scaleFactor).toInt();
-
-    // Calculate sales revenue
-    double salesRevenue;
-    if (_selectedBreed == 'layer') {
-      final sellingPricePerEgg = (data['sellingPricePerEgg'] ?? 15) as int;
-      const annualEggs = 300;
-      salesRevenue = (capacity * annualEggs * sellingPricePerEgg).toDouble();
-    } else {
-      final sellingPricePerBird = (data['sellingPricePerBird'] ?? 430) as int;
-      salesRevenue = (capacity * sellingPricePerBird).toDouble();
-    }
-
-    final netProfit = salesRevenue - scaledInitialBudget;
-    final roiMonths = _calculateROI(netProfit, scaledInitialBudget.toDouble());
-
-    return {
-      'breed': _selectedBreed,
-      'capacity': capacity,
-      'feedMedCost': scaledFeedMedCost,
-      'equipmentCost': scaledEquipmentCost,
-      'costPerBird': lastCostPerBird,
-      'initialBudget': scaledInitialBudget,
-      'adminFee': adminFee,
-      'salesRevenue': salesRevenue.toInt(),
-      'netProfit': netProfit.toInt(),
-      'roiMonths': roiMonths,
-      'productionCycle': data['productionCycle'],
-      'mortalityRate': data['mortalityRate'],
-      'materials': data['materials'],
-      if (_selectedBreed == 'layer') 'eggProduction': data['eggProduction'],
-      if (_selectedBreed == 'layer') 'peakProduction': data['peakProduction'],
-      if (_selectedBreed == 'layer') 'sellingPricePerEgg': data['sellingPricePerEgg'],
-      if (_selectedBreed == 'kienyeji') 'dualPurpose': data['dualPurpose'],
-      if (_selectedBreed == 'kienyeji') 'marketDemand': data['marketDemand'],
-      if (_selectedBreed == 'broiler') 'feedConversionRatio': data['feedConversionRatio'],
-      'isEstimated': true, // Flag to indicate this is an estimated value
-    };
-  }
-
-  int _calculateROI(double netProfit, double initialBudget) {
-    if (initialBudget <= 0) return 0;
-    final monthlyProfit = netProfit / 12;
-    if (monthlyProfit <= 0) return 99;
-    return (initialBudget / monthlyProfit).ceil();
-  }
-
-  Widget _buildEstimateSection() {
+  Widget _buildEstimateTables() {
     if (_selectedEstimate == null) return Container();
 
     final breed = _selectedBreed!;
-    final capacity = _selectedCapacity!;
     final estimate = _selectedEstimate!;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Estimate Header
+        // Header
         Container(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           decoration: BoxDecoration(
@@ -562,37 +483,24 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
           ),
           child: Row(
             children: [
-              Icon(Icons.assessment_outlined, color: Colors.white, size: 24),
+              Icon(Icons.table_chart, color: Colors.white, size: 24),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${breed.toUpperCase()} PRODUCTION ESTIMATE',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      '$capacity birds | ${estimate['productionCycle']} cycle',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 12,
-                      ),
-                    ),
-                    if (estimate['isEstimated'] == true)
-                      Text(
-                        'Based on estimated calculations',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.8),
-                          fontSize: 10,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                  ],
+                child: Text(
+                  '${breed.toUpperCase()} PRODUCTION DATA',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Text(
+                '${estimate['capacity']} birds',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],
@@ -600,188 +508,39 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
         ),
         const SizedBox(height: 24),
 
-        // Quick Summary
-        _buildInfoCard(
-          title: 'Quick Summary',
-          icon: Icons.summarize,
-          color: primaryColor,
-          children: [
-            _buildSummaryItem('Total Birds', '$capacity'),
-            _buildSummaryItem('Cost per Bird from hatchery', 'KSh ${estimate['costPerBird']}'),
-            _buildSummaryItem('Production Cycle', '${estimate['productionCycle']}'),
-            _buildSummaryItem('Mortality Rate', '${estimate['mortalityRate']}'),
-            if (breed == 'layer') ...[
-              _buildSummaryItem('Egg Production', estimate['eggProduction'] ?? '280-320/year'),
-              _buildSummaryItem('Peak Production', estimate['peakProduction'] ?? '85-90%'),
-            ],
-            if (breed == 'kienyeji') ...[
-              _buildSummaryItem('Type', estimate['dualPurpose'] ?? 'Dual Purpose'),
-              _buildSummaryItem('Market Demand', estimate['marketDemand'] ?? 'High'),
-            ],
-            if (breed == 'broiler')
-              _buildSummaryItem('Feed Conversion', estimate['feedConversionRatio'] ?? '1.8:1'),
-          ],
-        ),
+        // Basic Information Table
+        _buildBasicInfoTable(estimate),
         const SizedBox(height: 20),
 
-        // Cost Breakdown
-        _buildCostBreakdown(estimate),
+        // Cost Breakdown Table
+        _buildCostTable(estimate),
         const SizedBox(height: 20),
 
-        // Equipment Requirements
-        _buildInfoCard(
-          title: 'Equipment Requirements',
-          icon: Icons.build,
-          color: Colors.blue,
-          children: [
-            Column(
-              children: [
-                _buildEquipmentItem('Feeders & Drinkers', 'KSh ${estimate['equipmentCost']}'),
-                _buildEquipmentItem('Brooding Equipment', 'Included'),
-                _buildEquipmentItem('Vaccination Tools', 'Included'),
-                _buildEquipmentItem('Administrative Fee', 'KSh ${estimate['adminFee']}'),
-              ],
-            ),
-          ],
-        ),
+        // Equipment & Admin Table
+        _buildEquipmentTable(estimate),
         const SizedBox(height: 20),
 
-        // Required Materials
-        _buildInfoCard(
-          title: 'Required Materials & Supplies',
-          icon: Icons.inventory,
-          color: Colors.purple,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: (estimate['materials'] as List)
-                  .map<Widget>((material) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.check_circle, color: Colors.purple, size: 16),
-                    const SizedBox(width: 8),
-                    Expanded(child: Text(material)),
-                  ],
-                ),
-              ))
-                  .toList(),
-            ),
-          ],
-        ),
+        // Breed-specific tables
+        if (breed == 'broiler') _buildBroilerSpecificTable(estimate),
+        if (breed == 'layer') _buildLayerSpecificTable(estimate),
+        if (breed == 'kienyeji') _buildKienyejiSpecificTable(estimate),
         const SizedBox(height: 20),
 
-        // Financial Projection
-        _buildInfoCard(
-          title: 'Financial Projection',
-          icon: Icons.trending_up,
-          color: Colors.green,
-          children: [
-            Column(
-              children: [
-                _buildFinancialItem('Initial Investment', 'KSh ${estimate['initialBudget']}'),
-                _buildFinancialItem('Feed & Medication', 'KSh ${estimate['feedMedCost']}'),
-                _buildFinancialItem('Equipment & Admin', 'KSh ${estimate['equipmentCost'] + estimate['adminFee']}'),
-                const Divider(height: 20),
-                _buildFinancialItem('Total Estimated Cost', 'KSh ${estimate['initialBudget']}', isTotal: true),
-                _buildFinancialItem('Projected Revenue', 'KSh ${estimate['salesRevenue']}'),
-                const Divider(height: 20),
-                _buildFinancialItem(
-                  'Estimated Net Profit',
-                  'KSh ${estimate['netProfit']}',
-                  isProfit: true,
-                ),
-                _buildFinancialItem(
-                  'ROI Period',
-                  '${estimate['roiMonths']} months',
-                  isROI: true,
-                ),
-              ],
-            ),
-          ],
-        ),
+        // Materials Table
+        _buildMaterialsTable(estimate),
+        const SizedBox(height: 20),
+
+        // Financial Summary
+        _buildFinancialSummaryTable(estimate),
         const SizedBox(height: 20),
 
         // Recommendations
-        _buildInfoCard(
-          title: 'Recommendations',
-          icon: Icons.lightbulb_outline,
-          color: Colors.orange,
-          children: [
-            _buildRecommendationItem(
-              'Start with good quality day-old chicks from reputable hatcheries.',
-            ),
-            _buildRecommendationItem(
-              'Follow vaccination schedule strictly to prevent disease outbreaks.',
-            ),
-            _buildRecommendationItem(
-              'Monitor feed quality and ensure clean water is always available.',
-            ),
-            _buildRecommendationItem(
-              'Keep accurate records of all expenses and production data.',
-            ),
-            if (breed == 'broiler')
-              _buildRecommendationItem(
-                'Maintain proper temperature and ventilation in brooding area.',
-              ),
-            if (breed == 'layer')
-              _buildRecommendationItem(
-                'Provide adequate lighting (16 hours/day) for optimal egg production.',
-              ),
-            if (breed == 'kienyeji')
-              _buildRecommendationItem(
-                'Allow some free-range time for natural foraging behavior.',
-              ),
-          ],
-        ),
-        const SizedBox(height: 20),
-
-        // Note
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey.shade300),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.info_outline, color: Colors.blue.shade700, size: 20),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Note',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '• Administrative fee is Ksh. 1,000 for subsequent production cycles\n'
-                    '• Other fees such as transport may apply\n'
-                    '• Prices are estimates and may vary based on location and market conditions\n'
-                    '• Mortality rates and production figures are industry averages\n'
-                    '• For capacities without specific data, estimates are calculated based on available data',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade700,
-                  height: 1.5,
-                ),
-              ),
-            ],
-          ),
-        ),
+        _buildRecommendationsTable(breed),
       ],
     );
   }
 
-  Widget _buildCostBreakdown(Map<String, dynamic> estimate) {
+  Widget _buildBasicInfoTable(Map<String, dynamic> estimate) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -795,17 +554,10 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
           children: [
             Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: primaryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.attach_money, color: primaryColor, size: 20),
-                ),
-                const SizedBox(width: 12),
-                const Text(
-                  'COST BREAKDOWN',
+                Icon(Icons.info_outline, color: primaryColor, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'BASIC INFORMATION',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -815,64 +567,31 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            Column(
+            Table(
+              columnWidths: const {
+                0: FlexColumnWidth(2),
+                1: FlexColumnWidth(3),
+              },
+              border: TableBorder(
+                horizontalInside: BorderSide(color: Colors.grey.shade300),
+                verticalInside: BorderSide(color: Colors.grey.shade300),
+              ),
               children: [
-                _buildCostItem('Feed & Medication Cost', 'KSh ${estimate['feedMedCost']}'),
-                _buildCostItem('Equipment Cost', 'KSh ${estimate['equipmentCost']}'),
-                _buildCostItem('Administrative Fee', 'KSh ${estimate['adminFee']}'),
-                const Divider(height: 20),
-                _buildCostItem(
-                  'TOTAL INITIAL INVESTMENT',
-                  'KSh ${estimate['initialBudget']}',
-                  isTotal: true,
-                ),
+                _buildTableRow(['Breed Type', estimate['breed']!.toString().toUpperCase()]),
+                _buildTableRow(['Number of Birds', '${estimate['capacity']}']),
+                _buildTableRow(['Production Cycle', estimate['productionCycle']]),
+                _buildTableRow(['Mortality Rate', estimate['mortalityRate']]),
+                if (estimate['breed'] == 'broiler')
+                  _buildTableRow(['Feed Conversion Ratio', estimate['feedConversionRatio']]),
+                if (estimate['breed'] == 'layer')
+                  _buildTableRow(['Egg Production', estimate['eggProduction']]),
+                if (estimate['breed'] == 'layer')
+                  _buildTableRow(['Peak Production', estimate['peakProduction']]),
+                if (estimate['breed'] == 'kienyeji')
+                  _buildTableRow(['Purpose', estimate['dualPurpose']]),
+                if (estimate['breed'] == 'kienyeji')
+                  _buildTableRow(['Market Demand', estimate['marketDemand']]),
               ],
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.info_outline, size: 16, color: primaryColor),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Cost per Bird from hatchery: KSh ${estimate['costPerBird']}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: primaryColor,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (_selectedBreed == 'broiler') const SizedBox(height: 4),
-                  if (_selectedBreed == 'broiler')
-                    Text(
-                      'Includes: Day-old chicks, feed, vaccines, medication, utilities',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade700,
-                      ),
-                    ),
-                  if (estimate['isEstimated'] == true) const SizedBox(height: 4),
-                  if (estimate['isEstimated'] == true)
-                    Text(
-                      'Note: Costs are estimated based on available data',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.orange.shade700,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                ],
-              ),
             ),
           ],
         ),
@@ -880,17 +599,12 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
     );
   }
 
-  Widget _buildInfoCard({
-    required String title,
-    required IconData icon,
-    required Color color,
-    required List<Widget> children,
-  }) {
+  Widget _buildCostTable(Map<String, dynamic> estimate) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: color.withOpacity(0.2)),
+        side: BorderSide(color: Colors.blue.withOpacity(0.2)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -899,161 +613,571 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
           children: [
             Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(icon, color: color, size: 20),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: color,
-                    ),
+                Icon(Icons.monetization_on, color: Colors.blue, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'COST BREAKDOWN',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            ...children,
+            Table(
+              columnWidths: const {
+                0: FlexColumnWidth(3),
+                1: FlexColumnWidth(2),
+              },
+              border: TableBorder.all(color: Colors.grey.shade300),
+              children: [
+                TableRow(
+                  decoration: BoxDecoration(color: Colors.blue.shade50),
+                  children: [
+                    _buildTableCell('Item', fontWeight: FontWeight.bold),
+                    _buildTableCell('Amount (KSh)', fontWeight: FontWeight.bold),
+                  ],
+                ),
+                _buildTableRow(['Cost per Bird from hatchery', '${estimate['costPerBird']}']),
+                _buildTableRow(['Feed & Medication Cost', _formatCurrency(estimate['feedMedCost'])]),
+                _buildTableRow(['Equipment Cost', _formatCurrency(estimate['equipmentCost'])]),
+                _buildTableRow(['Administrative Fee', _formatCurrency(estimate['adminFee'])]),
+                TableRow(
+                  decoration: BoxDecoration(color: Colors.blue.shade100),
+                  children: [
+                    _buildTableCell('TOTAL INITIAL INVESTMENT', fontWeight: FontWeight.bold),
+                    _buildTableCell(_formatCurrency(estimate['initialBudget']), fontWeight: FontWeight.bold),
+                  ],
+                ),
+              ],
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSummaryItem(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.grey.shade700,
-              fontSize: 14,
+  Widget _buildEquipmentTable(Map<String, dynamic> estimate) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.purple.withOpacity(0.2)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.build, color: Colors.purple, size: 20),
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width*0.7,
+                  child: Text(
+                    'EQUIPMENT & ADMINISTRATIVE COSTS',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.purple,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-          Text(
-            value,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
+            const SizedBox(height: 16),
+            Table(
+              columnWidths: const {
+                0: FlexColumnWidth(3),
+                1: FlexColumnWidth(2),
+              },
+              border: TableBorder.all(color: Colors.grey.shade300),
+              children: [
+                TableRow(
+                  decoration: BoxDecoration(color: Colors.purple.shade50),
+                  children: [
+                    _buildTableCell('Item', fontWeight: FontWeight.bold),
+                    _buildTableCell('Amount (KSh)', fontWeight: FontWeight.bold),
+                  ],
+                ),
+                _buildTableRow(['Equipment Cost', _formatCurrency(estimate['equipmentCost'])]),
+                _buildTableRow(['Administrative Fee (Initial)', _formatCurrency(estimate['adminFee'])]),
+                _buildTableRow(['Administrative Fee (Subsequent)', '1,000']),
+                _buildTableRow(['Total Equipment & Admin', _formatCurrency(estimate['equipmentCost'] + estimate['adminFee'])]),
+              ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildCostItem(String label, String value, {bool isTotal = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          SizedBox(
-            width: MediaQuery.of(context).size.width * 0.4,
-            child: Text(
-              label,
+  Widget _buildBroilerSpecificTable(Map<String, dynamic> estimate) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.red.withOpacity(0.2)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.restaurant, color: Colors.red, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'BROILER SPECIFIC DATA',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Table(
+              columnWidths: const {
+                0: FlexColumnWidth(3),
+                1: FlexColumnWidth(2),
+              },
+              border: TableBorder.all(color: Colors.grey.shade300),
+              children: [
+                TableRow(
+                  decoration: BoxDecoration(color: Colors.red.shade50),
+                  children: [
+                    _buildTableCell('Item', fontWeight: FontWeight.bold),
+                    _buildTableCell('Amount (KSh)', fontWeight: FontWeight.bold),
+                  ],
+                ),
+                _buildTableRow(['Selling Price per Bird', '${estimate['sellingPricePerBird']}']),
+                _buildTableRow(['Feed Conversion Ratio', estimate['feedConversionRatio']]),
+                _buildTableRow(['Total Revenue', _formatCurrency(estimate['capacity'] * estimate['sellingPricePerBird'])]),
+                _buildTableRow(['Estimated Net Profit',
+                  _formatCurrency((estimate['capacity'] * estimate['sellingPricePerBird']) - estimate['initialBudget'])]),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLayerSpecificTable(Map<String, dynamic> estimate) {
+    final totalSales = estimate['totalSales'];
+    final monthlyLoss = estimate['monthlyLoss'];
+    final profitPerBird = estimate['profitPerBird'];
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.orange.withOpacity(0.2)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.egg, color: Colors.orange, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'LAYER SPECIFIC DATA',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Table(
+              columnWidths: const {
+                0: FlexColumnWidth(3),
+                1: FlexColumnWidth(2),
+              },
+              border: TableBorder.all(color: Colors.grey.shade300),
+              children: [
+                TableRow(
+                  decoration: BoxDecoration(color: Colors.orange.shade50),
+                  children: [
+                    _buildTableCell('Item', fontWeight: FontWeight.bold),
+                    _buildTableCell('Amount', fontWeight: FontWeight.bold),
+                  ],
+                ),
+                _buildTableRow(['Selling Price per Bird', '${estimate['sellingPricePerBird']}']),
+                _buildTableRow(['Selling Price per Egg', '${estimate['sellingPricePerEgg']}']),
+                _buildTableRow(['Birds Sold', '${estimate['birdsSold']}']),
+                _buildTableRow(['Total Sales Revenue', _formatCurrency(totalSales)]),
+                _buildTableRow(['Profit/Loss per Bird', '${profitPerBird.toString().replaceFirst('-', '')} (Loss)']),
+                _buildTableRow(['Monthly Loss', _formatCurrency(monthlyLoss)]),
+                _buildTableRow(['Total Loss', _formatCurrency(totalSales - estimate['initialBudget'])]),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildKienyejiSpecificTable(Map<String, dynamic> estimate) {
+    final totalSales = estimate['totalSales'];
+    final monthlyIncome = estimate['monthlyIncome'];
+    final profitPerBird = estimate['profitPerBird'];
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.green.withOpacity(0.2)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.nature, color: Colors.green, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'KIENYEJI SPECIFIC DATA',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Table(
+              columnWidths: const {
+                0: FlexColumnWidth(3),
+                1: FlexColumnWidth(2),
+              },
+              border: TableBorder.all(color: Colors.grey.shade300),
+              children: [
+                TableRow(
+                  decoration: BoxDecoration(color: Colors.green.shade50),
+                  children: [
+                    _buildTableCell('Item', fontWeight: FontWeight.bold),
+                    _buildTableCell('Amount', fontWeight: FontWeight.bold),
+                  ],
+                ),
+                _buildTableRow(['Selling Price per Bird', '${estimate['sellingPricePerBird']}']),
+                _buildTableRow(['Birds Sold', '${estimate['birdsSold']}']),
+                _buildTableRow(['Total Sales Revenue', _formatCurrency(totalSales)]),
+                _buildTableRow(['Profit per Bird', '${profitPerBird}']),
+                _buildTableRow(['Monthly Income', _formatCurrency(monthlyIncome)]),
+                _buildTableRow(['Total Profit', _formatCurrency(totalSales - estimate['initialBudget'])]),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMaterialsTable(Map<String, dynamic> estimate) {
+    final materials = estimate['materials'] as List<String>;
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.brown.withOpacity(0.2)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.inventory, color: Colors.brown, size: 20),
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width*0.7,
+                  child: Text(
+                    'REQUIRED MATERIALS & SUPPLIES',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.brown,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Table(
+              columnWidths: const {
+                0: IntrinsicColumnWidth(),
+                1: FlexColumnWidth(1),
+              },
+              border: TableBorder(
+                horizontalInside: BorderSide(color: Colors.grey.shade300),
+              ),
+              children: [
+                for (int i = 0; i < materials.length; i++)
+                  TableRow(
+                    children: [
+                      _buildTableCell('${i + 1}.', textAlign: TextAlign.right),
+                      _buildTableCell(materials[i]),
+                    ],
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFinancialSummaryTable(Map<String, dynamic> estimate) {
+    final breed = estimate['breed'];
+    double totalRevenue;
+    double netProfit;
+
+    if (breed == 'layer') {
+      totalRevenue = (estimate['totalSales'] as num).toDouble();
+    } else if (breed == 'kienyeji') {
+      totalRevenue = (estimate['totalSales'] as num).toDouble();
+    } else {
+      totalRevenue = (estimate['capacity'] * estimate['sellingPricePerBird']).toDouble();
+    }
+
+    netProfit = totalRevenue - estimate['initialBudget'];
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.teal.withOpacity(0.2)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.trending_up, color: Colors.teal, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'FINANCIAL SUMMARY',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.teal,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Table(
+              columnWidths: const {
+                0: FlexColumnWidth(3),
+                1: FlexColumnWidth(2),
+              },
+              border: TableBorder.all(color: Colors.grey.shade300),
+              children: [
+                TableRow(
+                  decoration: BoxDecoration(color: Colors.teal.shade50),
+                  children: [
+                    _buildTableCell('Item', fontWeight: FontWeight.bold),
+                    _buildTableCell('Amount (KSh)', fontWeight: FontWeight.bold),
+                  ],
+                ),
+                _buildTableRow(['Total Investment', _formatCurrency(estimate['initialBudget'])]),
+                _buildTableRow(['Total Revenue', _formatCurrency(totalRevenue.toInt())]),
+                TableRow(
+                  decoration: BoxDecoration(
+                    color: netProfit >= 0 ? Colors.green.shade50 : Colors.red.shade50,
+                  ),
+                  children: [
+                    _buildTableCell(
+                      'NET PROFIT/LOSS',
+                      fontWeight: FontWeight.bold,
+                      color: netProfit >= 0 ? Colors.green : Colors.red,
+                    ),
+                    _buildTableCell(
+                      _formatCurrency(netProfit.toInt()),
+                      fontWeight: FontWeight.bold,
+                      color: netProfit >= 0 ? Colors.green : Colors.red,
+                    ),
+                  ],
+                ),
+                if (breed == 'layer') _buildTableRow(['Monthly Loss', _formatCurrency(estimate['monthlyLoss'])]),
+                if (breed == 'kienyeji') _buildTableRow(['Monthly Income', _formatCurrency(estimate['monthlyIncome'])]),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecommendationsTable(String breed) {
+    List<String> recommendations = [];
+
+    if (breed == 'broiler') {
+      recommendations = [
+        'Start with good quality day-old chicks from reputable hatcheries.',
+        'Follow vaccination schedule strictly to prevent disease outbreaks.',
+        'Monitor feed quality and ensure clean water is always available.',
+        'Maintain proper temperature and ventilation in brooding area.',
+        'Keep accurate records of all expenses and production data.',
+      ];
+    } else if (breed == 'layer') {
+      recommendations = [
+        'Start with good quality day-old chicks from reputable hatcheries.',
+        'Follow vaccination schedule strictly to prevent disease outbreaks.',
+        'Monitor feed quality and ensure clean water is always available.',
+        'Provide adequate lighting (16 hours/day) for optimal egg production.',
+        'Keep accurate records of all expenses and production data.',
+      ];
+    } else if (breed == 'kienyeji') {
+      recommendations = [
+        'Start with good quality day-old chicks from reputable hatcheries.',
+        'Follow vaccination schedule strictly to prevent disease outbreaks.',
+        'Monitor feed quality and ensure clean water is always available.',
+        'Allow some free-range time for natural foraging behavior.',
+        'Keep accurate records of all expenses and production data.',
+      ];
+    }
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.amber.withOpacity(0.2)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.lightbulb_outline, color: Colors.amber, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'RECOMMENDATIONS',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.amber,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: recommendations.map((rec) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.check_circle, size: 16, color: Colors.green),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(rec)),
+                  ],
+                ),
+              )).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDisclaimer() {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey.withOpacity(0.2)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.warning, color: Colors.orange, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'DISCLAIMER',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '• Administrative fee is Ksh. 1,000 for subsequent production cycles\n'
+                  '• Other fees such as transport may apply\n'
+                  '• Prices are estimates and may vary based on location and market conditions\n'
+                  '• Mortality rates and production figures are industry averages\n'
+                  '• Consult with agricultural experts for specific farm conditions',
               style: TextStyle(
-                fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-                color: isTotal ? primaryColor : Colors.grey.shade700,
-                fontSize: isTotal ? 15 : 14,
+                fontSize: 14,
+                color: Colors.grey.shade700,
+                height: 1.5,
               ),
             ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-              color: isTotal ? primaryColor : Colors.green.shade700,
-              fontSize: isTotal ? 16 : 14,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildEquipmentItem(String label, String value) {
+  TableRow _buildTableRow(List<String> cells) {
+    return TableRow(
+      children: cells.map((cell) => _buildTableCell(cell)).toList(),
+    );
+  }
+
+  Widget _buildTableCell(String text, {
+    FontWeight fontWeight = FontWeight.normal,
+    TextAlign textAlign = TextAlign.left,
+    Color? color,
+  }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: 14),
-          ),
-          Text(
-            value,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-        ],
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: fontWeight,
+          color: color,
+        ),
+        textAlign: textAlign,
       ),
     );
   }
 
-  Widget _buildFinancialItem(String label, String value,
-      {bool isTotal = false, bool isProfit = false, bool isROI = false}) {
-    Color textColor = Colors.black;
-    if (isTotal) textColor = primaryColor;
-    if (isProfit) textColor = value.startsWith('-') ? Colors.red : Colors.green;
-    if (isROI) textColor = Colors.blue;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontWeight: isTotal || isProfit ? FontWeight.bold : FontWeight.normal,
-              color: textColor,
-              fontSize: isTotal ? 15 : 14,
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontWeight: isTotal || isProfit ? FontWeight.bold : FontWeight.normal,
-              color: textColor,
-              fontSize: isTotal ? 16 : 14,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRecommendationItem(String text) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(Icons.check, size: 16, color: Colors.green),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(fontSize: 14),
-            ),
-          ),
-        ],
-      ),
+  String _formatCurrency(dynamic amount) {
+    final numValue = amount is int ? amount : (amount as num).toInt();
+    return numValue.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]},',
     );
   }
 }
