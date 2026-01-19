@@ -27,13 +27,18 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
   final VetFarmerRepository _vetRepository = VetFarmerRepository();
   final _formKey = GlobalKey<FormState>();
   final _reasonController = TextEditingController();
+  final _batchCountController = TextEditingController();
 
   // Selection states
   String? _selectedFarm;
   String? _selectedHouse;
-  String? _selectedBatch;
-  String? _selectedServiceType;
+  List<String> _selectedBatches = [];
+  List<String> _selectedServices = [];
   String? _selectedPriority;
+
+  // Manual batch count
+  bool _useManualBatchCount = false;
+  int? _manualBatchCount;
 
   // Estimate state
   bool _isLoadingEstimate = false;
@@ -146,7 +151,9 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
       _houses = [];
       _availableBatches = [];
       _selectedHouse = null;
-      _selectedBatch = null;
+      _selectedBatches.clear();
+      _useManualBatchCount = false;
+      _batchCountController.clear();
     });
 
     try {
@@ -177,7 +184,9 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
   void _onHouseSelected(String? houseId) {
     setState(() {
       _selectedHouse = houseId;
-      _selectedBatch = null;
+      _selectedBatches.clear();
+      _useManualBatchCount = false;
+      _batchCountController.clear();
 
       // Update available batches based on selected house
       if (houseId != null) {
@@ -199,11 +208,40 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
     });
   }
 
+  void _onBatchSelected(String batchId, bool selected) {
+    setState(() {
+      if (selected) {
+        if (!_selectedBatches.contains(batchId)) {
+          _selectedBatches.add(batchId);
+        }
+      } else {
+        _selectedBatches.remove(batchId);
+      }
+      // If user selects any batch, disable manual count
+      if (_selectedBatches.isNotEmpty) {
+        _useManualBatchCount = false;
+        _batchCountController.clear();
+      }
+    });
+  }
+
+  void _onServiceSelected(String serviceId, bool selected) {
+    setState(() {
+      if (selected) {
+        if (!_selectedServices.contains(serviceId)) {
+          _selectedServices.add(serviceId);
+        }
+      } else {
+        _selectedServices.remove(serviceId);
+      }
+    });
+  }
+
   Future<void> _getEstimate() async {
-    if (_selectedPriority == null || _selectedServiceType == null) {
+    if (_selectedPriority == null || _selectedServices.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please select priority level and service type'),
+          content: Text('Please select priority level and at least one service'),
           backgroundColor: Colors.orange,
         ),
       );
@@ -220,6 +258,27 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
       return;
     }
 
+    // Validate batch selection or manual count
+    if (_selectedBatches.isEmpty && !_useManualBatchCount) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select batches or enable manual batch count'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (_useManualBatchCount && (_manualBatchCount == null || _manualBatchCount! <= 0)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a valid batch count'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -228,12 +287,33 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
       _isLoadingEstimate = true;
     });
 
+    // Calculate birds count
+    int birdsCount = 0;
+    if (_selectedBatches.isNotEmpty) {
+      for (final batchId in _selectedBatches) {
+        final batch = _availableBatches.firstWhere(
+              (b) => b.id == batchId,
+          orElse: () => BatchModel(
+            id: '',
+            batchName: '',
+            initialQuantity: 0,
+            birdsAlive: 0,
+            age: 0,
+            type: '', birdTypeId: '', breed: '', startDate: DateTime.now(), currentWeight: 1, expectedWeight:0, feedingTime: '', feedingSchedule: [],
+          ),
+        );
+        birdsCount += batch.birdsAlive;
+      }
+    } else if (_useManualBatchCount) {
+      birdsCount = _manualBatchCount!;
+    }
+
     final request = VetEstimateRequest(
       vetId: widget.vet.id,
       houseId: _selectedHouse,
-      batchId: _selectedBatch,
-      serviceId: _selectedServiceType,
-      birdCount:200,
+      batchIds: _selectedBatches.isNotEmpty ? _selectedBatches : null,
+      serviceIds: _selectedServices,
+      birdsCount: birdsCount,
       priorityLevel: _selectedPriority!,
       preferredDate: DateTime.now()
           .add(const Duration(days: 1))
@@ -503,191 +583,336 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
     );
   }
 
-  Widget _buildBatchDetails() {
-    if (_selectedBatch == null) return const SizedBox();
+  Widget _buildBatchSelection() {
+    if (_selectedHouse == null || _availableBatches.isEmpty) {
+      return _buildEmptyState('No batches available in this house');
+    }
 
-    final batch = _availableBatches.firstWhere(
-          (b) => b.id == _selectedBatch,
-      orElse: () => _availableBatches.first,
-    );
-
-    final mortalityRate = batch.initialQuantity > 0
-        ? ((batch.initialQuantity - batch.birdsAlive) /
-        batch.initialQuantity *
-        100)
-        .toStringAsFixed(1)
-        : '0.0';
-
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(top: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.orange.shade50,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.orange.shade100),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            batch.batchName,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Select Batches',
+          style: Theme.of(context).textTheme.titleMedium!.copyWith(
+            fontWeight: FontWeight.bold,
+            color: Colors.grey.shade800,
           ),
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Row(
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.white,
+          ),
+          child: Column(
+            children: [
+              // Checkbox list for batches
+              if (_availableBatches.isNotEmpty)
+                ..._availableBatches.map((batch) {
+                  final isSelected = _selectedBatches.contains(batch.id);
+
+                  return CheckboxListTile(
+                    title: Text(
+                      batch.batchName,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    subtitle: Row(
+                      children: [
+                        Text('${batch.birdsAlive} birds'),
+                        const SizedBox(width: 12),
+                        Text('${batch.age} weeks'),
+
+                      ],
+                    ),
+                    value: isSelected,
+                    onChanged: (bool? value) {
+                      _onBatchSelected(batch.id, value ?? false);
+                    },
+                    controlAffinity: ListTileControlAffinity.leading,
+                    secondary: Icon(
+                      Icons.pets,
+                      color: isSelected ? Colors.green : Colors.grey,
+                    ),
+                  );
+                }).toList(),
+
+              // Manual batch count option
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Divider(),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Checkbox(
+                          value: _useManualBatchCount,
+                          onChanged: (bool? value) {
+                            setState(() {
+                              _useManualBatchCount = value ?? false;
+                              if (_useManualBatchCount) {
+                                // Clear selected batches when using manual count
+                                _selectedBatches.clear();
+                              }
+                            });
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        const Expanded(
+                          child: Text(
+                            'Enter manual batch count',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (_useManualBatchCount)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 40, top: 12),
+                        child: ReusableInput(
+                          controller: _batchCountController,
+                          labelText: 'Number of Birds',
+                          hintText: 'Enter total number of birds',
+                          keyboardType: TextInputType.number,
+                          onChanged: (value) {
+                            setState(() {
+                              _manualBatchCount = int.tryParse(value ?? '');
+                            });
+                          },
+                          validator: (value) {
+                            if (_useManualBatchCount && (value == null || value.isEmpty)) {
+                              return 'Please enter batch count';
+                            }
+                            if (_useManualBatchCount && (int.tryParse(value ?? '') ?? 0) <= 0) {
+                              return 'Please enter a valid number';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Selected batches summary
+        if (_selectedBatches.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue.shade100),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.pets, size: 12, color: Colors.grey.shade600),
-                const SizedBox(width: 4),
-                Text(
-                  'Birds: ',
+                const Text(
+                  'Selected Batches:',
                   style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
                   ),
                 ),
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: _selectedBatches.map((batchId) {
+                    final batch = _availableBatches.firstWhere(
+                          (b) => b.id == batchId,
+                    );
+                    return Chip(
+                      label: Text(batch.batchName),
+                      deleteIcon: const Icon(Icons.close, size: 16),
+                      onDeleted: () {
+                        _onBatchSelected(batchId, false);
+                      },
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 4),
                 Text(
-                  '${batch.birdsAlive}/${batch.initialQuantity}',
+                  'Total birds: ${_selectedBatches.fold<int>(0, (sum, batchId) {
+                    final batch = _availableBatches.firstWhere((b) => b.id == batchId);
+                    return sum + batch.birdsAlive;
+                  })}',
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 2),
-            child: Row(
-              children: [
-                Icon(Icons.calendar_today,
-                    size: 12, color: Colors.grey.shade600),
-                const SizedBox(width: 4),
-                Text(
-                  'Age: ',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-                Text(
-                  '${batch.age} weeks',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Type: ',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-                Text(
-                  batch.type,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 2),
-            child: Row(
-              children: [
-                Text(
-                  'Mortality: ',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-                Text(
-                  '$mortalityRate%',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: _getMortalityColor(double.parse(mortalityRate)),
                   ),
                 ),
               ],
             ),
           ),
         ],
-      ),
+        if (_useManualBatchCount && _manualBatchCount != null) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.orange.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.orange.shade100),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info,
+                  color: Colors.orange.shade600,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Manual batch count: $_manualBatchCount birds',
+                    style: TextStyle(
+                      color: Colors.orange.shade800,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 
-  Widget _buildServiceTypeDetails() {
-    if (_selectedServiceType == null) return const SizedBox();
+  Widget _buildServiceSelection() {
+    if (_isLoadingServices) {
+      return _buildLoadingIndicator('Loading service types...');
+    }
 
-    final service = _serviceTypes.firstWhere(
-          (s) => s.id == _selectedServiceType,
-      orElse: () => _serviceTypes.first,
-    );
+    if (_servicesError != null) {
+      return _buildErrorWidget(_servicesError!, _loadServiceTypes);
+    }
 
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(top: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.purple.shade50,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.purple.shade100),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            service.serviceName,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
+    if (_serviceTypes.isEmpty) {
+      return _buildEmptyState('No service types available');
+    }
+
+    final activeServices =
+    _serviceTypes.where((service) => service.active).toList();
+
+    if (activeServices.isEmpty) {
+      return _buildEmptyState('No active services available');
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Select Services',
+          style: Theme.of(context).textTheme.titleMedium!.copyWith(
+            fontWeight: FontWeight.bold,
+            color: Colors.grey.shade800,
           ),
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Row(
-              children: [
-                Text(
-                  'Price: ',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.white,
+          ),
+          child: Column(
+            children: activeServices.map((service) {
+              final isSelected = _selectedServices.contains(service.id);
+              return CheckboxListTile(
+                title: Text(
+                  service.serviceName,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-                Text(
-                  '${service.currency} ${service.basePrice}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.green,
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (service.description.isNotEmpty)
+                      Text(
+                        service.description,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Price: ${service.currency} ${service.basePrice}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.green,
+                      ),
+                    ),
+                  ],
+                ),
+                value: isSelected,
+                onChanged: (bool? value) {
+                  _onServiceSelected(service.id, value ?? false);
+                },
+                controlAffinity: ListTileControlAffinity.leading,
+                secondary: Icon(
+                  Icons.medical_services,
+                  color: isSelected ? Colors.purple : Colors.grey,
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        // Selected services summary
+        if (_selectedServices.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.purple.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.purple.shade100),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Selected Services:',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
                   ),
+                ),
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: _selectedServices.map((serviceId) {
+                    final service = _serviceTypes.firstWhere(
+                          (s) => s.id == serviceId,
+                    );
+                    return Chip(
+                      label: Text(service.serviceName),
+                      backgroundColor: Colors.purple.shade100,
+                      deleteIcon: const Icon(Icons.close, size: 16),
+                      onDeleted: () {
+                        _onServiceSelected(serviceId, false);
+                      },
+                    );
+                  }).toList(),
                 ),
               ],
             ),
           ),
-          if (service.description.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                service.description,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-            ),
         ],
-      ),
+      ],
     );
   }
 
@@ -886,31 +1111,13 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               ],
 
               // Batch Selection
-              if (_selectedHouse != null && _availableBatches.isNotEmpty) ...[
-                Text(
-                  'Select Batch',
-                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade800,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                _buildBatchDropdown(),
-                if (_selectedBatch != null) _buildBatchDetails(),
+              if (_selectedHouse != null) ...[
+                _buildBatchSelection(),
                 const SizedBox(height: 20),
               ],
 
-              // Service Type
-              Text(
-                'Service Type',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
-              _buildServiceTypeDropdown(),
-              if (_selectedServiceType != null) _buildServiceTypeDetails(),
+              // Service Selection
+              _buildServiceSelection(),
               const SizedBox(height: 20),
 
               // Priority Level
@@ -1052,8 +1259,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
     }
 
     if (_hasError) {
-      return _buildErrorWidget(
-          _errorMessage ?? 'Failed to load farms', _loadFarms);
+      return _buildErrorWidget(_errorMessage ?? 'Failed to load farms', _loadFarms);
     }
 
     if (_farmsResponse == null || _farmsResponse!.farms.isEmpty) {
@@ -1082,9 +1288,11 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
         setState(() {
           _selectedFarm = newValue;
           _selectedHouse = null;
-          _selectedBatch = null;
+          _selectedBatches.clear();
           _houses = [];
           _availableBatches = [];
+          _useManualBatchCount = false;
+          _batchCountController.clear();
         });
         if (newValue != null) {
           _loadHousesForSelectedFarm();
@@ -1136,99 +1344,10 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
     );
   }
 
-  Widget _buildBatchDropdown() {
-    return ReusableDropdown<String>(
-      value: _selectedBatch,
-      hintText: 'Choose a batch from selected house',
-      labelText: 'Batch',
-      icon: Icons.egg,
-      isExpanded: true,
-      items: _availableBatches.map((batch) {
-        return DropdownMenuItem<String>(
-          value: batch.id,
-          child: Text(
-            batch.batchName,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 14,
-            ),
-          ),
-        );
-      }).toList(),
-      onChanged: (String? newValue) {
-        setState(() {
-          _selectedBatch = newValue;
-        });
-      },
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Please select a batch';
-        }
-        return null;
-      },
-    );
-  }
-
-  Widget _buildServiceTypeDropdown() {
-    if (_isLoadingServices) {
-      return _buildLoadingIndicator('Loading service types...');
-    }
-
-    if (_servicesError != null) {
-      return _buildErrorWidget(_servicesError!, _loadServiceTypes);
-    }
-
-    if (_serviceTypes.isEmpty) {
-      return _buildEmptyState('No service types available');
-    }
-
-    final activeServices =
-    _serviceTypes.where((service) => service.active).toList();
-
-    if (activeServices.isEmpty) {
-      return _buildEmptyState('No active services available');
-    }
-
-    return ReusableDropdown<String>(
-      value: _selectedServiceType,
-      labelText: 'Service Type',
-      hintText: 'Select type of service needed',
-      icon: Icons.medical_services,
-      items: activeServices.map((service) {
-        return DropdownMenuItem<String>(
-          value: service.id,
-          child: Text(
-            service.serviceName,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 14,
-            ),
-          ),
-        );
-      }).toList(),
-      onChanged: (String? newValue) {
-        setState(() {
-          _selectedServiceType = newValue;
-        });
-      },
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Please select service type';
-        }
-        return null;
-      },
-    );
-  }
-
-  Color _getMortalityColor(double mortalityRate) {
-    if (mortalityRate < 2) return Colors.green;
-    if (mortalityRate < 5) return Colors.orange;
-    return Colors.red;
-  }
-
   @override
   void dispose() {
     _reasonController.dispose();
+    _batchCountController.dispose();
     super.dispose();
   }
 }

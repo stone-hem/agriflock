@@ -11,9 +11,7 @@ class VaccinationRepository {
   /// Get vaccinations history for a batch
   Future<Result<VaccinationsResponse>> getVaccinations(String batchId) async {
     try {
-      final response = await apiClient.get(
-        '/batches/$batchId/vaccinations',
-      );
+      final response = await apiClient.get('/batches/$batchId/vaccinations');
 
       final jsonResponse = jsonDecode(response.body);
       LogUtil.info('Vaccinations API Response: $jsonResponse');
@@ -29,10 +27,7 @@ class VaccinationRepository {
       }
     } on SocketException catch (e) {
       LogUtil.error('Network error in getVaccinations: $e');
-      return const Failure(
-        message: 'No internet connection',
-        statusCode: 0,
-      );
+      return const Failure(message: 'No internet connection', statusCode: 0);
     } catch (e) {
       LogUtil.error('Error in getVaccinations: $e');
 
@@ -49,7 +44,9 @@ class VaccinationRepository {
   }
 
   /// Get vaccination dashboard statistics
-  Future<Result<VaccinationDashboard>> getVaccinationDashboard(String batchId) async {
+  Future<Result<VaccinationDashboard>> getVaccinationDashboard(
+    String batchId,
+  ) async {
     try {
       final response = await apiClient.get(
         '/batches/$batchId/vaccinations/dashboard',
@@ -62,17 +59,16 @@ class VaccinationRepository {
         return Success(VaccinationDashboard.fromJson(jsonResponse));
       } else {
         return Failure(
-          message: jsonResponse['message'] ?? 'Failed to fetch vaccination dashboard',
+          message:
+              jsonResponse['message'] ??
+              'Failed to fetch vaccination dashboard',
           response: response,
           statusCode: response.statusCode,
         );
       }
     } on SocketException catch (e) {
       LogUtil.error('Network error in getVaccinationDashboard: $e');
-      return const Failure(
-        message: 'No internet connection',
-        statusCode: 0,
-      );
+      return const Failure(message: 'No internet connection', statusCode: 0);
     } catch (e) {
       LogUtil.error('Error in getVaccinationDashboard: $e');
 
@@ -89,7 +85,9 @@ class VaccinationRepository {
   }
 
   /// Get recommended vaccinations for a batch based on age
-  Future<Result<RecommendedVaccinationsResponse>> getRecommendedVaccinations(String batchId) async {
+  Future<Result<RecommendedVaccinationsResponse>> getRecommendedVaccinations(
+    String batchId,
+  ) async {
     try {
       final response = await apiClient.get(
         '/batches/$batchId/vaccinations/recommendations',
@@ -102,17 +100,16 @@ class VaccinationRepository {
         return Success(RecommendedVaccinationsResponse.fromJson(jsonResponse));
       } else {
         return Failure(
-          message: jsonResponse['message'] ?? 'Failed to fetch recommended vaccinations',
+          message:
+              jsonResponse['message'] ??
+              'Failed to fetch recommended vaccinations',
           response: response,
           statusCode: response.statusCode,
         );
       }
     } on SocketException catch (e) {
       LogUtil.error('Network error in getRecommendedVaccinations: $e');
-      return const Failure(
-        message: 'No internet connection',
-        statusCode: 0,
-      );
+      return const Failure(message: 'No internet connection', statusCode: 0);
     } catch (e) {
       LogUtil.error('Error in getRecommendedVaccinations: $e');
 
@@ -130,9 +127,9 @@ class VaccinationRepository {
 
   /// Create a new vaccination schedule
   Future<Result<Vaccination>> createVaccination(
-      String batchId,
-      CreateVaccinationRequest request,
-      ) async {
+    String batchId,
+    CreateVaccinationRequest request,
+  ) async {
     try {
       final response = await apiClient.post(
         '/batches/$batchId/vaccinations',
@@ -153,10 +150,7 @@ class VaccinationRepository {
       }
     } on SocketException catch (e) {
       LogUtil.error('Network error in createVaccination: $e');
-      return const Failure(
-        message: 'No internet connection',
-        statusCode: 0,
-      );
+      return const Failure(message: 'No internet connection', statusCode: 0);
     } catch (e) {
       LogUtil.error('Error in createVaccination: $e');
 
@@ -174,10 +168,10 @@ class VaccinationRepository {
 
   /// Update vaccination status
   Future<Result<Vaccination>> updateVaccinationStatus(
-      String batchId,
-      String vaccinationId,
-      UpdateVaccinationStatusRequest request,
-      ) async {
+    String batchId,
+    String vaccinationId,
+    UpdateVaccinationStatusRequest request,
+  ) async {
     try {
       LogUtil.info(request.toJson());
       final response = await apiClient.put(
@@ -192,17 +186,15 @@ class VaccinationRepository {
         return Success(Vaccination.fromJson(jsonResponse));
       } else {
         return Failure(
-          message: jsonResponse['message'] ?? 'Failed to update vaccination status',
+          message:
+              jsonResponse['message'] ?? 'Failed to update vaccination status',
           response: response,
           statusCode: response.statusCode,
         );
       }
     } on SocketException catch (e) {
       LogUtil.error('Network error in updateVaccinationStatus: $e');
-      return const Failure(
-        message: 'No internet connection',
-        statusCode: 0,
-      );
+      return const Failure(message: 'No internet connection', statusCode: 0);
     } catch (e) {
       LogUtil.error('Error in updateVaccinationStatus: $e');
 
@@ -220,9 +212,9 @@ class VaccinationRepository {
 
   /// Quick done - Create completed vaccination
   Future<Result> quickDoneVaccination(
-      String batchId,
-      QuickDoneVaccinationRequest request,
-      ) async {
+    String batchId,
+    QuickDoneVaccinationRequest request,
+  ) async {
     try {
       LogUtil.info(request.toJson());
 
@@ -245,10 +237,7 @@ class VaccinationRepository {
       }
     } on SocketException catch (e) {
       LogUtil.error('Network error in quickDoneVaccination: $e');
-      return const Failure(
-        message: 'No internet connection',
-        statusCode: 0,
-      );
+      return const Failure(message: 'No internet connection', statusCode: 0);
     } catch (e) {
       LogUtil.error('Error in quickDoneVaccination: $e');
 
@@ -264,11 +253,10 @@ class VaccinationRepository {
     }
   }
 
-
   Future<Result> scheduleVaccination(
-      String batchId,
-      VaccinationScheduleRequest request,
-      ) async {
+    String batchId,
+    VaccinationScheduleRequest request,
+  ) async {
     try {
       LogUtil.info(request.toJson());
 
@@ -291,10 +279,7 @@ class VaccinationRepository {
       }
     } on SocketException catch (e) {
       LogUtil.error('Network error in scheduleVaccination: $e');
-      return const Failure(
-        message: 'No internet connection',
-        statusCode: 0,
-      );
+      return const Failure(message: 'No internet connection', statusCode: 0);
     } catch (e) {
       LogUtil.error('Error in scheduleVaccination: $e');
 
@@ -312,9 +297,9 @@ class VaccinationRepository {
 
   /// Adopt a single recommended vaccination
   Future<Result<Vaccination>> adoptRecommendedVaccination(
-      String batchId,
-      AdoptVaccinationRequest request,
-      ) async {
+    String batchId,
+    AdoptVaccinationRequest request,
+  ) async {
     try {
       final response = await apiClient.post(
         '/batches/$batchId/vaccinations/adopt',
@@ -335,10 +320,7 @@ class VaccinationRepository {
       }
     } on SocketException catch (e) {
       LogUtil.error('Network error in adoptRecommendedVaccination: $e');
-      return const Failure(
-        message: 'No internet connection',
-        statusCode: 0,
-      );
+      return const Failure(message: 'No internet connection', statusCode: 0);
     } catch (e) {
       LogUtil.error('Error in adoptRecommendedVaccination: $e');
 
@@ -356,9 +338,9 @@ class VaccinationRepository {
 
   /// Adopt all recommended vaccinations
   Future<Result<List<Vaccination>>> adoptAllRecommendedVaccinations(
-      String batchId,
-      AdoptAllVaccinationsRequest request,
-      ) async {
+    String batchId,
+    AdoptAllVaccinationsRequest request,
+  ) async {
     try {
       final response = await apiClient.post(
         '/batches/$batchId/vaccinations/adopt-all',
@@ -377,17 +359,15 @@ class VaccinationRepository {
         return Success(vaccinations);
       } else {
         return Failure(
-          message: jsonResponse['message'] ?? 'Failed to adopt all vaccinations',
+          message:
+              jsonResponse['message'] ?? 'Failed to adopt all vaccinations',
           response: response,
           statusCode: response.statusCode,
         );
       }
     } on SocketException catch (e) {
       LogUtil.error('Network error in adoptAllRecommendedVaccinations: $e');
-      return const Failure(
-        message: 'No internet connection',
-        statusCode: 0,
-      );
+      return const Failure(message: 'No internet connection', statusCode: 0);
     } catch (e) {
       LogUtil.error('Error in adoptAllRecommendedVaccinations: $e');
 
@@ -404,7 +384,10 @@ class VaccinationRepository {
   }
 
   /// Delete vaccination
-  Future<Result<void>> deleteVaccination(String batchId, String vaccinationId) async {
+  Future<Result<void>> deleteVaccination(
+    String batchId,
+    String vaccinationId,
+  ) async {
     try {
       final response = await apiClient.delete(
         '/batches/$batchId/vaccinations/$vaccinationId',
@@ -423,10 +406,7 @@ class VaccinationRepository {
       }
     } on SocketException catch (e) {
       LogUtil.error('Network error in deleteVaccination: $e');
-      return const Failure(
-        message: 'No internet connection',
-        statusCode: 0,
-      );
+      return const Failure(message: 'No internet connection', statusCode: 0);
     } catch (e) {
       LogUtil.error('Error in deleteVaccination: $e');
 
@@ -443,15 +423,20 @@ class VaccinationRepository {
   }
 
   /// Refresh methods
-  Future<Result<VaccinationsResponse>> refreshVaccinations(String batchId) async {
+  Future<Result<VaccinationsResponse>> refreshVaccinations(
+    String batchId,
+  ) async {
     return getVaccinations(batchId);
   }
 
-  Future<Result<VaccinationDashboard>> refreshVaccinationDashboard(String batchId) async {
+  Future<Result<VaccinationDashboard>> refreshVaccinationDashboard(
+    String batchId,
+  ) async {
     return getVaccinationDashboard(batchId);
   }
 
-  Future<Result<RecommendedVaccinationsResponse>> refreshRecommendedVaccinations(String batchId) async {
+  Future<Result<RecommendedVaccinationsResponse>>
+  refreshRecommendedVaccinations(String batchId) async {
     return getRecommendedVaccinations(batchId);
   }
 }

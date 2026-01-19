@@ -13,7 +13,7 @@ class VetFarmerRepository {
   /// Get recommended vet farmers
   Future<Result<List<VetFarmerRecommendation>>> getRecommendedVetFarmers() async {
     try {
-      final response = await apiClient.get('/extension-officers/recommendations');
+      final response = await apiClient.get('/extension-officers/recommendations?limit=3');
 
       final jsonResponse = jsonDecode(response.body);
       LogUtil.info('Get Recommended Vet Farmers API Response: $jsonResponse');

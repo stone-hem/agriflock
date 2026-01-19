@@ -467,8 +467,9 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
     final request = VetOrderRequest(
       vetId: widget.vet.id,
       houseId: widget.request.houseId,
-      batchId: widget.request.batchId,
-      serviceId: widget.request.serviceId,
+      batchIds: widget.request.batchIds,
+      serviceIds: widget.request.serviceIds,
+      birdsCount: widget.request.birdsCount,
       priorityLevel: widget.request.priorityLevel,
       preferredDate: _selectedDate!.toIso8601String().split('T').first,
       preferredTime: _selectedTime!.format(context),

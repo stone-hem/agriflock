@@ -1,8 +1,9 @@
 class VetOrderRequest {
   final String vetId;
   final String? houseId;
-  final String? batchId;
-  final String? serviceId;
+  final List<String>? batchIds;
+  final List<String> serviceIds;
+  final int birdsCount;
   final String priorityLevel;
   final String preferredDate;
   final String preferredTime;
@@ -13,8 +14,9 @@ class VetOrderRequest {
   VetOrderRequest({
     required this.vetId,
     this.houseId,
-    this.batchId,
-    this.serviceId,
+    this.batchIds,
+    required this.serviceIds,
+    required this.birdsCount,
     required this.priorityLevel,
     required this.preferredDate,
     required this.preferredTime,
@@ -27,8 +29,9 @@ class VetOrderRequest {
     return {
       'vet_id': vetId,
       'house_id': houseId,
-      'batch_id': batchId,
-      'service_id': serviceId,
+      'batch_id': batchIds,
+      'service_id': serviceIds,
+      'birds_count': birdsCount,
       'priority_level': priorityLevel,
       'preferred_date': preferredDate,
       'preferred_time': preferredTime,
@@ -42,9 +45,9 @@ class VetOrderRequest {
 class VetEstimateRequest {
   final String vetId;
   final String? houseId;
-  final String? batchId;
-  final String? serviceId;
-  final int birdCount;
+  final List<String>? batchIds; // Changed from single batchId to list
+  final List<String> serviceIds; // Changed from single serviceId to list
+  final int birdsCount;
   final String priorityLevel;
   final String preferredDate;
   final String preferredTime;
@@ -55,9 +58,9 @@ class VetEstimateRequest {
   VetEstimateRequest({
     required this.vetId,
     this.houseId,
-    this.batchId,
-    this.serviceId,
-    required this.birdCount,
+    this.batchIds,
+    required this.serviceIds,
+    required this.birdsCount,
     required this.priorityLevel,
     required this.preferredDate,
     required this.preferredTime,
@@ -70,9 +73,9 @@ class VetEstimateRequest {
     return {
       'vet_id': vetId,
       'house_id': houseId,
-      'batch_id': batchId,
-      'service_id': serviceId,
-      'bird_count': birdCount,
+      'batchIds': batchIds,
+      'serviceIds': serviceIds,
+      'birds_count': birdsCount,
       'priority_level': priorityLevel,
       'preferred_date': preferredDate,
       'preferred_time': preferredTime,
