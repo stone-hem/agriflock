@@ -1227,7 +1227,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                     ),
                   )
                       : const Icon(
-                    Icons.calculate,
+                    Icons.arrow_forward,
                     size: 20,
                     color: Colors.white,
                   ),
