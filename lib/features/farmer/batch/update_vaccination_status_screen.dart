@@ -1,4 +1,4 @@
-import 'package:agriflock360/features/farmer/batch/model/scheduled_vaccination.dart';
+import 'package:agriflock360/core/utils/date_util.dart';
 import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/vaccination_repo.dart';
 import 'package:flutter/material.dart';
@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 
 class UpdateVaccinationStatusScreen extends StatefulWidget {
   final String batchId;
-  final VaccinationSchedule vaccination;
+  final Vaccination vaccination;
 
   const UpdateVaccinationStatusScreen({
     super.key,
@@ -128,7 +128,7 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
                               Text(
                                 widget.vaccination.isOverdue
                                     ? 'Overdue: ${widget.vaccination.scheduledDate}'
-                                    : 'Scheduled: ${widget.vaccination.scheduledDate}',
+                                    : 'Scheduled: ${DateUtil.toDateWithDay(widget.vaccination.scheduledDate)}',
                                 style: TextStyle(
                                   color: widget.vaccination.isOverdue ? Colors.red.shade700 : Colors.grey.shade600,
                                   fontSize: 14,

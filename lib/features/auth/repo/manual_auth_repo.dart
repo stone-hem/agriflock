@@ -46,26 +46,28 @@ class ManualAuthRepository {
       } else {
         // Check for specific error cases
         final errorData = jsonDecode(response.body);
-        final message = errorData['message'];
 
-        if (message is Map<String, dynamic>) {
-          final status = message['status'] as String?;
-          final tempToken = message['tempToken'] as String?;
+        // Check for the new format first
+        final cond = errorData['cond'] as String?;
+        final message = errorData['message'] as String?;
+        final tempToken = errorData['tempToken'] as String?;
 
-          if (status == 'user_onboarding') {
-            return {
-              'success': false,
-              'needsOnboarding': true,
-              'tempToken': tempToken,
-            };
-          } else if (status == 'account_inactive') {
-            return {
-              'success': false,
-              'needsVerification': true,
-              'email': email,
-            };
-          }
+        if (cond == 'user_onboarding') {
+          return {
+            'success': false,
+            'needsOnboarding': true,
+            'tempToken': tempToken,
+            'message': message, // Optional: include the message if needed
+          };
+        } else if (cond == 'account_inactive') {
+          return {
+            'success': false,
+            'needsVerification': true,
+            'email': email,
+            'message': message,
+          };
         }
+
 
         // Handle other errors with the generic error handler
         ApiErrorHandler.handle(response);
@@ -73,6 +75,7 @@ class ManualAuthRepository {
           'success': false,
           'needsOnboarding': false,
           'needsVerification': false,
+          'message': message,
         };
       }
     } catch (e) {

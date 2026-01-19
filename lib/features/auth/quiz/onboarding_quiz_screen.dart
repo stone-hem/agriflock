@@ -11,6 +11,7 @@ import 'package:agriflock360/core/widgets/location_picker_step.dart';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/core/utils/date_util.dart';
+import 'package:agriflock360/features/auth/quiz/utils/terms_util.dart';
 import 'package:agriflock360/features/auth/shared/auth_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -279,6 +280,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         selfiePath: _selfieFile!.path,
         certificates: _uploadedCertificates,
         additionalDocuments: _uploadedFiles.isNotEmpty ? _uploadedFiles : null,
+        // vetAcceptedTerms: true,
       );
 
       if (result['success'] == true) {
@@ -439,18 +441,19 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
           style: const TextStyle(
             color: Colors.black87,
             fontWeight: FontWeight.w600,
-            fontSize: 18,
+            fontSize: 16,
           ),
         ),
         automaticallyImplyLeading: false,
+        centerTitle: false,
         actions: [
           FilledButton(
-            style: FilledButton.styleFrom(foregroundColor: Colors.red,backgroundColor: Colors.red),
+              style: FilledButton.styleFrom(foregroundColor: Colors.red,backgroundColor: Colors.red),
               onPressed: (){
-            context.go(AppRoutes.login);
-          }, child: Text("Cancel Onboarding",style: TextStyle(color: Colors.white),))
+                context.go(AppRoutes.login);
+              }, child: Text("Cancel Onboarding",style: TextStyle(color: Colors.white,fontSize: 10),)),
+          SizedBox(width: 5,)
         ],
-        centerTitle: false,
       ),
       body: GestureDetector(
         onTap: () {
@@ -512,7 +515,14 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
                       // Page 1: User Type Selection
                       UserTypeSelection(
                         selectedUserType: _selectedUserType,
-                        onUserTypeSelected: (String userType) {
+                        onUserTypeSelected: (String userType) async {
+                          if (userType == 'vet') {
+                            final accepted = await TermsUtil.showVetTermsDialog(context);
+                            if (!accepted) {
+                              ToastUtil.showError('You must accept the Terms & Code of Conduct to register as an Extension Officer');                              return;
+                            }
+                          }
+
                           setState(() {
                             _selectedUserType = userType;
                           });

@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class VaccineCatalog {
   final String id;
   final String vaccineName;
@@ -92,10 +94,14 @@ class Vaccination {
   final String batchId;
   final String? vaccineCatalogId;
   final VaccineCatalog? vaccineCatalog;
+  final String? inventoryItemId;
+  final String? inventoryTransactionId;
   final String vaccineName;
   final String vaccineType;
   final DateTime scheduledDate;
+  final TimeOfDay? scheduledTime;
   final DateTime? completedDate;
+  final TimeOfDay? completedTime;
   final String vaccinationStatus;
   final String dosage;
   final String administrationMethod;
@@ -103,9 +109,13 @@ class Vaccination {
   final DateTime? administeredAt;
   final int? birdsVaccinated;
   final String? cost;
+  final String? currency;
+  final String region;
+  final String? estimatedCost;
   final String? notes;
   final bool reminderSent;
   final String source;
+  final Map<String, dynamic>? metadata;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -114,10 +124,14 @@ class Vaccination {
     required this.batchId,
     this.vaccineCatalogId,
     this.vaccineCatalog,
+    this.inventoryItemId,
+    this.inventoryTransactionId,
     required this.vaccineName,
     required this.vaccineType,
     required this.scheduledDate,
+    this.scheduledTime,
     this.completedDate,
+    this.completedTime,
     required this.vaccinationStatus,
     required this.dosage,
     required this.administrationMethod,
@@ -125,9 +139,13 @@ class Vaccination {
     this.administeredAt,
     this.birdsVaccinated,
     this.cost,
+    this.currency,
+    required this.region,
+    this.estimatedCost,
     this.notes,
     required this.reminderSent,
     required this.source,
+    this.metadata,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -140,11 +158,19 @@ class Vaccination {
       vaccineCatalog: json['vaccine_catalog'] != null
           ? VaccineCatalog.fromJson(json['vaccine_catalog'])
           : null,
+      inventoryItemId: json['inventory_item_id'],
+      inventoryTransactionId: json['inventory_transaction_id'],
       vaccineName: json['vaccine_name'],
       vaccineType: json['vaccine_type'],
       scheduledDate: DateTime.parse(json['scheduled_date']),
+      scheduledTime: json['scheduled_time'] != null
+          ? _parseTime(json['scheduled_time'])
+          : null,
       completedDate: json['completed_date'] != null
           ? DateTime.parse(json['completed_date'])
+          : null,
+      completedTime: json['completed_time'] != null
+          ? _parseTime(json['completed_time'])
           : null,
       vaccinationStatus: json['vaccination_status'],
       dosage: json['dosage'],
@@ -155,32 +181,118 @@ class Vaccination {
           : null,
       birdsVaccinated: json['birds_vaccinated'],
       cost: json['cost'],
+      currency: json['currency'],
+      region: json['region'],
+      estimatedCost: json['estimated_cost'],
       notes: json['notes'],
       reminderSent: json['reminder_sent'],
       source: json['source'],
+      metadata: json['metadata'],
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
     );
   }
 
+  static TimeOfDay? _parseTime(String? timeString) {
+    if (timeString == null) return null;
+    final parts = timeString.split(':');
+    if (parts.length >= 2) {
+      return TimeOfDay(
+        hour: int.parse(parts[0]),
+        minute: int.parse(parts[1]),
+      );
+    }
+    return null;
+  }
+
+  // Alternative: Check if status is "completed" and has completion data
+  bool get isStatusCompleted {
+    return vaccinationStatus == 'completed';
+  }
+
+  // Alternative: Check if status is "scheduled" and has scheduled data
+  bool get isStatusScheduled {
+    return vaccinationStatus == 'scheduled';
+  }
+
+  // Get scheduled DateTime with time if available
+  DateTime? get scheduledDateTime {
+    if (scheduledTime != null) {
+      return DateTime(
+        scheduledDate.year,
+        scheduledDate.month,
+        scheduledDate.day,
+        scheduledTime!.hour,
+        scheduledTime!.minute,
+      );
+    }
+    return scheduledDate;
+  }
+
+  // Get completed DateTime with time if available
+  DateTime? get completedDateTime {
+    if (completedDate != null && completedTime != null) {
+      return DateTime(
+        completedDate!.year,
+        completedDate!.month,
+        completedDate!.day,
+        completedTime!.hour,
+        completedTime!.minute,
+      );
+    }
+    return completedDate;
+  }
+
+  // Check if vaccination is overdue (for scheduled vaccinations)
   bool get isOverdue {
-    if (vaccinationStatus != 'scheduled') return false;
-    return DateTime.now().isAfter(scheduledDate);
-  }
-
-  bool get isDueToday {
-    if (vaccinationStatus != 'scheduled') return false;
+    if (!isStatusScheduled) return false;
     final now = DateTime.now();
-    return scheduledDate.year == now.year &&
-        scheduledDate.month == now.month &&
-        scheduledDate.day == now.day;
+    final scheduled = scheduledDateTime ?? scheduledDate;
+    return now.isAfter(scheduled);
   }
 
+  // Check if vaccination is due today
+  bool get isDueToday {
+    if (!isStatusScheduled) return false;
+    final now = DateTime.now();
+    final scheduled = scheduledDateTime ?? scheduledDate;
+    return scheduled.year == now.year &&
+        scheduled.month == now.month &&
+        scheduled.day == now.day;
+  }
+
+  // Check if vaccination is upcoming (future scheduled)
   bool get isUpcoming {
-    if (vaccinationStatus != 'scheduled') return false;
-    return scheduledDate.isAfter(DateTime.now()) && !isDueToday;
+    if (!isStatusScheduled) return false;
+    final now = DateTime.now();
+    final scheduled = scheduledDateTime ?? scheduledDate;
+    return scheduled.isAfter(now) && !isDueToday;
+  }
+
+  // Check if vaccination is missed (overdue for more than 1 day)
+  bool get isMissed {
+    if (!isStatusScheduled) return false;
+    final now = DateTime.now();
+    final scheduled = scheduledDateTime ?? scheduledDate;
+    final difference = now.difference(scheduled);
+    return difference.inDays >= 1;
+  }
+
+  // Get vaccination status with validation
+  String get validatedStatus {
+    if (isStatusCompleted) return 'completed';
+    if (isStatusScheduled) {
+      if (isMissed) return 'missed';
+      if (isOverdue) return 'overdue';
+      if (isDueToday) return 'due_today';
+      if (isUpcoming) return 'upcoming';
+      return 'scheduled';
+    }
+    return vaccinationStatus; // fallback to original status
   }
 }
+
+
 
 class VaccinationSummary {
   final int total;

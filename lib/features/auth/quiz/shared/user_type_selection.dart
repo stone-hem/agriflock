@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 class UserTypeSelection extends StatelessWidget {
   final String? selectedUserType;
-  final Function(String) onUserTypeSelected;
+  final Future<void> Function(String) onUserTypeSelected; // Changed to async function
 
   const UserTypeSelection({
     super.key,

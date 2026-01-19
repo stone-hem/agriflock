@@ -233,6 +233,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
       houseId: _selectedHouse,
       batchId: _selectedBatch,
       serviceId: _selectedServiceType,
+      birdCount:200,
       priorityLevel: _selectedPriority!,
       preferredDate: DateTime.now()
           .add(const Duration(days: 1))

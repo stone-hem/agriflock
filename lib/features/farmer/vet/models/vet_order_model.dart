@@ -44,6 +44,7 @@ class VetEstimateRequest {
   final String? houseId;
   final String? batchId;
   final String? serviceId;
+  final int birdCount;
   final String priorityLevel;
   final String preferredDate;
   final String preferredTime;
@@ -56,6 +57,7 @@ class VetEstimateRequest {
     this.houseId,
     this.batchId,
     this.serviceId,
+    required this.birdCount,
     required this.priorityLevel,
     required this.preferredDate,
     required this.preferredTime,
@@ -70,6 +72,7 @@ class VetEstimateRequest {
       'house_id': houseId,
       'batch_id': batchId,
       'service_id': serviceId,
+      'bird_count': birdCount,
       'priority_level': priorityLevel,
       'preferred_date': preferredDate,
       'preferred_time': preferredTime,

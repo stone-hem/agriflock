@@ -1,7 +1,6 @@
 import 'package:agriflock360/core/utils/date_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
-import 'package:agriflock360/features/farmer/batch/model/scheduled_vaccination.dart';
 import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/recommended_vaccination_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/vaccination_repo.dart';
@@ -28,7 +27,6 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
 
   // State
   VaccinationDashboard? _dashboard;
-  VaccinationScheduleResponse? _scheduledVaccinations;
   VaccinationsResponse? _vaccinations;
   RecommendedVaccinationsResponse? _recommendations;
 
@@ -57,7 +55,6 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
 
     // Load data
     _loadDashboard();
-    _loadScheduledVaccinations();
     _loadVaccinationsHistory();
     _loadRecommendations();
   }
@@ -131,40 +128,6 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
     }
   }
 
-  Future<void> _loadScheduledVaccinations() async {
-    setState(() {
-      _isScheduledVaccinationsLoading = true;
-      _vaccinationsError = null;
-    });
-
-    try {
-      final result = await _repository.getScheduledVaccinations(widget.batch.id);
-
-      switch(result) {
-        case Success<VaccinationScheduleResponse>(data: final data):
-          setState(() {
-            _scheduledVaccinations = data;
-            _isScheduledVaccinationsLoading = false;
-          });
-          break;
-        case Failure(message: final error, :final statusCode, :final response):
-          setState(() {
-            _vaccinationsError = error;
-            _isScheduledVaccinationsLoading = false;
-          });
-          // Optionally handle the error using ApiErrorHandler
-          // ApiErrorHandler.handle(error);
-          break;
-      }
-    } finally {
-      // Ensure loading state is reset even if there's an unexpected error
-      if (_isScheduledVaccinationsLoading) {
-        setState(() {
-          _isScheduledVaccinationsLoading = false;
-        });
-      }
-    }
-  }
 
 
   Future<void> _loadRecommendations() async {
@@ -205,7 +168,6 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
   Future<void> _onRefresh() async {
     await Future.wait([
       _loadDashboard(),
-      _loadScheduledVaccinations(),
       _loadVaccinationsHistory(),
       _loadRecommendations(),
     ]);
@@ -420,21 +382,24 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
       onRefresh: _onRefresh,
       child: _isVaccinationsLoading
           ? const Center(child: CircularProgressIndicator())
-          : _scheduledVaccinationsError != null || _scheduledVaccinations == null
+          : _scheduledVaccinationsError != null || _vaccinations == null
           ? _buildErrorView(_scheduledVaccinationsError)
           : _buildTodayContent(),
     );
   }
 
   Widget _buildTodayContent() {
-    final dueToday = _scheduledVaccinations!.list
-        .where((v) => v.isToday)
+    final dueToday = _vaccinations!.vaccinations
+        .where((v) => !v.isStatusScheduled)
+        .where((v) => v.isDueToday)
         .toList();
-    final overdue = _scheduledVaccinations!.list
+    final overdue = _vaccinations!.vaccinations
+        .where((v) => !v.isStatusScheduled)
         .where((v) => v.isOverdue)
         .toList();
-    final upcoming = _scheduledVaccinations!.list
-        .where((v) => !v.isToday && !v.isOverdue)
+    final upcoming = _vaccinations!.vaccinations
+        .where((v) => !v.isStatusScheduled)
+        .where((v) => !v.isDueToday && !v.isOverdue)
         .toList();
 
     return ListView(
@@ -511,6 +476,7 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
 
   Widget _buildHistoryContent() {
     final completed = _vaccinations!.vaccinations
+        .where((v) => !v.isStatusCompleted)
         .toList();
 
     if (completed.isEmpty) {
@@ -703,7 +669,7 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
     );
   }
 
-  void _navigateToUpdateStatus(VaccinationSchedule vaccination) async {
+  void _navigateToUpdateStatus(Vaccination vaccination) async {
     final result = await context.push(
       '/batches/${widget.batch.id}/update-status',
       extra: vaccination,
@@ -725,7 +691,7 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
 }
 
 class _VaccinationItem extends StatelessWidget {
-  final VaccinationSchedule vaccination;
+  final Vaccination vaccination;
   final VoidCallback onUpdateStatus;
 
   const _VaccinationItem({
@@ -779,7 +745,7 @@ class _VaccinationItem extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      vaccination.dosagePerBird,
+                      vaccination.administrationMethod,
                       style: TextStyle(
                         color: Colors.grey.shade600,
                         fontSize: 12,
@@ -788,8 +754,8 @@ class _VaccinationItem extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       isOverdue
-                          ? 'Was due: ${vaccination.scheduledDate}'
-                          : 'Due: ${vaccination.scheduledDate}',
+                          ? 'Was due: ${DateUtil.toDateWithDay(vaccination.scheduledDate)}'
+                          : 'Due: ${DateUtil.toDateWithDay(vaccination.scheduledDate)}',
                       style: TextStyle(
                         color: isOverdue
                             ? Colors.red.shade700
@@ -891,7 +857,7 @@ class _CompletedVaccinationItem extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Completed: ${DateUtil.toMMDDYYYY(vaccination.completedDate ?? vaccination.scheduledDate)}',
+                      'Completed: ${DateUtil.toDateWithDay(vaccination.completedDate ?? vaccination.scheduledDate)}',
                       style: TextStyle(
                         color: Colors.grey.shade500,
                         fontSize: 11,

@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
-import 'package:agriflock360/features/farmer/batch/model/scheduled_vaccination.dart';
 import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/recommended_vaccination_model.dart';
 import 'package:agriflock360/main.dart';
@@ -40,45 +39,6 @@ class VaccinationRepository {
       if (e is http.Response) {
         return Failure(
           message: 'Failed to fetch vaccinations',
-          response: e,
-          statusCode: e.statusCode,
-        );
-      }
-
-      return Failure(message: e.toString());
-    }
-  }
-
-  Future<Result<VaccinationScheduleResponse>> getScheduledVaccinations(String batchId) async {
-    try {
-      final response = await apiClient.get(
-        '/batches/$batchId/vaccinations/lists',
-      );
-
-      final jsonResponse = jsonDecode(response.body);
-      LogUtil.info('Scheduled Vaccinations API Response: $jsonResponse');
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return Success(VaccinationScheduleResponse.fromJson(jsonResponse));
-      } else {
-        return Failure(
-          message: jsonResponse['message'] ?? 'Failed to fetch scheduled vaccinations',
-          response: response,
-          statusCode: response.statusCode,
-        );
-      }
-    } on SocketException catch (e) {
-      LogUtil.error('Network error in getScheduledVaccinations: $e');
-      return const Failure(
-        message: 'No internet connection',
-        statusCode: 0,
-      );
-    } catch (e) {
-      LogUtil.error('Error in getScheduledVaccinations: $e');
-
-      if (e is http.Response) {
-        return Failure(
-          message: 'Failed to fetch scheduled vaccinations',
           response: e,
           statusCode: e.statusCode,
         );
