@@ -1,3 +1,4 @@
+import 'package:agriflock360/features/farmer/quotation/widgets/image_with_desc.dart';
 import 'package:flutter/material.dart';
 
 class ProductionEstimateScreen extends StatefulWidget {
@@ -533,6 +534,15 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
         // Financial Summary
         _buildFinancialSummaryTable(estimate),
         const SizedBox(height: 20),
+
+        const SizedBox(height: 10),
+
+        ImageWithDescriptionWidget(imageAssetPath: 'assets/quotation/img_7.png', description: 'This is the first image description'),
+        ImageWithDescriptionWidget(imageAssetPath: 'assets/quotation/img_8.png', description: 'This is the first image description'),
+        ImageWithDescriptionWidget(imageAssetPath: 'assets/quotation/img_9.png', description: 'This is the first image description'),
+
+        const SizedBox(height: 10),
+
 
         // Recommendations
         _buildRecommendationsTable(breed),
