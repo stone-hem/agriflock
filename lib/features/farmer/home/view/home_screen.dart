@@ -1,3 +1,4 @@
+import 'package:agriflock360/app_routes.dart';
 import 'package:agriflock360/core/model/user_model.dart';
 import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
@@ -474,8 +475,12 @@ class _HomeScreenState extends State<HomeScreen> {
               child: HomeStatCard(
                 value: '${_summary!.numberOfFarms}',
                 label: 'Farms',
-                color: Colors.red.shade100,
-                textColor: Colors.red.shade800,
+                color: Colors.green.shade100,
+                textColor: Colors.green.shade800,
+                buttonText: 'View',
+               onButtonPressed: (){
+                  context.push('/farms');
+               },
               ),
             ),
             const SizedBox(width: 12),
@@ -518,15 +523,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 textColor: Colors.orange.shade800,
               ),
             ),
-            // const SizedBox(width: 12),
-            // Expanded(
-            //   child: HomeStatCard(
-            //     value: _summary!.activeBatches.toString(),
-            //     label: 'Active Batches',
-            //     color: Colors.green.shade100,
-            //     textColor: Colors.green.shade800,
-            //   ),
-            // ),
           ],
         ),
 
@@ -563,18 +559,11 @@ class _HomeScreenState extends State<HomeScreen> {
         GridView.count(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
+          crossAxisCount: 1,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
-          childAspectRatio: 1.0,
+          childAspectRatio: 3.2,
           children: [
-            HomeActionTile(
-              icon: Icons.group_add,
-              title: 'Farms',
-              subtitle: 'Manage farms and details',
-              color: Colors.green,
-              onTap: () => context.push('/farms'),
-            ),
             HomeActionTile(
               icon: Icons.restaurant,
               title: 'My Subscription',

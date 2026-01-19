@@ -5,10 +5,18 @@ class HomeStatCard extends StatelessWidget {
   final String label;
   final Color color;
   final Color textColor;
+  final VoidCallback? onButtonPressed;
+  final String? buttonText;
 
-  const HomeStatCard({super.key, required this.value, required this.label, required this.color, required this.textColor});
 
-
+  const HomeStatCard({
+    super.key,
+    required this.value,
+    required this.label,
+    required this.color,
+    required this.textColor,
+    this.onButtonPressed, this.buttonText,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +45,32 @@ class HomeStatCard extends StatelessWidget {
               fontWeight: FontWeight.w500,
             ),
           ),
+
+          if (onButtonPressed != null) ...[
+            const SizedBox(height: 12),
+            TextButton.icon(
+              onPressed: onButtonPressed,
+              style: TextButton.styleFrom(
+                foregroundColor: textColor,
+                padding: const EdgeInsets.symmetric(horizontal: 0),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              icon: Icon(
+                Icons.arrow_forward,
+                size: 16,
+                color: textColor,
+              ),
+              label: Text(
+                buttonText!,
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ]
         ],
       ),
     );
