@@ -1,12 +1,15 @@
+import 'package:agriflock360/features/farmer/batch/model/recommended_vaccination_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class AdoptScheduleScreen extends StatefulWidget {
+  final RecommendedVaccinationsResponse vaccineSchedule;
   final bool isSingleItem;
   final String? vaccineName;
 
   const AdoptScheduleScreen({
     super.key,
+    required this.vaccineSchedule,
     this.isSingleItem = false,
     this.vaccineName,
   });
@@ -21,60 +24,12 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
   bool _enableReminders = true;
   bool _adjustForAge = true;
 
-  final List<Map<String, String>> _scheduleItems = [
-    {
-      'name': 'Marek\'s Disease',
-      'timing': 'Day 1 (at hatchery)',
-      'method': 'Subcutaneous injection',
-    },
-    {
-      'name': 'Newcastle Disease (ND)',
-      'timing': 'Day 7-10',
-      'method': 'Eye/nose drop',
-    },
-    {
-      'name': 'Infectious Bursal Disease (Gumboro)',
-      'timing': 'Day 10-14',
-      'method': 'Drinking water',
-    },
-    {
-      'name': 'Newcastle Disease (Booster)',
-      'timing': 'Day 21-28',
-      'method': 'Drinking water',
-    },
-    {
-      'name': 'Infectious Bronchitis (IB)',
-      'timing': 'Day 14-21',
-      'method': 'Eye drop',
-    },
-    {
-      'name': 'Fowl Pox',
-      'timing': 'Week 6-8',
-      'method': 'Wing-web stab',
-    },
-    {
-      'name': 'Gumboro (Booster)',
-      'timing': 'Day 21-28',
-      'method': 'Drinking water',
-    },
-    {
-      'name': 'Avian Influenza',
-      'timing': 'Week 8-12',
-      'method': 'Subcutaneous',
-    },
-  ];
-
   @override
   void initState() {
     super.initState();
-    if (widget.isSingleItem && widget.vaccineName != null) {
-      // Pre-select the single item
-      _selectedItems[widget.vaccineName!] = true;
-    } else {
-      // Pre-select all items for "Adopt All"
-      for (var item in _scheduleItems) {
-        _selectedItems[item['name']!] = true;
-      }
+    // Auto-select all items from the passed-in schedule
+    for (var vaccine in widget.vaccineSchedule.data) {
+      _selectedItems[vaccine.vaccineName] = true;
     }
   }
 
@@ -128,8 +83,8 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Batch: 123',
+                          Text(
+                            'Batch Age: ${widget.vaccineSchedule.meta.batchAgeDays} days',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -251,7 +206,7 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Vaccination Items',
+                  'Vaccination Items (${widget.vaccineSchedule.data.length})',
                   style: Theme.of(context).textTheme.titleMedium!.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Colors.grey.shade800,
@@ -277,7 +232,7 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
             if (widget.isSingleItem && widget.vaccineName != null)
               _buildSingleScheduleItem()
             else
-              ..._scheduleItems.map((item) => _buildScheduleItem(item)),
+              ...widget.vaccineSchedule.data.map((vaccine) => _buildScheduleItem(vaccine)),
 
             const SizedBox(height: 24),
 
@@ -307,7 +262,7 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    _buildSummaryRow('Selected items', '$selectedCount'),
+                    _buildSummaryRow('Selected items', '$selectedCount/${widget.vaccineSchedule.data.length}'),
                     _buildSummaryRow(
                       'Start date',
                       _startDate == null
@@ -316,6 +271,7 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
                     ),
                     _buildSummaryRow('Reminders', _enableReminders ? 'Enabled' : 'Disabled'),
                     _buildSummaryRow('Age adjustment', _adjustForAge ? 'Yes' : 'No'),
+                    _buildSummaryRow('Batch age', '${widget.vaccineSchedule.meta.batchAgeDays} days'),
                   ],
                 ),
               ),
@@ -327,22 +283,22 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
   }
 
   Widget _buildSingleScheduleItem() {
-    final item = _scheduleItems.firstWhere(
-          (i) => i['name'] == widget.vaccineName,
-      orElse: () => _scheduleItems[0],
+    final vaccine = widget.vaccineSchedule.data.firstWhere(
+          (v) => v.vaccineName == widget.vaccineName,
+      orElse: () => widget.vaccineSchedule.data.first,
     );
-    return _buildScheduleItem(item, isSingle: true);
+    return _buildScheduleItem(vaccine, isSingle: true);
   }
 
-  Widget _buildScheduleItem(Map<String, String> item, {bool isSingle = false}) {
-    final isSelected = _selectedItems[item['name']] ?? false;
+  Widget _buildScheduleItem(RecommendedVaccination vaccine, {bool isSingle = false}) {
+    final isSelected = _selectedItems[vaccine.vaccineName] ?? false;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         onTap: isSingle ? null : () {
           setState(() {
-            _selectedItems[item['name']!] = !isSelected;
+            _selectedItems[vaccine.vaccineName] = !isSelected;
           });
         },
         borderRadius: BorderRadius.circular(12),
@@ -380,12 +336,23 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      item['name']!,
+                      vaccine.vaccineName,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
                       ),
                     ),
+                    if (vaccine.targetDisease != null && vaccine.targetDisease!.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        vaccine.targetDisease!,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 4),
                     Row(
                       children: [
@@ -396,7 +363,7 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          item['timing']!,
+                          'Day ${vaccine.recommendedAgeMin}-${vaccine.recommendedAgeMax}',
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey.shade600,
@@ -413,15 +380,49 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
                           color: Colors.grey.shade600,
                         ),
                         const SizedBox(width: 4),
-                        Text(
-                          item['method']!,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade600,
+                        Expanded(
+                          child: Text(
+                            vaccine.administrationMethod,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
                           ),
                         ),
                       ],
                     ),
+                    if (vaccine.dosage.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.medication,
+                            size: 14,
+                            color: Colors.grey.shade600,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            vaccine.dosage,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    if (vaccine.description != null && vaccine.description!.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        vaccine.description!,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade700,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -459,16 +460,16 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
 
   void _selectAll() {
     setState(() {
-      for (var item in _scheduleItems) {
-        _selectedItems[item['name']!] = true;
+      for (var vaccine in widget.vaccineSchedule.data) {
+        _selectedItems[vaccine.vaccineName] = true;
       }
     });
   }
 
   void _deselectAll() {
     setState(() {
-      for (var item in _scheduleItems) {
-        _selectedItems[item['name']!] = false;
+      for (var vaccine in widget.vaccineSchedule.data) {
+        _selectedItems[vaccine.vaccineName] = false;
       }
     });
   }
@@ -499,6 +500,11 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
       );
       return;
     }
+
+    // Get selected vaccines
+    final selectedVaccines = widget.vaccineSchedule.data
+        .where((vaccine) => _selectedItems[vaccine.vaccineName] == true)
+        .toList();
 
     showDialog(
       context: context,
@@ -540,6 +546,40 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
                 ),
               ),
             ],
+            if (selectedCount > 0) ...[
+              const SizedBox(height: 12),
+              Container(
+                constraints: const BoxConstraints(maxHeight: 150),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Selected vaccines:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Colors.grey.shade800,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      ...selectedVaccines.take(5).map((vaccine) => Padding(
+                        padding: const EdgeInsets.only(bottom: 2),
+                        child: Text(
+                          '• ${vaccine.vaccineName}',
+                          style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                        ),
+                      )),
+                      if (selectedVaccines.length > 5)
+                        Text(
+                          '... and ${selectedVaccines.length - 5} more',
+                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontStyle: FontStyle.italic),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
         actions: [
@@ -550,7 +590,7 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
           FilledButton(
             onPressed: () {
               Navigator.pop(context);
-              _confirmAdoption(selectedCount);
+              _confirmAdoption(selectedVaccines);
             },
             style: FilledButton.styleFrom(
               backgroundColor: Colors.green,
@@ -562,14 +602,14 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
     );
   }
 
-  void _confirmAdoption(int count) {
+  void _confirmAdoption(List<RecommendedVaccination> selectedVaccines) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Successfully adopted $count vaccination schedule(s)'),
+            Text('Successfully adopted ${selectedVaccines.length} vaccination schedule(s)'),
             const Text('All schedules are now active'),
           ],
         ),

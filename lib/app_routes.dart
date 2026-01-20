@@ -6,6 +6,7 @@ import 'package:agriflock360/features/farmer/batch/edit_batch_screen.dart';
 import 'package:agriflock360/features/farmer/batch/houses_screen.dart';
 import 'package:agriflock360/features/farmer/batch/log_feeding_screen.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
+import 'package:agriflock360/features/farmer/batch/model/recommended_vaccination_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
 import 'package:agriflock360/features/farmer/batch/record_expenditure_screen.dart';
 import 'package:agriflock360/features/farmer/batch/record_vaccination_screen.dart';
@@ -330,8 +331,13 @@ class AppRoutes {
               },
             ),
             GoRoute(
-              path: 'adopt-schedule',
-              builder: (context, state) => AdoptScheduleScreen(),
+              path: ':id/adopt-schedule',
+              builder: (context, state) {
+                final batchId = state.pathParameters['id']!;
+                final vaccineSchedule = state.extra as RecommendedVaccinationsResponse;
+
+                return AdoptScheduleScreen(vaccineSchedule:vaccineSchedule);
+                },
             ),
             GoRoute(
               path: 'update-status',

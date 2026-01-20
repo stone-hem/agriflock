@@ -31,7 +31,6 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
   RecommendedVaccinationsResponse? _recommendations;
 
   bool _isDashboardLoading = true;
-  bool _isScheduledVaccinationsLoading = true;
   bool _isVaccinationsLoading = true;
   bool _isRecommendationsLoading = true;
   String? _dashboardError;
@@ -513,18 +512,19 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
     return ListView(
       controller: _scrollControllers[2],
       children: [
-        Container(
+        if (_recommendations!.data.isNotEmpty)
+          Container(
           margin: const EdgeInsets.only(bottom: 16),
           child: FilledButton.icon(
             onPressed: () async {
               final result = await context.push(
-                  '/batches/${widget.batch.id}/adopt-all-schedule');
+                  '/batches/${widget.batch.id}/adopt-schedule',extra: _recommendations);
               if (result == true) {
                 _onRefresh();
               }
             },
             icon: const Icon(Icons.download),
-            label: const Text('Adopt All Schedule'),
+            label: const Text('Adopt Schedule'),
             style: FilledButton.styleFrom(
               backgroundColor: Colors.green,
               minimumSize: const Size(double.infinity, 48),
@@ -604,7 +604,6 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
         ..._recommendations!.data.map((recommendation) => RecommendedVaccinationItem(
           recommendation: recommendation,
           batchAge: batchAge,
-          onAdopt: () => _navigateToAdoptRecommendation(recommendation),
         )),
       ],
     );
@@ -682,15 +681,7 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
     }
   }
 
-  void _navigateToAdoptRecommendation(RecommendedVaccination recommendation) async {
-    final result = await context.push(
-      '/batches/${widget.batch.id}/adopt-schedule?vaccineId=${recommendation.id}',
-      extra: recommendation,
-    );
-    if (result == true) {
-      _onRefresh();
-    }
-  }
+
 }
 
 class _VaccinationItem extends StatelessWidget {
@@ -921,13 +912,11 @@ class _CompletedVaccinationItem extends StatelessWidget {
 class RecommendedVaccinationItem extends StatelessWidget {
   final RecommendedVaccination recommendation;
   final int batchAge;
-  final VoidCallback onAdopt;
 
   const RecommendedVaccinationItem({
     super.key,
     required this.recommendation,
     required this.batchAge,
-    required this.onAdopt,
   });
 
   String get _getTimingDescription {
@@ -1010,20 +999,6 @@ class RecommendedVaccinationItem extends StatelessWidget {
                       ),
                     ),
                   ],
-                ),
-              ),
-              SizedBox(
-                width: 90,
-                child: FilledButton(
-                  onPressed: onAdopt,
-                  style: FilledButton.styleFrom(
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  ),
-                  child: const Text(
-                    'Adopt',
-                    style: TextStyle(fontSize: 12),
-                  ),
                 ),
               ),
             ],
