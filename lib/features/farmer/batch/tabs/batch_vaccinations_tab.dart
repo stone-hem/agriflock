@@ -518,7 +518,10 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
           child: FilledButton.icon(
             onPressed: () async {
               final result = await context.push(
-                  '/batches/${widget.batch.id}/adopt-schedule',extra: _recommendations);
+                  '/batches/adopt-schedule', extra: {
+                'batch': widget.batch,
+                'schedule': _recommendations,
+              },);
               if (result == true) {
                 _onRefresh();
               }

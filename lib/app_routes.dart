@@ -331,12 +331,12 @@ class AppRoutes {
               },
             ),
             GoRoute(
-              path: ':id/adopt-schedule',
+              path: 'adopt-schedule',
               builder: (context, state) {
-                final batchId = state.pathParameters['id']!;
-                final vaccineSchedule = state.extra as RecommendedVaccinationsResponse;
-
-                return AdoptScheduleScreen(vaccineSchedule:vaccineSchedule);
+                final extra = state.extra as Map<String, dynamic>;
+                final batch = extra['batch'] as BatchModel;
+                final schedule= extra['schedule'] as RecommendedVaccinationsResponse;
+                return AdoptScheduleScreen(vaccineSchedule:schedule, batch: batch);
                 },
             ),
             GoRoute(

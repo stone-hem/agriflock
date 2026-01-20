@@ -1,17 +1,16 @@
+import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/recommended_vaccination_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class AdoptScheduleScreen extends StatefulWidget {
   final RecommendedVaccinationsResponse vaccineSchedule;
-  final bool isSingleItem;
-  final String? vaccineName;
+  final BatchModel batch;
 
   const AdoptScheduleScreen({
     super.key,
     required this.vaccineSchedule,
-    this.isSingleItem = false,
-    this.vaccineName,
+    required this.batch,
   });
 
   @override
@@ -40,7 +39,7 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: Text(widget.isSingleItem ? 'Adopt Schedule' : 'Adopt All Schedules'),
+        title: Text('Select items to adopt - ${widget.batch.batchName}'),
         centerTitle: false,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -84,16 +83,14 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Batch Age: ${widget.vaccineSchedule.meta.batchAgeDays} days',
+                            'Batch: ${widget.batch.batchName}',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                             ),
                           ),
                           Text(
-                            widget.isSingleItem
-                                ? 'Adopt recommended schedule item'
-                                : 'Adopt complete vaccination schedule',
+                            'Batch Age: ${widget.vaccineSchedule.meta.batchAgeDays} days',
                             style: TextStyle(
                               color: Colors.grey.shade600,
                               fontSize: 14,
@@ -212,27 +209,23 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
                     color: Colors.grey.shade800,
                   ),
                 ),
-                if (!widget.isSingleItem)
-                  Row(
-                    children: [
-                      TextButton(
-                        onPressed: _selectAll,
-                        child: const Text('All'),
-                      ),
-                      TextButton(
-                        onPressed: _deselectAll,
-                        child: const Text('Deselect'),
-                      ),
-                    ],
-                  ),
+                Row(
+                  children: [
+                    TextButton(
+                      onPressed: _selectAll,
+                      child: const Text('All'),
+                    ),
+                    TextButton(
+                      onPressed: _deselectAll,
+                      child: const Text('Deselect'),
+                    ),
+                  ],
+                ),
               ],
             ),
             const SizedBox(height: 12),
 
-            if (widget.isSingleItem && widget.vaccineName != null)
-              _buildSingleScheduleItem()
-            else
-              ...widget.vaccineSchedule.data.map((vaccine) => _buildScheduleItem(vaccine)),
+            ...widget.vaccineSchedule.data.map((vaccine) => _buildScheduleItem(vaccine)),
 
             const SizedBox(height: 24),
 
@@ -282,21 +275,13 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
     );
   }
 
-  Widget _buildSingleScheduleItem() {
-    final vaccine = widget.vaccineSchedule.data.firstWhere(
-          (v) => v.vaccineName == widget.vaccineName,
-      orElse: () => widget.vaccineSchedule.data.first,
-    );
-    return _buildScheduleItem(vaccine, isSingle: true);
-  }
-
-  Widget _buildScheduleItem(RecommendedVaccination vaccine, {bool isSingle = false}) {
+  Widget _buildScheduleItem(RecommendedVaccination vaccine) {
     final isSelected = _selectedItems[vaccine.vaccineName] ?? false;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
-        onTap: isSingle ? null : () {
+        onTap: () {
           setState(() {
             _selectedItems[vaccine.vaccineName] = !isSelected;
           });
@@ -314,23 +299,22 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
           ),
           child: Row(
             children: [
-              if (!isSingle)
-                Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    color: isSelected ? Colors.purple : Colors.transparent,
-                    border: Border.all(
-                      color: isSelected ? Colors.purple : Colors.grey.shade400,
-                      width: 2,
-                    ),
-                    borderRadius: BorderRadius.circular(6),
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: isSelected ? Colors.purple : Colors.transparent,
+                  border: Border.all(
+                    color: isSelected ? Colors.purple : Colors.grey.shade400,
+                    width: 2,
                   ),
-                  child: isSelected
-                      ? const Icon(Icons.check, size: 16, color: Colors.white)
-                      : null,
+                  borderRadius: BorderRadius.circular(6),
                 ),
-              if (!isSingle) const SizedBox(width: 12),
+                child: isSelected
+                    ? const Icon(Icons.check, size: 16, color: Colors.white)
+                    : null,
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
