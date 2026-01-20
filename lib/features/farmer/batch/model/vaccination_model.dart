@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+
 
 class VaccineCatalog {
   final String id;
@@ -417,38 +419,56 @@ class CreateVaccinationRequest {
   }
 }
 
+
 class UpdateVaccinationStatusRequest {
   final String status;
-  final DateTime? completedDate;
+  final String? actualDate;
+  final String? actualTime;
   final int? birdsVaccinated;
+  final String? administeredBy;
   final String? notes;
   final String? failureReason;
   final String? cancellationReason;
-  final DateTime? scheduledDate;
-
-
+  final bool? rescheduleAfterFailure;
+  final String? newScheduledDate;
+  final String? newScheduledTime;
+  final String? rescheduleReason;
 
   UpdateVaccinationStatusRequest({
     required this.status,
-    this.completedDate,
+    this.actualDate,
+    this.actualTime,
     this.birdsVaccinated,
+    this.administeredBy,
     this.notes,
     this.failureReason,
     this.cancellationReason,
-    this.scheduledDate,
+    this.rescheduleAfterFailure,
+    this.newScheduledDate,
+    this.newScheduledTime,
+    this.rescheduleReason,
   });
 
   Map<String, dynamic> toJson() {
     return {
-      'vaccination_status': status,
-      if (completedDate != null)
-        'completed_date': completedDate!.toIso8601String(),
+      'status': status,
+      if (actualDate != null) 'actual_date': actualDate,
+      if (actualTime != null) 'actual_time': actualTime,
       if (birdsVaccinated != null) 'birds_vaccinated': birdsVaccinated,
+      if (administeredBy != null) 'administered_by': administeredBy,
       if (notes != null) 'notes': notes,
       if (failureReason != null) 'failure_reason': failureReason,
       if (cancellationReason != null) 'cancellation_reason': cancellationReason,
-      if (scheduledDate != null) 'scheduled_date': scheduledDate,
+      if (rescheduleAfterFailure != null)
+        'reschedule_after_failure': rescheduleAfterFailure,
+      if (newScheduledDate != null) 'new_scheduled_date': newScheduledDate,
+      if (newScheduledTime != null) 'new_scheduled_time': newScheduledTime,
+      if (rescheduleReason != null) 'reschedule_reason': rescheduleReason,
     };
+  }
+
+  String toJsonString() {
+    return jsonEncode(toJson());
   }
 }
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class ReusableInput extends StatelessWidget {
-  final TextEditingController controller;
+  final TextEditingController? controller;
   final String? labelText;
   final String? topLabel;
   final String hintText;
@@ -20,13 +20,14 @@ class ReusableInput extends StatelessWidget {
   final int? maxLines;
   final int? minLines;
   final String? prefixText;
+  final String? initialValue;
   final TextInputAction? textInputAction;
   final void Function(String)? onChanged;
   final void Function(String)? onFieldSubmitted;
 
   const ReusableInput({
     super.key,
-    required this.controller,
+    this.controller,
     this.labelText,
     required this.hintText,
     this.icon, // Changed from required to optional
@@ -47,6 +48,7 @@ class ReusableInput extends StatelessWidget {
     this.onChanged,
     this.onFieldSubmitted,
     this.topLabel, this.prefixText,
+    this.initialValue,
   });
 
   @override
@@ -75,6 +77,7 @@ class ReusableInput extends StatelessWidget {
         const SizedBox(height: 10),
         TextFormField(
           controller: controller,
+          initialValue: initialValue,
           obscureText: obscureText,
           keyboardType: keyboardType,
           validator: validator,

@@ -334,14 +334,14 @@ class AppRoutes {
               builder: (context, state) => AdoptScheduleScreen(),
             ),
             GoRoute(
-              path: ':id/update-status',
+              path: 'update-status',
               builder: (context, state) {
-                final batchId = state.pathParameters['id']!;
-
-                final extra = state.extra as Vaccination;
+                final extra = state.extra as Map<String, dynamic>;
+                final batch = extra['batch'] as BatchModel;
+                final vaccination = extra['vaccination'] as Vaccination;
                 return UpdateVaccinationStatusScreen(
-                  vaccination: extra,
-                  batchId: batchId,
+                  batch: batch,
+                  vaccination: vaccination,
                 );
               },
             ),

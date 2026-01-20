@@ -295,49 +295,9 @@ class VaccinationRepository {
     }
   }
 
-  /// Adopt a single recommended vaccination
-  Future<Result<Vaccination>> adoptRecommendedVaccination(
-    String batchId,
-    AdoptVaccinationRequest request,
-  ) async {
-    try {
-      final response = await apiClient.post(
-        '/batches/$batchId/vaccinations/adopt',
-        body: jsonEncode(request.toJson()),
-      );
-
-      final jsonResponse = jsonDecode(response.body);
-      LogUtil.info('Adopt Vaccination API Response: $jsonResponse');
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return Success(Vaccination.fromJson(jsonResponse));
-      } else {
-        return Failure(
-          message: jsonResponse['message'] ?? 'Failed to adopt vaccination',
-          response: response,
-          statusCode: response.statusCode,
-        );
-      }
-    } on SocketException catch (e) {
-      LogUtil.error('Network error in adoptRecommendedVaccination: $e');
-      return const Failure(message: 'No internet connection', statusCode: 0);
-    } catch (e) {
-      LogUtil.error('Error in adoptRecommendedVaccination: $e');
-
-      if (e is http.Response) {
-        return Failure(
-          message: 'Failed to adopt vaccination',
-          response: e,
-          statusCode: e.statusCode,
-        );
-      }
-
-      return Failure(message: e.toString());
-    }
-  }
 
   /// Adopt all recommended vaccinations
-  Future<Result<List<Vaccination>>> adoptAllRecommendedVaccinations(
+  Future<Result<List<Vaccination>>> adoptRecommendedVaccinations(
     String batchId,
     AdoptAllVaccinationsRequest request,
   ) async {

@@ -671,8 +671,11 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
 
   void _navigateToUpdateStatus(Vaccination vaccination) async {
     final result = await context.push(
-      '/batches/${widget.batch.id}/update-status',
-      extra: vaccination,
+      '/batches/update-status',
+      extra: {
+        'batch': widget.batch,
+        'vaccination': vaccination,
+      },
     );
     if (result == true) {
       _onRefresh();
