@@ -296,15 +296,14 @@ class VaccinationRepository {
   }
 
 
-  /// Adopt all recommended vaccinations
+  /// Adopt  recommended vaccinations
   Future<Result<List<Vaccination>>> adoptRecommendedVaccinations(
-    String batchId,
-    AdoptAllVaccinationsRequest request,
+    String batchId, AdoptVaccinationsRequest request,
   ) async {
     try {
       final response = await apiClient.post(
-        '/batches/$batchId/vaccinations/adopt-all',
-        body: jsonEncode(request.toJson()),
+        '/batches/$batchId/vaccinations/vaccinations/adopt',
+        body: request.toJson(),
       );
 
       final jsonResponse = jsonDecode(response.body);

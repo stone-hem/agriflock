@@ -1,7 +1,11 @@
+import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/recommended_vaccination_model.dart';
+import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
+import 'package:agriflock360/features/farmer/batch/repo/vaccination_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 
 class AdoptScheduleScreen extends StatefulWidget {
   final RecommendedVaccinationsResponse vaccineSchedule;
@@ -18,10 +22,14 @@ class AdoptScheduleScreen extends StatefulWidget {
 }
 
 class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
+  final _vaccinationRepository=VaccinationRepository();
+
+
   final Map<String, bool> _selectedItems = {};
   DateTime? _startDate;
   bool _enableReminders = true;
   bool _adjustForAge = true;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -30,6 +38,8 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
     for (var vaccine in widget.vaccineSchedule.data) {
       _selectedItems[vaccine.vaccineName] = true;
     }
+    // Set default start date to today
+    _startDate = DateTime.now();
   }
 
   @override
@@ -48,16 +58,26 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
           onPressed: () => context.pop(),
         ),
         actions: [
-          TextButton(
-            onPressed: selectedCount > 0 ? _adoptSchedule : null,
-            child: Text(
-              'Adopt ($selectedCount)',
-              style: TextStyle(
-                color: selectedCount > 0 ? Colors.green : Colors.grey,
-                fontWeight: FontWeight.bold,
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            )
+          else
+            TextButton(
+              onPressed: selectedCount > 0 && !_isLoading ? _adoptSchedule : null,
+              child: Text(
+                'Adopt ($selectedCount)',
+                style: TextStyle(
+                  color: selectedCount > 0 && !_isLoading ? Colors.green : Colors.grey,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -115,7 +135,7 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
             ),
             const SizedBox(height: 8),
             InkWell(
-              onTap: _selectStartDate,
+              onTap: _isLoading ? null : _selectStartDate,
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -173,7 +193,7 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
                       style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                     ),
                     value: _adjustForAge,
-                    onChanged: (value) {
+                    onChanged: _isLoading ? null : (value) {
                       setState(() {
                         _adjustForAge = value;
                       });
@@ -187,7 +207,7 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
                       style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                     ),
                     value: _enableReminders,
-                    onChanged: (value) {
+                    onChanged: _isLoading ? null : (value) {
                       setState(() {
                         _enableReminders = value;
                       });
@@ -212,11 +232,11 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
                 Row(
                   children: [
                     TextButton(
-                      onPressed: _selectAll,
+                      onPressed: _isLoading ? null : _selectAll,
                       child: const Text('All'),
                     ),
                     TextButton(
-                      onPressed: _deselectAll,
+                      onPressed: _isLoading ? null : _deselectAll,
                       child: const Text('Deselect'),
                     ),
                   ],
@@ -281,7 +301,7 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
-        onTap: () {
+        onTap: _isLoading ? null : () {
           setState(() {
             _selectedItems[vaccine.vaccineName] = !isSelected;
           });
@@ -461,7 +481,7 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
   Future<void> _selectStartDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: _startDate ?? DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
     );
@@ -586,21 +606,82 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
     );
   }
 
-  void _confirmAdoption(List<RecommendedVaccination> selectedVaccines) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Successfully adopted ${selectedVaccines.length} vaccination schedule(s)'),
-            const Text('All schedules are now active'),
-          ],
-        ),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 3),
-      ),
-    );
-    context.pop();
+  Future<void> _confirmAdoption(List<RecommendedVaccination> selectedVaccines) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Extract vaccine catalog IDs from selected vaccines
+      final vaccineCatalogIds = selectedVaccines
+          .where((vaccine) => vaccine.id != null && vaccine.id!.isNotEmpty)
+          .map((vaccine) => vaccine.id!)
+          .toList();
+
+      if (vaccineCatalogIds.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No valid vaccine IDs found'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // Create the request object matching the API requirements
+      final request = AdoptVaccinationsRequest(
+        vaccineCatalogIds: vaccineCatalogIds,
+        scheduledDate: _startDate!,
+        skipExisting: _adjustForAge,
+      );
+
+      // Call the repository
+      final result = await _vaccinationRepository.adoptRecommendedVaccinations(
+        widget.batch.id,
+        request,
+      );
+
+      switch(result) {
+        case Success<List<Vaccination>>():
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Successfully adopted ${selectedVaccines.length} vaccination schedule(s)'),
+                ],
+              ),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+
+          // Navigate back
+          if (context.mounted) {
+            context.pop();
+          }
+        case Failure<List<Vaccination>>(message:final error):
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(error),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+      }
+
+      setState(() {
+        _isLoading = false;
+      });
+
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 }
