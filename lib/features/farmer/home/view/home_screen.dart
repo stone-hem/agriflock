@@ -427,11 +427,24 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   _buildStatsOverview(),
                   const SizedBox(height: 20),
-
-                  _buildQuickActions(context),
+                  Text(
+                    'Quick Action',
+                    style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade800,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  HomeActionTile(
+                    icon: Icons.restaurant,
+                    title: 'My Subscription',
+                    subtitle: 'Manage my subscriptions',
+                    color: Colors.orange,
+                    onTap: () => context.push('/payg'),
+                  ),
                   const SizedBox(height: 20),
 
-                  HomePerformanceGraph(),
+                  FinancialPerformanceGraph(),
                   const SizedBox(height: 20),
 
                   _buildRecentActivitySection(context),
@@ -544,38 +557,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildQuickActions(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Quick Actions',
-          style: Theme.of(context).textTheme.titleLarge!.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.grey.shade800,
-          ),
-        ),
-        const SizedBox(height: 16),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 1,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: 3.5,
-          children: [
-            HomeActionTile(
-              icon: Icons.restaurant,
-              title: 'My Subscription',
-              subtitle: 'Manage my subscriptions',
-              color: Colors.orange,
-              onTap: () => context.push('/payg'),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
 
   Widget _buildRecentActivitySection(BuildContext context) {
     if (_isActivitiesLoading) {
