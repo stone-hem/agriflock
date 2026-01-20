@@ -1,6 +1,6 @@
 class VetOrderRequest {
   final String vetId;
-  final String? houseId;
+  final List<String>? houseIds;
   final List<String>? batchIds;
   final List<String> serviceIds;
   final int birdsCount;
@@ -13,7 +13,7 @@ class VetOrderRequest {
 
   VetOrderRequest({
     required this.vetId,
-    this.houseId,
+    this.houseIds,
     this.batchIds,
     required this.serviceIds,
     required this.birdsCount,
@@ -28,9 +28,9 @@ class VetOrderRequest {
   Map<String, dynamic> toJson() {
     return {
       'vet_id': vetId,
-      'house_id': houseId,
-      'batch_id': batchIds,
-      'service_id': serviceIds,
+      'house_ids': houseIds,
+      'batch_ids': batchIds,
+      'service_ids': serviceIds,
       'birds_count': birdsCount,
       'priority_level': priorityLevel,
       'preferred_date': preferredDate,
@@ -44,7 +44,7 @@ class VetOrderRequest {
 
 class VetEstimateRequest {
   final String vetId;
-  final String? houseId;
+  final List<String>? houseIds;
   final List<String>? batchIds; // Changed from single batchId to list
   final List<String> serviceIds; // Changed from single serviceId to list
   final int birdsCount;
@@ -57,7 +57,7 @@ class VetEstimateRequest {
 
   VetEstimateRequest({
     required this.vetId,
-    this.houseId,
+    this.houseIds,
     this.batchIds,
     required this.serviceIds,
     required this.birdsCount,
@@ -72,9 +72,9 @@ class VetEstimateRequest {
   Map<String, dynamic> toJson() {
     return {
       'vet_id': vetId,
-      'house_id': houseId,
-      'batchIds': batchIds,
-      'serviceIds': serviceIds,
+      'house_ids': houseIds,
+      'batch_ids': batchIds,
+      'service_ids': serviceIds,
       'birds_count': birdsCount,
       'priority_level': priorityLevel,
       'preferred_date': preferredDate,

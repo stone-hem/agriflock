@@ -562,7 +562,7 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisCount: 1,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
-          childAspectRatio: 3.2,
+          childAspectRatio: 3.5,
           children: [
             HomeActionTile(
               icon: Icons.restaurant,

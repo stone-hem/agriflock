@@ -129,6 +129,7 @@ class BatchHouseRepository {
       } else {
         // Regular JSON request without photo
         batchData.removeWhere((key, value) => value == null);
+        LogUtil.info(batchData.toString());
 
         final response = await apiClient.post('/batches', body: batchData);
 

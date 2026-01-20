@@ -466,7 +466,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
 
     final request = VetOrderRequest(
       vetId: widget.vet.id,
-      houseId: widget.request.houseId,
+      houseIds: widget.request.houseIds,
       batchIds: widget.request.batchIds,
       serviceIds: widget.request.serviceIds,
       birdsCount: widget.request.birdsCount,

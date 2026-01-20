@@ -1,7 +1,7 @@
 import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
-import 'package:agriflock360/features/farmer/batch/model/archived_batch_model.dart';
+import 'package:agriflock360/features/farmer/batch/model/general_batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/archived_batch_repo.dart';
 import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
 import 'package:flutter/material.dart';

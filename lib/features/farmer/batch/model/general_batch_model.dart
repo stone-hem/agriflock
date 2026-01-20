@@ -1,4 +1,4 @@
-// lib/features/farmer/batch/models/archived_batch_model.dart
+// lib/features/farmer/batch/models/general_batch_model.dart
 
 class ArchivedBatchModel {
   final String id;

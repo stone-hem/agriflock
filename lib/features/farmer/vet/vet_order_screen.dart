@@ -310,7 +310,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
 
     final request = VetEstimateRequest(
       vetId: widget.vet.id,
-      houseId: _selectedHouse,
+      houseIds: [?_selectedHouse],
       batchIds: _selectedBatches.isNotEmpty ? _selectedBatches : null,
       serviceIds: _selectedServices,
       birdsCount: birdsCount,
