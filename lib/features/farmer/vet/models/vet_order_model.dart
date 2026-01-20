@@ -88,48 +88,253 @@ class VetEstimateRequest {
 
 class VetEstimateResponse {
   final double totalEstimatedCost;
-  final double consultationFee;
   final double serviceFee;
   final double mileageFee;
   final double distanceKm;
   final double prioritySurcharge;
+  final double officerEarnings;
+  final double platformCommission;
   final String currency;
   final String? breakdown;
   final String? notes;
   final String? serviceCode;
   final String? mileageDetails;
+  final String? birdType;
+  final int birdsCount;
+  final int housesCount;
+  final int batchesCount;
+  final Pricing pricing;
+  final List<ServiceCost> serviceCosts;
+  final List<HouseDetail> houseDetails;
+  final List<BatchDetail> batchDetails;
 
   VetEstimateResponse({
     required this.totalEstimatedCost,
-    required this.consultationFee,
     required this.serviceFee,
     required this.mileageFee,
     required this.distanceKm,
     required this.prioritySurcharge,
+    required this.officerEarnings,
+    required this.platformCommission,
+    required this.birdsCount,
+    required this.housesCount,
+    required this.batchesCount,
     this.currency = 'KES',
     this.breakdown,
     this.notes,
     this.serviceCode,
     this.mileageDetails,
+    this.birdType,
+    required this.pricing,
+    required this.serviceCosts,
+    required this.houseDetails,
+    required this.batchDetails,
   });
 
   factory VetEstimateResponse.fromJson(Map<String, dynamic> json) {
     return VetEstimateResponse(
       totalEstimatedCost: (json['totalEstimatedCost'] as num).toDouble(),
-      consultationFee: (json['consultationFee'] as num).toDouble(),
       serviceFee: (json['serviceFee'] as num).toDouble(),
       mileageFee: (json['mileageFee'] as num).toDouble(),
       distanceKm: (json['distanceKm'] as num).toDouble(),
       prioritySurcharge: (json['prioritySurcharge'] as num).toDouble(),
+      officerEarnings: (json['officerEarnings'] as num).toDouble(),
+      platformCommission: (json['platformCommission'] as num).toDouble(),
+      birdsCount: json['birdsCount'] as int,
+      housesCount: json['housesCount'] as int,
+      batchesCount: json['batchesCount'] as int,
       currency: json['currency'] as String? ?? 'KES',
       breakdown: json['breakdown'] as String?,
       notes: json['notes'] as String?,
       serviceCode: json['serviceCode'] as String?,
       mileageDetails: json['mileageDetails'] as String?,
+      birdType: json['birdType'] as String?,
+      pricing: Pricing.fromJson(json['pricing'] as Map<String, dynamic>),
+      serviceCosts: (json['serviceCosts'] as List)
+          .map((e) => ServiceCost.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      houseDetails: (json['houseDetails'] as List)
+          .map((e) => HouseDetail.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      batchDetails: (json['batchDetails'] as List)
+          .map((e) => BatchDetail.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'totalEstimatedCost': totalEstimatedCost,
+      'serviceFee': serviceFee,
+      'mileageFee': mileageFee,
+      'distanceKm': distanceKm,
+      'prioritySurcharge': prioritySurcharge,
+      'officerEarnings': officerEarnings,
+      'platformCommission': platformCommission,
+      'birdsCount': birdsCount,
+      'housesCount': housesCount,
+      'batchesCount': batchesCount,
+      'currency': currency,
+      'breakdown': breakdown,
+      'notes': notes,
+      'serviceCode': serviceCode,
+      'mileageDetails': mileageDetails,
+      'birdType': birdType,
+      'pricing': pricing.toJson(),
+      'serviceCosts': serviceCosts.map((e) => e.toJson()).toList(),
+      'houseDetails': houseDetails.map((e) => e.toJson()).toList(),
+      'batchDetails': batchDetails.map((e) => e.toJson()).toList(),
+    };
   }
 }
 
+class Pricing {
+  final double serviceFee;
+  final double mileageFee;
+  final double prioritySurcharge;
+  final double totalEstimatedCost;
+  final double officerEarnings;
+  final double platformCommission;
+  final String defaultTransportRatePerKm;
+
+  Pricing({
+    required this.serviceFee,
+    required this.mileageFee,
+    required this.prioritySurcharge,
+    required this.totalEstimatedCost,
+    required this.officerEarnings,
+    required this.platformCommission,
+    required this.defaultTransportRatePerKm,
+  });
+
+  factory Pricing.fromJson(Map<String, dynamic> json) {
+    return Pricing(
+      serviceFee: (json['service_fee'] as num).toDouble(),
+      mileageFee: (json['mileage_fee'] as num).toDouble(),
+      prioritySurcharge: (json['priority_surcharge'] as num).toDouble(),
+      totalEstimatedCost: (json['total_estimated_cost'] as num).toDouble(),
+      officerEarnings: (json['officer_earnings'] as num).toDouble(),
+      platformCommission: (json['platform_commission'] as num).toDouble(),
+      defaultTransportRatePerKm: json['default_transport_rate_per_km'] as String,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'service_fee': serviceFee,
+      'mileage_fee': mileageFee,
+      'priority_surcharge': prioritySurcharge,
+      'total_estimated_cost': totalEstimatedCost,
+      'officer_earnings': officerEarnings,
+      'platform_commission': platformCommission,
+      'default_transport_rate_per_km': defaultTransportRatePerKm,
+    };
+  }
+}
+
+class ServiceCost {
+  final String serviceId;
+  final String serviceName;
+  final String serviceCode;
+  final double cost;
+
+  ServiceCost({
+    required this.serviceId,
+    required this.serviceName,
+    required this.serviceCode,
+    required this.cost,
+  });
+
+  factory ServiceCost.fromJson(Map<String, dynamic> json) {
+    return ServiceCost(
+      serviceId: json['service_id'] as String,
+      serviceName: json['service_name'] as String,
+      serviceCode: json['service_code'] as String,
+      cost: (json['cost'] as num).toDouble(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'service_id': serviceId,
+      'service_name': serviceName,
+      'service_code': serviceCode,
+      'cost': cost,
+    };
+  }
+}
+
+class HouseDetail {
+  final String houseId;
+  final String houseName;
+  final int birdsCount;
+
+  HouseDetail({
+    required this.houseId,
+    required this.houseName,
+    required this.birdsCount,
+  });
+
+  factory HouseDetail.fromJson(Map<String, dynamic> json) {
+    return HouseDetail(
+      houseId: json['house_id'] as String,
+      houseName: json['house_name'] as String,
+      birdsCount: json['birds_count'] as int,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'house_id': houseId,
+      'house_name': houseName,
+      'birds_count': birdsCount,
+    };
+  }
+}
+
+class BatchDetail {
+  final String batchId;
+  final String batchName;
+  final String houseId;
+  final String houseName;
+  final int birdsCount;
+  final String birdTypeId;
+  final String birdTypeName;
+
+  BatchDetail({
+    required this.batchId,
+    required this.batchName,
+    required this.houseId,
+    required this.houseName,
+    required this.birdsCount,
+    required this.birdTypeId,
+    required this.birdTypeName,
+  });
+
+  factory BatchDetail.fromJson(Map<String, dynamic> json) {
+    return BatchDetail(
+      batchId: json['batch_id'] as String,
+      batchName: json['batch_name'] as String,
+      houseId: json['house_id'] as String,
+      houseName: json['house_name'] as String,
+      birdsCount: json['birds_count'] as int,
+      birdTypeId: json['bird_type_id'] as String,
+      birdTypeName: json['bird_type_name'] as String,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'batch_id': batchId,
+      'batch_name': batchName,
+      'house_id': houseId,
+      'house_name': houseName,
+      'birds_count': birdsCount,
+      'bird_type_id': birdTypeId,
+      'bird_type_name': birdTypeName,
+    };
+  }
+}
 
 class VetOrderResponse {
   final String id;

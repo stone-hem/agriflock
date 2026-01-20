@@ -1,6 +1,7 @@
 import 'package:agriflock360/features/farmer/vet/models/my_order_list_item.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'dart:math' as math;
 
 class MyOrderTrackingScreen extends StatefulWidget {
   final MyOrderListItem order;
@@ -12,9 +13,10 @@ class MyOrderTrackingScreen extends StatefulWidget {
 }
 
 class _MyOrderTrackingScreenState extends State<MyOrderTrackingScreen> {
-  late GoogleMapController _mapController;
+  GoogleMapController? _mapController;
   final Set<Marker> _markers = {};
   final Set<Polyline> _polylines = {};
+  bool _isMapReady = false;
 
   @override
   void initState() {
@@ -23,88 +25,138 @@ class _MyOrderTrackingScreenState extends State<MyOrderTrackingScreen> {
   }
 
   void _initializeMap() {
-    // Parse farmer location
-    final farmerLocation = widget.order.parsedFarmerLocation;
-    final vetLocation = widget.order.parsedVetLocation;
+    try {
+      // Parse farmer location
+      final farmerLocation = widget.order.parsedFarmerLocation;
+      final vetLocation = widget.order.parsedVetLocation;
 
-    if (farmerLocation != null && vetLocation != null) {
-      // Vet marker
-      final vetMarker = Marker(
-        markerId: const MarkerId('vet_location'),
-        position: LatLng(
-          vetLocation['latitude'] as double,
-          vetLocation['longitude'] as double,
-        ),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-        infoWindow: InfoWindow(
-          title: 'Vet Location',
-          snippet: vetLocation['address'] as String? ?? 'Vet Location',
-        ),
-      );
+      if (farmerLocation != null && vetLocation != null) {
+        // FIXED: Coordinates were swapped - vet should get vetLocation, farmer should get farmerLocation
+        final vetLat = vetLocation['latitude'];
+        final vetLng = vetLocation['longitude'];
+        final farmerLat = farmerLocation['latitude'];
+        final farmerLng = farmerLocation['longitude'];
 
-      // Farmer marker
-      final farmerMarker = Marker(
-        markerId: const MarkerId('farmer_location'),
-        position: LatLng(
-          farmerLocation['latitude'] as double,
-          farmerLocation['longitude'] as double,
-        ),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-        infoWindow: InfoWindow(
-          title: 'Your Farm',
-          snippet: farmerLocation['address'] as String? ?? 'Farm Location',
-        ),
-      );
+        if (vetLat == null || vetLng == null || farmerLat == null || farmerLng == null) {
+          print('Error: Missing coordinate values');
+          return;
+        }
 
-      // Polyline between vet and farmer
-      final polyline = Polyline(
-        polylineId: const PolylineId('route'),
-        color: Colors.blue,
-        width: 4,
-        points: [
-          LatLng(
-            vetLocation['latitude'] as double,
-            vetLocation['longitude'] as double,
+        // Vet marker
+        final vetMarker = Marker(
+          markerId: const MarkerId('vet_location'),
+          position: LatLng(
+            (vetLat as num).toDouble(),
+            (vetLng as num).toDouble(),
           ),
-          LatLng(
-            farmerLocation['latitude'] as double,
-            farmerLocation['longitude'] as double,
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+          infoWindow: InfoWindow(
+            title: 'Vet Location',
+            snippet: widget.order.vetAddress ?? 'Vet Location',
           ),
-        ],
-      );
+        );
 
-      setState(() {
-        _markers.add(vetMarker);
-        _markers.add(farmerMarker);
-        _polylines.add(polyline);
-      });
+        // Farmer marker
+        final farmerMarker = Marker(
+          markerId: const MarkerId('farmer_location'),
+          position: LatLng(
+            (farmerLat as num).toDouble(),
+            (farmerLng as num).toDouble(),
+          ),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+          infoWindow: InfoWindow(
+            title: 'Your Farm',
+            snippet: widget.order.farmerAddress ?? 'Farm Location',
+          ),
+        );
+
+        // Polyline between vet and farmer
+        final polyline = Polyline(
+          polylineId: const PolylineId('route'),
+          color: Colors.blue,
+          width: 4,
+          points: [
+            LatLng(
+              (vetLat as num).toDouble(),
+              (vetLng as num).toDouble(),
+            ),
+            LatLng(
+              (farmerLat as num).toDouble(),
+              (farmerLng as num).toDouble(),
+            ),
+          ],
+        );
+
+        if (mounted) {
+          setState(() {
+            _markers.clear();
+            _markers.add(vetMarker);
+            _markers.add(farmerMarker);
+            _polylines.clear();
+            _polylines.add(polyline);
+          });
+        }
+      }
+    } catch (e) {
+      print('Error initializing map: $e');
+      debugPrint('Full error stack: ${e.toString()}');
     }
   }
 
   Future<void> _onMapCreated(GoogleMapController controller) async {
-    _mapController = controller;
+    try {
+      _mapController = controller;
+      _isMapReady = true;
 
-    final farmerLocation = widget.order.parsedFarmerLocation;
-    final vetLocation = widget.order.parsedVetLocation;
+      final farmerLocation = widget.order.parsedFarmerLocation;
+      final vetLocation = widget.order.parsedVetLocation;
 
-    if (farmerLocation != null && vetLocation != null) {
-      // Fit bounds to show both markers
-      await _mapController.animateCamera(
-        CameraUpdate.newLatLngBounds(
-          LatLngBounds(
-            southwest: LatLng(
-              min(farmerLocation['latitude'] as double, vetLocation['latitude'] as double) - 0.01,
-              min(farmerLocation['longitude'] as double, vetLocation['longitude'] as double) - 0.01,
-            ),
-            northeast: LatLng(
-              max(farmerLocation['latitude'] as double, vetLocation['latitude'] as double) + 0.01,
-              max(farmerLocation['longitude'] as double, vetLocation['longitude'] as double) + 0.01,
-            ),
-          ),
-          50, // padding
-        ),
-      );
+      if (farmerLocation != null && vetLocation != null) {
+        final vetLat = vetLocation['latitude'];
+        final vetLng = vetLocation['longitude'];
+        final farmerLat = farmerLocation['latitude'];
+        final farmerLng = farmerLocation['longitude'];
+
+        if (vetLat != null && vetLng != null && farmerLat != null && farmerLng != null) {
+          final vetLatDouble = (vetLat as num).toDouble();
+          final vetLngDouble = (vetLng as num).toDouble();
+          final farmerLatDouble = (farmerLat as num).toDouble();
+          final farmerLngDouble = (farmerLng as num).toDouble();
+
+          // Calculate bounds with proper min/max
+          final minLat = math.min(farmerLatDouble, vetLatDouble);
+          final maxLat = math.max(farmerLatDouble, vetLatDouble);
+          final minLng = math.min(farmerLngDouble, vetLngDouble);
+          final maxLng = math.max(farmerLngDouble, vetLngDouble);
+
+          // Add padding to bounds
+          final padding = 0.01;
+
+          // Delay the camera animation to ensure map is fully ready
+          await Future.delayed(const Duration(milliseconds: 500));
+
+          if (mounted && _mapController != null) {
+            await _mapController!.animateCamera(
+              CameraUpdate.newLatLngBounds(
+                LatLngBounds(
+                  southwest: LatLng(minLat - padding, minLng - padding),
+                  northeast: LatLng(maxLat + padding, maxLng + padding),
+                ),
+                50, // padding
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      print('Error in onMapCreated: $e');
     }
+  }
+
+  @override
+  void dispose() {
+    _mapController?.dispose();
+    super.dispose();
   }
 
   // Helper method to get status color
@@ -112,12 +164,10 @@ class _MyOrderTrackingScreenState extends State<MyOrderTrackingScreen> {
     switch (status.toUpperCase()) {
       case 'PENDING':
         return Colors.orange;
-      case 'SCHEDULED':
+      case 'REVIEWED':
         return Colors.blue;
-      case 'EN_ROUTE':
+      case 'SCHEDULED':
         return Colors.purple;
-      case 'IN_PROGRESS':
-        return Colors.indigo;
       case 'COMPLETED':
         return Colors.green;
       case 'CANCELLED':
@@ -131,13 +181,11 @@ class _MyOrderTrackingScreenState extends State<MyOrderTrackingScreen> {
   String _getStatusText(String status) {
     switch (status.toUpperCase()) {
       case 'PENDING':
-        return 'Pending';
+        return 'Pending Review';
+      case 'REVIEWED':
+        return 'Reviewed';
       case 'SCHEDULED':
         return 'Scheduled';
-      case 'EN_ROUTE':
-        return 'En Route';
-      case 'IN_PROGRESS':
-        return 'In Progress';
       case 'COMPLETED':
         return 'Completed';
       case 'CANCELLED':
@@ -145,6 +193,41 @@ class _MyOrderTrackingScreenState extends State<MyOrderTrackingScreen> {
       default:
         return status;
     }
+  }
+
+  // Helper to get first service name
+  String _getFirstServiceName() {
+    if (widget.order.services.isNotEmpty) {
+      return widget.order.services.first.name;
+    } else if (widget.order.serviceCosts.isNotEmpty) {
+      return widget.order.serviceCosts.first.serviceName;
+    }
+    return 'Vet Service';
+  }
+
+  // Helper to get vet specialization
+  String _getVetSpecialization() {
+    if (widget.order.vetSpecialization.isNotEmpty) {
+      return widget.order.vetSpecialization.first.replaceAll('_', ' ');
+    }
+    return 'General Veterinarian';
+  }
+
+  // Helper to get house and batch info
+  String _getHouseInfo() {
+    if (widget.order.houses.isNotEmpty) {
+      final house = widget.order.houses.first;
+      return house.name;
+    }
+    return 'No House Info';
+  }
+
+  String _getBatchInfo() {
+    if (widget.order.batches.isNotEmpty) {
+      final batch = widget.order.batches.first;
+      return batch.name;
+    }
+    return 'No Batch Info';
   }
 
   Widget _buildOrderStatusCard() {
@@ -201,6 +284,7 @@ class _MyOrderTrackingScreenState extends State<MyOrderTrackingScreen> {
 
   Widget _buildTimeline() {
     final isPending = widget.order.status.toUpperCase() == 'PENDING';
+    final isReviewed = widget.order.reviewedAt != null;
     final isScheduled = widget.order.scheduledAt != null;
     final isCompleted = widget.order.status.toUpperCase() == 'COMPLETED';
     final isCancelled = widget.order.status.toUpperCase() == 'CANCELLED';
@@ -214,9 +298,9 @@ class _MyOrderTrackingScreenState extends State<MyOrderTrackingScreen> {
         widget.order.submittedAt,
       ),
       _buildTimelineStep(
-        'Vet Confirmed',
-        'Vet accepted your request',
-        isScheduled || isCompleted,
+        'Vet Reviewed',
+        'Vet reviewed your request',
+        isReviewed || isScheduled || isCompleted,
         Icons.check_circle,
         widget.order.reviewedAt,
       ),
@@ -226,13 +310,6 @@ class _MyOrderTrackingScreenState extends State<MyOrderTrackingScreen> {
         isScheduled || isCompleted,
         Icons.calendar_today,
         widget.order.scheduledAt,
-      ),
-      _buildTimelineStep(
-        'In Progress',
-        'Service is being provided',
-        isCompleted,
-        Icons.medical_services,
-        widget.order.completedAt,
       ),
       _buildTimelineStep(
         'Completed',
@@ -306,6 +383,18 @@ class _MyOrderTrackingScreenState extends State<MyOrderTrackingScreen> {
       return const SizedBox();
     }
 
+    // Safely handle preferredTime string
+    String timeString = 'Time TBD';
+    try {
+      if (widget.order.preferredTime.isNotEmpty) {
+        timeString = widget.order.preferredTime.length >= 5
+            ? widget.order.preferredTime.substring(0, 5)
+            : widget.order.preferredTime;
+      }
+    } catch (e) {
+      print('Error formatting time: $e');
+    }
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -330,7 +419,7 @@ class _MyOrderTrackingScreenState extends State<MyOrderTrackingScreen> {
                     ),
                   ),
                   Text(
-                    '${scheduledAt.day}/${scheduledAt.month}/${scheduledAt.year} at ${widget.order.preferredTime}',
+                    '${widget.order.preferredDate.year}-${widget.order.preferredDate.month.toString().padLeft(2, '0')}-${widget.order.preferredDate.day.toString().padLeft(2, '0')} at $timeString',
                     style: TextStyle(
                       color: Colors.grey.shade600,
                     ),
@@ -433,7 +522,7 @@ class _MyOrderTrackingScreenState extends State<MyOrderTrackingScreen> {
                                 ),
                               ),
                               Text(
-                                widget.order.serviceType,
+                                _getVetSpecialization(),
                                 style: TextStyle(
                                   color: Colors.grey.shade600,
                                 ),
@@ -450,6 +539,35 @@ class _MyOrderTrackingScreenState extends State<MyOrderTrackingScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
+
+                    // Services Info
+                    if (widget.order.services.isNotEmpty || widget.order.serviceCosts.isNotEmpty)
+                      Card(
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Services',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              ..._buildServicesList(),
+                            ],
+                          ),
+                        ),
+                      ),
+                    if (widget.order.services.isNotEmpty || widget.order.serviceCosts.isNotEmpty)
+                      const SizedBox(height: 16),
 
                     // Farm Info
                     Card(
@@ -473,11 +591,11 @@ class _MyOrderTrackingScreenState extends State<MyOrderTrackingScreen> {
                             const SizedBox(height: 8),
                             Row(
                               children: [
-                                Icon(Icons.location_on, size: 16, color: Colors.grey.shade600),
+                                Icon(Icons.home_work, size: 16, color: Colors.grey.shade600),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    widget.order.houseName,
+                                    _getHouseInfo(),
                                     style: TextStyle(
                                       color: Colors.grey.shade700,
                                     ),
@@ -492,7 +610,7 @@ class _MyOrderTrackingScreenState extends State<MyOrderTrackingScreen> {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    'Batch: ${widget.order.batchName}',
+                                    'Batch: ${_getBatchInfo()}',
                                     style: TextStyle(
                                       color: Colors.grey.shade700,
                                     ),
@@ -507,7 +625,7 @@ class _MyOrderTrackingScreenState extends State<MyOrderTrackingScreen> {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    'Birds: ${widget.order.birdCount}',
+                                    'Total Birds: ${widget.order.birdsCount}',
                                     style: TextStyle(
                                       color: Colors.grey.shade700,
                                     ),
@@ -515,6 +633,23 @@ class _MyOrderTrackingScreenState extends State<MyOrderTrackingScreen> {
                                 ),
                               ],
                             ),
+                            if (widget.order.birdTypeName != null) ...[
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(Icons.category, size: 16, color: Colors.grey.shade600),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Bird Type: ${widget.order.birdTypeName}',
+                                      style: TextStyle(
+                                        color: Colors.grey.shade700,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -549,9 +684,9 @@ class _MyOrderTrackingScreenState extends State<MyOrderTrackingScreen> {
                               ),
                             ),
                             const SizedBox(height: 8),
-                            _buildCostRow('Consultation', widget.order.consultationFee),
                             _buildCostRow('Service Fee', widget.order.serviceFee),
                             _buildCostRow('Mileage Fee', widget.order.mileageFee),
+                            _buildCostRow('Distance', widget.order.distanceKm, isDistance: true),
                             if (widget.order.prioritySurcharge > 0)
                               _buildCostRow('Priority Surcharge', widget.order.prioritySurcharge),
                             const Divider(height: 20),
@@ -650,7 +785,73 @@ class _MyOrderTrackingScreenState extends State<MyOrderTrackingScreen> {
     );
   }
 
-  Widget _buildCostRow(String label, double amount) {
+  List<Widget> _buildServicesList() {
+    final widgets = <Widget>[];
+
+    // Add services
+    for (final service in widget.order.services) {
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                service.name,
+                style: TextStyle(
+                  color: Colors.grey.shade700,
+                  fontSize: 14,
+                ),
+              ),
+              Text(
+                'KES ${service.cost.toStringAsFixed(2)}',
+                style: TextStyle(
+                  color: Colors.grey.shade700,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Add service costs (if different from services)
+    for (final serviceCost in widget.order.serviceCosts) {
+      // Check if this service is already in the services list
+      final isDuplicate = widget.order.services.any((s) => s.id == serviceCost.serviceId);
+      if (!isDuplicate) {
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  serviceCost.serviceName,
+                  style: TextStyle(
+                    color: Colors.grey.shade700,
+                    fontSize: 14,
+                  ),
+                ),
+                Text(
+                  'KES ${serviceCost.cost.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    color: Colors.grey.shade700,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    }
+
+    return widgets;
+  }
+
+  Widget _buildCostRow(String label, double amount, {bool isDistance = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -664,7 +865,9 @@ class _MyOrderTrackingScreenState extends State<MyOrderTrackingScreen> {
             ),
           ),
           Text(
-            'KES ${amount.toStringAsFixed(2)}',
+            isDistance
+                ? '${amount.toStringAsFixed(2)} km'
+                : 'KES ${amount.toStringAsFixed(2)}',
             style: TextStyle(
               color: Colors.grey.shade700,
               fontSize: 14,
@@ -675,7 +878,3 @@ class _MyOrderTrackingScreenState extends State<MyOrderTrackingScreen> {
     );
   }
 }
-
-// Helper function for min/max
-double min(double a, double b) => a < b ? a : b;
-double max(double a, double b) => a > b ? a : b;

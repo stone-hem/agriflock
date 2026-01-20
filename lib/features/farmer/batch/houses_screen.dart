@@ -1,4 +1,5 @@
 import 'package:agriflock360/core/utils/api_error_handler.dart';
+import 'package:agriflock360/core/utils/date_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
@@ -628,13 +629,15 @@ class _AdditionalInfoRow extends StatelessWidget {
       children: [
         // Add your additional details here
         // Example placeholder:
+        if(house.updatedAt!=null)
         _InfoChip(
           icon: Icons.date_range,
-          text: 'Last Updated: Today',
+          text: DateUtil.toShortDateWithDay(house.updatedAt!),
         ),
+        if(house.createdAt!=null)
         _InfoChip(
-          icon: Icons.location_on,
-          text: 'Section A',
+          icon: Icons.date_range,
+          text: DateUtil.toShortDateWithDay(house.createdAt!),
         ),
         // Add more chips as needed
       ],

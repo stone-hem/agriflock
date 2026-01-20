@@ -6,8 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:agriflock360/core/utils/date_util.dart';
 
 class MyVetOrdersScreen extends StatefulWidget {
-
-
   const MyVetOrdersScreen({
     super.key,
   });
@@ -291,177 +289,261 @@ class _MyVetOrdersScreenState extends State<MyVetOrdersScreen> {
     }
   }
 
+  // Helper to get first service name
+  String _getFirstServiceName(MyOrderListItem order) {
+    if (order.services.isNotEmpty) {
+      return order.services.first.name;
+    } else if (order.serviceCosts.isNotEmpty) {
+      return order.serviceCosts.first.serviceName;
+    }
+    return 'Service';
+  }
+
+  // Helper to get first service code
+  String _getFirstServiceCode(MyOrderListItem order) {
+    if (order.services.isNotEmpty) {
+      return order.services.first.code;
+    } else if (order.serviceCosts.isNotEmpty) {
+      return order.serviceCosts.first.serviceCode;
+    }
+    return 'SVC';
+  }
+
+  // Helper to get house and batch info
+  String _getHouseBatchInfo(MyOrderListItem order) {
+    final house = order.firstHouse;
+    final batch = order.firstBatch;
+
+    if (house != null && batch != null) {
+      return '${house.name} • ${batch.name} (${order.birdsCount} birds)';
+    } else if (house != null) {
+      return '${house.name} (${order.birdsCount} birds)';
+    } else if (batch != null) {
+      return '${batch.name} (${order.birdsCount} birds)';
+    }
+    return '${order.birdsCount} birds';
+  }
+
+  // Helper to get bird type info
+  String? _getBirdTypeInfo(MyOrderListItem order) {
+    return order.birdTypeName ?? (order.firstBatch?.birdTypeName);
+  }
+
   Widget _buildOrderCard(MyOrderListItem order) {
+    final birdType = _getBirdTypeInfo(order);
+    final vetSpecialization = order.vetSpecialization.isNotEmpty
+        ? order.vetSpecialization.first
+        : 'General';
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
-      child: InkWell(
-        onTap: () {
-          // Navigate to order details
-          context.push('/vet-order-details', extra: order);
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Order Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          order.serviceCode,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Order Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _getFirstServiceName(order),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
                         ),
-                        const SizedBox(height: 4),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${_getFirstServiceCode(order)} • Order: ${order.orderNumber}',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(order.status).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: _getStatusColor(order.status),
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    _getStatusText(order.status),
+                    style: TextStyle(
+                      color: _getStatusColor(order.status),
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Vet Info with Specialization
+            Row(
+              children: [
+                Icon(Icons.person, size: 16, color: Colors.grey.shade600),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        order.vetName,
+                        style: TextStyle(
+                          color: Colors.grey.shade700,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        vetSpecialization,
+                        style: TextStyle(
+                          color: Colors.blue.shade600,
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+
+            // Date & Time
+            Row(
+              children: [
+                Icon(Icons.calendar_today, size: 16, color: Colors.grey.shade600),
+                const SizedBox(width: 8),
+                Text(
+                  DateUtil.toMMDDYYYY(order.preferredDate),
+                  style: TextStyle(
+                    color: Colors.grey.shade700,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Icon(Icons.access_time, size: 16, color: Colors.grey.shade600),
+                const SizedBox(width: 8),
+                Text(
+                  order.preferredTime.substring(0, 5),
+                  style: TextStyle(
+                    color: Colors.grey.shade700,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+
+            // Farm Info with Bird Type
+            Row(
+              children: [
+                Icon(Icons.home_work, size: 16, color: Colors.grey.shade600),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _getHouseBatchInfo(order),
+                        style: TextStyle(
+                          color: Colors.grey.shade700,
+                          fontSize: 14,
+                        ),
+                      ),
+                      if (birdType != null)
                         Text(
-                          'Order: ${order.orderNumber}',
+                          birdType,
                           style: TextStyle(
-                            color: Colors.grey.shade600,
+                            color: Colors.green.shade600,
                             fontSize: 12,
                           ),
                         ),
-                      ],
-                    ),
+                    ],
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _getStatusColor(order.status).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: _getStatusColor(order.status),
-                        width: 1,
-                      ),
-                    ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+
+            // Multiple Services Indicator
+            if (order.services.length > 1 || order.serviceCosts.length > 1)
+              Row(
+                children: [
+                  Icon(Icons.list, size: 16, color: Colors.purple.shade600),
+                  const SizedBox(width: 8),
+                  Expanded(
                     child: Text(
-                      _getStatusText(order.status),
+                      '${order.services.length + order.serviceCosts.length} services',
                       style: TextStyle(
-                        color: _getStatusColor(order.status),
+                        color: Colors.purple.shade600,
                         fontSize: 12,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+            const SizedBox(height: 12),
 
-              // Vet Info
-              Row(
-                children: [
-                  Icon(Icons.person, size: 16, color: Colors.grey.shade600),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      order.vetName,
-                      style: TextStyle(
-                        color: Colors.grey.shade700,
-                        fontSize: 14,
-                      ),
-                    ),
+            // Cost and Actions
+            Row(
+              children: [
+                Icon(Icons.monetization_on, size: 16, color: Colors.green.shade600),
+                const SizedBox(width: 8),
+                Text(
+                  'KES ${order.totalEstimatedCost.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
                   ),
-                ],
-              ),
-              const SizedBox(height: 8),
-
-              // Date & Time
-              Row(
-                children: [
-                  Icon(Icons.calendar_today, size: 16, color: Colors.grey.shade600),
-                  const SizedBox(width: 8),
-                  Text(
-                    DateUtil.toMMDDYYYY(order.preferredDate),
-                    style: TextStyle(
-                      color: Colors.grey.shade700,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Icon(Icons.access_time, size: 16, color: Colors.grey.shade600),
-                  const SizedBox(width: 8),
-                  Text(
-                    order.preferredTime.substring(0, 5),
-                    style: TextStyle(
-                      color: Colors.grey.shade700,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-
-              // Farm Info
-              Row(
-                children: [
-                  Icon(Icons.home_work, size: 16, color: Colors.grey.shade600),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '${order.houseName} • ${order.batchName}',
-                      style: TextStyle(
-                        color: Colors.grey.shade700,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Cost
-              Row(
-                children: [
-                  Icon(Icons.monetization_on, size: 16, color: Colors.green.shade600),
-                  const SizedBox(width: 8),
-                  Text(
-                    'KES ${order.totalEstimatedCost.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green,
-                    ),
-                  ),
-                  const Spacer(),
-                  if (order.status == 'PENDING' || order.status == 'REVIEWED')
-                    OutlinedButton(
-                      onPressed: () => _cancelOrder(order),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.red,
-                        side: const BorderSide(color: Colors.red),
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                      ),
-                      child: const Text('Cancel'),
-                    ),
-                  const SizedBox(width: 8),
-                  ElevatedButton(
-                    onPressed: () {
-                      context.push('/my-order-tracking', extra: order);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                ),
+                const Spacer(),
+                if (order.status == 'PENDING' || order.status == 'REVIEWED')
+                  OutlinedButton(
+                    onPressed: () => _cancelOrder(order),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red,
+                      side: const BorderSide(color: Colors.red),
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                     ),
-                    child: const Text('Track'),
+                    child: const Text('Cancel'),
                   ),
-                ],
-              ),
-            ],
-          ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () {
+                    context.push('/my-order-tracking', extra: order);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                  ),
+                  child: const Text('Track'),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );

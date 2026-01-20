@@ -12,7 +12,6 @@ class VetOrderBottomSheet extends StatefulWidget {
   final VetEstimateResponse estimate;
   final VetFarmer vet;
   final VetEstimateRequest request;
-
   final VetFarmerRepository vetRepository;
   final VoidCallback onOrderSuccess;
 
@@ -21,7 +20,8 @@ class VetOrderBottomSheet extends StatefulWidget {
     required this.estimate,
     required this.vet,
     required this.vetRepository,
-    required this.onOrderSuccess, required this.request,
+    required this.onOrderSuccess,
+    required this.request,
   });
 
   @override
@@ -94,7 +94,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          const Expanded(
+                          Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -138,6 +138,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                         icon: Icons.calendar_today,
                         required: true,
                         minYear: DateTime.now().year,
+                        initialDate: DateTime.now(),
                         returnFormat: DateReturnFormat.dateTime,
                         maxYear: DateTime.now().year + 1,
                         controller: _selectedDateController,
@@ -189,6 +190,10 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 24),
+
+                      // Additional Information Card
+                      _buildAdditionalInfoCard(),
                       const SizedBox(height: 24),
 
                       // Terms and Conditions
@@ -319,16 +324,93 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
               ],
             ),
             const SizedBox(height: 12),
-            _buildEstimateItem(
-                'Consultation Fee:', widget.estimate.consultationFee),
+
+            // Service Costs
+            if (widget.estimate.serviceCosts.isNotEmpty) ...[
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Services:',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ...widget.estimate.serviceCosts.map((service) =>
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                '${service.serviceName} (${service.serviceCode}):',
+                                style: TextStyle(
+                                  color: Colors.grey.shade700,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '${widget.estimate.currency} ${service.cost.toStringAsFixed(0)}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green.shade700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ),
+            ],
+
+            // Updated to use correct fields
             _buildEstimateItem('Service Fee:', widget.estimate.serviceFee),
             _buildEstimateItem('Mileage Fee:', widget.estimate.mileageFee),
+
+            // Mileage details if available
+            if (widget.estimate.mileageDetails != null) ...[
+              Padding(
+                padding: const EdgeInsets.only(left: 16, bottom: 8),
+                child: Text(
+                  '(${widget.estimate.mileageDetails!})',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+
             if (widget.estimate.prioritySurcharge > 0)
               _buildEstimateItem(
                 'Priority Surcharge:',
                 widget.estimate.prioritySurcharge,
                 isSurcharge: true,
               ),
+
+            // Platform Commission
+            _buildEstimateItem(
+              'Platform Commission:',
+              widget.estimate.platformCommission,
+            ),
+
+            // Officer Earnings (optional display)
+            _buildEstimateItem(
+              'Veterinary Officer Earnings:',
+              widget.estimate.officerEarnings,
+              isSecondary: true,
+            ),
+
             const Divider(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -350,6 +432,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                 ),
               ],
             ),
+
             if (widget.estimate.notes != null) ...[
               const SizedBox(height: 8),
               Container(
@@ -377,6 +460,35 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                 ),
               ),
             ],
+
+            // Distance information
+            if (widget.estimate.distanceKm > 0) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.directions_car,
+                        size: 16, color: Colors.grey.shade700),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Distance to travel: ${widget.estimate.distanceKm.toStringAsFixed(2)} km',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -384,7 +496,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
   }
 
   Widget _buildEstimateItem(String label, double amount,
-      {bool isSurcharge = false}) {
+      {bool isSurcharge = false, bool isSecondary = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -396,8 +508,11 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
               style: TextStyle(
                 color: isSurcharge
                     ? Colors.orange.shade700
+                    : isSecondary
+                    ? Colors.grey.shade600
                     : Colors.grey.shade700,
                 fontSize: 14,
+                fontWeight: isSecondary ? FontWeight.normal : FontWeight.w600,
               ),
             ),
           ),
@@ -409,10 +524,158 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
               fontWeight: FontWeight.bold,
               color: isSurcharge
                   ? Colors.orange.shade700
+                  : isSecondary
+                  ? Colors.grey.shade600
                   : Colors.green.shade700,
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAdditionalInfoCard() {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.blue.shade100),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.pets, color: Colors.blue.shade600),
+                const SizedBox(width: 8),
+                const Text(
+                  'Service Details',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Birds count and houses
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Total Birds',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    Text(
+                      '${widget.estimate.birdsCount}',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green.shade700,
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Houses',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    Text(
+                      '${widget.estimate.housesCount}',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue.shade700,
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Batches',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    Text(
+                      '${widget.estimate.batchesCount}',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.purple.shade700,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+
+            // Bird type if available
+            if (widget.estimate.birdType != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.eco, size: 16, color: Colors.green.shade700),
+                    const SizedBox(width: 8),
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width * 0.6,
+                      child: Text(
+                        'Bird Type: ${widget.estimate.birdType!}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.green.shade700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
+            // Service codes if available
+            if (widget.estimate.serviceCosts.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: widget.estimate.serviceCosts.map((service) =>
+                    Chip(
+                      label: Text(service.serviceCode),
+                      backgroundColor: Colors.blue.shade50,
+                      labelStyle: TextStyle(
+                        fontSize: 12,
+                        color: Colors.blue.shade700,
+                      ),
+                    ),
+                ).toList(),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -464,6 +727,13 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
       _isSubmittingOrder = true;
     });
 
+    // Combine date and time
+    final combinedDate = DateTime(
+      _selectedDate!.year,
+      _selectedDate!.month,
+      _selectedDate!.day
+    );
+
     final request = VetOrderRequest(
       vetId: widget.vet.id,
       houseIds: widget.request.houseIds,
@@ -471,10 +741,9 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
       serviceIds: widget.request.serviceIds,
       birdsCount: widget.request.birdsCount,
       priorityLevel: widget.request.priorityLevel,
-      preferredDate: _selectedDate!.toIso8601String().split('T').first,
-      preferredTime: _selectedTime!.format(context),
+      preferredDate: combinedDate.toIso8601String(),
       reasonForVisit: widget.request.reasonForVisit,
-      termsAgreed: _termsAgreed,
+      termsAgreed: _termsAgreed, preferredTime: _selectedTime!.format(context),
     );
 
     final result = await widget.vetRepository.submitVetOrder(request);
@@ -487,19 +756,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
       case Success<VetOrderResponse>(data: final data):
       // Close bottom sheet
         Navigator.of(context).pop();
-
-        // Show success screen
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => VetOrderSuccessScreen(
-              order: data,
-              onClose: () {
-                context.pushReplacement('/my-vet-orders');
-              },
-            ),
-            fullscreenDialog: true,
-          ),
-        );
+        context.pushReplacement('/my-vet-orders');
         break;
       case Failure(message: final error):
         ScaffoldMessenger.of(context).showSnackBar(
