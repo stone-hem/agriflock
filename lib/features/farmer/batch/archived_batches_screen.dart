@@ -1,4 +1,4 @@
-// completed_batches_screen.dart
+// archived_batches_screen.dart
 import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
@@ -8,17 +8,17 @@ import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class CompletedBatchesScreen extends StatefulWidget {
+class ArchivedBatchesScreen extends StatefulWidget {
   final FarmModel farm;
-  const CompletedBatchesScreen({super.key, required this.farm});
+  const ArchivedBatchesScreen({super.key, required this.farm});
 
   @override
-  State<CompletedBatchesScreen> createState() => _CompletedBatchesScreenState();
+  State<ArchivedBatchesScreen> createState() => _ArchivedBatchesScreenState();
 }
 
-class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
+class _ArchivedBatchesScreenState extends State<ArchivedBatchesScreen> {
   final _repository = GeneralBatchRepository();
-  List<GeneralBatchModel> _completedBatches = [];
+  List<GeneralBatchModel> _archivedBatches = [];
   GeneralBatchPagination? _pagination;
   bool _isLoading = true;
   bool _isRestoring = false;
@@ -43,23 +43,24 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
         widget.farm.id,
         page: page,
         limit: _limit,
-        status: 'completed',
+        status: 'archived',
       );
 
-      switch (response) {
-        case Success<GeneralBatchesResponse>(data: final GeneralBatchesResponse response):
+      switch(response) {
+        case Success<GeneralBatchesResponse>(data: final response):
           setState(() {
-            _completedBatches = response.batches;
+            _archivedBatches = response.batches;
             _pagination = response.pagination;
             _currentPage = page;
             _isLoading = false;
           });
-        case Failure<GeneralBatchesResponse>(message: final message):
-          ApiErrorHandler.handle(message);
+        case Failure<GeneralBatchesResponse>():
+          ApiErrorHandler.handle('Failed to fetch archived batches');
           setState(() {
             _isLoading = false;
           });
       }
+
     } catch (e) {
       ApiErrorHandler.handle(e);
       setState(() {
@@ -75,7 +76,7 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
     });
 
     try {
-      final result = await _repository.restoreBatch(
+      final result = await _repository.deleteArchivedBatch(
         widget.farm.id,
         batchId,
       );
@@ -111,10 +112,9 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
         case Success<void>():
           ToastUtil.showSuccess('Batch deleted successfully');
           _loadData(); // Refresh the list
-        case Failure<void>():
+          case Failure<void>():
           ApiErrorHandler.handle('Failed to delete batch');
       }
-
     } catch (e) {
       ApiErrorHandler.handle(e);
     } finally {
@@ -125,11 +125,12 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Completed Batches'),
+        title: const Text('Archived Batches'),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -151,15 +152,15 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
             if (_isLoading) _buildLoadingIndicator(),
 
             // Empty State
-            if (!_isLoading && _completedBatches.isEmpty)
+            if (!_isLoading && _archivedBatches.isEmpty)
               _buildEmptyState(),
 
-            // Completed Batches List
-            if (_completedBatches.isNotEmpty)
-              ..._completedBatches.map((batch) => _buildBatchCard(batch)),
+            // Archived Batches List
+            if (_archivedBatches.isNotEmpty)
+              ..._archivedBatches.map((batch) => _buildBatchCard(batch)),
 
             // Pagination Controls
-            if (_completedBatches.isNotEmpty && _pagination != null)
+            if (_archivedBatches.isNotEmpty && _pagination != null)
               _buildPaginationControls(),
           ],
         ),
@@ -172,7 +173,7 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Completed Batches',
+          'Archived Batches',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.bold,
             color: Colors.grey.shade800,
@@ -184,6 +185,23 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
           style: TextStyle(
             color: Colors.grey.shade600,
             fontSize: 14,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.orange.shade50,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.orange.shade100),
+          ),
+          child: Text(
+            'Archived batches are hidden from the main view but can be restored or deleted.',
+            style: TextStyle(
+              color: Colors.orange.shade800,
+              fontSize: 13,
+            ),
+            textAlign: TextAlign.center,
           ),
         ),
       ],
@@ -206,13 +224,13 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.check_circle_outline,
+            Icons.archive_outlined,
             size: 80,
             color: Colors.grey.shade300,
           ),
           const SizedBox(height: 24),
           Text(
-            'No Completed Batches',
+            'No Archived Batches',
             style: TextStyle(
               fontSize: 18,
               color: Colors.grey.shade600,
@@ -221,7 +239,7 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            'Completed batches will appear here once they are finished.',
+            'Archived batches will appear here when you archive them.',
             style: TextStyle(color: Colors.grey.shade500),
             textAlign: TextAlign.center,
           ),
@@ -280,14 +298,14 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.green.shade50,
+                    color: Colors.orange.shade50,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.green.shade200),
+                    border: Border.all(color: Colors.orange.shade200),
                   ),
                   child: Text(
-                    'Completed',
+                    'Archived',
                     style: TextStyle(
-                      color: Colors.green.shade800,
+                      color: Colors.orange.shade800,
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
@@ -299,15 +317,47 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
 
             // Batch Details
             _buildDetailRow('Total Birds', '${batch.initialCount}'),
-            _buildDetailRow('Survived', '${batch.currentCount}'),
+            _buildDetailRow('Current Count', '${batch.currentCount}'),
             _buildDetailRow('Mortality', '${batch.totalMortality}'),
             _buildDetailRow('Mortality Rate', '${batch.mortalityRate.toStringAsFixed(2)}%'),
-            _buildDetailRow('Age at Completion', '${batch.ageInDays} days'),
+            _buildDetailRow('Age', '${batch.ageInDays} days'),
 
-            if (batch.actualEndDate != null)
+            if (batch.updatedAt != null)
               _buildDetailRow(
-                'Completed on',
-                '${batch.actualEndDate!.day}/${batch.actualEndDate!.month}/${batch.actualEndDate!.year}',
+                'Archived on',
+                '${batch.updatedAt!.day}/${batch.updatedAt!.month}/${batch.updatedAt!.year}',
+              ),
+
+            const SizedBox(height: 16),
+
+            // Status Info
+            if (batch.currentStatus == 'completed')
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.green.shade100),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.check_circle,
+                      color: Colors.green.shade600,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'This batch was completed before being archived',
+                        style: TextStyle(
+                          color: Colors.green.shade800,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
 
             const SizedBox(height: 16),
@@ -345,7 +395,7 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                        : const Icon(Icons.delete_outline, size: 18),
+                        : const Icon(Icons.delete_forever, size: 18),
                     label: Text(isDeleting ? 'Deleting...' : 'Delete'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.red,
@@ -358,6 +408,7 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
                 ),
               ],
             ),
+
 
           ],
         ),
@@ -409,7 +460,7 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
                   ? () => _loadData(page: _currentPage - 1)
                   : null,
               icon: const Icon(Icons.chevron_left),
-              color: _currentPage > 1 ? Colors.green : Colors.grey.shade400,
+              color: _currentPage > 1 ? Colors.orange : Colors.grey.shade400,
             ),
 
             // Page Info
@@ -435,7 +486,7 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
                   : null,
               icon: const Icon(Icons.chevron_right),
               color: _currentPage < _pagination!.totalPages
-                  ? Colors.green
+                  ? Colors.orange
                   : Colors.grey.shade400,
             ),
           ],

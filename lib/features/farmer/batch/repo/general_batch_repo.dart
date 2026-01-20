@@ -6,41 +6,56 @@ import 'package:agriflock360/features/farmer/batch/model/general_batch_model.dar
 import 'package:agriflock360/main.dart';
 import 'package:http/http.dart' as http;
 
-class ArchivedBatchRepository {
+class GeneralBatchRepository {
   // Get all archived batches for a farm with pagination
-  Future<Result<ArchivedBatchesResponse>> getArchivedBatches(
+  // In your GeneralBatchRepository class
+
+  Future<Result<GeneralBatchesResponse>> getBatches(
       String farmId, {
         int page = 1,
         int limit = 20,
+        String? status, // Optional: filter by status (active, completed, etc.)
+        String? birdTypeId, // Optional: filter by bird type
       }) async {
     try {
+      // Build query parameters
+      final queryParams = {
+        'page': page.toString(),
+        'limit': limit.toString(),
+        if (status != null && status.isNotEmpty) 'status': status,
+        if (birdTypeId != null && birdTypeId.isNotEmpty) 'bird_type_id': birdTypeId,
+      };
+
+      final queryString = Uri(queryParameters: queryParams).query;
       final response = await apiClient.get(
-        '/batches/archived?page=$page&limit=$limit',
+        '/batches?$queryString',
       );
+
       final jsonResponse = jsonDecode(response.body);
-      LogUtil.info('Archived Batches API Response: $jsonResponse');
+      LogUtil.info('Batches API Response: $jsonResponse');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        return Success(ArchivedBatchesResponse.fromJson(jsonResponse));
+        // Return BatchesResponse instead of GeneralBatchModel
+        return Success(GeneralBatchesResponse.fromJson(jsonResponse));
       } else {
         return Failure(
-          message: jsonResponse['message'] ?? 'Failed to fetch archived batches',
+          message: jsonResponse['message'] ?? 'Failed to fetch batches',
           response: response,
           statusCode: response.statusCode,
         );
       }
     } on SocketException catch (e) {
-      LogUtil.error('Network error in getArchivedBatches: $e');
+      LogUtil.error('Network error in getBatches: $e');
       return const Failure(
         message: 'No internet connection',
         statusCode: 0,
       );
     } catch (e) {
-      LogUtil.error('Error in getArchivedBatches: $e');
+      LogUtil.error('Error in getBatches: $e');
 
       if (e is http.Response) {
         return Failure(
-          message: 'Failed to fetch archived batches',
+          message: 'Failed to fetch batches',
           response: e,
           statusCode: e.statusCode,
         );
