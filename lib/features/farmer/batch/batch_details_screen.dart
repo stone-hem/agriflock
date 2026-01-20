@@ -1,4 +1,5 @@
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
+import 'package:agriflock360/features/farmer/batch/tabs/batch_expenditures_tab.dart';
 import 'package:agriflock360/features/farmer/batch/tabs/batch_feed_tab.dart';
 import 'package:agriflock360/features/farmer/batch/tabs/batch_overview.dart';
 import 'package:agriflock360/features/farmer/batch/tabs/batch_products_tab.dart';
@@ -24,7 +25,7 @@ class _BatchDetailsScreenState extends State<BatchDetailsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
   }
 
   @override
@@ -57,7 +58,7 @@ class _BatchDetailsScreenState extends State<BatchDetailsScreen>
               },
             ),
             const SizedBox(width: 12),
-            const Text('Batch Details'),
+            Text(widget.batch.batchName),
           ],
         ),
         backgroundColor: Colors.transparent,
@@ -92,6 +93,7 @@ class _BatchDetailsScreenState extends State<BatchDetailsScreen>
                 ),
               ),
               labelColor: Colors.green.shade700,
+              labelPadding: const EdgeInsets.symmetric(horizontal: 4),
               unselectedLabelColor: Colors.grey.shade600,
               labelStyle: const TextStyle(
                 fontSize: 11,
@@ -111,6 +113,8 @@ class _BatchDetailsScreenState extends State<BatchDetailsScreen>
                 _buildTab(Icons.fastfood, 'Feeding', false),
                 _buildTab(Icons.medical_services, 'Vaccinations', false),
                 _buildTab(Icons.inventory, 'Products', false),
+                _buildTab(Icons.account_balance_wallet, 'Expenditures', false),
+
               ],
             ),
           ),
@@ -123,6 +127,8 @@ class _BatchDetailsScreenState extends State<BatchDetailsScreen>
           BatchFeedTab(batch: widget.batch),
           BatchVaccinationsTab(batch: widget.batch),
           BatchProductsTab(batch: widget.batch),
+          BatchExpendituresTab(batch: widget.batch),
+
         ],
       ),
     );

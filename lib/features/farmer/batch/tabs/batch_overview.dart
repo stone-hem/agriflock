@@ -314,10 +314,6 @@ class _BatchOverviewState extends State<BatchOverview> {
               'Financial Overview',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            TextButton(
-              onPressed: () => context.push('/financial-details'),
-              child: const Text('Detailed Report'),
-            )
           ],
         ),
         const SizedBox(height: 16),

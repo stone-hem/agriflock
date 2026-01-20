@@ -10,6 +10,8 @@ class StatCard extends StatelessWidget {
   final double iconSize; // Icon size
   final bool showIconOnTop; // Whether to show icon above or beside value
   final MainAxisAlignment iconAlignment; // Icon alignment when beside value
+  final double? valueFontSize; // Font size for the value text
+
 
   const StatCard({
     super.key,
@@ -21,7 +23,7 @@ class StatCard extends StatelessWidget {
     this.iconColor,
     this.iconSize = 24,
     this.showIconOnTop = false,
-    this.iconAlignment = MainAxisAlignment.start,
+    this.iconAlignment = MainAxisAlignment.start, this.valueFontSize=16,
   });
 
   @override
@@ -64,6 +66,7 @@ class StatCard extends StatelessWidget {
                   style: Theme.of(context).textTheme.headlineSmall!.copyWith(
                     fontWeight: FontWeight.bold,
                     color: textColor,
+                    fontSize: valueFontSize,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
