@@ -27,6 +27,7 @@ class _MainDashboardState extends State<MainDashboard> {
   bool _isLoading = true;
   late List<NavConfig> _navConfigs;
   final SecureStorage _secureStorage = SecureStorage();
+  bool _hasSetInitialTab = false; // Track if we've set the initial tab
 
   // Define tab identifiers for both roles
   static const Map<String, Map<String, int>> _tabMappings = {
@@ -54,6 +55,20 @@ class _MainDashboardState extends State<MainDashboard> {
       LogUtil.warning('initialTab is null in main init state');
     }
     _loadUserRole();
+  }
+
+  @override
+  void didUpdateWidget(MainDashboard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Check if initialTab changed and we haven't set it yet
+    if (widget.initialTab != oldWidget.initialTab &&
+        widget.initialTab != null &&
+        !_hasSetInitialTab &&
+        !_isLoading) {
+      LogUtil.warning('didUpdateWidget: initialTab changed to ${widget.initialTab}');
+      _setInitialTab();
+    }
   }
 
   Future<void> _loadUserRole() async {
@@ -100,22 +115,28 @@ class _MainDashboardState extends State<MainDashboard> {
   }
 
   void _setInitialTab() {
-    if (widget.initialTab != null && _userRole != null) {
-      LogUtil.warning('Initial tab in main screen ${widget.initialTab!}');
+    if (widget.initialTab != null && _userRole != null && !_hasSetInitialTab) {
+      LogUtil.warning('_setInitialTab called with tab: ${widget.initialTab}, role: $_userRole');
+
       // Get the tab mappings for the current user role
       final roleTabs = _tabMappings[_userRole];
 
       if (roleTabs != null && roleTabs.containsKey(widget.initialTab)) {
-        LogUtil.warning('Initial tab in main screen  first if ${widget.initialTab!}');
-        // Only set the index if the tab is valid for this role (RBAC protection)
-        _selectedIndex = roleTabs[widget.initialTab]!;
+        LogUtil.warning('Setting index to: ${roleTabs[widget.initialTab]}');
+        setState(() {
+          _selectedIndex = roleTabs[widget.initialTab]!;
+          _hasSetInitialTab = true;
+        });
       } else {
         // Invalid tab for this role, default to home (index 0)
         LogUtil.warning('Warning: Tab "${widget.initialTab}" not valid for role "$_userRole"');
-        _selectedIndex = 0;
+        setState(() {
+          _selectedIndex = 0;
+          _hasSetInitialTab = true;
+        });
       }
-    }else{
-      LogUtil.warning('something fishy');
+    } else {
+      LogUtil.warning('Skipping _setInitialTab: initialTab=${widget.initialTab}, userRole=$_userRole, hasSet=$_hasSetInitialTab');
     }
   }
 

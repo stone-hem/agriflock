@@ -1,13 +1,10 @@
+import 'package:agriflock360/app_routes.dart';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
-import 'package:agriflock360/core/widgets/file_upload.dart';
 import 'package:agriflock360/features/auth/quiz/shared/gender_selector.dart';
-import 'package:agriflock360/core/widgets/photo_upload.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:file_picker/file_picker.dart';
-import 'dart:io';
 import 'dart:convert';
 
 import '../../../main.dart';
@@ -35,12 +32,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   final TextEditingController _houseCapacityController = TextEditingController();
   final TextEditingController _otherPoultryTypeController = TextEditingController();
 
-  // Photos
-  File? _idPhoto;
-
-  // Additional documents
-  final List<PlatformFile> _uploadedFiles = [];
-
   // Loading state
   bool _isLoading = false;
 
@@ -67,18 +58,22 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       color: primaryGreen,
       stepNumber: 2,
     ),
-    // ProfileStep(
-    //   title: 'Verification',
-    //   subtitle: 'Upload photos for verification',
-    //   icon: Icons.verified_user_outlined,
-    //   color: primaryGreen,
-    //   stepNumber: 3,
-    // ),
   ];
 
   @override
   void initState() {
     super.initState();
+
+    // Add listeners to update UI when fields change
+    _idNumberController.addListener(_updateValidationState);
+    _dobController.addListener(_updateValidationState);
+    _houseCapacityController.addListener(_updateValidationState);
+    _otherPoultryTypeController.addListener(_updateValidationState);
+  }
+
+  void _updateValidationState() {
+    // Trigger a rebuild to update button state
+    setState(() {});
   }
 
   @override
@@ -114,9 +109,21 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: DateTime.now().subtract(const Duration(days: 6570)), // 18 years ago
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: primaryGreen,
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null && mounted) {
       setState(() {
@@ -125,35 +132,20 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     }
   }
 
-  void _onFilesSelected(List<PlatformFile> files) {
-    setState(() {
-      _uploadedFiles.addAll(files);
-    });
-  }
-
-  void _onFileRemoved(int index) {
-    setState(() {
-      _uploadedFiles.removeAt(index);
-    });
-  }
-
   bool _isCurrentStepValid() {
     switch (_currentPage) {
       case 0: // Personal Information
-        return
-          _idNumberController.text.isNotEmpty &&
-              _dobController.text.isNotEmpty &&
-              _selectedGender != null;
+        return _idNumberController.text.trim().isNotEmpty &&
+            _dobController.text.trim().isNotEmpty &&
+            _selectedGender != null;
 
       case 1: // Farm Operations
-        return _selectedPoultryType != null &&
-            _houseCapacityController.text.isNotEmpty &&
-            (_selectedPoultryType != 'Other' ||
-                _otherPoultryTypeController.text.isNotEmpty);
+        final hasPoultryType = _selectedPoultryType != null;
+        final hasCapacity = _houseCapacityController.text.trim().isNotEmpty;
+        final otherTypeValid = _selectedPoultryType != 'Other' ||
+            _otherPoultryTypeController.text.trim().isNotEmpty;
 
-    // case 2: // Verification
-    //   return true;
-    //   // return _idPhoto != null;
+        return hasPoultryType && hasCapacity && otherTypeValid;
 
       default:
         return false;
@@ -182,7 +174,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         'chicken_house_capacity': int.tryParse(_houseCapacityController.text.trim()) ?? 0,
       };
 
-
       // Make API call
       final response = await apiClient.put(
         '/users/profile', // Your API endpoint
@@ -190,8 +181,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          // Add auth token if needed:
-          // 'Authorization': 'Bearer $yourToken',
         },
       );
 
@@ -199,11 +188,11 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         final data = jsonDecode(response.body);
 
         ToastUtil.showSuccess(
-         'Profile completed successfully! Please Log in again to use the app.',
+          'Profile completed successfully! Please Log in again to use the app.',
         );
 
-        // Navigate to login
-        await apiClient.logout();
+        // Navigate to quotation
+        context.pushReplacement(AppRoutes.dashboard, extra: 'farmer_quotation');
       } else {
         ApiErrorHandler.handle(response);
       }
@@ -307,8 +296,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         return _buildPersonalInfoPage();
       case 1:
         return _buildFarmOperationsPage();
-    // case 2:
-    //   return _buildVerificationPage();
       default:
         return Container();
     }
@@ -372,7 +359,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.calendar_today, color: primaryGreen),
+                      const Icon(Icons.calendar_today, color: primaryGreen),
                       const SizedBox(width: 12),
                       Text(
                         _dobController.text.isEmpty
@@ -455,7 +442,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     value: _selectedPoultryType,
                     hint: const Text('Select poultry type'),
                     isExpanded: true,
-                    icon: Icon(Icons.arrow_drop_down, color: primaryGreen),
+                    icon: const Icon(Icons.arrow_drop_down, color: primaryGreen),
                     style: const TextStyle(
                       color: Colors.black87,
                       fontSize: 16,
@@ -506,59 +493,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     );
   }
 
-  // Widget _buildVerificationPage() {
-  //   return SingleChildScrollView(
-  //     padding: const EdgeInsets.all(20),
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.start,
-  //       children: [
-  //         const Text(
-  //           'Verification Photos',
-  //           style: TextStyle(
-  //             fontSize: 24,
-  //             fontWeight: FontWeight.bold,
-  //             color: Colors.black87,
-  //           ),
-  //         ),
-  //         const SizedBox(height: 8),
-  //         const Text(
-  //           'Upload photos for profile verification',
-  //           style: TextStyle(
-  //             fontSize: 16,
-  //             color: Colors.black54,
-  //           ),
-  //         ),
-  //         const SizedBox(height: 20),
-  //
-  //         // ID Photo
-  //         PhotoUpload(
-  //           file: _idPhoto,
-  //           onFileSelected: (File? file) {
-  //             setState(() {
-  //               _idPhoto = file;
-  //             });
-  //           },
-  //           title: 'ID Photo *',
-  //           description: 'Upload a clear photo of your government-issued ID',
-  //           primaryColor: primaryGreen,
-  //         ),
-  //         const SizedBox(height: 20),
-  //
-  //         // Additional documents (optional)
-  //         FileUpload(
-  //           uploadedFiles: _uploadedFiles,
-  //           onFilesSelected: _onFilesSelected,
-  //           onFileRemoved: _onFileRemoved,
-  //           title: 'Additional Documents (Optional)',
-  //           description: 'Upload any additional farming certificates or documents',
-  //           primaryColor: primaryGreen,
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
   Widget _buildBottomNavigation() {
+    final isValid = _isCurrentStepValid();
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -592,7 +529,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           Expanded(
             flex: _currentPage > 0 ? 1 : 2,
             child: ElevatedButton(
-              onPressed: _isLoading || !_isCurrentStepValid()
+              onPressed: (_isLoading || !isValid)
                   ? null
                   : () {
                 if (_currentPage < _profileSteps.length - 1) {
