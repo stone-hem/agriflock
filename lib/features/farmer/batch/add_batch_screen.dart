@@ -741,7 +741,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
 
               // Current Weight
               Text(
-                'Average weight (kg)',
+                'Average weight (kg)  Per bird',
                 style: Theme.of(context).textTheme.titleMedium!.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.grey.shade800,
@@ -770,7 +770,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
 
               // Expected Weight
               Text(
-                'Expected Average Weight (kg)',
+                'Expected Average Weight (kg) Per bird',
                 style: Theme.of(context).textTheme.titleMedium!.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.grey.shade800,
