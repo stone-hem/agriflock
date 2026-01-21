@@ -21,6 +21,7 @@ class ReusableInput extends StatelessWidget {
   final int? minLines;
   final String? prefixText;
   final String? initialValue;
+  final FocusNode? focusNode;
   final TextInputAction? textInputAction;
   final void Function(String)? onChanged;
   final void Function(String)? onFieldSubmitted;
@@ -48,7 +49,7 @@ class ReusableInput extends StatelessWidget {
     this.onChanged,
     this.onFieldSubmitted,
     this.topLabel, this.prefixText,
-    this.initialValue,
+    this.initialValue, this.focusNode,
   });
 
   @override
@@ -89,6 +90,7 @@ class ReusableInput extends StatelessWidget {
           textInputAction: textInputAction,
           onChanged: onChanged,
           onFieldSubmitted: onFieldSubmitted,
+          focusNode: focusNode,
           decoration: InputDecoration(
             labelText: labelText,
             hintText: hintText,

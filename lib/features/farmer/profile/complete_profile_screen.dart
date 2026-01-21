@@ -1,12 +1,12 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'dart:convert';
+
 import 'package:agriflock360/app_routes.dart';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/auth/quiz/shared/gender_selector.dart';
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'dart:convert';
-
 import '../../../main.dart';
 
 class CompleteProfileScreen extends StatefulWidget {
@@ -34,6 +34,11 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
   // Loading state
   bool _isLoading = false;
+
+  // Focus nodes for text fields
+  final FocusNode _idNumberFocus = FocusNode();
+  final FocusNode _houseCapacityFocus = FocusNode();
+  final FocusNode _otherPoultryTypeFocus = FocusNode();
 
   // Poultry type options
   final List<String> _poultryTypes = [
@@ -83,6 +88,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     _dobController.dispose();
     _houseCapacityController.dispose();
     _otherPoultryTypeController.dispose();
+    _idNumberFocus.dispose();
+    _houseCapacityFocus.dispose();
+    _otherPoultryTypeFocus.dispose();
     super.dispose();
   }
 
@@ -107,6 +115,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   }
 
   Future<void> _selectDate(BuildContext context) async {
+    // First, dismiss any open keyboard
+    FocusScope.of(context).unfocus();
+
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now().subtract(const Duration(days: 6570)), // 18 years ago
@@ -153,6 +164,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   }
 
   Future<void> _completeProfile() async {
+    // Dismiss keyboard before submitting
+    FocusScope.of(context).unfocus();
+
     if (!_isCurrentStepValid()) {
       ToastUtil.showError('Please fill all required fields');
       return;
@@ -207,86 +221,99 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     }
   }
 
+  // Method to dismiss keyboard
+  void _dismissKeyboard() {
+    FocusScope.of(context).unfocus();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black54),
-          onPressed: () => context.pop(),
+    return GestureDetector(
+      onTap: _dismissKeyboard,
+      behavior: HitTestBehavior.opaque, // Important for proper tap handling
+      child: Scaffold(
+        backgroundColor: backgroundColor,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.black54),
+            onPressed: () {
+              _dismissKeyboard();
+              context.pop();
+            },
+          ),
+          title: Text(
+            _profileSteps[_currentPage].title,
+            style: const TextStyle(
+              color: Colors.black87,
+              fontWeight: FontWeight.w600,
+              fontSize: 18,
+            ),
+          ),
+          centerTitle: true,
         ),
-        title: Text(
-          _profileSteps[_currentPage].title,
-          style: const TextStyle(
-            color: Colors.black87,
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
-          ),
+        body: Column(
+          children: [
+            // Progress indicator
+            Container(
+              height: 4,
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              child: LinearProgressIndicator(
+                value: (_currentPage + 1) / _profileSteps.length,
+                backgroundColor: Colors.grey.shade300,
+                valueColor: const AlwaysStoppedAnimation<Color>(primaryGreen),
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // Page indicator
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Step ${_currentPage + 1} of ${_profileSteps.length}',
+                    style: const TextStyle(
+                      color: Colors.black54,
+                      fontSize: 14,
+                    ),
+                  ),
+                  Text(
+                    _profileSteps[_currentPage].title,
+                    style: const TextStyle(
+                      color: primaryGreen,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // PageView
+            Expanded(
+              child: PageView.builder(
+                controller: _pageController,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _profileSteps.length,
+                onPageChanged: (page) {
+                  _dismissKeyboard(); // Dismiss keyboard when changing pages
+                  setState(() {
+                    _currentPage = page;
+                  });
+                },
+                itemBuilder: (context, pageIndex) {
+                  return _buildStepPage(pageIndex);
+                },
+              ),
+            ),
+          ],
         ),
-        centerTitle: true,
+        bottomNavigationBar: _buildBottomNavigation(),
       ),
-      body: Column(
-        children: [
-          // Progress indicator
-          Container(
-            height: 4,
-            margin: const EdgeInsets.symmetric(horizontal: 20),
-            child: LinearProgressIndicator(
-              value: (_currentPage + 1) / _profileSteps.length,
-              backgroundColor: Colors.grey.shade300,
-              valueColor: const AlwaysStoppedAnimation<Color>(primaryGreen),
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          // Page indicator
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Step ${_currentPage + 1} of ${_profileSteps.length}',
-                  style: const TextStyle(
-                    color: Colors.black54,
-                    fontSize: 14,
-                  ),
-                ),
-                Text(
-                  _profileSteps[_currentPage].title,
-                  style: const TextStyle(
-                    color: primaryGreen,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // PageView
-          Expanded(
-            child: PageView.builder(
-              controller: _pageController,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _profileSteps.length,
-              onPageChanged: (page) {
-                setState(() {
-                  _currentPage = page;
-                });
-              },
-              itemBuilder: (context, pageIndex) {
-                return _buildStepPage(pageIndex);
-              },
-            ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: _buildBottomNavigation(),
     );
   }
 
@@ -302,193 +329,211 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   }
 
   Widget _buildPersonalInfoPage() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Personal Information',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Please provide your personal details for your profile',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.black54,
-            ),
-          ),
-          const SizedBox(height: 30),
-
-          // ID Number
-          ReusableInput(
-            controller: _idNumberController,
-            labelText: 'ID Number *',
-            hintText: 'Enter your national ID number',
-            icon: Icons.badge,
-            keyboardType: TextInputType.number,
-          ),
-          const SizedBox(height: 20),
-
-          // Date of Birth
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Date of Birth *',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
+    return GestureDetector(
+      onTap: _dismissKeyboard,
+      behavior: HitTestBehavior.opaque,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Personal Information',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
               ),
-              const SizedBox(height: 8),
-              InkWell(
-                onTap: () => _selectDate(context),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(12),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Please provide your personal details for your profile',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.black54,
+              ),
+            ),
+            const SizedBox(height: 30),
+
+            // ID Number
+            ReusableInput(
+              controller: _idNumberController,
+              focusNode: _idNumberFocus,
+              labelText: 'ID Number *',
+              hintText: 'Enter your national ID number',
+              icon: Icons.badge,
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 20),
+
+            // Date of Birth
+            GestureDetector(
+              onTap: () => _selectDate(context),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Date of Birth *',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
                   ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.calendar_today, color: primaryGreen),
-                      const SizedBox(width: 12),
-                      Text(
-                        _dobController.text.isEmpty
-                            ? 'Select your date of birth'
-                            : _formatDateForDisplay(_dobController.text),
-                        style: TextStyle(
-                          color: _dobController.text.isEmpty
-                              ? Colors.grey.shade500
-                              : Colors.black87,
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.calendar_today, color: primaryGreen),
+                        const SizedBox(width: 12),
+                        Text(
+                          _dobController.text.isEmpty
+                              ? 'Select your date of birth'
+                              : _formatDateForDisplay(_dobController.text),
+                          style: TextStyle(
+                            color: _dobController.text.isEmpty
+                                ? Colors.grey.shade500
+                                : Colors.black87,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
-          const SizedBox(height: 20),
+            ),
+            const SizedBox(height: 20),
 
-          // Gender
-          GenderSelector(
-            selectedGender: _selectedGender,
-            onGenderSelected: (String gender) {
-              setState(() {
-                _selectedGender = gender.toLowerCase();
-              });
-            },
-          ),
-        ],
+            // Gender
+            GenderSelector(
+              selectedGender: _selectedGender,
+              onGenderSelected: (String gender) {
+                _dismissKeyboard(); // Dismiss keyboard when selecting gender
+                setState(() {
+                  _selectedGender = gender.toLowerCase();
+                });
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildFarmOperationsPage() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Farm Operations',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Details about your current farming operations',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.black54,
-            ),
-          ),
-          const SizedBox(height: 30),
-
-          // Primary Poultry Type (Dropdown)
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Primary Poultry Type *',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
+    return GestureDetector(
+      onTap: _dismissKeyboard,
+      behavior: HitTestBehavior.opaque,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Farm Operations',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
               ),
-              const SizedBox(height: 8),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _selectedPoultryType,
-                    hint: const Text('Select poultry type'),
-                    isExpanded: true,
-                    icon: const Icon(Icons.arrow_drop_down, color: primaryGreen),
-                    style: const TextStyle(
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Details about your current farming operations',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.black54,
+              ),
+            ),
+            const SizedBox(height: 30),
+
+            // Primary Poultry Type (Dropdown)
+            GestureDetector(
+              onTap: () {
+                _dismissKeyboard(); // Dismiss keyboard before opening dropdown
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Primary Poultry Type *',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
                       color: Colors.black87,
-                      fontSize: 16,
                     ),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _selectedPoultryType = newValue;
-                        if (newValue != 'Other') {
-                          _otherPoultryTypeController.clear();
-                        }
-                      });
-                    },
-                    items: _poultryTypes.map((String type) {
-                      return DropdownMenuItem<String>(
-                        value: type,
-                        child: Text(type),
-                      );
-                    }).toList(),
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: _selectedPoultryType,
+                        hint: const Text('Select poultry type'),
+                        isExpanded: true,
+                        icon: const Icon(Icons.arrow_drop_down, color: primaryGreen),
+                        style: const TextStyle(
+                          color: Colors.black87,
+                          fontSize: 16,
+                        ),
+                        onChanged: (String? newValue) {
+                          _dismissKeyboard(); // Dismiss keyboard when selecting from dropdown
+                          setState(() {
+                            _selectedPoultryType = newValue;
+                            if (newValue != 'Other') {
+                              _otherPoultryTypeController.clear();
+                            }
+                          });
+                        },
+                        items: _poultryTypes.map((String type) {
+                          return DropdownMenuItem<String>(
+                            value: type,
+                            child: Text(type),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  if (_selectedPoultryType == 'Other')
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: ReusableInput(
+                        controller: _otherPoultryTypeController,
+                        focusNode: _otherPoultryTypeFocus,
+                        labelText: 'Specify other poultry type *',
+                        hintText: 'Enter your specific poultry type',
+                        icon: Icons.edit,
+                      ),
+                    ),
+                ],
               ),
-              const SizedBox(height: 4),
-              if (_selectedPoultryType == 'Other')
-                Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: ReusableInput(
-                    controller: _otherPoultryTypeController,
-                    labelText: 'Specify other poultry type *',
-                    hintText: 'Enter your specific poultry type',
-                    icon: Icons.edit,
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 20),
+            ),
+            const SizedBox(height: 20),
 
-          // Chicken House Capacity
-          ReusableInput(
-            controller: _houseCapacityController,
-            labelText: 'Chicken House Capacity *',
-            hintText: 'Maximum number of chickens your house can hold',
-            icon: Icons.home_work,
-            keyboardType: TextInputType.number,
-          ),
-          const SizedBox(height: 20),
-        ],
+            // Chicken House Capacity
+            ReusableInput(
+              controller: _houseCapacityController,
+              focusNode: _houseCapacityFocus,
+              labelText: 'Chicken House Capacity *',
+              hintText: 'Maximum number of chickens your house can hold',
+              icon: Icons.home_work,
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
       ),
     );
   }
@@ -496,78 +541,83 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   Widget _buildBottomNavigation() {
     final isValid = _isCurrentStepValid();
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          if (_currentPage > 0)
+    return GestureDetector(
+      onTap: _dismissKeyboard,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            if (_currentPage > 0)
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: _isLoading ? null : _previousPage,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: primaryGreen,
+                    side: const BorderSide(color: primaryGreen),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text('Back'),
+                ),
+              ),
+            if (_currentPage > 0) const SizedBox(width: 12),
             Expanded(
-              child: OutlinedButton(
-                onPressed: _isLoading ? null : _previousPage,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: primaryGreen,
-                  side: const BorderSide(color: primaryGreen),
+              flex: _currentPage > 0 ? 1 : 2,
+              child: ElevatedButton(
+                onPressed: (_isLoading || !isValid)
+                    ? null
+                    : () {
+                  _dismissKeyboard(); // Dismiss keyboard before navigation/submission
+                  if (_currentPage < _profileSteps.length - 1) {
+                    _nextPage();
+                  } else {
+                    _completeProfile();
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryGreen,
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
+                  disabledBackgroundColor: Colors.grey.shade300,
                 ),
-                child: const Text('Back'),
-              ),
-            ),
-          if (_currentPage > 0) const SizedBox(width: 12),
-          Expanded(
-            flex: _currentPage > 0 ? 1 : 2,
-            child: ElevatedButton(
-              onPressed: (_isLoading || !isValid)
-                  ? null
-                  : () {
-                if (_currentPage < _profileSteps.length - 1) {
-                  _nextPage();
-                } else {
-                  _completeProfile();
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryGreen,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                disabledBackgroundColor: Colors.grey.shade300,
-              ),
-              child: _isLoading
-                  ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              )
-                  : Text(
-                _currentPage == _profileSteps.length - 1
-                    ? 'Complete Profile'
-                    : 'Continue',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                child: _isLoading
+                    ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+                    : Text(
+                  _currentPage == _profileSteps.length - 1
+                      ? 'Complete Profile'
+                      : 'Continue',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
