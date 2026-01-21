@@ -160,10 +160,11 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
                                   fontSize: 16,
                                 ),
                               ),
-                              Text(
+                              if(widget.vaccination.scheduledDate != null)
+                                Text(
                                 widget.vaccination.isOverdue
                                     ? 'Overdue: ${widget.vaccination.scheduledDate}'
-                                    : 'Scheduled: ${DateUtil.toDateWithDay(widget.vaccination.scheduledDate)}',
+                                    : 'Scheduled: ${DateUtil.toDateWithDay(widget.vaccination.scheduledDate!)}',
                                 style: TextStyle(
                                   color: widget.vaccination.isOverdue ? Colors.red.shade700 : Colors.grey.shade600,
                                   fontSize: 14,

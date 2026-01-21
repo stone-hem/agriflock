@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/features/farmer/batch/add_batch_screen.dart';
 import 'package:agriflock360/features/farmer/batch/adopt_schedule_screen.dart';
 import 'package:agriflock360/features/farmer/batch/batch_details_screen.dart';
@@ -257,7 +258,15 @@ class AppRoutes {
         ),
         GoRoute(
           path: dashboard,
-          builder: (context, state) => const MainDashboard(),
+          builder: (context, state) {
+            final initialTab = state.extra as String?;
+            if(initialTab != null) {
+              LogUtil.warning('In routes $initialTab');
+            }else{
+              LogUtil.warning('initialTab is null in routes');
+            }
+            return MainDashboard(initialTab: initialTab);
+            },
         ),
         GoRoute(
           path: batches,

@@ -100,7 +100,7 @@ class Vaccination {
   final String? inventoryTransactionId;
   final String vaccineName;
   final String vaccineType;
-  final DateTime scheduledDate;
+  final DateTime? scheduledDate;
   final TimeOfDay? scheduledTime;
   final DateTime? completedDate;
   final TimeOfDay? completedTime;
@@ -112,7 +112,7 @@ class Vaccination {
   final int? birdsVaccinated;
   final String? cost;
   final String? currency;
-  final String region;
+  final String? region;
   final String? estimatedCost;
   final String? notes;
   final bool reminderSent;
@@ -130,7 +130,7 @@ class Vaccination {
     this.inventoryTransactionId,
     required this.vaccineName,
     required this.vaccineType,
-    required this.scheduledDate,
+    this.scheduledDate,
     this.scheduledTime,
     this.completedDate,
     this.completedTime,
@@ -142,7 +142,7 @@ class Vaccination {
     this.birdsVaccinated,
     this.cost,
     this.currency,
-    required this.region,
+    this.region,
     this.estimatedCost,
     this.notes,
     required this.reminderSent,
@@ -164,7 +164,9 @@ class Vaccination {
       inventoryTransactionId: json['inventory_transaction_id'],
       vaccineName: json['vaccine_name'],
       vaccineType: json['vaccine_type'],
-      scheduledDate: DateTime.parse(json['scheduled_date']),
+      scheduledDate: json['scheduled_date'] != null
+          ? DateTime.parse(json['scheduled_date'] as String)
+          : null,
       scheduledTime: json['scheduled_time'] != null
           ? _parseTime(json['scheduled_time'])
           : null,
@@ -219,11 +221,11 @@ class Vaccination {
 
   // Get scheduled DateTime with time if available
   DateTime? get scheduledDateTime {
-    if (scheduledTime != null) {
+    if (scheduledDate != null && scheduledTime != null) {
       return DateTime(
-        scheduledDate.year,
-        scheduledDate.month,
-        scheduledDate.day,
+        scheduledDate!.year,
+        scheduledDate!.month,
+        scheduledDate!.day,
         scheduledTime!.hour,
         scheduledTime!.minute,
       );
@@ -247,17 +249,17 @@ class Vaccination {
 
   // Check if vaccination is overdue (for scheduled vaccinations)
   bool get isOverdue {
-    if (!isStatusScheduled) return false;
+    if (!isStatusScheduled || scheduledDate == null) return false;
     final now = DateTime.now();
-    final scheduled = scheduledDateTime ?? scheduledDate;
+    final scheduled = scheduledDateTime ?? scheduledDate!;
     return now.isAfter(scheduled);
   }
 
   // Check if vaccination is due today
   bool get isDueToday {
-    if (!isStatusScheduled) return false;
+    if (!isStatusScheduled || scheduledDate == null) return false;
     final now = DateTime.now();
-    final scheduled = scheduledDateTime ?? scheduledDate;
+    final scheduled = scheduledDateTime ?? scheduledDate!;
     return scheduled.year == now.year &&
         scheduled.month == now.month &&
         scheduled.day == now.day;
@@ -265,18 +267,18 @@ class Vaccination {
 
   // Check if vaccination is upcoming (future scheduled)
   bool get isUpcoming {
-    if (!isStatusScheduled) return false;
+    if (!isStatusScheduled || scheduledDate == null) return false;
     final now = DateTime.now();
     final scheduled = scheduledDateTime ?? scheduledDate;
-    return scheduled.isAfter(now) && !isDueToday;
+    return scheduled!.isAfter(now) && !isDueToday;
   }
 
   // Check if vaccination is missed (overdue for more than 1 day)
   bool get isMissed {
-    if (!isStatusScheduled) return false;
+    if (!isStatusScheduled || scheduledDate == null) return false;
     final now = DateTime.now();
     final scheduled = scheduledDateTime ?? scheduledDate;
-    final difference = now.difference(scheduled);
+    final difference = now.difference(scheduled!);
     return difference.inDays >= 1;
   }
 

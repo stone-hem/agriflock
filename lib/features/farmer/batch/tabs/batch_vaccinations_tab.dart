@@ -749,10 +749,11 @@ class _VaccinationItem extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
+                    if(vaccination.scheduledDate != null)
                     Text(
                       isOverdue
-                          ? 'Was due: ${DateUtil.toDateWithDay(vaccination.scheduledDate)}'
-                          : 'Due: ${DateUtil.toDateWithDay(vaccination.scheduledDate)}',
+                          ? 'Was due: ${DateUtil.toDateWithDay(vaccination.scheduledDate!)}'
+                          : 'Due: ${DateUtil.toDateWithDay(vaccination.scheduledDate!)}',
                       style: TextStyle(
                         color: isOverdue
                             ? Colors.red.shade700
@@ -853,13 +854,30 @@ class _CompletedVaccinationItem extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
+                    if(vaccination.completedDate != null)
                     Text(
-                      'Completed: ${DateUtil.toDateWithDay(vaccination.completedDate ?? vaccination.scheduledDate)}',
+                      'Completed: ${DateUtil.toDateWithDay(vaccination.completedDate!)}',
                       style: TextStyle(
                         color: Colors.grey.shade500,
                         fontSize: 11,
                       ),
                     ),
+                    if(vaccination.scheduledDate != null)
+                      Text(
+                      'Completed: ${DateUtil.toDateWithDay(vaccination.scheduledDate!)}',
+                      style: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontSize: 11,
+                      ),
+                    ),
+                    if(vaccination.scheduledDate == null && vaccination.completedDate == null)
+                      Text(
+                        'Not completed',
+                        style: TextStyle(
+                          color: Colors.grey.shade500,
+                          fontSize: 11,
+                        ),
+                      ),
                   ],
                 ),
               ),

@@ -1,4 +1,5 @@
 import 'package:agriflock360/core/model/user_model.dart';
+import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:agriflock360/features/farmer/farm/view/farms_home_screen.dart';
 import 'package:agriflock360/features/farmer/profile/profile_screen.dart';
@@ -13,7 +14,8 @@ import 'package:agriflock360/features/farmer/quotation/quotation_screen.dart';
 import 'package:flutter/material.dart';
 
 class MainDashboard extends StatefulWidget {
-  const MainDashboard({super.key});
+  final String? initialTab;
+  const MainDashboard({super.key, this.initialTab});
 
   @override
   State<MainDashboard> createState() => _MainDashboardState();
@@ -26,9 +28,31 @@ class _MainDashboardState extends State<MainDashboard> {
   late List<NavConfig> _navConfigs;
   final SecureStorage _secureStorage = SecureStorage();
 
+  // Define tab identifiers for both roles
+  static const Map<String, Map<String, int>> _tabMappings = {
+    'extension_officer': {
+      'vet_home': 0,
+      'vet_schedules': 1,
+      'vet_payments': 2,
+      'vet_profile': 3,
+    },
+    'farmer': {
+      'farmer_home': 0,
+      'farmer_farms': 1,
+      'farmer_quotation': 2,
+      'farmer_vets': 3,
+      'farmer_profile': 4,
+    },
+  };
+
   @override
   void initState() {
     super.initState();
+    if(widget.initialTab != null) {
+      LogUtil.warning('In main init state ${widget.initialTab}');
+    }else{
+      LogUtil.warning('initialTab is null in main init state');
+    }
     _loadUserRole();
   }
 
@@ -47,6 +71,7 @@ class _MainDashboardState extends State<MainDashboard> {
         setState(() {
           _userRole = roleName.toLowerCase();
           _initializeNavConfigs();
+          _setInitialTab();
           _isLoading = false;
         });
       } else {
@@ -54,6 +79,7 @@ class _MainDashboardState extends State<MainDashboard> {
         setState(() {
           _userRole = 'farmer';
           _initializeNavConfigs();
+          _setInitialTab();
           _isLoading = false;
         });
       }
@@ -67,8 +93,29 @@ class _MainDashboardState extends State<MainDashboard> {
       setState(() {
         _userRole = 'farmer';
         _initializeNavConfigs();
+        _setInitialTab();
         _isLoading = false;
       });
+    }
+  }
+
+  void _setInitialTab() {
+    if (widget.initialTab != null && _userRole != null) {
+      LogUtil.warning('Initial tab in main screen ${widget.initialTab!}');
+      // Get the tab mappings for the current user role
+      final roleTabs = _tabMappings[_userRole];
+
+      if (roleTabs != null && roleTabs.containsKey(widget.initialTab)) {
+        LogUtil.warning('Initial tab in main screen  first if ${widget.initialTab!}');
+        // Only set the index if the tab is valid for this role (RBAC protection)
+        _selectedIndex = roleTabs[widget.initialTab]!;
+      } else {
+        // Invalid tab for this role, default to home (index 0)
+        LogUtil.warning('Warning: Tab "${widget.initialTab}" not valid for role "$_userRole"');
+        _selectedIndex = 0;
+      }
+    }else{
+      LogUtil.warning('something fishy');
     }
   }
 

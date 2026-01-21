@@ -743,8 +743,7 @@ class _MyVetOrdersScreenState extends State<MyVetOrdersScreen> {
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
-              // Navigate to create new order
-              context.push('/order-vet');
+              context.push('/vets');
             },
           ),
         ],
