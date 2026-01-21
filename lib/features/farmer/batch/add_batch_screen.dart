@@ -5,6 +5,7 @@ import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/core/widgets/photo_upload.dart';
+import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/bird_type.dart';
@@ -333,14 +334,9 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                         ],
                       ),
                     )
-                  : DropdownButtonFormField<String>(
-                      initialValue: _selectedBirdTypeId,
-                      decoration: InputDecoration(
-                        hintText: 'Select bird type',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
+                  : ReusableDropdown<String>(
+                      value: _selectedBirdTypeId,
+                hintText: 'Select bird type',
                       items: _birdTypes.map((BirdType type) {
                         return DropdownMenuItem<String>(
                           value: type.id,
@@ -370,14 +366,9 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                initialValue: _selectedBatchType,
-                decoration: InputDecoration(
-                  hintText: 'Select batch type',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+              ReusableDropdown<String>(
+                value: _selectedBatchType,
+                hintText: 'Select batch type',
                 items: _batchTypes.map((String type) {
                   return DropdownMenuItem<String>(
                     value: type,
@@ -823,14 +814,9 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
               const SizedBox(height: 8),
 
               // Feeding Time Category Selection
-              DropdownButtonFormField<String>(
+              ReusableDropdown<String>(
                 value: _selectedFeedingTimeCategory,
-                decoration: InputDecoration(
-                  hintText: 'Select feeding time category',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+                hintText: 'Select feeding time category',
                 items: _feedingTimeOptions.keys.map((String category) {
                   return DropdownMenuItem<String>(
                     value: category,

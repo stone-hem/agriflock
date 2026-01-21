@@ -356,25 +356,10 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
                 const SizedBox(width: 12),
                 Expanded(
                   flex: 3,
-                  child: DropdownButtonFormField<String>(
-                    initialValue: _selectedDosageUnit,
-                    decoration: InputDecoration(
-                      labelText: 'Unit',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade400),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade400),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.blue),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                    ),
-                    hint: const Text('Select unit'),
+                  child: ReusableDropdown<String>(
+                    value: _selectedDosageUnit,
+                    labelText: 'Unit',
+                    hintText: 'Select unit',
                     items: _dosageUnits.map((String unit) {
                       return DropdownMenuItem<String>(
                         value: unit,
@@ -703,25 +688,10 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
                 const SizedBox(width: 12),
                 Expanded(
                   flex: 2,
-                  child: DropdownButtonFormField<String>(
+                  child: ReusableDropdown<String>(
                     value: _selectedDosageUnit,
-                    decoration: InputDecoration(
-                      labelText: 'Unit',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade400),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade400),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.green),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                    ),
-                    hint: const Text('Select unit'),
+                    labelText: 'Unit',
+                    hintText: 'Select unit',
                     items: _dosageUnits.map((String unit) {
                       return DropdownMenuItem<String>(
                         value: unit,

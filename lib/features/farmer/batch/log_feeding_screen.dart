@@ -2,6 +2,7 @@ import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
+import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/batch/model/feeding_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/feeding_repo.dart';
@@ -557,7 +558,7 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
             border: Border.all(color: Colors.grey.shade400),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: DropdownButtonFormField<String>(
+          child: ReusableDropdown<String>(
             value: _selectedFeedType,
             onChanged: (value) {
               setState(() {
@@ -577,14 +578,10 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
                   value: value,
                   child: Text(value),
                 );
-              }).toList(),
+              }),
             ],
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              hintText: 'Choose feed type',
-              prefixIcon: const Icon(Icons.restaurant),
-            ),
+            hintText: 'Choose feed type',
+            icon: Icons.restaurant,
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Please select feed type';

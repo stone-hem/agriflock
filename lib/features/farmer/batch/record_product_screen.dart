@@ -1,5 +1,6 @@
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
+import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/batch/model/product_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/batch_mgt_repo.dart';
@@ -355,14 +356,9 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
+              ReusableDropdown<String>(
                 value: _selectedProductType,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  prefixIcon: Icon(Icons.category, color: Colors.grey.shade600),
-                ),
+               icon: Icons.category,
                 items: _productTypes.map((type) {
                   return DropdownMenuItem(
                     value: type['value'],
@@ -377,7 +373,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
                       _crackedEggsController.text = '0';
                     }
                   });
-                },
+                }, hintText: 'type',
               ),
               const SizedBox(height: 24),
 
