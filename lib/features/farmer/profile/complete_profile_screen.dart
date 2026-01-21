@@ -240,7 +240,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
             icon: const Icon(Icons.arrow_back, color: Colors.black54),
             onPressed: () {
               _dismissKeyboard();
-              context.pop();
+              context.pushReplacement(AppRoutes.dashboard, extra: 'farmer_home');
             },
           ),
           title: Text(
