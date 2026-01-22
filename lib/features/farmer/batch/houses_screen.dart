@@ -724,6 +724,7 @@ class _AddEditHouseDialogState extends State<_AddEditHouseDialog> {
               ReusableInput(
                 controller: _nameController,
                 labelText: 'House Name',
+                topLabel: 'House Name',
                 hintText: 'Enter house name',
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -736,6 +737,7 @@ class _AddEditHouseDialogState extends State<_AddEditHouseDialog> {
               ReusableInput(
                 controller: _capacityController,
                 labelText: 'Capacity',
+                topLabel: 'House Capacity',
                 hintText: 'Enter capacity',
                 suffixText: 'birds',
                 keyboardType: TextInputType.number,
@@ -751,6 +753,7 @@ class _AddEditHouseDialogState extends State<_AddEditHouseDialog> {
               ),
               const SizedBox(height: 16),
               ReusableInput(
+                topLabel: 'House Description',
                 controller: _descriptionController,
                 labelText: 'Description (Optional)',
                 hintText: 'Enter house description',
@@ -765,7 +768,7 @@ class _AddEditHouseDialogState extends State<_AddEditHouseDialog> {
           onPressed: _isLoading ? null : () => Navigator.pop(context),
           child: const Text('Cancel'),
         ),
-        ElevatedButton(
+        FilledButton(
           onPressed: _isLoading ? null : _saveHouse,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.green,

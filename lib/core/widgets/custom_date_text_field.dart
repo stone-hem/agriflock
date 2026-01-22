@@ -11,11 +11,18 @@ class DateTextFormatter extends TextInputFormatter {
       ) {
     final text = newValue.text;
     final oldText = oldValue.text;
+    final selection = newValue.selection;
+
+    // Handle selection replacement (when user selects and types)
+    if (oldValue.selection.start != oldValue.selection.end) {
+      // User had a selection and typed something
+      return _handleSelectionReplacement(oldValue, newValue);
+    }
 
     // If user is deleting
     if (text.length < oldText.length) {
       final digitsOnly = text.replaceAll(RegExp(r'[^\d]'), '');
-      return _formatWithMask(digitsOnly, true);
+      return _formatWithMask(digitsOnly, true, selection.baseOffset);
     }
 
     // Remove all non-digit characters for new input
@@ -24,7 +31,69 @@ class DateTextFormatter extends TextInputFormatter {
     // Validate and restrict input in real-time
     digitsOnly = _validateAndRestrictInput(digitsOnly);
 
-    return _formatWithMask(digitsOnly, false);
+    return _formatWithMask(digitsOnly, false, selection.baseOffset);
+  }
+
+  TextEditingValue _handleSelectionReplacement(
+      TextEditingValue oldValue,
+      TextEditingValue newValue,
+      ) {
+    final selectionStart = oldValue.selection.start;
+    final selectionEnd = oldValue.selection.end;
+    final newText = newValue.text;
+    final oldText = oldValue.text;
+
+    // Determine which section was selected
+    int sectionStart, sectionEnd;
+
+    if (selectionStart <= 2) {
+      // Day section
+      sectionStart = 0;
+      sectionEnd = 2;
+    } else if (selectionStart <= 5) {
+      // Month section
+      sectionStart = 3;
+      sectionEnd = 5;
+    } else {
+      // Year section
+      sectionStart = 6;
+      sectionEnd = 10;
+    }
+
+    // Extract the parts
+    String beforeSection = oldText.substring(0, sectionStart);
+    String afterSection = sectionEnd < oldText.length ? oldText.substring(sectionEnd) : '';
+
+    // Get the new input (what user typed)
+    String newInput = newText.replaceAll(RegExp(r'[^\d]'), '');
+    String oldDigits = oldText.replaceAll(RegExp(r'[^\d]'), '');
+
+    // Figure out what was actually typed
+    String beforeDigits = beforeSection.replaceAll(RegExp(r'[^\d]'), '');
+    String afterDigits = afterSection.replaceAll(RegExp(r'[^\d]'), '');
+
+    int expectedLength = beforeDigits.length + afterDigits.length;
+    String typedDigits = '';
+
+    if (newInput.length > expectedLength) {
+      typedDigits = newInput.substring(beforeDigits.length, newInput.length - afterDigits.length);
+    }
+
+    // Reconstruct the digits
+    String reconstructed = beforeDigits + typedDigits + afterDigits;
+
+    // Validate and format
+    reconstructed = _validateAndRestrictInput(reconstructed);
+
+    // Calculate cursor position based on section
+    int cursorPos = sectionStart + typedDigits.length;
+    if (typedDigits.length > 0 && sectionStart == 0 && typedDigits.length >= 2) {
+      cursorPos = 3; // Move past day and slash
+    } else if (typedDigits.length > 0 && sectionStart == 3 && typedDigits.length >= 2) {
+      cursorPos = 6; // Move past month and slash
+    }
+
+    return _formatWithMask(reconstructed, false, cursorPos);
   }
 
   String _validateAndRestrictInput(String digits) {
@@ -35,7 +104,6 @@ class DateTextFormatter extends TextInputFormatter {
     // Day validation (first 2 digits)
     if (digits.length >= 1) {
       int firstDigit = int.parse(digits[0]);
-      // First digit of day can only be 0-3
       if (firstDigit > 3) {
         result += '0${digits[0]}';
         if (digits.length > 1) {
@@ -48,11 +116,9 @@ class DateTextFormatter extends TextInputFormatter {
       if (digits.length >= 2) {
         int day = int.parse(result + digits[1]);
         if (day > 31) {
-          // If day exceeds 31, keep only first digit
           return result;
         }
         if (day == 0) {
-          // Don't allow day 00
           return result;
         }
         result += digits[1];
@@ -65,7 +131,6 @@ class DateTextFormatter extends TextInputFormatter {
     // Month validation (next 2 digits)
     if (digits.length >= 1) {
       int firstDigit = int.parse(digits[0]);
-      // First digit of month can only be 0 or 1
       if (firstDigit > 1) {
         result += '0${digits[0]}';
         if (digits.length > 1) {
@@ -78,22 +143,18 @@ class DateTextFormatter extends TextInputFormatter {
       if (digits.length >= 2) {
         int month = int.parse(result.substring(2) + digits[1]);
         if (month > 12) {
-          // If month exceeds 12, keep only first digit
           return result;
         }
         if (month == 0) {
-          // Don't allow month 00
           return result;
         }
         result += digits[1];
         digits = digits.substring(2);
 
-        // Now validate day based on month and year (if available)
         int day = int.parse(result.substring(0, 2));
         int maxDay = _getMaxDayForMonth(month, result.length >= 8 ? int.parse(result.substring(4, 8)) : null);
 
         if (day > maxDay) {
-          // Adjust day to max allowed for this month
           return result.substring(0, 2).replaceFirst(result.substring(0, 2), maxDay.toString().padLeft(2, '0')) + result.substring(2);
         }
       } else {
@@ -101,12 +162,10 @@ class DateTextFormatter extends TextInputFormatter {
       }
     }
 
-    // Year validation (last 4 digits) - allow any year
+    // Year validation (last 4 digits)
     if (digits.length >= 1) {
-      // Limit year to 4 digits
       result += digits.substring(0, digits.length > 4 ? 4 : digits.length);
 
-      // Re-validate day if we now have complete year for leap year check
       if (result.length == 8) {
         int day = int.parse(result.substring(0, 2));
         int month = int.parse(result.substring(2, 4));
@@ -114,7 +173,6 @@ class DateTextFormatter extends TextInputFormatter {
         int maxDay = _getMaxDayForMonth(month, year);
 
         if (day > maxDay) {
-          // Adjust day to max allowed for this month/year
           result = maxDay.toString().padLeft(2, '0') + result.substring(2);
         }
       }
@@ -125,13 +183,12 @@ class DateTextFormatter extends TextInputFormatter {
 
   int _getMaxDayForMonth(int month, int? year) {
     switch (month) {
-      case 2: // February
+      case 2:
         if (year != null) {
-          // Check for leap year
           bool isLeapYear = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
           return isLeapYear ? 29 : 28;
         }
-        return 29; // Assume leap year if year not provided yet
+        return 29;
       case 4:
       case 6:
       case 9:
@@ -142,8 +199,7 @@ class DateTextFormatter extends TextInputFormatter {
     }
   }
 
-  TextEditingValue _formatWithMask(String digitsOnly, bool isDeleting) {
-    // Limit to 8 digits
+  TextEditingValue _formatWithMask(String digitsOnly, bool isDeleting, int cursorPos) {
     final limitedDigits = digitsOnly.length > 8 ? digitsOnly.substring(0, 8) : digitsOnly;
 
     String formatted = '';
@@ -157,27 +213,19 @@ class DateTextFormatter extends TextInputFormatter {
           formatted += limitedDigits[digitIndex];
           digitIndex++;
         } else {
-          // Use placeholder characters
           formatted += mask[i];
         }
       }
     }
 
-    // Calculate cursor position
-    int newCursorPos = 0;
-    if (digitIndex > 0) {
-      int formattedDigitCount = 0;
-      for (int i = 0; i < formatted.length && formattedDigitCount < digitIndex; i++) {
-        if (formatted[i] != '/') {
-          formattedDigitCount++;
-        }
-        newCursorPos = i + 1;
-      }
+    int newCursorPos = cursorPos;
+    if (newCursorPos > formatted.length) {
+      newCursorPos = formatted.length;
+    }
 
-      // Skip over slash if cursor is on it (except when deleting)
-      if (!isDeleting && newCursorPos < formatted.length && formatted[newCursorPos] == '/') {
-        newCursorPos++;
-      }
+    // Skip over slashes
+    if (!isDeleting && newCursorPos < formatted.length && formatted[newCursorPos] == '/') {
+      newCursorPos++;
     }
 
     return TextEditingValue(
@@ -187,11 +235,10 @@ class DateTextFormatter extends TextInputFormatter {
   }
 }
 
-// Enum to specify return format
 enum DateReturnFormat {
-  string,      // Returns "DD/MM/YYYY" string (default)
-  isoString,   // Returns ISO string "YYYY-MM-DD"
-  dateTime,    // Returns DateTime object
+  string,
+  isoString,
+  dateTime,
 }
 
 class CustomDateTextField extends StatefulWidget {
@@ -199,14 +246,14 @@ class CustomDateTextField extends StatefulWidget {
   final String hintText;
   final IconData icon;
   final String? value;
-  final Function(dynamic)? onChanged; // Changed to dynamic to support different return types
+  final Function(dynamic)? onChanged;
   final TextEditingController controller;
   final int? minYear;
   final int? maxYear;
   final bool required;
   final String? Function(String?)? customValidator;
-  final DateReturnFormat returnFormat; // New parameter to specify return format
-  final DateTime? initialDate; // New parameter to set initial date
+  final DateReturnFormat returnFormat;
+  final DateTime? initialDate;
 
   const CustomDateTextField({
     super.key,
@@ -220,8 +267,8 @@ class CustomDateTextField extends StatefulWidget {
     this.maxYear,
     this.required = false,
     this.customValidator,
-    this.returnFormat = DateReturnFormat.string, // Default to string format
-    this.initialDate, // Optional initial date
+    this.returnFormat = DateReturnFormat.string,
+    this.initialDate,
   });
 
   @override
@@ -236,11 +283,9 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
   void initState() {
     super.initState();
 
-    // Initialize with initial date if provided
     if (widget.initialDate != null) {
       _initializeWithDate(widget.initialDate!);
     } else if (widget.controller.text.isEmpty) {
-      // Initialize with mask if empty and no initial date
       widget.controller.text = 'DD/MM/YYYY';
       widget.controller.selection = const TextSelection.collapsed(offset: 0);
     }
@@ -249,29 +294,17 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
   }
 
   void _initializeWithDate(DateTime date) {
-    // Format date as "DD/MM/YYYY"
     final day = date.day.toString().padLeft(2, '0');
     final month = date.month.toString().padLeft(2, '0');
     final year = date.year.toString();
 
     widget.controller.text = '$day/$month/$year';
-
-    // Trigger onChanged with appropriate format if callback exists
-    // if (widget.onChanged != null) {
-    //   _triggerOnChangedWithFormattedDate();
-    // }
-  }
-
-  void _triggerOnChangedWithFormattedDate() {
-    final formattedValue = _parseDateToFormat(widget.controller.text);
-    widget.onChanged!(formattedValue);
   }
 
   @override
   void didUpdateWidget(covariant CustomDateTextField oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    // Update if initialDate changes
     if (widget.initialDate != oldWidget.initialDate && widget.initialDate != null) {
       _initializeWithDate(widget.initialDate!);
     }
@@ -286,12 +319,10 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
 
   void _handleFocusChange() {
     if (_focusNode.hasFocus) {
-      // When focused, select the first placeholder position
       if (widget.controller.text == 'DD/MM/YYYY') {
         widget.controller.selection = const TextSelection.collapsed(offset: 0);
       }
     } else {
-      // When focus lost, validate
       setState(() {
         _errorText = _validateDate(widget.controller.text);
       });
@@ -299,7 +330,6 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
   }
 
   String? _validateDate(String? value) {
-    // Custom validator takes precedence
     if (widget.customValidator != null) {
       return widget.customValidator!(value);
     }
@@ -312,12 +342,10 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
       return null;
     }
 
-    // Check if still contains placeholder characters
     if (value.contains('D') || value.contains('M') || value.contains('Y')) {
       return 'Please complete the date';
     }
 
-    // Check format
     final parts = value.split('/');
     if (parts.length != 3) {
       return 'Invalid format';
@@ -328,7 +356,6 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
       final month = int.parse(parts[1]);
       final year = int.parse(parts[2]);
 
-      // Validate ranges
       if (month < 1 || month > 12) {
         return 'Month must be between 01 and 12';
       }
@@ -337,13 +364,11 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
         return 'Day must be between 01 and 31';
       }
 
-      // Check days in month (including leap year)
       final daysInMonth = DateTime(year, month + 1, 0).day;
       if (day > daysInMonth) {
         return 'Invalid day for ${_getMonthName(month)} $year';
       }
 
-      // Validate year constraints
       if (widget.minYear != null && year < widget.minYear!) {
         return 'Year must be ${widget.minYear} or later';
       }
@@ -352,7 +377,6 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
         return 'Year must be ${widget.maxYear} or earlier';
       }
 
-      // Check if date is valid
       final date = DateTime(year, month, day);
       if (date.year != year || date.month != month || date.day != day) {
         return 'Invalid date';
@@ -372,7 +396,6 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
     return months[month - 1];
   }
 
-  // Helper method to parse date string and return in requested format
   dynamic _parseDateToFormat(String dateString) {
     if (dateString.isEmpty ||
         dateString == 'DD/MM/YYYY' ||
@@ -392,16 +415,13 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
 
       switch (widget.returnFormat) {
         case DateReturnFormat.isoString:
-        // Return as ISO string "YYYY-MM-DD"
           return '${year.toString().padLeft(4, '0')}-${month.toString().padLeft(2, '0')}-${day.toString().padLeft(2, '0')}';
 
         case DateReturnFormat.dateTime:
-        // Return as DateTime object
           return DateTime(year, month, day);
 
         case DateReturnFormat.string:
         default:
-        // Return as original "DD/MM/YYYY" string
           return dateString;
       }
     } catch (e) {
@@ -410,7 +430,6 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
   }
 
   void _handleChanged(String value) {
-    // Clear error when user starts typing
     if (_errorText != null) {
       setState(() {
         _errorText = null;
@@ -418,13 +437,10 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
     }
 
     if (widget.onChanged != null) {
-      // Only callback with actual date, not the mask
       if (!value.contains('D') && !value.contains('M') && !value.contains('Y')) {
-        // Parse and return in requested format
         final formattedValue = _parseDateToFormat(value);
         widget.onChanged!(formattedValue);
       } else {
-        // If incomplete, pass null
         widget.onChanged!(null);
       }
     }
@@ -432,27 +448,36 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
 
   void _handleTap() {
     final text = widget.controller.text;
-    final currentPos = widget.controller.selection.baseOffset;
+    int currentPos = widget.controller.selection.baseOffset;
 
-    // If user taps on a slash, move cursor past it
-    if (currentPos < text.length && text[currentPos] == '/') {
-      widget.controller.selection = TextSelection.collapsed(offset: currentPos + 1);
+    // Only auto-select if the field has actual date data (not just the mask)
+    if (text == 'DD/MM/YYYY' ||
+        text.contains('D') ||
+        text.contains('M') ||
+        text.contains('Y')) {
+      return; // Don't auto-select on empty/placeholder field
     }
-    // If user taps on a completed digit, find next placeholder
-    else if (currentPos < text.length &&
-        text[currentPos] != 'D' &&
-        text[currentPos] != 'M' &&
-        text[currentPos] != 'Y' &&
-        text[currentPos] != '/') {
-      // Find next placeholder position
-      int nextPos = currentPos;
-      for (int i = currentPos; i < text.length; i++) {
-        if (text[i] == 'D' || text[i] == 'M' || text[i] == 'Y') {
-          nextPos = i;
-          break;
-        }
-      }
-      widget.controller.selection = TextSelection.collapsed(offset: nextPos);
+
+    // Determine which section was tapped and select it
+    if (currentPos <= 2) {
+      // Day section
+      _selectSection(0, 2);
+    } else if (currentPos <= 5) {
+      // Month section
+      _selectSection(3, 5);
+    } else {
+      // Year section
+      _selectSection(6, 10);
+    }
+  }
+
+  void _selectSection(int start, int end) {
+    final text = widget.controller.text;
+    if (text.length >= end) {
+      widget.controller.selection = TextSelection(
+        baseOffset: start,
+        extentOffset: end,
+      );
     }
   }
 

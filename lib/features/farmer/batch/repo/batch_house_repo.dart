@@ -102,6 +102,8 @@ class BatchHouseRepository {
           }
         });
 
+
+
         final multipartFile = await http.MultipartFile.fromPath(
           'batch_avatar',
           photoFile.path,

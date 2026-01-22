@@ -4,7 +4,6 @@ import 'package:agriflock360/features/farmer/batch/model/expenditure_model.dart'
 import 'package:agriflock360/features/farmer/batch/repo/batch_mgt_repo.dart';
 import 'package:agriflock360/features/farmer/batch/shared/stat_card.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 class BatchExpendituresTab extends StatefulWidget {
   final BatchModel batch;
@@ -164,16 +163,6 @@ class _BatchExpendituresTabState extends State<BatchExpendituresTab> {
     await _loadExpenditureData();
   }
 
-  Future<void> _navigateToRecordExpenditure() async {
-    final result = await context.push(
-      '/batches/${widget.batch.id}/record-expenditure',
-      extra: widget.batch, // Pass the batch as extra
-    );
-
-    if (result == true) {
-      _loadExpenditureData(); // Refresh data after recording
-    }
-  }
 
   Widget _buildErrorWidget(String error, VoidCallback onRetry) {
     return Container(
@@ -468,13 +457,6 @@ class _BatchExpendituresTabState extends State<BatchExpendituresTab> {
             ],
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _navigateToRecordExpenditure,
-        backgroundColor: Colors.red, // Different color to distinguish
-        icon: const Icon(Icons.add),
-        foregroundColor: Colors.white,
-        label: const Text('Record Expenditure'),
       ),
     );
   }

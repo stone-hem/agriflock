@@ -9,7 +9,7 @@ import 'package:agriflock360/features/farmer/batch/log_feeding_screen.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/recommended_vaccination_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
-import 'package:agriflock360/features/farmer/batch/record_expenditure_screen.dart';
+import 'package:agriflock360/features/farmer/expense/record_expenditure_screen.dart';
 import 'package:agriflock360/features/farmer/batch/record_vaccination_screen.dart';
 import 'package:agriflock360/features/farmer/batch/record_product_screen.dart';
 import 'package:agriflock360/features/farmer/batch/update_vaccination_status_screen.dart';
@@ -367,19 +367,16 @@ class AppRoutes {
                 return RecordProductScreen(batchId: batchId);
               },
             ),
-            GoRoute(
-              path: ':batchId/record-expenditure',
-              builder: (context, state) {
-                final batchId = state.pathParameters['batchId']!;
-                final batch = state.extra as BatchModel;
-
-                return RecordExpenditureScreen(
-                  batchId: batchId,
-                  batch: batch,
-                );
-              },
-            ),
           ],
+        ),
+        GoRoute(
+          path: '/record-expenditure',
+          builder: (context, state) {
+            final farm = state.extra as FarmModel?;
+            return RecordExpenditureScreen(
+              farm: farm,
+            );
+          },
         ),
         GoRoute(path: payg, builder: (context, state) => const PAYGDashboard()),
         GoRoute(

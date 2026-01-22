@@ -749,56 +749,6 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Current Weight
-              ReusableInput(
-                topLabel: 'Average weight (kg)  Per bird(Optional)',
-                controller: _currentWeightController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                  signed: false,
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter current weight';
-                  }
-                  if (double.tryParse(value) == null) {
-                    return 'Please enter a valid weight';
-                  }
-                  return null;
-                },
-                labelText: 'Current average weight',
-                hintText: 'e.g., 0.0',
-              ),
-              const SizedBox(height: 20),
-
-              // Expected Weight
-              ReusableInput(
-                topLabel: 'Expected weight (kg)  Per bird(Optional)',
-                controller: _expectedWeightController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                  signed: false,
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter expected weight';
-                  }
-                  if (double.tryParse(value) == null) {
-                    return 'Please enter a valid weight';
-                  }
-                  final expected = double.parse(value);
-                  final current =
-                      double.tryParse(_currentWeightController.text) ?? 0.0;
-                  if (expected < current) {
-                    return 'Expected weight should be greater than current weight';
-                  }
-                  return null;
-                },
-                labelText: 'Expected average weight at removal/sale',
-                hintText: 'e.g., 2.5',
-              ),
-              const SizedBox(height: 20),
-
               // Feeding Time Selection
               ReusableDropdown<String>(
                 topLabel: 'Feeding Time',
@@ -946,6 +896,52 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                 const SizedBox(height: 16),
               ],
 
+              // Current Weight
+              ReusableInput(
+                topLabel: 'Average weight (kg)  Per bird(Optional)',
+                controller: _currentWeightController,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                  signed: false,
+                ),
+                labelText: 'Current average weight',
+                hintText: 'e.g., 0.0',
+              ),
+              const SizedBox(height: 20),
+
+              // Expected Weight
+              ReusableInput(
+                topLabel: 'Expected weight (kg)  Per bird(Optional)',
+                controller: _expectedWeightController,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                  signed: false,
+                ),
+                validator: (value) {
+                  // Allow empty/null value since it's not required
+                  if (value == null || value.isEmpty) {
+                    return null; // No error, field is optional
+                  }
+
+                  final expected = double.tryParse(value);
+                  if (expected == null) {
+                    return 'Please enter a valid number or leave empty';
+                  }
+
+                  final current = double.tryParse(_currentWeightController.text) ?? 0.0;
+                  if (expected < current) {
+                    return 'Expected weight should be greater than current weight';
+                  }
+
+                  return null;
+                },
+                labelText: 'Expected average weight at removal/sale',
+                hintText: 'e.g., 2.5',
+              ),
+              const SizedBox(height: 20),
+
+
+
               // Notes
               ReusableInput(
                 topLabel: 'Notes (Optional)',
@@ -1086,13 +1082,14 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
         'bird_type_id': _selectedBirdTypeId,
         'batch_type': _selectedBatchType,
         'initial_count': int.parse(_initialQuantityController.text.trim()),
+        'current_count': int.parse(_birdsAliveController.text.trim()),
         'hatch_date': DateUtil.toISO8601(_hatchDate!), // Date only
         'birds_alive': int.parse(_birdsAliveController.text.trim()),
-        'current_weight': double.parse(_currentWeightController.text.trim()),
-        'expected_weight': double.parse(_expectedWeightController.text.trim()),
+        'current_weight': _currentWeightController.text.isNotEmpty?double.parse(_currentWeightController.text.trim()):null,
+        'expected_weight': _expectedWeightController.text.isNotEmpty?double.parse(_expectedWeightController.text.trim()):null,
         'purchase_cost': double.parse(_chickCostController.text.trim()),
         'age_at_purchase': int.parse(_chickAgeController.text.trim()),
-        'hatch_source': !_isOwnHatch && _hatchSourceController.text.isNotEmpty
+        'hatchery_source': !_isOwnHatch && _hatchSourceController.text.isNotEmpty
             ? _hatchSourceController.text.trim()
             : null, // Optional hatch source
         'feeding_time': _selectedFeedingTimeCategory,
@@ -1103,6 +1100,10 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
             ? _notesController.text.trim()
             : null,
       };
+
+      if( double.parse(_chickCostController.text.trim())==0){
+        batchData.remove('purchase_cost');
+      }
 
       final result = await _repository.createBatch(
         widget.farm.id,

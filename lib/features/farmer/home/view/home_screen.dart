@@ -428,11 +428,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   _buildStatsOverview(),
                   const SizedBox(height: 20),
                   Text(
-                    'Quick Action',
+                    'Quick Actions',
                     style: Theme.of(context).textTheme.titleLarge!.copyWith(
                       fontWeight: FontWeight.bold,
                       color: Colors.grey.shade800,
                     ),
+                  ),
+                  const SizedBox(height: 20),
+                  HomeActionTile(
+                    icon: Icons.outbond,
+                    title: 'Quick Expense',
+                    subtitle: 'Add expenses',
+                    color: Colors.red,
+                    onTap: () => context.push('/record-expenditure'),
                   ),
                   const SizedBox(height: 20),
                   HomeActionTile(
