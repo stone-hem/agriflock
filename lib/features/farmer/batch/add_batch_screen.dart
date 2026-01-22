@@ -35,6 +35,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
   final _notesController = TextEditingController();
   final _chickCostController = TextEditingController();
   final _chickAgeController = TextEditingController();
+  final _hatchSourceController = TextEditingController();
   final _repository = BatchHouseRepository();
 
   String? _selectedBirdTypeId;
@@ -84,6 +85,13 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
     super.initState();
     _initializeForm();
     _loadBirdTypes();
+    _calculateAvailableCapacity();
+  }
+
+  void _calculateAvailableCapacity() {
+    setState(() {
+      _availableCapacity = widget.house.capacity - widget.house.currentBirds;
+    });
   }
 
   Future<void> _loadBirdTypes() async {
@@ -120,6 +128,46 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
     // Initialize chick cost as 0
     _chickCostController.text = '0';
     _chickAgeController.text = '0';
+
+    // Set initial hatch date to today for both modes
+    _hatchDate = DateTime.now();
+    _hatchController.text = DateUtil.toReadableDate(_hatchDate!);
+  }
+
+  void _switchHatchSource(bool isOwnHatch) {
+    setState(() {
+      final wasOwnHatch = _isOwnHatch;
+      _isOwnHatch = isOwnHatch;
+
+      // Clear relevant fields when switching
+      if (wasOwnHatch != isOwnHatch) {
+        if (isOwnHatch) {
+          // Switching to own hatch
+          _chickAgeController.text = '0';
+          _hatchSourceController.clear();
+          _hatchDate = DateTime.now();
+          _hatchController.text = DateUtil.toReadableDate(_hatchDate!);
+        } else {
+          // Switching to purchased chicks
+          _hatchController.clear();
+          _hatchDate = DateTime.now();
+          _hatchController.text = DateUtil.toReadableDate(_hatchDate!);
+          _calculateAndUpdateHatchDate();
+        }
+      }
+    });
+  }
+
+  void _calculateAndUpdateHatchDate() {
+    if (!_isOwnHatch) {
+      final age = int.tryParse(_chickAgeController.text) ?? 0;
+      if (age >= 0) {
+        setState(() {
+          _hatchDate = DateTime.now().subtract(Duration(days: age));
+          _hatchController.text = DateUtil.toReadableDate(_hatchDate!);
+        });
+      }
+    }
   }
 
   @override
@@ -140,20 +188,20 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
             onPressed: _isLoading ? null : _createBatch,
             child: _isLoading
                 ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
-                    ),
-                  )
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+              ),
+            )
                 : const Text(
-                    'Create',
-                    style: TextStyle(
-                      color: Colors.green,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+              'Create',
+              style: TextStyle(
+                color: Colors.green,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -270,15 +318,8 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
               const SizedBox(height: 32),
 
               // Batch Name
-              Text(
-                'Batch Name',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
               ReusableInput(
+                topLabel: 'Batch Name',
                 controller: _nameController,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -291,76 +332,62 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
               ),
               const SizedBox(height: 20),
               // Bird Type Selection
-              Text(
-                'Bird Type',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
               _isLoadingBirdTypes
                   ? Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade400),
-                        borderRadius: BorderRadius.circular(12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade400),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Colors.green,
+                        ),
                       ),
-                      child: Row(
-                        children: [
-                          SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.green,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            'Loading bird types...',
-                            style: TextStyle(color: Colors.grey.shade600),
-                          ),
-                        ],
-                      ),
-                    )
-                  : ReusableDropdown<String>(
-                      value: _selectedBirdTypeId,
-                hintText: 'Select bird type',
-                      items: _birdTypes.map((BirdType type) {
-                        return DropdownMenuItem<String>(
-                          value: type.id,
-                          child: Text(type.name),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _selectedBirdTypeId = newValue;
-                        });
-                      },
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please select a bird type';
-                        }
-                        return null;
-                      },
                     ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Loading bird types...',
+                      style: TextStyle(color: Colors.grey.shade600),
+                    ),
+                  ],
+                ),
+              )
+                  : ReusableDropdown<String>(
+                topLabel: 'Bird Type',
+                value: _selectedBirdTypeId,
+                hintText: 'Select bird type',
+                items: _birdTypes.map((BirdType type) {
+                  return DropdownMenuItem<String>(
+                    value: type.id,
+                    child: Text(type.name),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedBirdTypeId = newValue;
+                  });
+                },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please select a bird type';
+                  }
+                  return null;
+                },
+              ),
               const SizedBox(height: 20),
 
               // Batch Type Selection
-              Text(
-                'Batch Type',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
               ReusableDropdown<String>(
                 value: _selectedBatchType,
                 hintText: 'Select batch type',
+                topLabel: 'Batch Type',
                 items: _batchTypes.map((String type) {
                   return DropdownMenuItem<String>(
                     value: type,
@@ -397,14 +424,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                       label: const Text('Own Hatch'),
                       selected: _isOwnHatch,
                       onSelected: (selected) {
-                        setState(() {
-                          _isOwnHatch = selected;
-                          if (selected) {
-                            _chickAgeController.text = '0';
-                            _hasChickCost = false;
-                            _chickCostController.text = '0';
-                          }
-                        });
+                        _switchHatchSource(selected);
                       },
                       selectedColor: Colors.green,
                       labelStyle: TextStyle(
@@ -420,9 +440,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                       label: const Text('Purchased Chicks'),
                       selected: !_isOwnHatch,
                       onSelected: (selected) {
-                        setState(() {
-                          _isOwnHatch = !selected;
-                        });
+                        _switchHatchSource(!selected);
                       },
                       selectedColor: Colors.blue,
                       labelStyle: TextStyle(
@@ -450,7 +468,10 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                   controller: _hatchController,
                   onChanged: (value) {
                     if (value != null) {
-                      _hatchDate = value;
+                      setState(() {
+                        _hatchDate = value;
+                        _hatchController.text = DateUtil.toReadableDate(value);
+                      });
                     }
                   },
                 ),
@@ -459,27 +480,13 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
 
               // Chick Age - Only shown for purchased chicks
               if (!_isOwnHatch) ...[
-                Text(
-                  'Chick Age (Days)',
-                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade800,
-                  ),
-                ),
-                const SizedBox(height: 8),
                 ReusableInput(
+                  topLabel: 'Chick Age (Days)',
                   controller: _chickAgeController,
                   keyboardType: TextInputType.number,
                   onChanged: (value) {
-                    // Trigger UI update when age changes
-                    setState(() {
-                      // Calculate and update hatch date in real-time
-                      final age = int.tryParse(value) ?? 0;
-                      if (age >= 0) {
-                        _hatchDate = DateTime.now().subtract(Duration(days: age));
-                        _hatchController.text = DateUtil.toISO8601(_hatchDate!);
-                      }
-                    });
+                    // Calculate and update hatch date in real-time
+                    _calculateAndUpdateHatchDate();
                   },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -492,6 +499,9 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                     if (age < 0) {
                       return 'Age cannot be negative';
                     }
+                    if (age > 365) {
+                      return 'Age cannot be more than 1 year';
+                    }
                     return null;
                   },
                   labelText: 'Age of chicks when purchased (days)',
@@ -499,46 +509,64 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // Show calculated hatch date
-                if (_hatchDate != null) ...[
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.blue.shade100),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.calendar_today, color: Colors.blue.shade700, size: 20),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Calculated Hatch Date',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blue.shade700,
-                                fontSize: 14,
-                              ),
+                // Hatch Source (Optional) - Only for purchased chicks
+                ReusableInput(
+                  topLabel: 'Hatchery/Source (Optional)',
+                  controller: _hatchSourceController,
+                  labelText: 'Where did you purchase the chicks?',
+                  hintText: 'e.g., XYZ Hatchery, Local Market, Farm Name',
+                  maxLines: 2,
+                ),
+                const SizedBox(height: 20),
+
+                // Show calculated hatch date for both modes
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.blue.shade100),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.calendar_today, color: Colors.blue.shade700, size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            _isOwnHatch ? 'Selected Hatch Date' : 'Calculated Hatch Date',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue.shade700,
+                              fontSize: 14,
                             ),
-                          ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        DateUtil.toReadableDate(_hatchDate!),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey.shade800,
                         ),
+                      ),
+                      if (!_isOwnHatch) ...[
                         const SizedBox(height: 8),
                         Text(
-                          DateUtil.toReadableDate(_hatchDate!),
+                          'Based on chicks being ${_chickAgeController.text} days old',
                           style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.grey.shade800,
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
                           ),
                         ),
                       ],
-                    ),
+                    ],
                   ),
-                  const SizedBox(height: 20),
-                ],
+                ),
+                const SizedBox(height: 20),
               ],
 
               // Chick Cost
@@ -560,9 +588,9 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                             'Chick Cost',
                             style: Theme.of(context).textTheme.titleMedium!
                                 .copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey.shade800,
-                                ),
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade800,
+                            ),
                           ),
                           Switch(
                             value: _hasChickCost,
@@ -574,7 +602,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                                 }
                               });
                             },
-                            activeColor: Colors.green,
+                            activeThumbColor: Colors.green,
                           ),
                         ],
                       ),
@@ -620,7 +648,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                         const SizedBox(height: 8),
                         Text(
                           _chickCostController.text.isNotEmpty &&
-                                  _initialQuantityController.text.isNotEmpty
+                              _initialQuantityController.text.isNotEmpty
                               ? 'Total cost: KSH ${_calculateTotalChickCost().toStringAsFixed(2)}'
                               : 'Total cost: KSH 0.00',
                           style: TextStyle(
@@ -663,15 +691,8 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
               const SizedBox(height: 20),
 
               // Initial Count with capacity validation
-              Text(
-                'Initial Count',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
               ReusableInput(
+                topLabel: 'Initial bird count',
                 controller: _initialQuantityController,
                 keyboardType: TextInputType.number,
                 onChanged: (value) {
@@ -700,17 +721,14 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
               const SizedBox(height: 20),
 
               // Birds Alive
-              Text(
-                'Current Count',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
               ReusableInput(
                 controller: _birdsAliveController,
                 keyboardType: TextInputType.number,
+                topLabel: 'Current bird count',
+                onChanged: (value) {
+                  // Update validation state
+                  setState(() {});
+                },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter number of birds alive';
@@ -732,15 +750,8 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
               const SizedBox(height: 20),
 
               // Current Weight
-              Text(
-                'Average weight (kg)  Per bird',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
               ReusableInput(
+                topLabel: 'Average weight (kg)  Per bird(Optional)',
                 controller: _currentWeightController,
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
@@ -761,15 +772,8 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
               const SizedBox(height: 20),
 
               // Expected Weight
-              Text(
-                'Expected Average Weight (kg) Per bird',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
               ReusableInput(
+                topLabel: 'Expected weight (kg)  Per bird(Optional)',
                 controller: _expectedWeightController,
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
@@ -796,17 +800,8 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
               const SizedBox(height: 20),
 
               // Feeding Time Selection
-              Text(
-                'Feeding Time',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              // Feeding Time Category Selection
               ReusableDropdown<String>(
+                topLabel: 'Feeding Time',
                 value: _selectedFeedingTimeCategory,
                 hintText: 'Select feeding time category',
                 items: _feedingTimeOptions.keys.map((String category) {
@@ -843,11 +838,11 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                 // Display all options for the selected category
                 Column(
                   children: _feedingTimeOptions[_selectedFeedingTimeCategory]!.map((
-                    time,
-                  ) {
+                      time,
+                      ) {
                     bool isSelected =
-                        _selectedFeedingTimes[_selectedFeedingTimeCategory]!
-                            .contains(time);
+                    _selectedFeedingTimes[_selectedFeedingTimeCategory]!
+                        .contains(time);
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 8),
@@ -930,19 +925,19 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                           spacing: 8,
                           runSpacing: 4,
                           children:
-                              _selectedFeedingTimes[_selectedFeedingTimeCategory]!
-                                  .map(
-                                    (time) => Chip(
-                                      label: Text(
-                                        time,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      backgroundColor: Colors.green,
-                                    ),
-                                  )
-                                  .toList(),
+                          _selectedFeedingTimes[_selectedFeedingTimeCategory]!
+                              .map(
+                                (time) => Chip(
+                              label: Text(
+                                time,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                ),
+                              ),
+                              backgroundColor: Colors.green,
+                            ),
+                          )
+                              .toList(),
                         ),
                       ],
                     ),
@@ -952,15 +947,8 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
               ],
 
               // Notes
-              Text(
-                'Notes (Optional)',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
               ReusableInput(
+                topLabel: 'Notes (Optional)',
                 controller: _notesController,
                 maxLines: 3,
                 labelText: 'Notes',
@@ -990,11 +978,11 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                       SizedBox(height: 8),
                       Text(
                         'After creating your batch, you can:\n'
-                        '• Track growth progress\n'
-                        '• Monitor feeding schedules\n'
-                        '• Record health checks\n'
-                        '• Update weight metrics\n'
-                        '• Generate performance reports',
+                            '• Track growth progress\n'
+                            '• Monitor feeding schedules\n'
+                            '• Record health checks\n'
+                            '• Update weight metrics\n'
+                            '• Generate performance reports',
                         style: TextStyle(color: Colors.grey, fontSize: 14),
                       ),
                     ],
@@ -1009,11 +997,11 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
   }
 
   Widget _buildCapacityInfo(
-    String title,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
+      String title,
+      String value,
+      IconData icon,
+      Color color,
+      ) {
     return Column(
       children: [
         Icon(icon, color: color, size: 24),
@@ -1045,18 +1033,6 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
     }
   }
 
-  DateTime? _calculateHatchDate() {
-    try {
-      final age = int.tryParse(_chickAgeController.text) ?? 0;
-      if (age > 0) {
-        return DateTime.now().subtract(Duration(days: age));
-      }
-      return DateTime.now();
-    } catch (e) {
-      return DateTime.now();
-    }
-  }
-
   Future<void> _createBatch() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -1069,12 +1045,23 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
         return;
       }
     } else {
-      // For purchased chicks, calculate hatch date
+      // For purchased chicks, validate chick age
+      if (_chickAgeController.text.isEmpty) {
+        ToastUtil.showError('Please enter chick age');
+        return;
+      }
       final age = int.tryParse(_chickAgeController.text) ?? 0;
-      _hatchDate = DateTime.now().subtract(Duration(days: age));
+      if (age < 0) {
+        ToastUtil.showError('Chick age cannot be negative');
+        return;
+      }
+      if (age > 365) {
+        ToastUtil.showError('Chick age cannot be more than 1 year');
+        return;
+      }
 
-      // Update the hatch controller for display
-      _hatchController.text = DateUtil.toISO8601(_hatchDate!);
+      // Calculate hatch date for purchased chicks
+      _hatchDate = DateTime.now().subtract(Duration(days: age));
     }
 
     // Validate feeding times selection
@@ -1091,7 +1078,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
     try {
       // Prepare batch data according to API requirements
       final selectedFeedingTimes =
-          _selectedFeedingTimes[_selectedFeedingTimeCategory]!;
+      _selectedFeedingTimes[_selectedFeedingTimeCategory]!;
 
       final batchData = {
         'house_id': widget.house.id,
@@ -1105,8 +1092,9 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
         'expected_weight': double.parse(_expectedWeightController.text.trim()),
         'purchase_cost': double.parse(_chickCostController.text.trim()),
         'age_at_purchase': int.parse(_chickAgeController.text.trim()),
-        // 'is_own_hatch': _isOwnHatch,
-        // 'has_chick_cost': _hasChickCost,
+        'hatch_source': !_isOwnHatch && _hatchSourceController.text.isNotEmpty
+            ? _hatchSourceController.text.trim()
+            : null, // Optional hatch source
         'feeding_time': _selectedFeedingTimeCategory,
         'feeding_schedule': selectedFeedingTimes.join(
           ',',
@@ -1150,6 +1138,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _hatchController.dispose();
     _initialQuantityController.dispose();
     _birdsAliveController.dispose();
     _currentWeightController.dispose();
@@ -1157,6 +1146,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
     _notesController.dispose();
     _chickCostController.dispose();
     _chickAgeController.dispose();
+    _hatchSourceController.dispose();
     super.dispose();
   }
 }

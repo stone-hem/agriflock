@@ -68,8 +68,8 @@ class ReusableInput extends StatelessWidget {
                 topLabel!,
                 style: TextStyle(
                   fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey.shade700,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade800,
                 ),
               ),
             ],

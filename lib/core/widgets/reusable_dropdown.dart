@@ -69,10 +69,10 @@ class ReusableDropdown<T> extends StatelessWidget {
           if (labelText != null) ...[
             Text(
               labelText!,
-              style: const TextStyle(
+              style:  TextStyle(
                 fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade800,
               ),
             ),
             const SizedBox(height: 8),
