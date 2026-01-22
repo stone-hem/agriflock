@@ -130,15 +130,8 @@ class _EditFarmScreenState extends State<EditFarmScreen> {
               const SizedBox(height: 32),
 
               // Farm Name
-              Text(
-                'Farm Name',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
               ReusableInput(
+                topLabel: 'Farm Name',
                 controller: _nameController,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -168,15 +161,8 @@ class _EditFarmScreenState extends State<EditFarmScreen> {
               const SizedBox(height: 20),
 
               // Description
-              Text(
-                'Description (Optional)',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
               ReusableInput(
+                topLabel: 'Description (Optional)',
                 controller: _descriptionController,
                 maxLines: 3,
                 labelText: 'Description',

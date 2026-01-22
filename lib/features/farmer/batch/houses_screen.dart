@@ -466,34 +466,6 @@ class _HouseCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: ElevatedButton(
-                    onPressed: onViewBatches,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.remove_red_eye_outlined, size: 20),
-                        SizedBox(width: 6),
-                        Flexible(
-                          child: Text(
-                            'View',
-                            style: TextStyle(fontWeight: FontWeight.w500),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
                   child: OutlinedButton(
                     onPressed: onEdit,
                     style: OutlinedButton.styleFrom(
@@ -548,6 +520,32 @@ class _HouseCard extends StatelessWidget {
                 ),
               ],
             ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: onViewBatches,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.agriculture, size: 20),
+                  SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      'View / Add batch',
+                      style: TextStyle(fontWeight: FontWeight.w500),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            )
           ],
         ),
       ),

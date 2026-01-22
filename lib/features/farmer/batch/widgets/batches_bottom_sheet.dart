@@ -250,19 +250,6 @@ class _BatchesBottomSheetState extends State<BatchesBottomSheet> {
                         ],
                       ),
                     ),
-                    // Add Batch Button
-                    IconButton(
-                      onPressed: _navigateToAddBatch,
-                      icon: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.green,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(Icons.add, color: Colors.white, size: 20),
-                      ),
-                    ),
                   ],
                 ),
               ),

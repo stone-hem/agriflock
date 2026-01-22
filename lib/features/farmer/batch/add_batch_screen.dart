@@ -117,14 +117,6 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
   }
 
   void _initializeForm() {
-    // Auto-fill initial quantity with available capacity if it's reasonable
-    _availableCapacity = widget.house.capacity - widget.house.currentBirds;
-    setState(() {
-      if (_availableCapacity > 0) {
-        _initialQuantityController.text = _availableCapacity.toString();
-        _birdsAliveController.text = _availableCapacity.toString();
-      }
-    });
     // Initialize chick cost as 0
     _chickCostController.text = '0';
     _chickAgeController.text = '0';

@@ -30,7 +30,6 @@ class _RecordExpenditureScreenState extends State<RecordExpenditureScreen> {
   final TextEditingController _selectedDateController = TextEditingController();
   String? _selectedUnit;
   final TextEditingController _supplierController = TextEditingController();
-  DateTime _selectedDate = DateTime.now();
 
   bool _isSubmitting = false;
   String? _errorMessage;
@@ -395,7 +394,6 @@ class _RecordExpenditureScreenState extends State<RecordExpenditureScreen> {
                 controller: _selectedDateController,
                 onChanged: (value) {
                   if (value != null) {
-                    _selectedDate = value;
                   }
                 },
               ),

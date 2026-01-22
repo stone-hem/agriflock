@@ -1,4 +1,6 @@
 import 'package:agriflock360/app_routes.dart';
+import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
+import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/farm/models/inventory_models.dart';
 import 'package:agriflock360/features/farmer/farm/repositories/inventory_repository.dart';
@@ -19,12 +21,13 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _currentStockController = TextEditingController(text: '0');
-  final _minStockController = TextEditingController(text: '10');
-  final _reorderPointController = TextEditingController(text: '20');
+  final _currentStockController = TextEditingController();
+  final _minStockController = TextEditingController();
+  final _reorderPointController = TextEditingController();
   final _costController = TextEditingController();
   final _supplierController = TextEditingController();
   final _notesController = TextEditingController();
+  final _expiryDateController = TextEditingController();
 
   final InventoryRepository _repository = InventoryRepository();
   List<InventoryCategory> _categories = [];
@@ -32,7 +35,6 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
   String? _selectedCategoryId;
   String? _selectedUnit;
   DateTime? _selectedExpiryDate;
-  DateTime? _lastRestockDate;
 
   final List<String> _units = [
     'kg',
@@ -53,7 +55,6 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
   void initState() {
     super.initState();
     _loadCategories();
-    _lastRestockDate = DateTime.now();
   }
 
   Future<void> _loadCategories() async {
@@ -87,20 +88,6 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
     }
   }
 
-  Future<void> _selectExpiryDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now().add(const Duration(days: 365)),
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2100),
-    );
-
-    if (picked != null && picked != _selectedExpiryDate) {
-      setState(() {
-        _selectedExpiryDate = picked;
-      });
-    }
-  }
 
   Future<void> _addItem() async {
     if (_formKey.currentState!.validate()) {
@@ -264,8 +251,8 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
               const SizedBox(height: 24),
 
               // Item Name
-              _buildSectionTitle('Item Name'),
               ReusableInput(
+                topLabel: 'Item Name',
                 controller: _nameController,
                 hintText: 'e.g., Broiler Starter Feed',
                 validator: (value) {
@@ -278,15 +265,10 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
               const SizedBox(height: 20),
 
               // Category
-              _buildSectionTitle('Category'),
-              DropdownButtonFormField<String>(
-                initialValue: _selectedCategoryId,
-                decoration: InputDecoration(
-                  hintText: 'Select category',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+              ReusableDropdown<String>(
+                topLabel: 'Category',
+                value: _selectedCategoryId,
+                hintText: 'Select category',
                 items: _categories.map((InventoryCategory category) {
                   return DropdownMenuItem<String>(
                     value: category.id,
@@ -308,8 +290,8 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
               const SizedBox(height: 20),
 
               // Description
-              _buildSectionTitle('Description (Optional)'),
               ReusableInput(
+                topLabel: 'Description (Optional)',
                 controller: _descriptionController,
                 maxLines: 3,
                 hintText: 'Description of the item...', labelText: 'Description',
@@ -318,15 +300,10 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
               const SizedBox(height: 20),
 
               // Unit of Measurement
-              _buildSectionTitle('Unit of Measurement'),
-              DropdownButtonFormField<String>(
-                initialValue: _selectedUnit,
-                decoration: InputDecoration(
-                  hintText: 'Select unit',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+              ReusableDropdown<String>(
+                topLabel: 'Unit of Measurement',
+                value: _selectedUnit,
+                hintText: 'Select unit',
                 items: _units.map((String unit) {
                   return DropdownMenuItem<String>(
                     value: unit,
@@ -348,11 +325,12 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
               const SizedBox(height: 20),
 
               // Current Stock
-              _buildSectionTitle('Current Stock'),
               ReusableInput(
+                topLabel: 'Current Stock',
                 controller: _currentStockController,
                 keyboardType: TextInputType.number,
                 hintText: 'e.g., 100.0',
+                labelText: 'Current Stock',
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter current stock';
@@ -365,7 +343,7 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
                     return 'Stock cannot be negative';
                   }
                   return null;
-                }, labelText: '',
+                },
               ),
               const SizedBox(height: 20),
 
@@ -376,12 +354,11 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildSectionTitle('Min Stock'),
                         ReusableInput(
+                          topLabel: 'Minimum Stock',
                           controller: _minStockController,
                           keyboardType: TextInputType.number,
                           hintText: 'Min',
-
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Required';
@@ -394,7 +371,7 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
                               return 'Must be ≥ 0';
                             }
                             return null;
-                          }, labelText: '',
+                          }, labelText: 'Min Stock',
                         ),
                       ],
                     ),
@@ -404,12 +381,11 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildSectionTitle('Reorder Point'),
                         ReusableInput(
                           controller: _reorderPointController,
                           keyboardType: TextInputType.number,
                           hintText: 'Reorder',
-
+                          topLabel: 'Reorder Point',
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Required';
@@ -422,7 +398,7 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
                               return 'Must be ≥ 0';
                             }
                             return null;
-                          }, labelText: '',
+                          }, labelText: 'Reorder',
                         ),
                       ],
                     ),
@@ -432,8 +408,8 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
               const SizedBox(height: 20),
 
               // Cost per Unit
-              _buildSectionTitle('Cost per Unit'),
               ReusableInput(
+                topLabel: 'Cost per Unit',
                 controller: _costController,
                 keyboardType: TextInputType.number,
                 hintText: 'e.g., 2.50',
@@ -450,70 +426,44 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
                     return 'Cost cannot be negative';
                   }
                   return null;
-                }, labelText: '',
+                }, labelText: 'Cost per Unit',
               ),
               const SizedBox(height: 20),
 
               // Supplier Information
-              _buildSectionTitle('Supplier Information(Optional)'),
               ReusableInput(
                 controller: _supplierController,
                 labelText: 'Supplier Name(Optional)',
-
+                topLabel: 'Supplier Information(Optional)',
                 hintText: '',
               ),
               const SizedBox(height: 12),
 
               // Expiry Date
-              _buildSectionTitle('Expiry Date (Optional)'),
-              InkWell(
-                onTap: _selectExpiryDate,
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.calendar_today,
-                        color: Colors.grey.shade600,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        _selectedExpiryDate != null
-                            ? '${_selectedExpiryDate!.day}/${_selectedExpiryDate!.month}/${_selectedExpiryDate!.year}'
-                            : 'Select expiry date',
-                        style: TextStyle(
-                          color: _selectedExpiryDate != null
-                              ? Colors.grey.shade800
-                              : Colors.grey.shade500,
-                        ),
-                      ),
-                      const Spacer(),
-                      if (_selectedExpiryDate != null)
-                        IconButton(
-                          icon: const Icon(Icons.clear, size: 20),
-                          onPressed: () {
-                            setState(() {
-                              _selectedExpiryDate = null;
-                            });
-                          },
-                        ),
-                    ],
-                  ),
-                ),
+              CustomDateTextField(
+                label: 'Expiry Date (Optional)',
+                hintText: 'Select expiry date',
+                icon: Icons.calendar_today,
+                required: true,
+                minYear: DateTime.now().year - 1,
+                returnFormat: DateReturnFormat.dateTime,
+                initialDate: DateTime.now(),
+                maxYear: DateTime.now().year,
+                controller: _expiryDateController,
+                onChanged: (value) {
+                  if (value != null) {
+                    _selectedExpiryDate = value;
+                  }
+                },
               ),
               const SizedBox(height: 20),
 
               // Notes
-              _buildSectionTitle('Notes (Optional)'),
               ReusableInput(
+                topLabel: 'Notes (Optional)',
                 controller: _notesController,
                 maxLines: 3,
-                hintText: 'Any additional notes about this item...', labelText: '',
-
+                hintText: 'Any additional notes about this item...', labelText: 'Notes'
               ),
               const SizedBox(height: 32),
 
@@ -561,18 +511,6 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleMedium!.copyWith(
-          fontWeight: FontWeight.bold,
-          color: Colors.grey.shade800,
-        ),
-      ),
-    );
-  }
 
   @override
   void dispose() {
@@ -584,6 +522,7 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
     _costController.dispose();
     _supplierController.dispose();
     _notesController.dispose();
+    _expiryDateController.dispose();
     super.dispose();
   }
 }

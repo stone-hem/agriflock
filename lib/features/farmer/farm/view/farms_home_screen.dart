@@ -177,7 +177,6 @@ class _FarmsHomeScreenState extends State<FarmsHomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    // _buildStatsSection(),
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -190,104 +189,7 @@ class _FarmsHomeScreenState extends State<FarmsHomeScreen> {
     );
   }
 
-  Widget _buildStatsSection() {
-    if (_isLoading) {
-      return _buildStatsLoading();
-    }
 
-    if (_hasError) {
-      return _buildStatsError();
-    }
-
-    if (_farmsResponse == null) {
-      return const SizedBox();
-    }
-
-    return _buildStatsOverview(_farmsResponse!.statistics);
-  }
-
-  Widget _buildStatsLoading() {
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            height: 80,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Container(
-            height: 80,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Container(
-            height: 80,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatsError() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.red.shade50,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        _errorMessage ?? 'Failed to load statistics',
-        style: TextStyle(color: Colors.red.shade700),
-      ),
-    );
-  }
-
-  Widget _buildStatsOverview(FarmStatistics stats) {
-    return Row(
-      children: [
-        Expanded(
-          child: _StatCard(
-            value: '${stats.totalFarms}',
-            label: 'Total Farms',
-            color: Colors.blue.shade100,
-            textColor: Colors.blue.shade800,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _StatCard(
-            value: '${stats.totalBirds}',
-            label: 'Total Birds',
-            color: Colors.green.shade100,
-            textColor: Colors.green.shade800,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _StatCard(
-            value: '${stats.totalActiveBatches}',
-            label: 'Active Batches',
-            color: Colors.orange.shade100,
-            textColor: Colors.orange.shade800,
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _buildFarmsListSection() {
     if (_isLoading) {
@@ -652,7 +554,7 @@ class _FarmCard extends StatelessWidget {
                       children: [
                         Icon(Icons.visibility_outlined, size: 20),
                         SizedBox(width: 8),
-                        Text('View Batches'),
+                        Text('View Houses'),
                       ],
                     ),
                   ),

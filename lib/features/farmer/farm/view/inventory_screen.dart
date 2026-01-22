@@ -26,10 +26,47 @@ class _InventoryScreenState extends State<InventoryScreen> {
   int _lowStockCount = 0;
   String? _error;
 
+  // Scroll controller to track scrolling
+  late ScrollController _scrollController;
+  bool _showFloatingButton = true;
+  double _scrollOffset = 0.0;
+  final GlobalKey _refreshIndicatorKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_handleScroll);
     _loadInventory();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_handleScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _handleScroll() {
+    // Hide floating button when user starts scrolling down
+    if (_scrollController.offset > _scrollOffset + 50) {
+      if (_showFloatingButton) {
+        setState(() {
+          _showFloatingButton = false;
+        });
+      }
+    }
+    // Show floating button when user scrolls back to top
+    else if (_scrollController.offset <= _scrollOffset + 50) {
+      if (!_showFloatingButton) {
+        setState(() {
+          _showFloatingButton = true;
+        });
+      }
+    }
+
+    // Update scroll offset for next comparison
+    _scrollOffset = _scrollController.offset;
   }
 
   Future<void> _loadInventory({bool loadMore = false}) async {
@@ -94,6 +131,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
   }
 
   Future<void> _onRefresh() async {
+    // Reset scroll position and show button
+    _scrollController.jumpTo(0);
+    setState(() {
+      _showFloatingButton = true;
+    });
+
     final result = await _repository.refreshInventory(
       limit: 20,
       farmId: widget.farmId,
@@ -372,27 +415,27 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   Widget _buildDetailRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              '$label:',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(
-                color: Colors.grey.shade700,
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 120,
+              child: Text(
+                '$label:',
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
-          ),
-        ],
-      ),
+            Expanded(
+              child: Text(
+                value,
+                style: TextStyle(
+                  color: Colors.grey.shade700,
+                ),
+              ),
+            ),
+          ],
+        )
     );
   }
 
@@ -480,24 +523,47 @@ class _InventoryScreenState extends State<InventoryScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _onRefresh,
-          ),
-          IconButton(
-            icon: const Icon(Icons.add),
             onPressed: () {
-              context.push('/farms/inventory/add/${widget.farmId}');
+              // Trigger pull-to-refresh manually
+              (_refreshIndicatorKey.currentState as RefreshIndicatorState?)?.show();
             },
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: _onRefresh,
-        child: _buildBodyContent(),
+      body: Stack(
+        children: [
+          // Main content with pull-to-refresh
+          _buildMainContent(),
+
+          // Floating Add Button
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            right: 20,
+            bottom: _showFloatingButton ? 20 : -100, // Hide button off-screen when not shown
+            child: FloatingActionButton.extended(
+              onPressed: () {
+                context.push('/farms/inventory/add/${widget.farmId}');
+              },
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              elevation: 6,
+              icon: const Icon(Icons.add),
+              label: const Text(
+                'Add Item',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildBodyContent() {
+  Widget _buildMainContent() {
     if (_isLoading && _inventoryItems.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -528,94 +594,114 @@ class _InventoryScreenState extends State<InventoryScreen> {
     }
 
     if (_inventoryItems.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.inventory_2_outlined,
-                size: 64, color: Colors.grey.shade400),
-            const SizedBox(height: 16),
-            Text(
-              'No inventory items',
-              style: TextStyle(color: Colors.grey.shade600),
+      return RefreshIndicator(
+        key: _refreshIndicatorKey,
+        onRefresh: _onRefresh,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.inventory_2_outlined,
+                      size: 64, color: Colors.grey.shade400),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No inventory items',
+                    style: TextStyle(color: Colors.grey.shade600),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Add your first inventory item',
+                    style: TextStyle(color: Colors.grey.shade500),
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: () {
+                      context.push('/farms/inventory/add/${widget.farmId}');
+                    },
+                    child: const Text('Add Item'),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Add your first inventory item',
-              style: TextStyle(color: Colors.grey.shade500),
-            ),
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: () {
-                context.push('/farms/inventory/add/${widget.farmId}');
-              },
-              child: const Text('Add Item'),
-            ),
-          ],
+          ),
         ),
       );
     }
 
-    return CustomScrollView(
-      slivers: [
-        // Summary Section
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: InventoryStatsCard(
-                    color:Colors.blue.shade100, value: _totalItems.toString(), label: 'Total Items', textColor: Colors.blue,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: InventoryStatsCard(
-                    label: 'Low Stock',
-                    value: _lowStockCount.toString(),
-                    color:Colors.orange.shade100, textColor: Colors.orange,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        // Inventory List
-        SliverList(
-          delegate: SliverChildBuilderDelegate(
-                (context, index) {
-              final item = _inventoryItems[index];
-              return _buildInventoryItem(item);
-            },
-            childCount: _inventoryItems.length,
-          ),
-        ),
-
-        // Loading More Indicator
-        if (_isLoadingMore)
-          const SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Center(child: CircularProgressIndicator()),
-            ),
-          ),
-
-        // Load More Button
-        if (_hasMore && !_isLoading && !_isLoadingMore)
+    return RefreshIndicator(
+      key: _refreshIndicatorKey,
+      onRefresh: _onRefresh,
+      child: CustomScrollView(
+        controller: _scrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          // Summary Section
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Center(
-                child: ElevatedButton(
-                  onPressed: () => _loadInventory(loadMore: true),
-                  child: const Text('Load More Items'),
-                ),
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: InventoryStatsCard(
+                      color:Colors.blue.shade100,
+                      value: _totalItems.toString(),
+                      label: 'Total Items',
+                      textColor: Colors.blue,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: InventoryStatsCard(
+                      label: 'Low Stock',
+                      value: _lowStockCount.toString(),
+                      color:Colors.orange.shade100,
+                      textColor: Colors.orange,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-      ],
+
+          // Inventory List
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                final item = _inventoryItems[index];
+                return _buildInventoryItem(item);
+              },
+              childCount: _inventoryItems.length,
+            ),
+          ),
+
+          // Loading More Indicator
+          if (_isLoadingMore)
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            ),
+
+          // Load More Button
+          if (_hasMore && !_isLoading && !_isLoadingMore)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Center(
+                  child: ElevatedButton(
+                    onPressed: () => _loadInventory(loadMore: true),
+                    child: const Text('Load More Items'),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -843,6 +929,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
       ),
     );
   }
+
   Color _getCategoryColor(String category) {
     switch (category.toLowerCase()) {
       case 'feed':

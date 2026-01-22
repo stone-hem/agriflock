@@ -102,15 +102,8 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
               const SizedBox(height: 32),
 
               // Farm Name
-              Text(
-                'Farm Name',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
               ReusableInput(
+                topLabel: 'Farm Name',
                 controller: _nameController,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -139,16 +132,8 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Description
-              Text(
-                'Description (Optional)',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
               ReusableInput(
+                topLabel: 'Description (Optional)',
                 controller: _descriptionController,
                 maxLines: 3,
                 labelText: 'Description',
@@ -178,10 +163,9 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
                       SizedBox(height: 8),
                       Text(
                         'After creating your farm, you can:\n'
-                        '• Add multiple flocks\n'
+                        '• Add multiple batches\n'
                         '• Set up IoT devices\n'
-                        '• Track performance metrics\n'
-                        '• Manage farm staff',
+                        '• Track performance metrics',
                         style: TextStyle(color: Colors.grey, fontSize: 14),
                       ),
                     ],
