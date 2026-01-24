@@ -151,7 +151,7 @@ class VetFarmer {
 }
 
 class Location {
-  final Address address;
+  final Address? address;
   final double latitude;
   final double longitude;
 
@@ -162,13 +162,30 @@ class Location {
   });
 
   factory Location.fromJson(Map<String, dynamic> json) {
+    Address? address;
+
+    // Handle both cases: when address is a String or a Map
+    if (json['address'] is Map<String, dynamic>) {
+      address = Address.fromJson(json['address'] as Map<String, dynamic>);
+    } else if (json['address'] is String) {
+      // Create an Address object with the string as formatted_address
+      address = Address(
+        city: null,
+        county: null,
+        subCounty: null,
+        formattedAddress: json['address'] as String,
+      );
+    }
+
     return Location(
-      address: Address.fromJson(json['address'] as Map<String, dynamic>? ?? {}),
+      address: address,
       latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
       longitude: (json['longitude'] as num?)?.toDouble() ?? 0.0,
     );
   }
 }
+
+
 
 class Address {
   final String? city;

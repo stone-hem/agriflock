@@ -60,6 +60,7 @@ class _VetDetailsScreenState extends State<VetDetailsScreen> {
 
       switch (result) {
         case Success<VetFarmer>(data: final data):
+
           setState(() {
             _vet = data;
             _isLoading = false;
@@ -550,7 +551,7 @@ class _VetDetailsScreenState extends State<VetDetailsScreen> {
                             _buildInfoCard(
                               icon: Icons.location_on,
                               label: 'Location',
-                              value: _vet!.location.address.formattedAddress,
+                              value: _vet!.location.address!.formattedAddress,
                             ),
                             _buildInfoCard(
                               icon: Icons.email,

@@ -1,9 +1,7 @@
-import 'package:agriflock360/app_routes.dart';
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_farmer_model.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_order_model.dart';
 import 'package:agriflock360/features/farmer/vet/repo/vet_farmer_repository.dart';
-import 'package:agriflock360/features/farmer/vet/vet_order_success_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:go_router/go_router.dart';
@@ -30,7 +28,7 @@ class VetOrderBottomSheet extends StatefulWidget {
 
 class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
   final _selectedDateController = TextEditingController();
-  DateTime? _selectedDate;
+  DateTime? _selectedDate=DateTime.now();
   TimeOfDay? _selectedTime;
   bool _termsAgreed = false;
   bool _isSubmittingOrder = false;
@@ -702,6 +700,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
       );
       return;
     }
+
 
     if (_selectedTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(

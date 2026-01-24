@@ -260,7 +260,6 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
 
   Widget _buildVetCard(VetFarmer vet) {
     final rating = double.tryParse(vet.averageRating) ?? 0.0;
-    final isAvailable = vet.status == 'active';
     final yearsExp = vet.yearsOfExperience;
 
     return Card(
@@ -319,18 +318,18 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: isAvailable
+                            color: vet.isAvailable
                                 ? Colors.green.withOpacity(0.1)
                                 : Colors.red.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: isAvailable ? Colors.green : Colors.red,
+                              color: vet.isAvailable ? Colors.green : Colors.red,
                             ),
                           ),
                           child: Text(
-                            vet.status,
+                            vet.isAvailable?'Available':'Unavailable',
                             style: TextStyle(
-                              color: isAvailable ? Colors.green : Colors.red,
+                              color: vet.isAvailable ? Colors.green : Colors.red,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                             ),
@@ -474,25 +473,6 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Recommended badge
-              Container(
-                width: 40,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(0.2),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    bottomLeft: Radius.circular(12),
-                  ),
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.recommend,
-                    color: Colors.amber,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
 
               // Vet Avatar
               Container(
@@ -572,7 +552,7 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            vet.location.address.formattedAddress,
+                            vet.location.address!.formattedAddress,
                             style: TextStyle(
                               color: Colors.grey.shade600,
                               fontSize: 12,

@@ -637,7 +637,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                       color: isSelected ? Colors.green : Colors.grey,
                     ),
                   );
-                }).toList(),
+                }),
 
               // Manual batch count option
               Padding(
@@ -994,7 +994,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                                 const SizedBox(width: 4),
                                 Expanded(
                                   child: Text(
-                                    widget.vet.location.address.formattedAddress,
+                                    widget.vet.location.address!.formattedAddress,
                                     style: TextStyle(
                                       color: Colors.grey.shade600,
                                       fontSize: 12,
@@ -1083,28 +1083,12 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               const SizedBox(height: 24),
 
               // Farm Selection
-              Text(
-                'Select Farm',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
               _buildFarmDropdown(),
               if (_selectedFarm != null) _buildFarmDetails(),
               const SizedBox(height: 20),
 
               // House Selection
               if (_selectedFarm != null) ...[
-                Text(
-                  'Select House',
-                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade800,
-                  ),
-                ),
-                const SizedBox(height: 8),
                 _buildHouseDropdown(),
                 if (_selectedHouse != null) _buildHouseDetails(),
                 const SizedBox(height: 20),
@@ -1121,15 +1105,8 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               const SizedBox(height: 20),
 
               // Priority Level
-              Text(
-                'Priority Level',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
               ReusableDropdown<String>(
+                topLabel: 'Priority Level',
                 value: _selectedPriority,
                 hintText: 'Select priority level',
                 icon: Icons.priority_high,
@@ -1268,6 +1245,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
 
     return ReusableDropdown<String>(
       value: _selectedFarm,
+      topLabel: "Select a farm",
       hintText: 'Choose a farm',
       labelText: 'Farm',
       icon: Icons.agriculture,
@@ -1317,6 +1295,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
     }
 
     return ReusableDropdown<String>(
+      topLabel: "Select a house",
       value: _selectedHouse,
       hintText: 'Choose a poultry house',
       labelText: 'House',
