@@ -438,7 +438,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   HomeActionTile(
                     icon: Icons.outbond,
                     title: 'Quick Expense',
-                    subtitle: 'Add expenses',
+                    subtitle: 'Help the application to generate the correct finance report',
                     color: Colors.red,
                     onTap: () => context.push('/record-expenditure'),
                   ),

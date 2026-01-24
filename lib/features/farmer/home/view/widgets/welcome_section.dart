@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class WelcomeSection extends StatelessWidget {
   final String greeting;
   final String summaryMsg;
   final int? daysSinceLogin; // Add this
 
-
-  const WelcomeSection({super.key, required this.greeting, required this.summaryMsg, this.daysSinceLogin});
+  const WelcomeSection({
+    super.key,
+    required this.greeting,
+    required this.summaryMsg,
+    this.daysSinceLogin,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +32,10 @@ class WelcomeSection extends StatelessWidget {
           if (daysSinceLogin != null)
             Container(
               margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 4,
+              ),
               decoration: BoxDecoration(
                 color: Colors.green.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
@@ -60,14 +68,19 @@ class WelcomeSection extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             summaryMsg,
-            style: TextStyle(
-              color: Colors.green.shade600,
-              fontSize: 16,
+            style: TextStyle(color: Colors.green.shade600, fontSize: 16),
+          ),
+          const SizedBox(height: 4),
+          TextButton.icon(
+            onPressed: () => context.push('/record-expenditure'),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red.shade800,
             ),
+            icon: Icon(Icons.arrow_forward, color: Colors.red.shade800),
+            label: Text('Record an expense'),
           ),
         ],
       ),
     );
-
   }
 }

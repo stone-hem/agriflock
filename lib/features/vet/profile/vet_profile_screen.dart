@@ -203,7 +203,7 @@ class _VetProfileScreenState extends State<VetProfileScreen> {
                         border: Border.all(color: Colors.amber.shade300),
                       ),
                       child: Text(
-                        'Premium Member',
+                        'Premium Officer',
                         style: TextStyle(
                           color: Colors.amber.shade800,
                           fontWeight: FontWeight.w600,

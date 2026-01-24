@@ -62,7 +62,7 @@ class _RecordExpenditureScreenState extends State<RecordExpenditureScreen> {
     'Feed',
     'Medication',
     'Vaccines',
-    'Utilities',
+    'Utilities(Electricity and Water)',
     'Labor',
     'Equipment',
     'Transport',

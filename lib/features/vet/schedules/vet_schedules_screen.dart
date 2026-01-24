@@ -411,15 +411,15 @@ class _VetSchedulesScreenState extends State<VetSchedulesScreen> with SingleTick
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const Spacer(),
-                    Text(
-                      '${visit.distanceKm.toStringAsFixed(1)} km away',
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 12,
-                      ),
-                    ),
                   ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${visit.distanceKm.toStringAsFixed(1)} km away',
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: 12,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Row(

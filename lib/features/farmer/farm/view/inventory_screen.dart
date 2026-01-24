@@ -520,15 +520,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
           icon: Icon(Icons.arrow_back, color: Colors.grey.shade700),
           onPressed: () => context.pop(),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              // Trigger pull-to-refresh manually
-              (_refreshIndicatorKey.currentState as RefreshIndicatorState?)?.show();
-            },
-          ),
-        ],
       ),
       body: Stack(
         children: [
@@ -536,28 +527,28 @@ class _InventoryScreenState extends State<InventoryScreen> {
           _buildMainContent(),
 
           // Floating Add Button
-          AnimatedPositioned(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            right: 20,
-            bottom: _showFloatingButton ? 20 : -100, // Hide button off-screen when not shown
-            child: FloatingActionButton.extended(
-              onPressed: () {
-                context.push('/farms/inventory/add/${widget.farmId}');
-              },
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              elevation: 6,
-              icon: const Icon(Icons.add),
-              label: const Text(
-                'Add Item',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-          ),
+          // AnimatedPositioned(
+          //   duration: const Duration(milliseconds: 300),
+          //   curve: Curves.easeInOut,
+          //   right: 20,
+          //   bottom: _showFloatingButton ? 20 : -100, // Hide button off-screen when not shown
+          //   child: FloatingActionButton.extended(
+          //     onPressed: () {
+          //       context.push('/farms/inventory/add/${widget.farmId}');
+          //     },
+          //     backgroundColor: Colors.green,
+          //     foregroundColor: Colors.white,
+          //     elevation: 6,
+          //     icon: const Icon(Icons.add),
+          //     label: const Text(
+          //       'Add Item',
+          //       style: TextStyle(
+          //         fontWeight: FontWeight.w600,
+          //         fontSize: 16,
+          //       ),
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );
