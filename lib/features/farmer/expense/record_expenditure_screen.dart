@@ -1,4 +1,6 @@
 import 'package:agriflock360/core/utils/api_error_handler.dart';
+import 'package:agriflock360/core/utils/date_util.dart';
+import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
@@ -7,6 +9,9 @@ import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/batch_house_repo.dart';
 import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
 import 'package:agriflock360/features/farmer/farm/repositories/farm_repository.dart';
+import 'package:agriflock360/features/farmer/expense/model/expense_category.dart';
+import 'package:agriflock360/features/farmer/expense/repo/categories_repository.dart';
+import 'package:agriflock360/features/farmer/expense/repo/expenditure_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -28,6 +33,8 @@ class _RecordExpenditureScreenState extends State<RecordExpenditureScreen> {
   // Repositories
   final _farmRepository = FarmRepository();
   final _batchHouseRepository = BatchHouseRepository();
+  final _categoriesRepository = CategoriesRepository();
+  final _expenditureRepository = ExpenditureRepository();
 
   // Selection states
   String? _selectedFarm;
@@ -38,15 +45,17 @@ class _RecordExpenditureScreenState extends State<RecordExpenditureScreen> {
   FarmsResponse? _farmsResponse;
   List<House> _houses = [];
   List<BatchModel> _availableBatches = [];
+  List<InventoryCategory> _categories = [];
 
   // Loading states
   bool _isLoadingFarms = false;
   bool _isLoadingHouses = false;
+  bool _isLoadingCategories = false;
   bool _hasError = false;
   String? _errorMessage;
 
   // Form fields
-  String? _selectedType;
+  String? _selectedCategoryId;
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _quantityController = TextEditingController(text: '1');
@@ -56,18 +65,6 @@ class _RecordExpenditureScreenState extends State<RecordExpenditureScreen> {
 
   bool _isSubmitting = false;
   String? _submitErrorMessage;
-
-  // Poultry farm expenditure types
-  final List<String> _expenditureTypes = [
-    'Feed',
-    'Medication',
-    'Vaccines',
-    'Utilities(Electricity and Water)',
-    'Labor',
-    'Equipment',
-    'Transport',
-    'Other',
-  ];
 
   final List<String> _units = [
     'bag',
@@ -88,6 +85,9 @@ class _RecordExpenditureScreenState extends State<RecordExpenditureScreen> {
   }
 
   void _initializeData() {
+    // Load categories first
+    _loadCategories();
+
     // If farm is passed, use it
     if (widget.farm != null) {
       setState(() {
@@ -97,6 +97,37 @@ class _RecordExpenditureScreenState extends State<RecordExpenditureScreen> {
     } else {
       // Otherwise load all farms
       _loadFarms();
+    }
+  }
+
+  Future<void> _loadCategories() async {
+    setState(() {
+      _isLoadingCategories = true;
+    });
+
+    try {
+      final result = await _categoriesRepository.getCategories();
+
+      switch (result) {
+        case Success<List<InventoryCategory>>(data: final categories):
+          setState(() {
+            _categories = categories;
+            _isLoadingCategories = false;
+          });
+          break;
+        case Failure(message: final error):
+          setState(() {
+            _isLoadingCategories = false;
+            _errorMessage = 'Failed to load categories: $error';
+          });
+          ApiErrorHandler.handle(error);
+          break;
+      }
+    } catch (e) {
+      setState(() {
+        _isLoadingCategories = false;
+        _errorMessage = 'Failed to load categories: $e';
+      });
     }
   }
 
@@ -202,35 +233,58 @@ class _RecordExpenditureScreenState extends State<RecordExpenditureScreen> {
       return;
     }
 
+    if(_selectedDateController.text.isEmpty){
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a date'),));
+    }
+
+    final DateTime? selectedDate =DateUtil.parseDDMMYYYY(_selectedDateController.text);
+
+
     setState(() {
       _isSubmitting = true;
       _submitErrorMessage = null;
     });
 
+
     try {
       // Prepare expenditure data
       final expenditureData = {
-        'farmId': _selectedFarm,
-        'houseId': _selectedHouse,
-        'batchId': _selectedBatch,
-        'type': _selectedType!,
+        'farm_id': _selectedFarm,
+        if (_selectedHouse != null) 'house_id': _selectedHouse,
+        if (_selectedBatch != null) 'batch_id': _selectedBatch,
+        'category_id': _selectedCategoryId!,
         'description': _descriptionController.text,
         'amount': double.parse(_amountController.text),
         'quantity': int.parse(_quantityController.text),
         'unit': _selectedUnit!,
-        'date': _selectedDateController.text,
-        'supplier': _supplierController.text.isNotEmpty ? _supplierController.text : null,
+        'date': DateUtil.toISO8601(selectedDate!),
+        if (_supplierController.text.isNotEmpty) 'supplier': _supplierController.text,
       };
 
-      // TODO: Replace with actual API call
-      // await _expenditureRepository.recordExpenditure(expenditureData);
+      final result = await _expenditureRepository.createExpenditure(expenditureData);
 
-      // Simulate API delay
-      await Future.delayed(const Duration(seconds: 1));
-
-      // Return success
-      if (mounted) {
-        context.pop(true); // Return true to indicate success
+      switch (result) {
+        case Success():
+        // Return success
+          if (mounted) {
+            // Show success message
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Expenditure recorded successfully'),
+                backgroundColor: Colors.green,
+              ),
+            );
+            context.pop(true); // Return true to indicate success
+          }
+          break;
+        case Failure(message: final error):
+          setState(() {
+            _submitErrorMessage = error;
+          });
+          ApiErrorHandler.handle(error);
+          break;
       }
     } catch (e) {
       setState(() {
@@ -658,6 +712,58 @@ class _RecordExpenditureScreenState extends State<RecordExpenditureScreen> {
     );
   }
 
+  Widget _buildCategoryDropdown() {
+    if (_isLoadingCategories) {
+      return _buildLoadingIndicator('Loading categories...');
+    }
+
+    if (_categories.isEmpty) {
+      return _buildErrorWidget(
+        'No categories available. Please try again.',
+        _loadCategories,
+      );
+    }
+
+    return ReusableDropdown<String>(
+      value: _selectedCategoryId,
+      topLabel: 'Expenditure Category *',
+      icon: Icons.category,
+      onChanged: (value) {
+        setState(() {
+          _selectedCategoryId = value;
+        });
+      },
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please select expenditure category';
+        }
+        return null;
+      },
+      hintText: 'Select category',
+      items: _categories.map((category) {
+        return DropdownMenuItem<String>(
+          value: category.id,
+          child: Row(
+            children: [
+              Icon(
+                _getCategoryIcon(category.name),
+                size: 18,
+                color: Colors.grey.shade600,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  category.name,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
   Widget _buildLoadingIndicator(String message) {
     return Container(
       width: double.infinity,
@@ -722,23 +828,22 @@ class _RecordExpenditureScreenState extends State<RecordExpenditureScreen> {
     );
   }
 
-  IconData _getTypeIcon(String type) {
-    switch (type.toLowerCase()) {
-      case 'feed':
-        return Icons.fastfood;
-      case 'medication':
-      case 'vaccines':
-        return Icons.medical_services;
-      case 'utilities':
-        return Icons.bolt;
-      case 'labor':
-        return Icons.people;
-      case 'equipment':
-        return Icons.build;
-      case 'transport':
-        return Icons.local_shipping;
-      default:
-        return Icons.account_balance_wallet;
+  IconData _getCategoryIcon(String categoryName) {
+    final lowerName = categoryName.toLowerCase();
+    if (lowerName.contains('feed')) {
+      return Icons.fastfood;
+    } else if (lowerName.contains('medication') || lowerName.contains('vaccine') || lowerName.contains('medicine')) {
+      return Icons.medical_services;
+    } else if (lowerName.contains('utility') || lowerName.contains('utilities') || lowerName.contains('electricity') || lowerName.contains('water')) {
+      return Icons.bolt;
+    } else if (lowerName.contains('labor') || lowerName.contains('labour')) {
+      return Icons.people;
+    } else if (lowerName.contains('equipment') || lowerName.contains('tool')) {
+      return Icons.build;
+    } else if (lowerName.contains('transport')) {
+      return Icons.local_shipping;
+    } else {
+      return Icons.account_balance_wallet;
     }
   }
 
@@ -892,36 +997,9 @@ class _RecordExpenditureScreenState extends State<RecordExpenditureScreen> {
                 const SizedBox(height: 20),
               ],
 
-              // Expenditure Type
-              ReusableDropdown<String>(
-                value: _selectedType,
-                topLabel: 'Expenditure Type *',
-                icon: Icons.category,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedType = value;
-                  });
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please select expenditure type';
-                  }
-                  return null;
-                },
-                hintText: 'Select type',
-                items: _expenditureTypes.map((type) {
-                  return DropdownMenuItem<String>(
-                    value: type,
-                    child: Row(
-                      children: [
-                        Icon(_getTypeIcon(type), size: 18, color: Colors.grey.shade600),
-                        const SizedBox(width: 12),
-                        Text(type),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              ),
+              // Expenditure Category
+              _buildCategoryDropdown(),
+              const SizedBox(height: 20),
 
               // Description
               ReusableInput(
@@ -959,10 +1037,10 @@ class _RecordExpenditureScreenState extends State<RecordExpenditureScreen> {
                 controller: _amountController,
               ),
 
-              // Amount and Quantity Row
+              // Quantity and Unit Row
               Row(
-                crossAxisAlignment: .center,
-                mainAxisAlignment: .center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Expanded(
                     child: ReusableInput(

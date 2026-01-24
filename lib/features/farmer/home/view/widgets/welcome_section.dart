@@ -71,12 +71,12 @@ class WelcomeSection extends StatelessWidget {
             style: TextStyle(color: Colors.green.shade600, fontSize: 16),
           ),
           const SizedBox(height: 4),
-          TextButton.icon(
+          FilledButton.icon(
             onPressed: () => context.push('/record-expenditure'),
             style: TextButton.styleFrom(
-              foregroundColor: Colors.red.shade800,
+              backgroundColor: Colors.red.shade800,
             ),
-            icon: Icon(Icons.arrow_forward, color: Colors.red.shade800),
+            icon: Icon(Icons.arrow_forward, color: Colors.white),
             label: Text('Record an expense'),
           ),
         ],
