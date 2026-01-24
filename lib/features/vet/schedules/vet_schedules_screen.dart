@@ -1,5 +1,8 @@
+import 'package:agriflock360/core/utils/date_util.dart';
+import 'package:agriflock360/features/vet/schedules/repo/visit_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:agriflock360/features/vet/schedules/models/visit_model.dart';
 
 class VetSchedulesScreen extends StatefulWidget {
   const VetSchedulesScreen({super.key});
@@ -10,6 +13,12 @@ class VetSchedulesScreen extends StatefulWidget {
 
 class _VetSchedulesScreenState extends State<VetSchedulesScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final VisitsRepository _repository = VisitsRepository();
+
+  // Hardcoded counts for now - will be replaced with API data
+  int pendingCount = 0;
+  int scheduledCount = 0;
+  int completedCount = 0;
 
   @override
   void initState() {
@@ -21,6 +30,36 @@ class _VetSchedulesScreenState extends State<VetSchedulesScreen> with SingleTick
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+
+
+  String _formatTime(String time24) {
+    try {
+      final parts = time24.split(':');
+      final hour = int.parse(parts[0]);
+      final minute = parts[1];
+      final period = hour >= 12 ? 'PM' : 'AM';
+      final hour12 = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+      return '$hour12:$minute $period';
+    } catch (e) {
+      return time24;
+    }
+  }
+
+  String _getTimeAgo(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays} day${difference.inDays > 1 ? 's' : ''} ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours} hour${difference.inHours > 1 ? 's' : ''} ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes} minute${difference.inMinutes > 1 ? 's' : ''} ago';
+    } else {
+      return 'Just now';
+    }
   }
 
   @override
@@ -69,438 +108,117 @@ class _VetSchedulesScreenState extends State<VetSchedulesScreen> with SingleTick
           unselectedLabelColor: Colors.grey.shade600,
           indicatorColor: Colors.blue.shade700,
           labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-          tabs: const [
-            Tab(text: 'Pending'),
-            Tab(text: 'In Progress'),
-            Tab(text: 'Completed'),
+          tabs: [
+            Tab(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Pending'),
+                  if (pendingCount > 0) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.orange,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        '$pendingCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Tab(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Scheduled'),
+                  if (scheduledCount > 0) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.blue,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        '$scheduledCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Tab(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Completed'),
+                  if (completedCount > 0) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.green,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        '$completedCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildPendingRequests(),
-          _buildInProgressRequests(),
-          _buildCompletedRequests(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPendingRequests() {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        _buildRequestStats(pending: 5, inProgress: 3, completed: 12),
-        const SizedBox(height: 20),
-        _PendingRequestCard(
-          farmerName: 'John Peterson',
-          farmName: 'Green Valley Farm',
-          requestDate: 'Dec 21, 2023',
-          requestTime: '2 hours ago',
-          visitType: 'Regular Checkup',
-          birdsCount: '1,240',
-          urgency: 'Normal',
-          description: 'Routine health checkup for the flock. Some birds showing mild respiratory symptoms.',
-          onAccept: () => _showAcceptDialog(context, 'John Peterson', 'Green Valley Farm'),
-          onReject: () => _showRejectDialog(context, 'John Peterson'),
-        ),
-        _PendingRequestCard(
-          farmerName: 'Maria Rodriguez',
-          farmName: 'Sunrise Poultry',
-          requestDate: 'Dec 21, 2023',
-          requestTime: '5 hours ago',
-          visitType: 'Vaccination',
-          birdsCount: '890',
-          urgency: 'Normal',
-          description: 'Need vaccination for new batch of chicks.',
-          onAccept: () => _showAcceptDialog(context, 'Maria Rodriguez', 'Sunrise Poultry'),
-          onReject: () => _showRejectDialog(context, 'Maria Rodriguez'),
-        ),
-        _PendingRequestCard(
-          farmerName: 'Robert Chen',
-          farmName: 'Happy Hens Farm',
-          requestDate: 'Dec 20, 2023',
-          requestTime: '1 day ago',
-          visitType: 'Emergency Visit',
-          birdsCount: '2,150',
-          urgency: 'High',
-          description: 'Sudden increase in mortality rate. Multiple birds showing severe symptoms. Need immediate attention.',
-          onAccept: () => _showAcceptDialog(context, 'Robert Chen', 'Happy Hens Farm'),
-          onReject: () => _showRejectDialog(context, 'Robert Chen'),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildInProgressRequests() {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        _buildRequestStats(pending: 5, inProgress: 3, completed: 12),
-        const SizedBox(height: 20),
-        _InProgressRequestCard(
-          farmerName: 'David Wilson',
-          farmName: 'Wilson Farms',
-          visitType: 'Health Inspection',
-          birdsCount: '1,500',
-          acceptedDate: 'Dec 20, 2023',
-          scheduledDate: 'Dec 22, 2023',
-          scheduledTime: '10:00 AM',
-          onComplete: () => context.push('/vet/payment/service'),
-          onCancel: () => _showCancelDialog(context, 'David Wilson'),
-        ),
-        _InProgressRequestCard(
-          farmerName: 'Sarah Miller',
-          farmName: 'Miller Poultry',
-          visitType: 'Follow-up Visit',
-          birdsCount: '750',
-          acceptedDate: 'Dec 19, 2023',
-          scheduledDate: 'Dec 23, 2023',
-          scheduledTime: '2:30 PM',
-          onComplete: () => context.push('/vet/payment/service'),
-          onCancel: () => _showCancelDialog(context, 'Sarah Miller'),
-        ),
-        _InProgressRequestCard(
-          farmerName: 'James Brown',
-          farmName: 'Brown\'s Farm',
-          visitType: 'New Farm Setup',
-          birdsCount: '3,200',
-          acceptedDate: 'Dec 18, 2023',
-          scheduledDate: 'Dec 24, 2023',
-          scheduledTime: '11:00 AM',
-          onComplete: () => context.push('/vet/payment/service'),
-          onCancel: () => _showCancelDialog(context, 'James Brown'),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCompletedRequests() {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        _buildRequestStats(pending: 5, inProgress: 3, completed: 12),
-        const SizedBox(height: 20),
-        _CompletedRequestCard(
-          farmerName: 'Michael Anderson',
-          farmName: 'Anderson Poultry',
-          visitType: 'Vaccination',
-          birdsCount: '1,100',
-          completedDate: 'Dec 19, 2023',
-          status: 'Completed',
-          notes: 'Successfully vaccinated all birds. Follow-up scheduled for next month.',
-        ),
-        _CompletedRequestCard(
-          farmerName: 'Emily Davis',
-          farmName: 'Sunrise Farm',
-          visitType: 'Emergency Treatment',
-          birdsCount: '2,000',
-          completedDate: 'Dec 18, 2023',
-          status: 'Completed',
-          notes: 'Treated respiratory infection. Prescribed medication for 7 days.',
-        ),
-        _CompletedRequestCard(
-          farmerName: 'Thomas White',
-          farmName: 'White Ranch',
-          visitType: 'Regular Checkup',
-          birdsCount: '850',
-          completedDate: 'Dec 15, 2023',
-          status: 'Cancelled',
-          notes: 'Cancelled by vet - Farmer rescheduled to next week.',
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRequestStats({required int pending, required int inProgress, required int completed}) {
-    return Row(
-      children: [
-        Expanded(
-          child: _StatCard(
-            value: pending.toString(),
-            label: 'Pending',
-            color: Colors.orange.shade100,
-            textColor: Colors.orange.shade800,
-            icon: Icons.pending_actions,
+          _VisitsListView(
+            status: VisitStatus.pending.value,
+            repository: _repository,
+            onCountUpdate: (count) => setState(() => pendingCount = count),
+            buildCard: (visit) => _buildPendingCard(visit),
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _StatCard(
-            value: inProgress.toString(),
-            label: 'In Progress',
-            color: Colors.blue.shade100,
-            textColor: Colors.blue.shade800,
-            icon: Icons.work_outline,
+          _VisitsListView(
+            status: VisitStatus.scheduled.value,
+            repository: _repository,
+            onCountUpdate: (count) => setState(() => scheduledCount = count),
+            buildCard: (visit) => _buildScheduledCard(visit),
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _StatCard(
-            value: completed.toString(),
-            label: 'Completed',
-            color: Colors.green.shade100,
-            textColor: Colors.green.shade800,
-            icon: Icons.check_circle_outline,
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _showAcceptDialog(BuildContext context, String farmerName, String farmName) {
-    final notesController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Accept Visit Request'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Farmer: $farmerName',
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              Text(
-                'Farm: $farmName',
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: notesController,
-                decoration: const InputDecoration(
-                  labelText: 'Notes (Optional)',
-                  hintText: 'Add any additional notes',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 3,
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // Handle accept logic here
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Request accepted successfully')),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Accept'),
+          _VisitsListView(
+            status: VisitStatus.completed.value,
+            repository: _repository,
+            onCountUpdate: (count) => setState(() => completedCount = count),
+            buildCard: (visit) => _buildCompletedCard(visit),
           ),
         ],
       ),
     );
   }
 
-  void _showRejectDialog(BuildContext context, String farmerName) {
-    final reasonController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Reject Visit Request'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Are you sure you want to reject the request from $farmerName?',
-              style: TextStyle(color: Colors.grey.shade700),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: reasonController,
-              decoration: const InputDecoration(
-                labelText: 'Reason for rejection',
-                hintText: 'Please provide a reason',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (reasonController.text.trim().isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Please provide a reason')),
-                );
-                return;
-              }
-              // Handle reject logic here
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Request rejected')),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Reject'),
-          ),
-        ],
-      ),
-    );
-  }
-
-
-  void _showCancelDialog(BuildContext context, String farmerName) {
-    final reasonController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Cancel Visit'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Cancel scheduled visit for $farmerName?',
-              style: TextStyle(color: Colors.grey.shade700),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: reasonController,
-              decoration: const InputDecoration(
-                labelText: 'Reason for cancellation',
-                hintText: 'Please provide a reason',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Back'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (reasonController.text.trim().isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Please provide a reason')),
-                );
-                return;
-              }
-              // Handle cancel logic here
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Visit cancelled')),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Cancel Visit'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  final String value;
-  final String label;
-  final Color color;
-  final Color textColor;
-  final IconData icon;
-
-  const _StatCard({
-    required this.value,
-    required this.label,
-    required this.color,
-    required this.textColor,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: textColor, size: 24),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: textColor,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: textColor.withOpacity(0.8),
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PendingRequestCard extends StatelessWidget {
-  final String farmerName;
-  final String farmName;
-  final String requestDate;
-  final String requestTime;
-  final String visitType;
-  final String birdsCount;
-  final String urgency;
-  final String description;
-  final VoidCallback onAccept;
-  final VoidCallback onReject;
-
-  const _PendingRequestCard({
-    required this.farmerName,
-    required this.farmName,
-    required this.requestDate,
-    required this.requestTime,
-    required this.visitType,
-    required this.birdsCount,
-    required this.urgency,
-    required this.description,
-    required this.onAccept,
-    required this.onReject,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isHighUrgency = urgency == 'High';
+  Widget _buildPendingCard(Visit visit) {
+    final isHighPriority = visit.priorityLevel == PriorityLevel.urgent.value ||
+        visit.priorityLevel == PriorityLevel.emergency.value;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -508,8 +226,8 @@ class _PendingRequestCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isHighUrgency ? Colors.red.shade300 : Colors.grey.shade200,
-          width: isHighUrgency ? 2 : 1,
+          color: isHighPriority ? Colors.red.shade300 : Colors.grey.shade200,
+          width: isHighPriority ? 2 : 1,
         ),
       ),
       child: Column(
@@ -519,7 +237,7 @@ class _PendingRequestCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isHighUrgency ? Colors.red.shade50 : Colors.grey.shade50,
+              color: isHighPriority ? Colors.red.shade50 : Colors.grey.shade50,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(12),
                 topRight: Radius.circular(12),
@@ -532,7 +250,7 @@ class _PendingRequestCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        farmerName,
+                        visit.farmerName,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -540,11 +258,25 @@ class _PendingRequestCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        farmName,
+                        visit.farmerLocation,
                         style: TextStyle(
                           color: Colors.grey.shade600,
                           fontSize: 14,
                         ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.phone, size: 12, color: Colors.grey.shade600),
+                          const SizedBox(width: 4),
+                          Text(
+                            visit.farmerPhone,
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -552,11 +284,11 @@ class _PendingRequestCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: isHighUrgency ? Colors.red : Colors.orange,
+                    color: isHighPriority ? Colors.red : Colors.orange,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    urgency,
+                    visit.priorityLevel,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,
@@ -576,21 +308,55 @@ class _PendingRequestCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.medical_services, size: 16, color: Colors.grey.shade600),
+                    Icon(Icons.calendar_today, size: 16, color: Colors.grey.shade600),
                     const SizedBox(width: 6),
                     Text(
-                      visitType,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    const Spacer(),
-                    Icon(Icons.pets, size: 16, color: Colors.grey.shade600),
-                    const SizedBox(width: 6),
-                    Text(
-                      '$birdsCount birds',
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                      'Preferred: ${visit.preferredDate} at ${_formatTime(visit.preferredTime)}',
+                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                     ),
                   ],
                 ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Icon(Icons.pets, size: 16, color: Colors.grey.shade600),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${visit.birdsCount} birds',
+                      style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
+                    ),
+                    const SizedBox(width: 16),
+                    Icon(Icons.home_work, size: 16, color: Colors.grey.shade600),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${visit.houses.length} house${visit.houses.length > 1 ? 's' : ''}',
+                      style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
+                    ),
+                  ],
+                ),
+                if (visit.serviceCosts.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: visit.serviceCosts.map((service) => Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.blue.shade100),
+                      ),
+                      child: Text(
+                        service.serviceName,
+                        style: TextStyle(
+                          color: Colors.blue.shade700,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    )).toList(),
+                  ),
+                ],
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.all(12),
@@ -598,22 +364,70 @@ class _PendingRequestCard extends StatelessWidget {
                     color: Colors.grey.shade50,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(
-                    description,
-                    style: TextStyle(
-                      color: Colors.grey.shade700,
-                      fontSize: 14,
-                      height: 1.5,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Reason for Visit:',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        visit.reasonForVisit,
+                        style: TextStyle(
+                          color: Colors.grey.shade700,
+                          fontSize: 14,
+                          height: 1.5,
+                        ),
+                      ),
+                      if (visit.additionalNotes != null && visit.additionalNotes!.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          'Notes: ${visit.additionalNotes}',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 13,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
+                    Icon(Icons.attach_money, size: 16, color: Colors.green.shade700),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Est. Earnings: KES ${visit.officerEarnings.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        color: Colors.green.shade700,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${visit.distanceKm.toStringAsFixed(1)} km away',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
                     Icon(Icons.access_time, size: 14, color: Colors.grey.shade500),
                     const SizedBox(width: 4),
                     Text(
-                      'Requested $requestTime',
+                      'Requested ${_getTimeAgo(visit.submittedAt)}',
                       style: TextStyle(
                         color: Colors.grey.shade500,
                         fontSize: 12,
@@ -626,7 +440,7 @@ class _PendingRequestCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: onReject,
+                        onPressed: () => _showRejectDialog(visit),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.red,
                           side: const BorderSide(color: Colors.red),
@@ -640,7 +454,7 @@ class _PendingRequestCard extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: onAccept,
+                        onPressed: () => _showAcceptDialog(visit),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
                           foregroundColor: Colors.white,
@@ -660,33 +474,8 @@ class _PendingRequestCard extends StatelessWidget {
       ),
     );
   }
-}
 
-class _InProgressRequestCard extends StatelessWidget {
-  final String farmerName;
-  final String farmName;
-  final String visitType;
-  final String birdsCount;
-  final String acceptedDate;
-  final String scheduledDate;
-  final String scheduledTime;
-  final VoidCallback onComplete;
-  final VoidCallback onCancel;
-
-  const _InProgressRequestCard({
-    required this.farmerName,
-    required this.farmName,
-    required this.visitType,
-    required this.birdsCount,
-    required this.acceptedDate,
-    required this.scheduledDate,
-    required this.scheduledTime,
-    required this.onComplete,
-    required this.onCancel,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildScheduledCard(Visit visit) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -714,7 +503,7 @@ class _InProgressRequestCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        farmerName,
+                        visit.farmerName,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -722,11 +511,25 @@ class _InProgressRequestCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        farmName,
+                        visit.farmerLocation,
                         style: TextStyle(
                           color: Colors.grey.shade600,
                           fontSize: 14,
                         ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.phone, size: 12, color: Colors.grey.shade600),
+                          const SizedBox(width: 4),
+                          Text(
+                            visit.farmerPhone,
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -758,21 +561,44 @@ class _InProgressRequestCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.medical_services, size: 16, color: Colors.grey.shade600),
-                    const SizedBox(width: 6),
-                    Text(
-                      visitType,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    const Spacer(),
                     Icon(Icons.pets, size: 16, color: Colors.grey.shade600),
                     const SizedBox(width: 6),
                     Text(
-                      '$birdsCount birds',
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                      '${visit.birdsCount} birds',
+                      style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
+                    ),
+                    const SizedBox(width: 16),
+                    Icon(Icons.home_work, size: 16, color: Colors.grey.shade600),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${visit.houses.length} house${visit.houses.length > 1 ? 's' : ''}',
+                      style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
                     ),
                   ],
                 ),
+                if (visit.serviceCosts.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: visit.serviceCosts.map((service) => Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.blue.shade100),
+                      ),
+                      child: Text(
+                        service.serviceName,
+                        style: TextStyle(
+                          color: Colors.blue.shade700,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    )).toList(),
+                  ),
+                ],
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.all(12),
@@ -797,7 +623,7 @@ class _InProgressRequestCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            '$scheduledDate at $scheduledTime',
+                            '${visit.preferredDate} at ${_formatTime(visit.preferredTime)}',
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
                               color: Colors.blue.shade700,
@@ -811,23 +637,48 @@ class _InProgressRequestCard extends StatelessWidget {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Icon(Icons.check_circle_outline, size: 14, color: Colors.grey.shade500),
+                    Icon(Icons.attach_money, size: 16, color: Colors.green.shade700),
                     const SizedBox(width: 4),
                     Text(
-                      'Accepted on $acceptedDate',
+                      'Earnings: KES ${visit.officerEarnings.toStringAsFixed(2)}',
                       style: TextStyle(
-                        color: Colors.grey.shade500,
+                        color: Colors.green.shade700,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${visit.distanceKm.toStringAsFixed(1)} km',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
                         fontSize: 12,
                       ),
                     ),
                   ],
                 ),
+                if (visit.scheduledAt != null) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.check_circle_outline, size: 14, color: Colors.grey.shade500),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Accepted ${_getTimeAgo(visit.scheduledAt!)}',
+                        style: TextStyle(
+                          color: Colors.grey.shade500,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 16),
                 Row(
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: onCancel,
+                        onPressed: () => _showCancelDialog(visit),
                         icon: const Icon(Icons.cancel_outlined, size: 18),
                         label: const Text('Cancel'),
                         style: OutlinedButton.styleFrom(
@@ -842,7 +693,7 @@ class _InProgressRequestCard extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: onComplete,
+                        onPressed: () => context.push('/vet/payment/service'),
                         icon: const Icon(Icons.check_circle, size: 18),
                         label: const Text('Complete'),
                         style: ElevatedButton.styleFrom(
@@ -863,30 +714,9 @@ class _InProgressRequestCard extends StatelessWidget {
       ),
     );
   }
-}
 
-class _CompletedRequestCard extends StatelessWidget {
-  final String farmerName;
-  final String farmName;
-  final String visitType;
-  final String birdsCount;
-  final String completedDate;
-  final String status;
-  final String notes;
-
-  const _CompletedRequestCard({
-    required this.farmerName,
-    required this.farmName,
-    required this.visitType,
-    required this.birdsCount,
-    required this.completedDate,
-    required this.status,
-    required this.notes,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isCompleted = status == 'Completed';
+  Widget _buildCompletedCard(Visit visit) {
+    final isCancelled = visit.status == 'CANCELLED';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -902,7 +732,7 @@ class _CompletedRequestCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isCompleted ? Colors.green.shade50 : Colors.red.shade50,
+              color: isCancelled ? Colors.red.shade50 : Colors.green.shade50,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(12),
                 topRight: Radius.circular(12),
@@ -915,7 +745,7 @@ class _CompletedRequestCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        farmerName,
+                        visit.farmerName,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -923,7 +753,7 @@ class _CompletedRequestCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        farmName,
+                        visit.farmerLocation,
                         style: TextStyle(
                           color: Colors.grey.shade600,
                           fontSize: 14,
@@ -935,20 +765,20 @@ class _CompletedRequestCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: isCompleted ? Colors.green : Colors.red,
+                    color: isCancelled ? Colors.red : Colors.green,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        isCompleted ? Icons.check_circle : Icons.cancel,
+                        isCancelled ? Icons.cancel : Icons.check_circle,
                         size: 14,
                         color: Colors.white,
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        status,
+                        isCancelled ? 'Cancelled' : 'Completed',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,
@@ -970,62 +800,104 @@ class _CompletedRequestCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.medical_services, size: 16, color: Colors.grey.shade600),
-                    const SizedBox(width: 6),
-                    Text(
-                      visitType,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    const Spacer(),
                     Icon(Icons.pets, size: 16, color: Colors.grey.shade600),
                     const SizedBox(width: 6),
                     Text(
-                      '$birdsCount birds',
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                      '${visit.birdsCount} birds',
+                      style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
+                    ),
+                    const SizedBox(width: 16),
+                    Icon(Icons.home_work, size: 16, color: Colors.grey.shade600),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${visit.houses.length} house${visit.houses.length > 1 ? 's' : ''}',
+                      style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Notes:',
+                if (visit.serviceCosts.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: visit.serviceCosts.map((service) => Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        service.serviceName,
                         style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
                           color: Colors.grey.shade700,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                    )).toList(),
+                  ),
+                ],
+                if (isCancelled && visit.cancellationReason != null) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Cancellation Reason:',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.red.shade700,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          visit.cancellationReason!,
+                          style: TextStyle(
+                            color: Colors.grey.shade700,
+                            fontSize: 14,
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 12),
+                if (!isCancelled)
+                  Row(
+                    children: [
+                      Icon(Icons.attach_money, size: 16, color: Colors.green.shade700),
+                      const SizedBox(width: 4),
                       Text(
-                        notes,
+                        'Earned: KES ${visit.officerEarnings.toStringAsFixed(2)}',
                         style: TextStyle(
-                          color: Colors.grey.shade600,
+                          color: Colors.green.shade700,
                           fontSize: 14,
-                          height: 1.5,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 Row(
                   children: [
                     Icon(
-                      isCompleted ? Icons.check_circle_outline : Icons.cancel_outlined,
+                      isCancelled ? Icons.cancel_outlined : Icons.check_circle_outline,
                       size: 14,
                       color: Colors.grey.shade500,
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '${isCompleted ? 'Completed' : 'Cancelled'} on $completedDate',
+                      isCancelled
+                          ? 'Cancelled on ${visit.cancelledAt != null ? DateUtil.toFullDateTime(visit.cancelledAt!) : 'N/A'}'
+                          : 'Completed on ${visit.completedAt != null ? DateUtil.toFullDateTime(visit.completedAt!) : 'N/A'}',
                       style: TextStyle(
                         color: Colors.grey.shade500,
                         fontSize: 12,
@@ -1037,6 +909,372 @@ class _CompletedRequestCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showAcceptDialog(Visit visit) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Accept Visit Request'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Farmer: ${visit.farmerName}',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              Text(
+                'Location: ${visit.farmerLocation}',
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Earnings: KES ${visit.officerEarnings.toStringAsFixed(2)}',
+                style: TextStyle(
+                  color: Colors.green.shade700,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+
+              final result = await _repository.acceptVisit(visitId: visit.id);
+
+              if (mounted) {
+                result.when(
+                  success: (data) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Request accepted successfully'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                    setState(() {}); // Refresh the list
+                  },
+                  failure: (message, _, __) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(message),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  },
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Accept'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showRejectDialog(Visit visit) {
+    final reasonController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reject Visit Request'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Are you sure you want to reject the request from ${visit.farmerName}?',
+              style: TextStyle(color: Colors.grey.shade700),
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(
+                labelText: 'Reason for rejection',
+                hintText: 'Please provide a reason',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (reasonController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please provide a reason')),
+                );
+                return;
+              }
+
+              Navigator.pop(context);
+
+              final result = await _repository.rejectVisit(
+                visitId: visit.id,
+                body: {'reason': reasonController.text.trim()},
+              );
+
+              if (mounted) {
+                result.when(
+                  success: (data) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Request rejected'),
+                        backgroundColor: Colors.orange,
+                      ),
+                    );
+                    setState(() {}); // Refresh the list
+                  },
+                  failure: (message, _, __) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(message),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  },
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Reject'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCancelDialog(Visit visit) {
+    final reasonController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cancel Visit'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Cancel scheduled visit for ${visit.farmerName}?',
+              style: TextStyle(color: Colors.grey.shade700),
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(
+                labelText: 'Reason for cancellation',
+                hintText: 'Please provide a reason',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Back'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (reasonController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please provide a reason')),
+                );
+                return;
+              }
+
+              Navigator.pop(context);
+
+              final result = await _repository.cancelVisit(
+                visitId: visit.id,
+                body: {'reason': reasonController.text.trim()},
+              );
+
+              if (mounted) {
+                result.when(
+                  success: (data) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Visit cancelled'),
+                        backgroundColor: Colors.orange,
+                      ),
+                    );
+                    setState(() {}); // Refresh the list
+                  },
+                  failure: (message, _, __) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(message),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  },
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Cancel Visit'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Separate widget for visits list with pagination
+// Simple widget for visits list WITHOUT pagination
+class _VisitsListView extends StatefulWidget {
+  final String status;
+  final VisitsRepository repository;
+  final Function(int) onCountUpdate;
+  final Widget Function(Visit) buildCard;
+
+  const _VisitsListView({
+    required this.status,
+    required this.repository,
+    required this.onCountUpdate,
+    required this.buildCard,
+  });
+
+  @override
+  State<_VisitsListView> createState() => _VisitsListViewState();
+}
+
+class _VisitsListViewState extends State<_VisitsListView> with AutomaticKeepAliveClientMixin {
+  final List<Visit> _visits = [];
+  bool _isLoading = false;
+  bool _hasError = false;
+  String _errorMessage = '';
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVisits();
+  }
+
+  Future<void> _loadVisits() async {
+    if (_isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+    });
+
+    final result = await widget.repository.getVetVisitsByStatus(
+      status: widget.status,
+    );
+
+    if (mounted) {
+      result.when(
+        success: (visits) {
+          setState(() {
+            _visits.clear();
+            _visits.addAll(visits);
+            _isLoading = false;
+            widget.onCountUpdate(visits.length); // Update count with list length
+          });
+        },
+        failure: (message, _, __) {
+          setState(() {
+            _hasError = true;
+            _errorMessage = message;
+            _isLoading = false;
+            widget.onCountUpdate(0);
+          });
+        },
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+
+    if (_hasError && _visits.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
+            const SizedBox(height: 16),
+            Text(
+              _errorMessage,
+              style: TextStyle(color: Colors.grey.shade600),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: _loadVisits,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_isLoading && _visits.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_visits.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.inbox_outlined, size: 64, color: Colors.grey.shade300),
+            const SizedBox(height: 16),
+            Text(
+              'No visits found',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey.shade600,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadVisits,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _visits.length,
+        itemBuilder: (context, index) {
+          return widget.buildCard(_visits[index]);
+        },
       ),
     );
   }

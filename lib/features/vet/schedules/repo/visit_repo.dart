@@ -8,13 +8,11 @@ import 'package:http/http.dart' as http;
 
 class VisitsRepository {
   /// Get vet visits by status with pagination response
-  Future<Result<VisitListResponse>> getVetVisitsByStatus({
+  Future<Result<List<Visit>>> getVetVisitsByStatus({
     required String status,
-    int page = 1,
-    int limit = 10,
   }) async {
     try {
-      final endpoint = '/vet/visits/status/$status?page=$page&limit=$limit';
+      final endpoint = '/vet/visits/status/$status';
 
       LogUtil.info('Fetching visits with endpoint: $endpoint');
       final response = await apiClient.get(endpoint);
@@ -22,7 +20,20 @@ class VisitsRepository {
       LogUtil.info('Get Vet Visits by Status API Response: $jsonResponse');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        return Success(VisitListResponse.fromJson(jsonResponse));
+        List<Visit> visits = [];
+
+        // API returns a List directly
+        if (jsonResponse is List) {
+          visits = jsonResponse.map((item) => Visit.fromJson(item)).toList();
+        } else {
+          LogUtil.error('Unexpected response format: $jsonResponse');
+          return Failure(
+            message: 'Unexpected response format from server',
+            statusCode: response.statusCode,
+          );
+        }
+
+        return Success(visits);
       } else {
         return Failure(
           message: jsonResponse['message'] ?? 'Failed to fetch vet visits',
