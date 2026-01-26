@@ -24,11 +24,15 @@ class AutoDecimalFormatter extends TextInputFormatter {
       formattedText = '';
       cursorPosition = 0;
     } else if (digitsOnly.length == 1) {
-      // Just one digit, no dot yet for display but we'll handle it
-      formattedText = digitsOnly;
-      cursorPosition = 1;
+      // Single digit: show as "X." to guide the user
+      formattedText = '${digitsOnly[0]}.';
+      cursorPosition = 2; // Position cursor after the dot
+    } else if (digitsOnly.length == 2) {
+      // Two digits: show as "X.X"
+      formattedText = '${digitsOnly[0]}.${digitsOnly[1]}';
+      cursorPosition = formattedText.length;
     } else {
-      // Two or more digits: insert dot after first digit
+      // Three digits: show as "X.XX"
       formattedText = '${digitsOnly[0]}.${digitsOnly.substring(1)}';
       cursorPosition = formattedText.length;
     }
@@ -115,8 +119,8 @@ class ReusableDecimalInput extends StatelessWidget {
     String digitsOnly = valueStr.replaceAll('.', '');
 
     // Format it properly
-    if (digitsOnly.length == 1 || (digitsOnly.length == 2 && digitsOnly.startsWith('0'))) {
-      controller.text = digitsOnly;
+    if (digitsOnly.length == 1) {
+      controller.text = '$digitsOnly.'; // Add dot immediately
     } else if (digitsOnly.length >= 2) {
       controller.text = '${digitsOnly[0]}.${digitsOnly.substring(1)}';
     }
@@ -212,4 +216,3 @@ class ReusableDecimalInput extends StatelessWidget {
     );
   }
 }
-

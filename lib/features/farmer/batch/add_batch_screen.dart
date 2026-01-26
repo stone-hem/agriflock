@@ -902,7 +902,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                 controller: _currentWeightController,
                 labelText: 'Current average weight',
                 hintText: 'e.g., 0.0',
-                suffixText: '/10',
+                suffixText: 'Max 10',
               ),
               const SizedBox(height: 20),
 
@@ -930,7 +930,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                 },
                 labelText: 'Expected average weight at removal/sale',
                 hintText: 'e.g., 2.5',
-                suffixText: '/10',
+                suffixText: 'Max 10',
               ),
               const SizedBox(height: 20),
 
