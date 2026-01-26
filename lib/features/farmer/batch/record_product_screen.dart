@@ -40,7 +40,6 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
   final _selectedDateController = TextEditingController();
 
 
-  DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay.now();
   bool _isSaving = false;
 
@@ -51,17 +50,6 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
     _crackedEggsController.text = '0';
   }
 
-  Future<void> _selectDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null) {
-      setState(() => _selectedDate = picked);
-    }
-  }
 
   Future<void> _selectTime() async {
     final TimeOfDay? picked = await showTimePicker(
@@ -81,14 +69,6 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
     setState(() => _isSaving = true);
 
     try {
-      // Combine date and time
-      final collectionDateTime = DateTime(
-        _selectedDate.year,
-        _selectedDate.month,
-        _selectedDate.day,
-        _selectedTime.hour,
-        _selectedTime.minute,
-      );
 
       // Create request based on product type
       CreateProductRequest request;
@@ -100,7 +80,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
           eggsCollected: int.parse(_quantityController.text),
           crackedEggs: int.tryParse(_crackedEggsController.text) ?? 0,
           price: num.parse(_priceController.text),
-          collectionDate: collectionDateTime.toIso8601String(),
+          collectionDate: _selectedDateController.text,
           notes: _notesController.text.isNotEmpty ? _notesController.text : null,
         );
       } else if (_selectedProductType == 'meat') {
@@ -112,7 +92,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
               ? num.parse(_weightController.text)
               : null,
           price: num.parse(_priceController.text),
-          collectionDate: collectionDateTime.toIso8601String(),
+          collectionDate: _selectedDateController.text,
           notes: _notesController.text.isNotEmpty ? _notesController.text : null,
         );
       } else {
@@ -122,7 +102,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
           batchId: widget.batchId,
           quantity: num.parse(_quantityController.text),
           price: num.parse(_priceController.text),
-          collectionDate: collectionDateTime.toIso8601String(),
+          collectionDate: _selectedDateController.text,
           notes: _notesController.text.isNotEmpty ? _notesController.text : null,
         );
       }
@@ -461,11 +441,6 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
                     returnFormat: DateReturnFormat.dateTime,
                     maxYear: DateTime.now().year,
                     controller: _selectedDateController,
-                    onChanged: (value) {
-                      if (value != null) {
-                        _selectedDate = value;
-                      }
-                    },
                   ),
                   const SizedBox(height: 12),
                   InkWell(

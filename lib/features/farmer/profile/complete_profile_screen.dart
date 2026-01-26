@@ -345,15 +345,11 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
               label: 'Date of Birth *',
               icon: Icons.calendar_today,
               required: true,
-              returnFormat: DateReturnFormat.dateTime,
+              initialDate: DateTime.now().subtract(Duration(days:365*10)),
+              returnFormat: DateReturnFormat.isoString,
               minYear: DateTime.now().year - 100,
               maxYear: DateTime.now().year - 10,
               controller: _dobController,
-              onChanged: (value) {
-                if (value != null) {
-                    _dobController.text = DateUtil.toReadableDate(value);
-                }
-              },
             ),
 
             const SizedBox(height: 20),

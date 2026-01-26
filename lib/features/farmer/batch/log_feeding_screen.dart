@@ -1,4 +1,5 @@
 import 'package:agriflock360/core/utils/api_error_handler.dart';
+import 'package:agriflock360/core/utils/date_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
@@ -36,7 +37,6 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
   bool _isLoading = true;
   bool _isSaving = false;
   String? _error;
-  DateTime _selectedFeedingDate = DateTime.now();
   String? _selectedFeedType;
 
   // List of available feed types
@@ -545,50 +545,37 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
         const SizedBox(height: 16),
 
         // Feed Type Select
-        Text(
-          'Feed Type',
-          style: Theme.of(context).textTheme.titleMedium!.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.grey.shade800,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade400),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: ReusableDropdown<String>(
-            value: _selectedFeedType,
-            onChanged: (value) {
-              setState(() {
-                _selectedFeedType = value;
-              });
-            },
-            items: [
-              const DropdownMenuItem<String>(
-                value: null,
-                child: Text(
-                  'Select feed type',
-                  style: TextStyle(color: Colors.grey),
-                ),
+        ReusableDropdown<String>(
+          topLabel: 'Feed Type',
+          value: _selectedFeedType,
+          onChanged: (value) {
+            setState(() {
+              _selectedFeedType = value;
+            });
+          },
+          items: [
+            const DropdownMenuItem<String>(
+              value: null,
+              child: Text(
+                'Select feed type',
+                style: TextStyle(color: Colors.grey),
               ),
-              ..._feedTypes.map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }),
-            ],
-            hintText: 'Choose feed type',
-            icon: Icons.restaurant,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please select feed type';
-              }
-              return null;
-            },
-          ),
+            ),
+            ..._feedTypes.map<DropdownMenuItem<String>>((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(value),
+              );
+            }),
+          ],
+          hintText: 'Choose feed type',
+          icon: Icons.restaurant,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please select feed type';
+            }
+            return null;
+          },
         ),
         const SizedBox(height: 20),
         CustomDateTextField(
@@ -596,14 +583,10 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
           icon: Icons.calendar_today,
           required: true,
           minYear: DateTime.now().year - 1,
-          returnFormat: DateReturnFormat.dateTime,
+          initialDate: DateTime.now(),
+          returnFormat: DateReturnFormat.isoString,
           maxYear: DateTime.now().year,
           controller: _selectedDateController,
-          onChanged: (value) {
-            if (value != null) {
-              _selectedFeedingDate = value;
-            }
-          },
         ),
         const SizedBox(height: 12),
         InkWell(
@@ -618,6 +601,8 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
         const SizedBox(height: 20),
 
         ReusableInput(
+          topLabel: 'Feed Quantity',
+          icon: Icons.scale,
           controller: _quantityController,
           keyboardType: const TextInputType.numberWithOptions(
             decimal: true,
@@ -637,6 +622,8 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
         ),
         const SizedBox(height: 20),
         ReusableInput(
+          topLabel: 'Notes(Optional)',
+          icon: Icons.note,
           labelText: 'Notes (Optional)',
           controller: _notesController,
           maxLines: 3,
@@ -660,6 +647,8 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
         const SizedBox(height: 16),
 
         ReusableInput(
+          topLabel: 'Mortality Today',
+          icon: Icons.leave_bags_at_home,
           controller: _mortalityTodayController,
           keyboardType: TextInputType.number,
           labelText: 'Mortality Today',
@@ -669,6 +658,8 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
 
         // Current Total Weight
         ReusableInput(
+          topLabel: 'Current Average Weight',
+          icon: Icons.monitor_weight,
           controller: _currentWeightController,
           keyboardType: const TextInputType.numberWithOptions(
             decimal: true,
@@ -775,10 +766,11 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
         _isSaving = true;
       });
 
-      DateTime _selectedFeedingTime=DateTime(
-        _selectedFeedingDate.year,
-        _selectedFeedingDate.month,
-        _selectedFeedingDate.day,
+      DateTime selectedFeedingDate = DateTime.parse(_selectedDateController.text);
+      DateTime selectedFeedingTime=DateTime(
+        selectedFeedingDate.year,
+        selectedFeedingDate.month,
+        selectedFeedingDate.day,
         _selectedTime.hour,
         _selectedTime.minute,
       );
@@ -787,7 +779,7 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
         final request= {
           'feed_type': _selectedFeedType,
           'quantity': double.parse(_quantityController.text),
-          'fed_at': _selectedFeedingTime.toIso8601String(),
+          'fed_at': selectedFeedingTime.toUtc().toIso8601String(),
           'notes': _notesController.text,
           'mortality_today': _mortalityTodayController.text.isEmpty ? null : int.parse(_mortalityTodayController.text),
           'current_total_weight': _currentWeightController.text.isEmpty ? null : double.parse(_currentWeightController.text),

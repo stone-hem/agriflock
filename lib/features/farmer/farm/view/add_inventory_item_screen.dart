@@ -445,14 +445,9 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
                 icon: Icons.calendar_today,
                 required: true,
                 minYear: DateTime.now().year - 1,
-                returnFormat: DateReturnFormat.dateTime,
+                returnFormat: DateReturnFormat.isoString,
                 maxYear: DateTime.now().year,
                 controller: _expiryDateController,
-                onChanged: (value) {
-                  if (value != null) {
-                    _selectedExpiryDate = value;
-                  }
-                },
               ),
               const SizedBox(height: 20),
 

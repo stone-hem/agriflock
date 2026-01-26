@@ -28,7 +28,6 @@ class VetOrderBottomSheet extends StatefulWidget {
 
 class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
   final _selectedDateController = TextEditingController();
-  DateTime? _selectedDate=DateTime.now();
   TimeOfDay? _selectedTime;
   bool _termsAgreed = false;
   bool _isSubmittingOrder = false;
@@ -135,16 +134,9 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                         icon: Icons.calendar_today,
                         required: true,
                         minYear: DateTime.now().year,
-                        returnFormat: DateReturnFormat.dateTime,
+                        returnFormat: DateReturnFormat.isoString,
                         maxYear: DateTime.now().year + 1,
                         controller: _selectedDateController,
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              _selectedDate = value;
-                            });
-                          }
-                        },
                       ),
                       const SizedBox(height: 20),
 
@@ -251,7 +243,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                         child: ElevatedButton(
                           onPressed: _isSubmittingOrder ||
                               !_termsAgreed ||
-                              _selectedDate == null ||
+                              _selectedDateController.text.isEmpty ||
                               _selectedTime == null
                               ? null
                               : _submitOrder,
@@ -689,7 +681,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
   }
 
   Future<void> _submitOrder() async {
-    if (_selectedDate == null) {
+    if (_selectedDateController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please select a preferred date'),
@@ -724,12 +716,6 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
       _isSubmittingOrder = true;
     });
 
-    // Combine date and time
-    final combinedDate = DateTime(
-      _selectedDate!.year,
-      _selectedDate!.month,
-      _selectedDate!.day
-    );
 
     final request = VetOrderRequest(
       vetId: widget.vet.id,
@@ -738,7 +724,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
       serviceIds: widget.request.serviceIds,
       birdsCount: widget.request.birdsCount,
       priorityLevel: widget.request.priorityLevel,
-      preferredDate: combinedDate.toIso8601String(),
+      preferredDate: _selectedDateController.text,
       reasonForVisit: widget.request.reasonForVisit,
       termsAgreed: _termsAgreed, preferredTime: _selectedTime!.format(context),
     );

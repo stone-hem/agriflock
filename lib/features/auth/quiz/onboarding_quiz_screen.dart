@@ -50,7 +50,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
   final FocusNode _farmerExperienceFocus = FocusNode();
 
   // Vet data
-  DateTime? _selectedDateOfBirth;
   final TextEditingController _dobController = TextEditingController();
   final TextEditingController _vetExperienceController = TextEditingController();
   final TextEditingController _vetProfileController = TextEditingController();
@@ -282,7 +281,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         address: _selectedAddress!,
         latitude: _latitude!,
         longitude: _longitude!,
-        dateOfBirth: DateUtil.toISO8601(_selectedDateOfBirth!),
+        dateOfBirth: _dobController.text,
         gender: _selectedGender!,
         yearsOfExperience: _vetExperienceController.text,
         professionalSummary: _vetProfileController.text,
@@ -343,7 +342,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         ToastUtil.showError("Please select a location");
         return;
       }
-      if (_dobController.text.isEmpty || _selectedDateOfBirth == null) {
+      if (_dobController.text.isEmpty) {
         ToastUtil.showError("Please select your date of birth");
         return;
       }
@@ -428,7 +427,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
           return true;
         } else if (_selectedUserType == 'vet') {
           return _dobController.text.isNotEmpty &&
-              _selectedDateOfBirth != null &&
               _selectedGender != null &&
               _vetExperienceController.text.isNotEmpty &&
               _selectedEducationLevel != null &&
@@ -733,9 +731,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
             required: true,
             minYear: 1900,
             maxYear: currentYear - 18, // Must be at least 18 years old
-            onChanged: (value) {
-              _selectedDateOfBirth=DateUtil.parseMMDDYYYY(value);
-            },
           ),
           const SizedBox(height: 20),
       
@@ -899,10 +894,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
                     _buildSummaryItem('Highest Education', _selectedEducationLevel ?? 'Not provided'),
                     _buildSummaryItem('Professional Summary', _vetProfileController.text),
                     _buildSummaryItem(
-                      'Date of Birth',
-                      _selectedDateOfBirth != null
-                          ? DateUtil.toReadableDate(_selectedDateOfBirth!)
-                          : 'Not provided',
+                      'Date of Birth', _dobController.text.isEmpty ? 'Not provided' : _dobController.text,
                     ),
                     _buildSummaryItem('Gender', _selectedGender?.toUpperCase() ?? ''),
                     _buildSummaryItem('Experience', '${_vetExperienceController.text} years'),

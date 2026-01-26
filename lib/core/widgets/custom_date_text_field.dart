@@ -10,8 +10,6 @@ enum DateReturnFormat {
 class CustomDateTextField extends StatefulWidget {
   final String label;
   final IconData icon;
-  final String? value;
-  final Function(dynamic)? onChanged;
   final TextEditingController controller;
   final int? minYear;
   final int? maxYear;
@@ -25,8 +23,6 @@ class CustomDateTextField extends StatefulWidget {
     required this.label,
     required this.icon,
     required this.controller,
-    this.value,
-    this.onChanged,
     this.minYear,
     this.maxYear,
     this.required = false,
@@ -49,57 +45,63 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
   final FocusNode _yearFocus = FocusNode();
 
   String? _errorText;
-  bool _hasLostFocus = false;
-  DateTime? _lastInitializedDate;
-  bool _isUpdatingFromInit = false;
 
   @override
   void initState() {
     super.initState();
 
-    if (widget.initialDate != null) {
-      _initializeWithDate(widget.initialDate!);
-      _lastInitializedDate = widget.initialDate;
-    } else if (widget.controller.text.isNotEmpty && widget.controller.text != 'DD/MM/YYYY') {
-      _parseExistingValue(widget.controller.text);
-    }
+    // Initialize from initialDate or existing controller value
+    // Use post-frame callback to avoid setState during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.initialDate != null) {
+        _setDateSilently(widget.initialDate!);
+      } else if (widget.controller.text.isNotEmpty &&
+          widget.controller.text != 'DD/MM/YYYY') {
+        _parseExistingValue(widget.controller.text);
+      }
+    });
 
-    // Add listeners to update main controller
+    // Add listeners
     _dayController.addListener(_updateMainController);
     _monthController.addListener(_updateMainController);
     _yearController.addListener(_updateMainController);
 
-    // Add focus listeners for validation
     _dayFocus.addListener(_handleFocusChange);
     _monthFocus.addListener(_handleFocusChange);
     _yearFocus.addListener(_handleFocusChange);
   }
 
-  void _initializeWithDate(DateTime date) {
-    _isUpdatingFromInit = true;
-
-    // Temporarily remove listeners to avoid cascading updates
+  void _setDateSilently(DateTime date) {
+    // Remove listeners temporarily
     _dayController.removeListener(_updateMainController);
     _monthController.removeListener(_updateMainController);
     _yearController.removeListener(_updateMainController);
 
-    // Set the values
+    // Set values
     _dayController.text = date.day.toString().padLeft(2, '0');
     _monthController.text = date.month.toString().padLeft(2, '0');
     _yearController.text = date.year.toString();
+
+    // Update main controller based on return format
+    widget.controller.text = _formatDateForController(date);
 
     // Re-add listeners
     _dayController.addListener(_updateMainController);
     _monthController.addListener(_updateMainController);
     _yearController.addListener(_updateMainController);
+  }
 
-    // Silently update the main controller (no callback)
-    final day = _dayController.text.padLeft(2, '0');
-    final month = _monthController.text.padLeft(2, '0');
-    final year = _yearController.text;
-    widget.controller.text = '$day/$month/$year';
-
-    _isUpdatingFromInit = false;
+  String _formatDateForController(DateTime date) {
+    switch (widget.returnFormat) {
+      case DateReturnFormat.isoString:
+        return '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      case DateReturnFormat.dateTime:
+      // For DateTime format, store as ISO string in controller
+        return date.toIso8601String();
+      case DateReturnFormat.string:
+      default:
+        return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+    }
   }
 
   void _parseExistingValue(String value) {
@@ -108,17 +110,6 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
       _dayController.text = parts[0];
       _monthController.text = parts[1];
       _yearController.text = parts[2];
-    }
-  }
-
-  @override
-  void didUpdateWidget(covariant CustomDateTextField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    // Only reinitialize if initialDate changed and is different from what we last initialized
-    if (widget.initialDate != null && widget.initialDate != _lastInitializedDate) {
-      _initializeWithDate(widget.initialDate!);
-      _lastInitializedDate = widget.initialDate;
     }
   }
 
@@ -135,24 +126,16 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
 
   void _handleFocusChange() {
     if (!_dayFocus.hasFocus && !_monthFocus.hasFocus && !_yearFocus.hasFocus) {
-      // All fields lost focus
       setState(() {
-        _hasLostFocus = true;
         _errorText = _validateDate();
       });
     }
   }
 
   void _updateMainController() {
-    // Skip if we're initializing
-    if (_isUpdatingFromInit) return;
-
-    final day = _dayController.text.padLeft(2, '0');
-    final month = _monthController.text.padLeft(2, '0');
+    final day = _dayController.text;
+    final month = _monthController.text;
     final year = _yearController.text;
-
-    // Update the main controller
-    widget.controller.text = '$day/$month/$year';
 
     // Clear error when user types
     if (_errorText != null) {
@@ -161,15 +144,22 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
       });
     }
 
-    // Call onChanged callback - defer to avoid setState during build
-    if (widget.onChanged != null) {
-      final formattedValue = _parseDateToFormat();
-
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          widget.onChanged!(formattedValue);
-        }
-      });
+    // Only update if we have all parts
+    if (day.isNotEmpty && month.isNotEmpty && year.isNotEmpty) {
+      try {
+        final date = DateTime(
+          int.parse(year),
+          int.parse(month),
+          int.parse(day),
+        );
+        widget.controller.text = _formatDateForController(date);
+      } catch (e) {
+        // Invalid date, just store the raw format
+        widget.controller.text = '${day.padLeft(2, '0')}/${month.padLeft(2, '0')}/$year';
+      }
+    } else {
+      // Partial date
+      widget.controller.text = '${day.padLeft(2, '0')}/${month.padLeft(2, '0')}/$year';
     }
   }
 
@@ -237,36 +227,6 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
       'July', 'August', 'September', 'October', 'November', 'December'
     ];
     return months[month - 1];
-  }
-
-  dynamic _parseDateToFormat() {
-    final day = _dayController.text;
-    final month = _monthController.text;
-    final year = _yearController.text;
-
-    if (day.isEmpty || month.isEmpty || year.isEmpty) {
-      return null;
-    }
-
-    try {
-      final dayInt = int.parse(day);
-      final monthInt = int.parse(month);
-      final yearInt = int.parse(year);
-
-      switch (widget.returnFormat) {
-        case DateReturnFormat.isoString:
-          return '${yearInt.toString().padLeft(4, '0')}-${monthInt.toString().padLeft(2, '0')}-${dayInt.toString().padLeft(2, '0')}';
-
-        case DateReturnFormat.dateTime:
-          return DateTime(yearInt, monthInt, dayInt);
-
-        case DateReturnFormat.string:
-        default:
-          return '${dayInt.toString().padLeft(2, '0')}/${monthInt.toString().padLeft(2, '0')}/$yearInt';
-      }
-    } catch (e) {
-      return null;
-    }
   }
 
   @override
@@ -423,7 +383,6 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
   }
 }
 
-// Input formatter for day field
 class _DayInputFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
@@ -437,7 +396,6 @@ class _DayInputFormatter extends TextInputFormatter {
     final value = int.tryParse(text);
     if (value == null) return oldValue;
 
-    // If first digit is > 3, prepend with 0
     if (text.length == 1 && value > 3) {
       return TextEditingValue(
         text: '0$text',
@@ -445,7 +403,6 @@ class _DayInputFormatter extends TextInputFormatter {
       );
     }
 
-    // Don't allow day > 31
     if (value > 31) {
       return oldValue;
     }
@@ -454,7 +411,6 @@ class _DayInputFormatter extends TextInputFormatter {
   }
 }
 
-// Input formatter for month field
 class _MonthInputFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
@@ -468,7 +424,6 @@ class _MonthInputFormatter extends TextInputFormatter {
     final value = int.tryParse(text);
     if (value == null) return oldValue;
 
-    // If first digit is > 1, prepend with 0
     if (text.length == 1 && value > 1) {
       return TextEditingValue(
         text: '0$text',
@@ -476,7 +431,6 @@ class _MonthInputFormatter extends TextInputFormatter {
       );
     }
 
-    // Don't allow month > 12
     if (value > 12) {
       return oldValue;
     }

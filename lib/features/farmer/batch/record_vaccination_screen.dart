@@ -40,7 +40,6 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
   DateTime _scheduledDate = DateTime.now();
   TimeOfDay _scheduledTime = TimeOfDay.now();
 
-  DateTime _completionDate = DateTime.now();
   TimeOfDay _completionTime = TimeOfDay.now();
 
   bool _isSaving = false;
@@ -388,14 +387,9 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
               icon: Icons.calendar_today,
               required: true,
               minYear: DateTime.now().year - 1,
-              returnFormat: DateReturnFormat.dateTime,
+              returnFormat: DateReturnFormat.isoString,
               maxYear: DateTime.now().year,
               controller: _scheduledDateController,
-              onChanged: (value) {
-                if (value != null) {
-                  _scheduledDate = value;
-                }
-              },
             ),
             const SizedBox(height: 20),
 
@@ -736,14 +730,9 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
               icon: Icons.calendar_today,
               required: true,
               minYear: DateTime.now().year - 1,
-              returnFormat: DateReturnFormat.dateTime,
+              returnFormat: DateReturnFormat.isoString,
               maxYear: DateTime.now().year,
               controller: _completedDateController,
-              onChanged: (value) {
-                if (value != null) {
-                  _completionDate = value;
-                }
-              },
             ),
             const SizedBox(height: 20),
 
@@ -939,7 +928,7 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
 
       try {
         // Create dosage string from amount and unit
-        final dosage = '${_dosageAmountController.text} ${_selectedDosageUnit}';
+        final dosage = '${_dosageAmountController.text} $_selectedDosageUnit';
 
         final request = QuickDoneVaccinationRequest(
           vaccineName: _selectedVaccineName!,
@@ -947,7 +936,7 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
           dosage: dosage,
           administrationMethod: _selectedAdministration!,
           birdsVaccinated: int.parse(_birdsVaccinatedController.text),
-          completedDate: _completionDate,
+          completedDate: _completedDateController.text,
           completedTime: '${_completionTime.hour}:${_completionTime.minute}',
           notes: _notesController.text.isEmpty ? null : _notesController.text,
         );
@@ -993,7 +982,6 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
       _selectedDosageUnit = null;
       _scheduledDate = DateTime.now();
       _scheduledTime = TimeOfDay.now();
-      _completionDate = DateTime.now();
       _completionTime = TimeOfDay.now();
     });
   }

@@ -513,7 +513,7 @@ class QuickDoneVaccinationRequest {
   final String dosage;
   final String administrationMethod;
   final int birdsVaccinated;
-  final DateTime completedDate;
+  final String completedDate;
   final String completedTime;
   final String? notes;
 
@@ -530,7 +530,7 @@ class QuickDoneVaccinationRequest {
   Map<String, dynamic> toJson() => {
     'vaccine_name': vaccineName,
     'vaccine_type': vaccineType,
-    'completed_date': completedDate.toIso8601String(),
+    'completed_date': completedDate,
     'completed_time': completedTime,
     'dosage': dosage,
     'birds_vaccinated':birdsVaccinated,

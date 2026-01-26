@@ -42,7 +42,6 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
   String? _selectedBirdTypeId;
   String? _selectedBatchType;
   String? _selectedFeedingTimeCategory;
-  DateTime? _hatchDate;
   File? _batchPhotoFile;
   bool _isLoading = false;
   bool _isLoadingBirdTypes = false;
@@ -131,8 +130,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
     _chickAgeController.text = '0';
 
     // Set initial hatch date to today for both modes
-    _hatchDate = DateTime.now();
-    _hatchController.text = DateUtil.toReadableDate(_hatchDate!);
+    _hatchController.text = DateUtil.toReadableDate(DateTime.now());
   }
 
   void _switchHatchSource(bool isOwnHatch) {
@@ -146,13 +144,11 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
           // Switching to own hatch
           _chickAgeController.text = '0';
           _hatchSourceController.clear();
-          _hatchDate = DateTime.now();
-          _hatchController.text = DateUtil.toReadableDate(_hatchDate!);
+          _hatchController.text = DateUtil.toReadableDate(DateTime.now());
         } else {
           // Switching to purchased chicks
           _hatchController.clear();
-          _hatchDate = DateTime.now();
-          _hatchController.text = DateUtil.toReadableDate(_hatchDate!);
+          _hatchController.text = DateUtil.toReadableDate(DateTime.now());
           _calculateAndUpdateHatchDate();
         }
       }
@@ -164,8 +160,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
       final age = int.tryParse(_chickAgeController.text) ?? 0;
       if (age >= 0) {
         setState(() {
-          _hatchDate = DateTime.now().subtract(Duration(days: age));
-          _hatchController.text = DateUtil.toReadableDate(_hatchDate!);
+          _hatchController.text = DateUtil.toReadableDate(DateTime.now().subtract(Duration(days: age)));
         });
       }
     }
@@ -461,18 +456,11 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                   label: 'Date of Hatching',
                   icon: Icons.calendar_today,
                   required: true,
+                  initialDate: DateTime.now(),
                   minYear: DateTime.now().year - 1,
-                  returnFormat: DateReturnFormat.dateTime,
+                  returnFormat: DateReturnFormat.isoString,
                   maxYear: DateTime.now().year,
                   controller: _hatchController,
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() {
-                        _hatchDate = value;
-                        _hatchController.text = DateUtil.toReadableDate(value);
-                      });
-                    }
-                  },
                 ),
                 const SizedBox(height: 20),
               ],
@@ -545,7 +533,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        DateUtil.toReadableDate(_hatchDate!),
+                        _hatchController.text.isNotEmpty?_hatchController.text:'Not provided',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
@@ -1029,7 +1017,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
 
     // Handle hatch date validation based on source
     if (_isOwnHatch) {
-      if (_hatchDate == null) {
+      if (_hatchController.text.isEmpty) {
         ToastUtil.showError('Please select hatch date');
         return;
       }
@@ -1050,7 +1038,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
       }
 
       // Calculate hatch date for purchased chicks
-      _hatchDate = DateTime.now().subtract(Duration(days: age));
+      _hatchController.text = DateTime.now().subtract(Duration(days: age)).toIso8601String();
     }
 
     // Validate feeding times selection
@@ -1076,7 +1064,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
         'batch_type': _selectedBatchType,
         'initial_count': int.parse(_initialQuantityController.text.trim()),
         'current_count': int.parse(_birdsAliveController.text.trim()),
-        'hatch_date': DateUtil.toISO8601(_hatchDate!), // Date only
+        'hatch_date': _hatchController.text, // Date only
         'birds_alive': int.parse(_birdsAliveController.text.trim()),
         'current_weight': _currentWeightController.text.isNotEmpty?double.parse(_currentWeightController.text.trim()):null,
         'expected_weight': _expectedWeightController.text.isNotEmpty?double.parse(_expectedWeightController.text.trim()):null,

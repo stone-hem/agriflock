@@ -1097,14 +1097,9 @@ class _RecordExpenditureScreenState extends State<RecordExpenditureScreen> {
                 icon: Icons.calendar_today,
                 required: true,
                 minYear: DateTime.now().year - 1,
-                returnFormat: DateReturnFormat.dateTime,
+                returnFormat: DateReturnFormat.isoString,
                 maxYear: DateTime.now().year,
                 controller: _selectedDateController,
-                onChanged: (value) {
-                  if (value != null) {
-                    // Handle date change if needed
-                  }
-                },
               ),
 
               // Supplier
