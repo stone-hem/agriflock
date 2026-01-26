@@ -437,10 +437,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 20),
                   HomeActionTile(
                     icon: Icons.outbond,
-                    title: 'Quick Expense',
+                    title: 'My Expenditures',
                     subtitle: 'Help the application to generate the correct finance report',
                     color: Colors.red,
-                    onTap: () => context.push('/record-expenditure'),
+                    onTap: () => context.push('/my-expenditures'),
                   ),
                   const SizedBox(height: 20),
                   HomeActionTile(

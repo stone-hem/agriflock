@@ -9,6 +9,7 @@ import 'package:agriflock360/features/farmer/batch/log_feeding_screen.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/recommended_vaccination_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
+import 'package:agriflock360/features/farmer/expense/expenditures_screen.dart';
 import 'package:agriflock360/features/farmer/expense/record_expenditure_screen.dart';
 import 'package:agriflock360/features/farmer/batch/record_vaccination_screen.dart';
 import 'package:agriflock360/features/farmer/batch/record_product_screen.dart';
@@ -376,6 +377,12 @@ class AppRoutes {
             return RecordExpenditureScreen(
               farm: farm,
             );
+          },
+        ),
+        GoRoute(
+          path: '/my-expenditures',
+          builder: (context, state) {
+            return ExpendituresScreen();
           },
         ),
         GoRoute(path: payg, builder: (context, state) => const PAYGDashboard()),

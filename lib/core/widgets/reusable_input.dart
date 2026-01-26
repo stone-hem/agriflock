@@ -14,6 +14,7 @@ class ReusableInput extends StatelessWidget {
   final VoidCallback? onTap;
   final bool readOnly;
   final Widget? suffixIcon;
+  final Widget? prefixIcon;
   final Color? iconColor;
   final Color? backgroundColor;
   final bool enabled;
@@ -49,7 +50,7 @@ class ReusableInput extends StatelessWidget {
     this.onChanged,
     this.onFieldSubmitted,
     this.topLabel, this.prefixText,
-    this.initialValue, this.focusNode,
+    this.initialValue, this.focusNode, this.prefixIcon,
   });
 
   @override
