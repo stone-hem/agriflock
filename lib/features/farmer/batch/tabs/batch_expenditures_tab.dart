@@ -1,8 +1,12 @@
+import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/date_util.dart';
+import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/expenditure_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/batch_mgt_repo.dart';
 import 'package:agriflock360/features/farmer/batch/shared/stat_card.dart';
+import 'package:agriflock360/features/farmer/expense/model/expenditure_model.dart' as expense_model;
+import 'package:agriflock360/features/farmer/expense/repo/expenditure_repository.dart';
 import 'package:flutter/material.dart';
 
 class BatchExpendituresTab extends StatefulWidget {
@@ -15,15 +19,21 @@ class BatchExpendituresTab extends StatefulWidget {
 }
 
 class _BatchExpendituresTabState extends State<BatchExpendituresTab> {
-  final BatchMgtRepository _repository = BatchMgtRepository();
+  final BatchMgtRepository _batchRepository = BatchMgtRepository();
+  final ExpenditureRepository _expenditureRepository = ExpenditureRepository();
 
   ExpenditureDashboard? _dashboard;
-  List<Expenditure> _recentExpenditures = [];
+  List<expense_model.Expenditure> _recentExpenditures = [];
   bool _isLoading = true;
   bool _loadingDashboard = false;
   bool _loadingExpenditures = false;
   String? _dashboardError;
   String? _expendituresError;
+
+  // Totals
+  double _totalAmount = 0;
+  int _totalItems = 0;
+  Map<String, double> _categoryTotals = {};
 
   @override
   void initState() {
@@ -38,6 +48,9 @@ class _BatchExpendituresTabState extends State<BatchExpendituresTab> {
       _expendituresError = null;
       _loadingDashboard = true;
       _loadingExpenditures = true;
+      _totalAmount = 0;
+      _totalItems = 0;
+      _categoryTotals = {};
     });
 
     await Future.wait([
@@ -52,35 +65,27 @@ class _BatchExpendituresTabState extends State<BatchExpendituresTab> {
 
   Future<void> _loadDashboardData() async {
     try {
-      // For now, create mock data - replace with actual API call
-      // final result = await _repository.getExpenditureDashboard(batchId: widget.batch.id);
+      // Load expenditures to calculate dashboard stats
+      final result = await _expenditureRepository.getExpenditures(
+        batchId: widget.batch.id,
+      );
 
-      // Mock data - replace with actual API call
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      setState(() {
-        _dashboard = ExpenditureDashboard(
-          totalAmount: 125000,
-          averageDailyCost: 1250,
-          categoryBreakdown: {
-            'feed': 60000,
-            'medication': 25000,
-            'utilities': 15000,
-            'labor': 20000,
-            'other': 5000,
-          },
-          feedCost: 60000,
-          medicationCost: 25000,
-          utilitiesCost: 15000,
-          laborCost: 20000,
-          otherCost: 5000,
-        );
-        _dashboardError = null;
-      });
+      switch (result) {
+        case Success<expense_model.ExpenditureResponse>(data: final response):
+          _calculateDashboardStats(response.data);
+          break;
+        case Failure(message: final error):
+          setState(() {
+            _dashboard = null;
+            _dashboardError = 'Failed to load expenditure data: $error';
+          });
+          ApiErrorHandler.handle(error);
+          break;
+      }
     } catch (e) {
       setState(() {
         _dashboard = null;
-        _dashboardError = 'Failed to load expenditure data';
+        _dashboardError = 'Failed to load expenditure data: $e';
       });
     } finally {
       setState(() {
@@ -89,68 +94,110 @@ class _BatchExpendituresTabState extends State<BatchExpendituresTab> {
     }
   }
 
+  void _calculateDashboardStats(List<expense_model.Expenditure> expenditures) {
+    double totalAmount = 0;
+    int totalItems = expenditures.length;
+    Map<String, double> categoryTotals = {};
+
+    // Calculate totals
+    for (final exp in expenditures) {
+      totalAmount += exp.amount;
+
+      // Group by category
+      final categoryName = exp.category.name;
+      categoryTotals.update(
+        categoryName,
+            (value) => value + exp.amount,
+        ifAbsent: () => exp.amount,
+      );
+    }
+
+    // Calculate days since batch started (for average daily cost)
+    final daysSinceStart = DateTime.now().difference(widget.batch.startDate).inDays; // Fallback to 30 days if no start date
+
+    final averageDailyCost = daysSinceStart > 0
+        ? totalAmount / daysSinceStart
+        : totalAmount;
+
+    // Get top categories
+    double feedCost = 0;
+    double medicationCost = 0;
+    double utilitiesCost = 0;
+    double laborCost = 0;
+    double otherCost = 0;
+
+    for (final entry in categoryTotals.entries) {
+      final categoryName = entry.key.toLowerCase();
+      if (categoryName.contains('feed')) {
+        feedCost = entry.value;
+      } else if (categoryName.contains('medication') ||
+          categoryName.contains('vaccine') ||
+          categoryName.contains('medicine')) {
+        medicationCost = entry.value;
+      } else if (categoryName.contains('utility') ||
+          categoryName.contains('utilities') ||
+          categoryName.contains('electricity') ||
+          categoryName.contains('water')) {
+        utilitiesCost = entry.value;
+      } else if (categoryName.contains('labor') ||
+          categoryName.contains('labour')) {
+        laborCost = entry.value;
+      } else {
+        otherCost += entry.value;
+      }
+    }
+
+    setState(() {
+      _totalAmount = totalAmount;
+      _totalItems = totalItems;
+      _categoryTotals = categoryTotals;
+
+      _dashboard = ExpenditureDashboard(
+        totalAmount: totalAmount,
+        averageDailyCost: averageDailyCost,
+        categoryBreakdown: categoryTotals,
+        feedCost: feedCost,
+        medicationCost: medicationCost,
+        utilitiesCost: utilitiesCost,
+        laborCost: laborCost,
+        otherCost: otherCost,
+      );
+      _dashboardError = null;
+    });
+  }
+
   Future<void> _loadExpendituresData() async {
     try {
-      // For now, create mock data - replace with actual API call
-      // final result = await _repository.getExpenditures(batchId: widget.batch.id);
+      final result = await _expenditureRepository.getExpenditures(
+        batchId: widget.batch.id,
+      );
 
-      // Mock data - replace with actual API call
-      await Future.delayed(const Duration(milliseconds: 500));
+      switch (result) {
+        case Success<expense_model.ExpenditureResponse>(data: final response):
+        // Sort by date descending (most recent first)
+          final sortedExpenditures = List<expense_model.Expenditure>.from(response.data)
+            ..sort((a, b) => b.date.compareTo(a.date));
 
-      setState(() {
-        _recentExpenditures = [
-          Expenditure(
-            id: '1',
-            batchId: widget.batch.id,
-            type: 'feed',
-            category: 'recurring',
-            description: 'Layer mash feed purchase',
-            amount: 15000,
-            quantity: 50,
-            unit: 'bags',
-            date: DateTime.now().subtract(const Duration(days: 1)),
-            supplier: 'FeedCo Ltd',
-            receiptNumber: 'RC-001',
-            createdAt: DateTime.now().subtract(const Duration(days: 1)),
-            updatedAt: DateTime.now().subtract(const Duration(days: 1)),
-          ),
-          Expenditure(
-            id: '2',
-            batchId: widget.batch.id,
-            type: 'medication',
-            category: 'recurring',
-            description: 'Vaccines and antibiotics',
-            amount: 5000,
-            quantity: 100,
-            unit: 'doses',
-            date: DateTime.now().subtract(const Duration(days: 3)),
-            supplier: 'Vet Supplies',
-            receiptNumber: 'RC-002',
-            createdAt: DateTime.now().subtract(const Duration(days: 3)),
-            updatedAt: DateTime.now().subtract(const Duration(days: 3)),
-          ),
-          Expenditure(
-            id: '3',
-            batchId: widget.batch.id,
-            type: 'utilities',
-            category: 'recurring',
-            description: 'Electricity bill for heaters',
-            amount: 8000,
-            quantity: 1,
-            unit: 'bill',
-            date: DateTime.now().subtract(const Duration(days: 7)),
-            supplier: 'Power Utility',
-            receiptNumber: 'RC-003',
-            createdAt: DateTime.now().subtract(const Duration(days: 7)),
-            updatedAt: DateTime.now().subtract(const Duration(days: 7)),
-          ),
-        ];
-        _expendituresError = null;
-      });
+          // Take only recent items (first 10)
+          final recentItems = sortedExpenditures.take(10).toList();
+
+          setState(() {
+            _recentExpenditures = recentItems;
+            _expendituresError = null;
+          });
+          break;
+        case Failure(message: final error):
+          setState(() {
+            _recentExpenditures = [];
+            _expendituresError = 'Failed to load expenditures: $error';
+          });
+          ApiErrorHandler.handle(error);
+          break;
+      }
     } catch (e) {
       setState(() {
         _recentExpenditures = [];
-        _expendituresError = 'Failed to load expenditures';
+        _expendituresError = 'Failed to load expenditures: $e';
       });
     } finally {
       setState(() {
@@ -162,7 +209,6 @@ class _BatchExpendituresTabState extends State<BatchExpendituresTab> {
   Future<void> _onRefresh() async {
     await _loadExpenditureData();
   }
-
 
   Widget _buildErrorWidget(String error, VoidCallback onRetry) {
     return Container(
@@ -213,37 +259,59 @@ class _BatchExpendituresTabState extends State<BatchExpendituresTab> {
     );
   }
 
-  IconData _getExpenditureIcon(String type) {
-    switch (type.toLowerCase()) {
-      case 'feed':
-        return Icons.fastfood;
-      case 'medication':
-        return Icons.medical_services;
-      case 'utilities':
-        return Icons.bolt;
-      case 'labor':
-        return Icons.people;
-      case 'equipment':
-        return Icons.build;
-      default:
-        return Icons.account_balance_wallet;
+  IconData _getExpenditureIcon(expense_model.ExpenditureCategory category) {
+    final categoryName = category.name.toLowerCase();
+    if (categoryName.contains('feed')) {
+      return Icons.fastfood;
+    } else if (categoryName.contains('medication') ||
+        categoryName.contains('vaccine') ||
+        categoryName.contains('medicine')) {
+      return Icons.medical_services;
+    } else if (categoryName.contains('cleaning')) {
+      return Icons.clean_hands;
+    } else if (categoryName.contains('utility') ||
+        categoryName.contains('utilities') ||
+        categoryName.contains('electricity') ||
+        categoryName.contains('water')) {
+      return Icons.bolt;
+    } else if (categoryName.contains('labor') ||
+        categoryName.contains('labour')) {
+      return Icons.people;
+    } else if (categoryName.contains('equipment') ||
+        categoryName.contains('tool')) {
+      return Icons.build;
+    } else if (categoryName.contains('transport')) {
+      return Icons.local_shipping;
+    } else {
+      return Icons.account_balance_wallet;
     }
   }
 
-  Color _getExpenditureColor(String type) {
-    switch (type.toLowerCase()) {
-      case 'feed':
-        return Colors.orange.shade600;
-      case 'medication':
-        return Colors.red.shade600;
-      case 'utilities':
-        return Colors.blue.shade600;
-      case 'labor':
-        return Colors.green.shade600;
-      case 'equipment':
-        return Colors.purple.shade600;
-      default:
-        return Colors.grey.shade600;
+  Color _getExpenditureColor(expense_model.ExpenditureCategory category) {
+    final categoryName = category.name.toLowerCase();
+    if (categoryName.contains('feed')) {
+      return Colors.orange;
+    } else if (categoryName.contains('medication') ||
+        categoryName.contains('vaccine') ||
+        categoryName.contains('medicine')) {
+      return Colors.red;
+    } else if (categoryName.contains('cleaning')) {
+      return Colors.blue;
+    } else if (categoryName.contains('utility') ||
+        categoryName.contains('utilities') ||
+        categoryName.contains('electricity') ||
+        categoryName.contains('water')) {
+      return Colors.yellow.shade700;
+    } else if (categoryName.contains('labor') ||
+        categoryName.contains('labour')) {
+      return Colors.purple;
+    } else if (categoryName.contains('equipment') ||
+        categoryName.contains('tool')) {
+      return Colors.brown;
+    } else if (categoryName.contains('transport')) {
+      return Colors.teal;
+    } else {
+      return Colors.green;
     }
   }
 
@@ -258,18 +326,102 @@ class _BatchExpendituresTabState extends State<BatchExpendituresTab> {
         }
         return '${difference.inMinutes}m ago';
       }
-      return 'Today, ${DateUtil.toReadableDate(date)}';
+      return 'Today, ${DateUtil.toMMDDYYYY(date)}';
     } else if (difference.inDays == 1) {
       return 'Yesterday';
     } else if (difference.inDays < 7) {
       return '${difference.inDays}d ago';
     } else {
-      return DateUtil.toReadableDate(date);
+      return DateUtil.toMMDDYYYY(date);
     }
   }
 
   String _formatCurrency(double amount) {
     return 'Ksh ${amount.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}';
+  }
+
+  Widget _buildCategoryBreakdown() {
+    if (_categoryTotals.isEmpty) {
+      return const SizedBox();
+    }
+
+    // Sort categories by amount (descending)
+    final sortedCategories = _categoryTotals.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Category Breakdown',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...sortedCategories.take(5).map((entry) {
+          final percentage = _totalAmount > 0
+              ? (entry.value / _totalAmount * 100).toStringAsFixed(1)
+              : '0';
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: Text(
+                    entry.key,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+                Expanded(
+                  flex: 4,
+                  child: LinearProgressIndicator(
+                    value: _totalAmount > 0 ? entry.value / _totalAmount : 0,
+                    backgroundColor: Colors.grey.shade200,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      _getExpenditureColorForCategory(entry.key),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 3,
+                  child: Text(
+                    '$percentage%',
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ],
+    );
+  }
+
+  Color _getExpenditureColorForCategory(String categoryName) {
+    final lowerName = categoryName.toLowerCase();
+    if (lowerName.contains('feed')) {
+      return Colors.orange;
+    } else if (lowerName.contains('medication') ||
+        lowerName.contains('vaccine') ||
+        lowerName.contains('medicine')) {
+      return Colors.red;
+    } else if (lowerName.contains('utility') ||
+        lowerName.contains('utilities') ||
+        lowerName.contains('electricity') ||
+        lowerName.contains('water')) {
+      return Colors.blue;
+    } else if (lowerName.contains('labor') ||
+        lowerName.contains('labour')) {
+      return Colors.green;
+    } else {
+      return Colors.purple;
+    }
   }
 
   @override
@@ -309,72 +461,15 @@ class _BatchExpendituresTabState extends State<BatchExpendituresTab> {
 
                     const SizedBox(height: 12),
 
-                    // Daily Average & Category Breakdown
+                    // Stats Row 1: Items Count and Days Active
                     Row(
                       children: [
                         Expanded(
                           child: StatCard(
-                            value: _formatCurrency(_dashboard!.averageDailyCost),
-                            label: 'Avg Daily Cost',
-                            color: Colors.amber.shade100,
-                            icon: Icons.timeline,
-                            textColor: Colors.amber.shade800,
-                            valueFontSize: 12,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: StatCard(
-                            value: _dashboard!.categoryBreakdown.length.toString(),
-                            label: 'Categories',
+                            value: _totalItems.toString(),
+                            label: 'Total Expenses',
                             color: Colors.blue.shade100,
-                            icon: Icons.category,
-                            textColor: Colors.blue.shade800,
-                            valueFontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // Category Breakdown Cards
-                    Row(
-                      children: [
-                        Expanded(
-                          child: StatCard(
-                            value: _formatCurrency(_dashboard!.feedCost),
-                            label: 'Feed Cost',
-                            color: Colors.orange.shade100,
-                            icon: Icons.fastfood,
-                            textColor: Colors.orange.shade800,
-                            valueFontSize: 12,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: StatCard(
-                            value: _formatCurrency(_dashboard!.medicationCost),
-                            label: 'Medication',
-                            color: Colors.red.shade100,
-                            icon: Icons.medical_services,
-                            textColor: Colors.red.shade800,
-                            valueFontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    Row(
-                      children: [
-                        Expanded(
-                          child: StatCard(
-                            value: _formatCurrency(_dashboard!.utilitiesCost),
-                            label: 'Utilities',
-                            color: Colors.blue.shade100,
-                            icon: Icons.bolt,
+                            icon: Icons.receipt,
                             textColor: Colors.blue.shade800,
                             valueFontSize: 12,
                           ),
@@ -382,16 +477,36 @@ class _BatchExpendituresTabState extends State<BatchExpendituresTab> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: StatCard(
-                            value: _formatCurrency(_dashboard!.laborCost),
-                            label: 'Labor',
+                            value: DateTime.now()
+                                .difference(widget.batch.startDate!)
+                                .inDays
+                                .toString(),
+                            label: 'Days Active',
                             color: Colors.green.shade100,
-                            icon: Icons.people,
+                            icon: Icons.calendar_today,
                             textColor: Colors.green.shade800,
                             valueFontSize: 12,
                           ),
                         ),
                       ],
                     ),
+
+                    const SizedBox(height: 12),
+
+                    // Average Daily Cost
+                    StatCard(
+                      value: _formatCurrency(_dashboard!.averageDailyCost),
+                      label: 'Avg Daily Cost',
+                      color: Colors.amber.shade100,
+                      icon: Icons.timeline,
+                      textColor: Colors.amber.shade800,
+                      valueFontSize: 12,
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Top Category Breakdown
+                    _buildCategoryBreakdown(),
                   ],
                 ],
               ),
@@ -429,7 +544,7 @@ class _BatchExpendituresTabState extends State<BatchExpendituresTab> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Tap the button below to record your first expenditure',
+                              'Add expenses to track your batch costs',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Colors.grey.shade400,
@@ -443,20 +558,37 @@ class _BatchExpendituresTabState extends State<BatchExpendituresTab> {
                   else
                     ..._recentExpenditures.map((expenditure) {
                       return _ExpenditureItem(
-                        icon: _getExpenditureIcon(expenditure.type),
+                        icon: _getExpenditureIcon(expenditure.category),
                         title: expenditure.description,
-                        subtitle: '${expenditure.type.toUpperCase()} • ${expenditure.quantity} ${expenditure.unit}',
+                        subtitle: '${expenditure.category.name} • ${expenditure.quantity} ${expenditure.unit}',
                         amount: _formatCurrency(expenditure.amount),
                         time: _formatDate(expenditure.date),
-                        color: _getExpenditureColor(expenditure.type),
+                        color: _getExpenditureColor(expenditure.category),
                         supplier: expenditure.supplier,
                       );
                     }).toList(),
                 ],
               ),
+
+              const SizedBox(height: 80), // Padding for FAB
             ],
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          // Navigate to add expenditure screen with batch pre-selected
+          // You'll need to implement this navigation
+          // context.push('/record-expenditure', extra: {
+          //   'batchId': widget.batch.id,
+          //   'houseId': widget.batch.houseId,
+          //   'farmId': null, // Let the user select farm
+          // });
+        },
+        icon: const Icon(Icons.add),
+        label: const Text('Add Expense'),
+        backgroundColor: Colors.green,
+        foregroundColor: Colors.white,
       ),
     );
   }
@@ -541,6 +673,8 @@ class _ExpenditureItem extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(fontWeight: FontWeight.w600),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
                 Text(
