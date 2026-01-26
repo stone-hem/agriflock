@@ -51,6 +51,7 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
   String? _errorText;
   bool _hasLostFocus = false;
   DateTime? _lastInitializedDate;
+  bool _isUpdatingFromInit = false;
 
   @override
   void initState() {
@@ -75,6 +76,8 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
   }
 
   void _initializeWithDate(DateTime date) {
+    _isUpdatingFromInit = true;
+
     // Temporarily remove listeners to avoid cascading updates
     _dayController.removeListener(_updateMainController);
     _monthController.removeListener(_updateMainController);
@@ -90,8 +93,13 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
     _monthController.addListener(_updateMainController);
     _yearController.addListener(_updateMainController);
 
-    // Manually update the main controller once
-    _silentUpdateMainController();
+    // Silently update the main controller (no callback)
+    final day = _dayController.text.padLeft(2, '0');
+    final month = _monthController.text.padLeft(2, '0');
+    final year = _yearController.text;
+    widget.controller.text = '$day/$month/$year';
+
+    _isUpdatingFromInit = false;
   }
 
   void _parseExistingValue(String value) {
@@ -135,15 +143,10 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
     }
   }
 
-  // Silent update - used during initialization, doesn't trigger onChanged
-  void _silentUpdateMainController() {
-    final day = _dayController.text.padLeft(2, '0');
-    final month = _monthController.text.padLeft(2, '0');
-    final year = _yearController.text;
-    widget.controller.text = '$day/$month/$year';
-  }
-
   void _updateMainController() {
+    // Skip if we're initializing
+    if (_isUpdatingFromInit) return;
+
     final day = _dayController.text.padLeft(2, '0');
     final month = _monthController.text.padLeft(2, '0');
     final year = _yearController.text;
@@ -158,11 +161,10 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
       });
     }
 
-    // Call onChanged callback
+    // Call onChanged callback - defer to avoid setState during build
     if (widget.onChanged != null) {
       final formattedValue = _parseDateToFormat();
 
-      // Use post frame callback to avoid setState during build
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           widget.onChanged!(formattedValue);

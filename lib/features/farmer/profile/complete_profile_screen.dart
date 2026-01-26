@@ -346,13 +346,11 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
               icon: Icons.calendar_today,
               required: true,
               returnFormat: DateReturnFormat.dateTime,
-              initialDate:  DateTime.now().subtract(const Duration(days: 365 * 10)),
               minYear: DateTime.now().year - 100,
               maxYear: DateTime.now().year - 10,
               controller: _dobController,
               onChanged: (value) {
                 if (value != null) {
-                    // _hatchDate = value;
                     _dobController.text = DateUtil.toReadableDate(value);
                 }
               },
