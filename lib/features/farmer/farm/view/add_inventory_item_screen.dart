@@ -442,7 +442,6 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
               // Expiry Date
               CustomDateTextField(
                 label: 'Expiry Date (Optional)',
-                hintText: 'Select expiry date',
                 icon: Icons.calendar_today,
                 required: true,
                 minYear: DateTime.now().year - 1,

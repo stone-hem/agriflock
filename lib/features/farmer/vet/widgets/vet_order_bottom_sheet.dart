@@ -132,7 +132,6 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                       const SizedBox(height: 8),
                       CustomDateTextField(
                         label: 'Preferred Date',
-                        hintText: 'Select your preferred date',
                         icon: Icons.calendar_today,
                         required: true,
                         minYear: DateTime.now().year,

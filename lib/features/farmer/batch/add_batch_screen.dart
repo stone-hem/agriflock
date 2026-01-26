@@ -5,6 +5,7 @@ import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/core/widgets/photo_upload.dart';
+import 'package:agriflock360/core/widgets/reusable_decimal_input.dart';
 import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
@@ -458,7 +459,6 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
               if (_isOwnHatch) ...[
                 CustomDateTextField(
                   label: 'Date of Hatching',
-                  hintText: 'Select hatch date',
                   icon: Icons.calendar_today,
                   required: true,
                   minYear: DateTime.now().year - 1,
@@ -897,26 +897,19 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
               ],
 
               // Current Weight
-              ReusableInput(
+              ReusableDecimalInput(
                 topLabel: 'Average weight (kg)  Per bird(Optional)',
                 controller: _currentWeightController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                  signed: false,
-                ),
                 labelText: 'Current average weight',
                 hintText: 'e.g., 0.0',
+                suffixText: '/10',
               ),
               const SizedBox(height: 20),
 
               // Expected Weight
-              ReusableInput(
+              ReusableDecimalInput(
                 topLabel: 'Expected weight (kg)  Per bird(Optional)',
                 controller: _expectedWeightController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                  signed: false,
-                ),
                 validator: (value) {
                   // Allow empty/null value since it's not required
                   if (value == null || value.isEmpty) {
@@ -937,6 +930,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                 },
                 labelText: 'Expected average weight at removal/sale',
                 hintText: 'e.g., 2.5',
+                suffixText: '/10',
               ),
               const SizedBox(height: 20),
 

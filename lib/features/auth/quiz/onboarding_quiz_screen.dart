@@ -54,6 +54,10 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
   final TextEditingController _dobController = TextEditingController();
   final TextEditingController _vetExperienceController = TextEditingController();
   final TextEditingController _vetProfileController = TextEditingController();
+  final TextEditingController _vetNationalIdController = TextEditingController();
+  final TextEditingController _vetFieldOfStudyController = TextEditingController();
+  final FocusNode _vetFieldOfStudyFocus = FocusNode();
+  final FocusNode _vetNationalIdFocus = FocusNode();
   final FocusNode _vetExperienceFocus = FocusNode();
   final FocusNode _vetProfileFocus = FocusNode();
 
@@ -175,6 +179,13 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     _vetProfileController.dispose();
     _vetExperienceFocus.dispose();
     _vetProfileFocus.dispose();
+    _vetNationalIdController.dispose();
+    _vetFieldOfStudyController.dispose();
+    _idPhotoFile = null;
+    _selfieFile = null;
+    _selectedAddress = null;
+    _latitude = null;
+    _longitude = null;
     super.dispose();
   }
 
@@ -280,6 +291,8 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         selfiePath: _selfieFile!.path,
         certificates: _uploadedCertificates,
         additionalDocuments: _uploadedFiles.isNotEmpty ? _uploadedFiles : null,
+        nationalId:_vetNationalIdController.text,
+        fieldOfStudy:_vetFieldOfStudyController.text,
         // vetAcceptedTerms: true,
       );
 
@@ -414,7 +427,18 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         if (_selectedUserType == 'farmer') {
           return true;
         } else if (_selectedUserType == 'vet') {
-          return _dobController.text.isNotEmpty;
+          return _dobController.text.isNotEmpty &&
+              _selectedDateOfBirth != null &&
+              _selectedGender != null &&
+              _vetExperienceController.text.isNotEmpty &&
+              _selectedEducationLevel != null &&
+              _idPhotoFile != null &&
+              _selfieFile != null &&
+              _uploadedCertificates.isNotEmpty &&
+              _vetProfileController.text.isNotEmpty &&
+    _vetFieldOfStudyController.text.isNotEmpty &&
+    _vetNationalIdController.text.isNotEmpty;
+
         }
         return true;
       case 2:
@@ -674,6 +698,19 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
             primaryColor: primaryGreen,
           ),
           const SizedBox(height: 30),
+
+          // Field of  Study
+          AuthTextField(
+            controller: _vetFieldOfStudyController,
+            labelText: 'Field of Study *Required',
+            hintText: 'Enter your field of study',
+            icon: Icons.description,
+            focusNode: _vetFieldOfStudyFocus,
+            nextFocusNode: _vetProfileFocus,
+            maxLength: 100,
+            value: '',
+          ),
+          const SizedBox(height: 20),
       
           // Professional Profile
           AuthTextField(
@@ -692,7 +729,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
           CustomDateTextField(
             controller: _dobController,
             label: 'Date of Birth *Required',
-            hintText: 'Enter your date of birth',
             icon: Icons.calendar_today,
             required: true,
             minYear: 1900,
@@ -721,10 +757,24 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
             hintText: 'Enter your years of veterinary experience',
             icon: Icons.work,
             focusNode: _vetExperienceFocus,
-            nextFocusNode: _vetProfileFocus,
+            nextFocusNode: _vetNationalIdFocus,
             keyboardType: TextInputType.number,
             value: '',
            maxLength: 2,
+          ),
+          const SizedBox(height: 30),
+
+          // National ID
+          AuthTextField(
+            controller: _vetNationalIdController,
+            labelText: 'National ID *Required',
+            hintText: 'Enter your national ID',
+            icon: Icons.numbers,
+            focusNode: _vetNationalIdFocus,
+            nextFocusNode: _vetProfileFocus,
+            keyboardType: TextInputType.text,
+            value: '',
+            maxLength: 50,
           ),
           const SizedBox(height: 30),
       

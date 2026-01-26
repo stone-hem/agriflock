@@ -102,7 +102,7 @@ class _VetTermsDialogState extends State<VetTermsDialog> {
                       ),
                       _buildTermSection(
                         title: '5. Payments & Earnings',
-                        content: '- Extension officers set or agree on service price within platform guidelines\n- Officers earn 80% per completed job\n- AgriFlock 360 earns 20% as platform commission\n- Payments must be mobile money (logged in-app)',
+                        content: '- Extension officers set or agree on service price within platform guidelines\n- Officers earn 80% per completed job\n- AgriFlock 360 earns 20% as platform commission',
                       ),
                       _buildTermSection(
                         title: '6. Ratings & Accountability',

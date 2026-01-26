@@ -759,11 +759,6 @@ class _MyVetOrdersScreenState extends State<MyVetOrdersScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _refreshVetOrders,
-        backgroundColor: Colors.blue,
-        child: const Icon(Icons.refresh),
-      ),
     );
   }
 }

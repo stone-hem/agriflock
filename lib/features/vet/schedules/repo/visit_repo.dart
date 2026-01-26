@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/features/vet/schedules/models/visit_model.dart';
+import 'package:agriflock360/features/vet/schedules/models/visit_stats.dart';
 import 'package:agriflock360/main.dart';
 import 'package:http/http.dart' as http;
 
@@ -63,7 +64,7 @@ class VisitsRepository {
   }
 
   /// Accept a visit
-  Future<Result<Visit>> acceptVisit({
+  Future<Result> acceptVisit({
     required String visitId,
   }) async {
     try {
@@ -76,7 +77,7 @@ class VisitsRepository {
       LogUtil.info('Accept Visit API Response: $jsonResponse');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        return Success(Visit.fromJson(jsonResponse));
+        return Success(null);
       } else {
         return Failure(
           message: jsonResponse['message'] ?? 'Failed to accept visit',
@@ -106,7 +107,7 @@ class VisitsRepository {
   }
 
   /// Reject a visit
-  Future<Result<Visit>> rejectVisit({
+  Future<Result> rejectVisit({
     required String visitId,
     required Map<String, dynamic> body,
   }) async {
@@ -120,7 +121,7 @@ class VisitsRepository {
       LogUtil.info('Reject Visit API Response: $jsonResponse');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        return Success(Visit.fromJson(jsonResponse));
+        return Success(null);
       } else {
         return Failure(
           message: jsonResponse['message'] ?? 'Failed to reject visit',
@@ -150,7 +151,7 @@ class VisitsRepository {
   }
 
   /// Complete a visit
-  Future<Result<Visit>> completeVisit({
+  Future<Result> completeVisit({
     required String visitId,
     required Map<String, dynamic> body,
   }) async {
@@ -164,7 +165,7 @@ class VisitsRepository {
       LogUtil.info('Complete Visit API Response: $jsonResponse');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        return Success(Visit.fromJson(jsonResponse));
+        return Success(null);
       } else {
         return Failure(
           message: jsonResponse['message'] ?? 'Failed to complete visit',
@@ -194,7 +195,7 @@ class VisitsRepository {
   }
 
   /// Cancel a visit
-  Future<Result<Visit>> cancelVisit({
+  Future<Result> cancelVisit({
     required String visitId,
     required Map<String, dynamic> body,
   }) async {
@@ -208,7 +209,7 @@ class VisitsRepository {
       LogUtil.info('Cancel Visit API Response: $jsonResponse');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        return Success(Visit.fromJson(jsonResponse));
+        return Success(null);
       } else {
         return Failure(
           message: jsonResponse['message'] ?? 'Failed to cancel visit',
@@ -238,7 +239,7 @@ class VisitsRepository {
   }
 
   /// Start a visit
-  Future<Result<Visit>> startVisit({
+  Future<Result> startVisit({
     required String visitId,
     required Map<String, dynamic> body,
   }) async {
@@ -252,7 +253,7 @@ class VisitsRepository {
       LogUtil.info('Start Visit API Response: $jsonResponse');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        return Success(Visit.fromJson(jsonResponse));
+        return Success(null);
       } else {
         return Failure(
           message: jsonResponse['message'] ?? 'Failed to start visit',
@@ -272,6 +273,56 @@ class VisitsRepository {
       if (e is http.Response) {
         return Failure(
           message: 'Failed to start visit',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+
+      return Failure(message: e.toString());
+    }
+  }
+
+
+  /// Get visit statistics (counts by status)
+  Future<Result<VisitStats>> getVisitStats() async {
+    try {
+      const endpoint = '/vet/dashboard/visit-stats';
+
+      LogUtil.info('Fetching visit stats with endpoint: $endpoint');
+      final response = await apiClient.get(endpoint);
+      final jsonResponse = jsonDecode(response.body);
+      LogUtil.info('Get Visit Stats API Response: $jsonResponse');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        if (jsonResponse is Map<String, dynamic>) {
+          final stats = VisitStats.fromJson(jsonResponse);
+          return Success(stats);
+        } else {
+          LogUtil.error('Unexpected response format: $jsonResponse');
+          return Failure(
+            message: 'Unexpected response format from server',
+            statusCode: response.statusCode,
+          );
+        }
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to fetch visit statistics',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in getVisitStats: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
+    } catch (e) {
+      LogUtil.error('Error in getVisitStats: $e');
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to fetch visit statistics',
           response: e,
           statusCode: e.statusCode,
         );

@@ -385,7 +385,6 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
 
             CustomDateTextField(
               label: 'Scheduled Date',
-              hintText: 'Select date',
               icon: Icons.calendar_today,
               required: true,
               minYear: DateTime.now().year - 1,
@@ -735,7 +734,6 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
             // Completion Date
             CustomDateTextField(
               label: 'Completion Date',
-              hintText: 'Select date',
               icon: Icons.calendar_today,
               required: true,
               minYear: DateTime.now().year - 1,

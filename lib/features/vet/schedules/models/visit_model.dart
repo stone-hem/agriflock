@@ -365,20 +365,69 @@ class VisitListResponse {
 
 // Enum for visit status
 enum VisitStatus {
-  pending('PENDING'),
-  scheduled('SCHEDULED'),
-  completed('COMPLETED'),
-  cancelled('CANCELLED'),
-  reviewed('REVIEWED');
+  pending('pending'),
+  inProgress('in_progress'),
+  completed('completed'),
+  accepted('accepted'),
+  declined('declined'),
+  cancelled('cancelled');
 
   final String value;
   const VisitStatus(this.value);
 
   static VisitStatus fromString(String value) {
     return VisitStatus.values.firstWhere(
-          (status) => status.value == value,
+          (status) => status.value.toLowerCase() == value.toLowerCase(),
       orElse: () => VisitStatus.pending,
     );
+  }
+
+  // Helper method to get display label
+  String get displayLabel {
+    switch (this) {
+      case VisitStatus.pending:
+        return 'Pending';
+      case VisitStatus.inProgress:
+        return 'In Progress';
+      case VisitStatus.completed:
+        return 'Completed';
+      case VisitStatus.accepted:
+        return 'Accepted';
+      case VisitStatus.declined:
+        return 'Declined';
+      case VisitStatus.cancelled:
+        return 'Cancelled';
+    }
+  }
+
+  // Check if status is an active status (can perform actions)
+  bool get isActive {
+    return this == VisitStatus.pending ||
+        this == VisitStatus.accepted ||
+        this == VisitStatus.inProgress;
+  }
+
+  // Check if status is a final status (read-only)
+  bool get isFinal {
+    return this == VisitStatus.completed ||
+        this == VisitStatus.declined ||
+        this == VisitStatus.cancelled;
+  }
+
+  // Get next possible status transitions
+  List<VisitStatus> get possibleTransitions {
+    switch (this) {
+      case VisitStatus.pending:
+        return [VisitStatus.accepted, VisitStatus.declined];
+      case VisitStatus.accepted:
+        return [VisitStatus.inProgress, VisitStatus.cancelled];
+      case VisitStatus.inProgress:
+        return [VisitStatus.completed, VisitStatus.cancelled];
+      case VisitStatus.completed:
+      case VisitStatus.declined:
+      case VisitStatus.cancelled:
+        return []; // No transitions from final states
+    }
   }
 }
 

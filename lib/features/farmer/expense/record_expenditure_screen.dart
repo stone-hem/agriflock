@@ -1094,7 +1094,6 @@ class _RecordExpenditureScreenState extends State<RecordExpenditureScreen> {
               // Date
               CustomDateTextField(
                 label: 'Date',
-                hintText: 'Select date',
                 icon: Icons.calendar_today,
                 required: true,
                 minYear: DateTime.now().year - 1,

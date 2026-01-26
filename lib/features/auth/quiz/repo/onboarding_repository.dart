@@ -66,6 +66,8 @@ class OnboardingRepository {
     required String selfiePath,
     required List<PlatformFile> certificates,
     List<PlatformFile>? additionalDocuments,
+    required String nationalId,
+    required String fieldOfStudy,
   }) async {
     try {
       // Prepare fields
@@ -81,6 +83,8 @@ class OnboardingRepository {
         'profile_bio': professionalSummary,
         'education_level': educationLevel,
         'officer_type': 'vet',
+        'national_id': nationalId,
+        'field_of_study': fieldOfStudy,
       };
 
       // Prepare files

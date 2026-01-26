@@ -455,7 +455,6 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
 
                   CustomDateTextField(
                     label: 'Date & Time',
-                    hintText: 'Select date',
                     icon: Icons.calendar_today,
                     required: true,
                     minYear: DateTime.now().year - 1,
