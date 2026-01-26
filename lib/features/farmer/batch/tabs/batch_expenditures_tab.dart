@@ -8,6 +8,7 @@ import 'package:agriflock360/features/farmer/batch/shared/stat_card.dart';
 import 'package:agriflock360/features/farmer/expense/model/expenditure_model.dart' as expense_model;
 import 'package:agriflock360/features/farmer/expense/repo/expenditure_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class BatchExpendituresTab extends StatefulWidget {
   final BatchModel batch;
@@ -579,11 +580,7 @@ class _BatchExpendituresTabState extends State<BatchExpendituresTab> {
         onPressed: () {
           // Navigate to add expenditure screen with batch pre-selected
           // You'll need to implement this navigation
-          // context.push('/record-expenditure', extra: {
-          //   'batchId': widget.batch.id,
-          //   'houseId': widget.batch.houseId,
-          //   'farmId': null, // Let the user select farm
-          // });
+          context.push('/record-expenditure');
         },
         icon: const Icon(Icons.add),
         label: const Text('Add Expense'),
