@@ -135,7 +135,6 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                         icon: Icons.calendar_today,
                         required: true,
                         minYear: DateTime.now().year,
-                        initialDate: DateTime.now(),
                         returnFormat: DateReturnFormat.dateTime,
                         maxYear: DateTime.now().year + 1,
                         controller: _selectedDateController,

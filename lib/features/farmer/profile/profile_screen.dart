@@ -25,7 +25,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late User _user;
   bool _isLoading = true;
   bool _isUploading = false;
-  double _profileCompletion = 65.0;
 
   @override
   void initState() {
@@ -64,8 +63,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (userData != null && mounted) {
         setState(() {
           _user = userData;
-          // Calculate profile completion based on available data
-          _profileCompletion = _calculateProfileCompletion(userData);
           _isLoading = false;
         });
       } else {
@@ -130,19 +127,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         });
       }
     }
-  }
-
-  double _calculateProfileCompletion(User user) {
-    int completedFields = 0;
-    int totalFields = 5;
-
-    if (user.name.isNotEmpty && user.name != 'Not Provided') completedFields++;
-    if (user.email.isNotEmpty) completedFields++;
-    if (user.phoneNumber != null && user.phoneNumber!.isNotEmpty) completedFields++;
-    if (user.avatar != null && user.avatar!.isNotEmpty) completedFields++;
-    if (user.agreedToTerms == true) completedFields++;
-
-    return (completedFields / totalFields) * 100;
   }
 
   Future<void> _uploadAvatar() async {
@@ -261,7 +245,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           if (mounted) {
             setState(() {
               _user = updatedUser;
-              _profileCompletion = _calculateProfileCompletion(updatedUser);
             });
           }
 
@@ -355,7 +338,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (mounted) {
           setState(() {
             _user = updatedUser;
-            _profileCompletion = _calculateProfileCompletion(updatedUser);
           });
         }
 
@@ -551,7 +533,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                   // Profile Completion Card
                   const SizedBox(height: 10),
-                  _buildProfileCompletionCard(context),
                 ],
               ),
             ),
@@ -665,145 +646,4 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileCompletionCard(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // Progress Row
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Profile Completion',
-                        style: TextStyle(
-                          color: Colors.grey.shade700,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${_profileCompletion.toInt()}% Complete',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: _profileCompletion >= 100 ? Colors.green : Colors.orange,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      width: 60,
-                      height: 60,
-                      child: CircularProgressIndicator(
-                        value: _profileCompletion / 100,
-                        strokeWidth: 6,
-                        backgroundColor: Colors.grey.shade300,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          _profileCompletion >= 100 ? Colors.green : Colors.orange,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      '${_profileCompletion.toInt()}%',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            // Progress Bar
-            LinearProgressIndicator(
-              value: _profileCompletion / 100,
-              backgroundColor: Colors.grey.shade300,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                _profileCompletion >= 100 ? Colors.green : Colors.orange,
-              ),
-              borderRadius: BorderRadius.circular(10),
-              minHeight: 8,
-            ),
-
-            const SizedBox(height: 12),
-
-            // Warning Text and Button
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: _profileCompletion < 100 ? Colors.orange.shade50 : Colors.green.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _profileCompletion < 100 ? Colors.orange.shade100 : Colors.green.shade100),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    _profileCompletion < 100 ? Icons.info_outline : Icons.check_circle_outline,
-                    color: _profileCompletion < 100 ? Colors.orange.shade600 : Colors.green.shade600,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _profileCompletion < 100
-                          ? 'Complete your profile to unlock all features'
-                          : 'Your profile is complete! All features unlocked.',
-                      style: TextStyle(
-                        color: _profileCompletion < 100 ? Colors.orange.shade800 : Colors.green.shade800,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Complete Profile Button
-            if (_profileCompletion < 100)
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    context.push('/complete-profile');
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  child: const Text(
-                    'Complete Profile',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
 }

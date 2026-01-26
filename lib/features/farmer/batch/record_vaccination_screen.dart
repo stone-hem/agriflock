@@ -389,7 +389,6 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
               required: true,
               minYear: DateTime.now().year - 1,
               returnFormat: DateReturnFormat.dateTime,
-              initialDate: DateTime.now(),
               maxYear: DateTime.now().year,
               controller: _scheduledDateController,
               onChanged: (value) {
@@ -738,7 +737,6 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
               required: true,
               minYear: DateTime.now().year - 1,
               returnFormat: DateReturnFormat.dateTime,
-              initialDate: DateTime.now(),
               maxYear: DateTime.now().year,
               controller: _completedDateController,
               onChanged: (value) {

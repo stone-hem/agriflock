@@ -1,3 +1,5 @@
+import 'package:agriflock360/core/utils/date_util.dart';
+import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:convert';
@@ -114,34 +116,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     }
   }
 
-  Future<void> _selectDate(BuildContext context) async {
-    // First, dismiss any open keyboard
-    FocusScope.of(context).unfocus();
-
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now().subtract(const Duration(days: 6570)), // 18 years ago
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: primaryGreen,
-              onPrimary: Colors.white,
-              onSurface: Colors.black,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null && mounted) {
-      setState(() {
-        _dobController.text = picked.toIso8601String(); // Use ISO format for API
-      });
-    }
-  }
 
   bool _isCurrentStepValid() {
     switch (_currentPage) {
@@ -367,47 +341,23 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
             const SizedBox(height: 20),
 
             // Date of Birth
-            GestureDetector(
-              onTap: () => _selectDate(context),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Date of Birth *',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.calendar_today, color: primaryGreen),
-                        const SizedBox(width: 12),
-                        Text(
-                          _dobController.text.isEmpty
-                              ? 'Select your date of birth'
-                              : _formatDateForDisplay(_dobController.text),
-                          style: TextStyle(
-                            color: _dobController.text.isEmpty
-                                ? Colors.grey.shade500
-                                : Colors.black87,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+            CustomDateTextField(
+              label: 'Date of Birth *',
+              icon: Icons.calendar_today,
+              required: true,
+              returnFormat: DateReturnFormat.dateTime,
+              initialDate:  DateTime.now().subtract(const Duration(days: 365 * 10)),
+              minYear: DateTime.now().year - 100,
+              maxYear: DateTime.now().year - 10,
+              controller: _dobController,
+              onChanged: (value) {
+                if (value != null) {
+                    // _hatchDate = value;
+                    _dobController.text = DateUtil.toReadableDate(value);
+                }
+              },
             ),
+
             const SizedBox(height: 20),
 
             // Gender
@@ -622,14 +572,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     );
   }
 
-  String _formatDateForDisplay(String isoDate) {
-    try {
-      final date = DateTime.parse(isoDate);
-      return "${date.day}/${date.month}/${date.year}";
-    } catch (e) {
-      return isoDate;
-    }
-  }
 }
 
 // Data Model

@@ -446,7 +446,6 @@ class _AddInventoryItemScreenState extends State<AddInventoryItemScreen> {
                 required: true,
                 minYear: DateTime.now().year - 1,
                 returnFormat: DateReturnFormat.dateTime,
-                initialDate: DateTime.now(),
                 maxYear: DateTime.now().year,
                 controller: _expiryDateController,
                 onChanged: (value) {

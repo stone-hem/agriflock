@@ -77,7 +77,7 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
     ],
   };
 
-  // ACCURATE PRODUCTION DATA FROM YOUR TABLES
+  // ACCURATE PRODUCTION DATA
   final Map<String, Map<String, dynamic>> _productionData = {
     'broiler': {
       // 9 capacities

@@ -50,6 +50,7 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
 
   String? _errorText;
   bool _hasLostFocus = false;
+  DateTime? _lastInitializedDate;
 
   @override
   void initState() {
@@ -57,6 +58,7 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
 
     if (widget.initialDate != null) {
       _initializeWithDate(widget.initialDate!);
+      _lastInitializedDate = widget.initialDate;
     } else if (widget.controller.text.isNotEmpty && widget.controller.text != 'DD/MM/YYYY') {
       _parseExistingValue(widget.controller.text);
     }
@@ -73,9 +75,23 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
   }
 
   void _initializeWithDate(DateTime date) {
+    // Temporarily remove listeners to avoid cascading updates
+    _dayController.removeListener(_updateMainController);
+    _monthController.removeListener(_updateMainController);
+    _yearController.removeListener(_updateMainController);
+
+    // Set the values
     _dayController.text = date.day.toString().padLeft(2, '0');
     _monthController.text = date.month.toString().padLeft(2, '0');
     _yearController.text = date.year.toString();
+
+    // Re-add listeners
+    _dayController.addListener(_updateMainController);
+    _monthController.addListener(_updateMainController);
+    _yearController.addListener(_updateMainController);
+
+    // Manually update the main controller once
+    _silentUpdateMainController();
   }
 
   void _parseExistingValue(String value) {
@@ -91,8 +107,10 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
   void didUpdateWidget(covariant CustomDateTextField oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    if (widget.initialDate != oldWidget.initialDate && widget.initialDate != null) {
+    // Only reinitialize if initialDate changed and is different from what we last initialized
+    if (widget.initialDate != null && widget.initialDate != _lastInitializedDate) {
       _initializeWithDate(widget.initialDate!);
+      _lastInitializedDate = widget.initialDate;
     }
   }
 
@@ -117,6 +135,14 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
     }
   }
 
+  // Silent update - used during initialization, doesn't trigger onChanged
+  void _silentUpdateMainController() {
+    final day = _dayController.text.padLeft(2, '0');
+    final month = _monthController.text.padLeft(2, '0');
+    final year = _yearController.text;
+    widget.controller.text = '$day/$month/$year';
+  }
+
   void _updateMainController() {
     final day = _dayController.text.padLeft(2, '0');
     final month = _monthController.text.padLeft(2, '0');
@@ -135,7 +161,13 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
     // Call onChanged callback
     if (widget.onChanged != null) {
       final formattedValue = _parseDateToFormat();
-      widget.onChanged!(formattedValue);
+
+      // Use post frame callback to avoid setState during build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          widget.onChanged!(formattedValue);
+        }
+      });
     }
   }
 
