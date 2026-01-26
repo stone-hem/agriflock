@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/features/vet/schedules/models/visit_model.dart';
 import 'package:agriflock360/features/vet/schedules/repo/visit_repo.dart';
 import 'package:agriflock360/features/vet/schedules/widgets/visit_card.dart';
@@ -46,6 +47,8 @@ class _VisitsListViewState extends State<VisitsListView>
     final result = await widget.repository.getVetVisitsByStatus(
       status: widget.status,
     );
+
+    LogUtil.warning(widget.status);
 
     if (mounted) {
       result.when(

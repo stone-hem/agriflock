@@ -20,6 +20,7 @@ class InProgressVisitCard extends StatefulWidget {
 
 class _InProgressVisitCardState extends State<InProgressVisitCard> {
   bool _isProcessing = false;
+  bool? _followUpRequired; // true/false for radio buttons
 
   Future<void> _completeVisit(Map<String, dynamic> data) async {
     if (_isProcessing) return;
@@ -57,10 +58,9 @@ class _InProgressVisitCardState extends State<InProgressVisitCard> {
   }
 
   void _showCompleteDialog() {
-    final diagnosisController = TextEditingController();
-    final treatmentController = TextEditingController();
+    final notesController = TextEditingController();
     final recommendationsController = TextEditingController();
-    final medicationController = TextEditingController();
+    _followUpRequired = null; // Reset radio button
 
     showDialog(
       context: context,
@@ -75,47 +75,100 @@ class _InProgressVisitCardState extends State<InProgressVisitCard> {
                 children: [
                   Text(
                     'Complete visit for ${widget.visit.farmerName}',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 16),
+
+                  // Service Fee Display (non-editable)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Service Fee:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                        Text(
+                          'KES ${widget.visit.serviceFee.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.green,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Follow-up Required Radio Buttons
+                  const Text(
+                    'Follow-up Required:',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Radio<bool>(
+                        value: true,
+                        groupValue: _followUpRequired,
+                        onChanged: _isProcessing
+                            ? null
+                            : (value) {
+                          setState(() {
+                            _followUpRequired = value;
+                          });
+                        },
+                      ),
+                      const Text('Yes'),
+                      const SizedBox(width: 20),
+                      Radio<bool>(
+                        value: false,
+                        groupValue: _followUpRequired,
+                        onChanged: _isProcessing
+                            ? null
+                            : (value) {
+                          setState(() {
+                            _followUpRequired = value;
+                          });
+                        },
+                      ),
+                      const Text('No'),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Notes Input
                   TextField(
-                    controller: diagnosisController,
+                    controller: notesController,
                     decoration: const InputDecoration(
-                      labelText: 'Diagnosis',
-                      hintText: 'Enter diagnosis',
+                      labelText: 'Notes',
+                      hintText: 'Enter any additional notes',
                       border: OutlineInputBorder(),
                     ),
                     maxLines: 3,
                     enabled: !_isProcessing,
                   ),
                   const SizedBox(height: 12),
-                  TextField(
-                    controller: treatmentController,
-                    decoration: const InputDecoration(
-                      labelText: 'Treatment Provided',
-                      hintText: 'Enter treatment details',
-                      border: OutlineInputBorder(),
-                    ),
-                    maxLines: 3,
-                    enabled: !_isProcessing,
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: medicationController,
-                    decoration: const InputDecoration(
-                      labelText: 'Medication Prescribed',
-                      hintText: 'Enter medication details',
-                      border: OutlineInputBorder(),
-                    ),
-                    maxLines: 2,
-                    enabled: !_isProcessing,
-                  ),
-                  const SizedBox(height: 12),
+
+                  // Recommendations Input
                   TextField(
                     controller: recommendationsController,
                     decoration: const InputDecoration(
                       labelText: 'Recommendations',
-                      hintText: 'Enter follow-up recommendations',
+                      hintText: 'Enter recommendations for the farmer',
                       border: OutlineInputBorder(),
                     ),
                     maxLines: 3,
@@ -131,26 +184,27 @@ class _InProgressVisitCardState extends State<InProgressVisitCard> {
               ),
               ElevatedButton(
                 onPressed: _isProcessing ? null : () async {
-                  if (diagnosisController.text.trim().isEmpty) {
+                  // Validate required fields
+                  if (_followUpRequired == null) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please enter diagnosis')),
+                      const SnackBar(
+                        content: Text('Please select if follow-up is required'),
+                        backgroundColor: Colors.red,
+                      ),
                     );
                     return;
                   }
 
-                  if (treatmentController.text.trim().isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please enter treatment details')),
-                    );
-                    return;
-                  }
-
+                  // Prepare data for API
                   final data = {
-                    'diagnosis': diagnosisController.text.trim(),
-                    'treatment': treatmentController.text.trim(),
-                    'medication': medicationController.text.trim(),
-                    'recommendations': recommendationsController.text.trim(),
-                    'completed_at': DateTime.now().toIso8601String(),
+                    "actual_cost": widget.visit.serviceFee,
+                    "notes": notesController.text.trim().isEmpty
+                        ? "string"
+                        : notesController.text.trim(),
+                    "recommendations": recommendationsController.text.trim().isEmpty
+                        ? "string"
+                        : recommendationsController.text.trim(),
+                    "follow_up_required": _followUpRequired.toString(), // Convert bool to string
                   };
 
                   Navigator.pop(context);
@@ -344,7 +398,7 @@ class _InProgressVisitCardState extends State<InProgressVisitCard> {
                     Icon(Icons.attach_money, size: 16, color: Colors.green.shade700),
                     const SizedBox(width: 4),
                     Text(
-                      'Earnings: KES ${widget.visit.officerEarnings.toStringAsFixed(2)}',
+                      'Service Fee: KES ${widget.visit.serviceFee.toStringAsFixed(2)}',
                       style: TextStyle(
                         color: Colors.green.shade700,
                         fontSize: 14,
