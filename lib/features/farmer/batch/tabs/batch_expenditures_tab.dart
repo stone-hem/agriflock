@@ -578,8 +578,6 @@ class _BatchExpendituresTabState extends State<BatchExpendituresTab> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          // Navigate to add expenditure screen with batch pre-selected
-          // You'll need to implement this navigation
           context.push('/record-expenditure');
         },
         icon: const Icon(Icons.add),
