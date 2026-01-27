@@ -1,5 +1,3 @@
-// features/profile/update_profile_screen.dart
-
 import 'package:agriflock360/core/model/user_model.dart';
 import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
@@ -14,13 +12,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class UpdateProfileScreen extends StatefulWidget {
-  final ProfileRepository profileRepository;
-  final ProfileData? initialProfileData;
 
   const UpdateProfileScreen({
     super.key,
-    required this.profileRepository,
-    this.initialProfileData,
   });
 
   @override
@@ -28,6 +22,8 @@ class UpdateProfileScreen extends StatefulWidget {
 }
 
 class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
+  final ProfileRepository _repository = ProfileRepository();
+
   final SecureStorage _secureStorage = SecureStorage();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
@@ -59,7 +55,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
 
   Future<void> _loadProfileData() async {
     try {
-      final result = await widget.profileRepository.getProfile();
+      final result = await _repository.getProfile();
       switch(result) {
         case Success<ProfileData>(data:final profileData):
           setState(() {
@@ -138,7 +134,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
         preferredFeedCompany: _preferredFeedCompanyController.text.trim(),
       );
 
-      final result = await widget.profileRepository.updateProfile(request);
+      final result = await _repository.updateProfile(request);
 
       setState(() {
         _isLoading = false;
@@ -402,16 +398,19 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
               ),
               const SizedBox(height: 12),
 
-              ElevatedButton.icon(
-                onPressed: () {
-                  _showLocationPicker();
+              LocationPickerStep(
+                selectedAddress: _selectedAddress,
+                latitude: _latitude,
+                longitude: _longitude,
+                onLocationSelected: (String address, double lat, double lng) {
+                  setState(() {
+                    _selectedAddress = address;
+                    _latitude = lat;
+                    _longitude = lng;
+                  });
+                  Navigator.of(context).pop();
                 },
-                icon: const Icon(Icons.location_on),
-                label: const Text('Select Location'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                ),
+                primaryColor: Colors.green,
               ),
               const SizedBox(height: 24),
 
@@ -480,44 +479,6 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
     );
   }
 
-  void _showLocationPicker() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.9,
-          minChildSize: 0.5,
-          maxChildSize: 0.95,
-          builder: (context, scrollController) {
-            return ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(20),
-              ),
-              child: Container(
-                color: Colors.white,
-                child: LocationPickerStep(
-                  selectedAddress: _selectedAddress,
-                  latitude: _latitude,
-                  longitude: _longitude,
-                  onLocationSelected: (String address, double lat, double lng) {
-                    setState(() {
-                      _selectedAddress = address;
-                      _latitude = lat;
-                      _longitude = lng;
-                    });
-                    Navigator.of(context).pop();
-                  },
-                  primaryColor: Colors.green,
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
 
   @override
   void dispose() {

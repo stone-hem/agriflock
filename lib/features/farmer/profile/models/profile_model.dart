@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class UpdateProfileRequest {
   final String fullName;
   final String phoneNumber;
@@ -136,6 +138,14 @@ class ProfileData {
   });
 
   factory ProfileData.fromJson(Map<String, dynamic> json) {
+    // Parse location string if it's a String, otherwise use the Map directly
+    Map<String, dynamic> locationJson;
+    if (json['location'] is String) {
+      locationJson = jsonDecode(json['location']) ?? {};
+    } else {
+      locationJson = json['location'] ?? {};
+    }
+
     return ProfileData(
       id: json['id'] ?? '',
       userId: json['user_id'] ?? '',
@@ -145,7 +155,7 @@ class ProfileData {
       dateOfBirth: json['date_of_birth'],
       age: json['age'] != null ? int.tryParse(json['age'].toString()) : null,
       gender: json['gender'],
-      location: Location.fromJson(json['location'] ?? {}),
+      location: Location.fromJson(locationJson),
       avatar: json['avatar'],
       farmId: json['farm_id'],
       yearsOfExperience: json['years_of_experience']?.toInt() ?? 0,
@@ -162,7 +172,6 @@ class ProfileData {
       updatedAt: DateTime.parse(json['updated_at'] ?? '2025-12-26T08:33:24.207Z'),
     );
   }
-
   Map<String, dynamic> toJson() {
     return {
       'id': id,

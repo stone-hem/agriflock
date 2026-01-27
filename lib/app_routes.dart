@@ -34,6 +34,7 @@ import 'package:agriflock360/features/farmer/profile/congratulations_screen.dart
 import 'package:agriflock360/features/farmer/profile/help_support_screen.dart';
 import 'package:agriflock360/features/farmer/profile/settings_screen.dart';
 import 'package:agriflock360/features/farmer/profile/telemetry_data_screen.dart';
+import 'package:agriflock360/features/farmer/profile/update_profile_screen.dart';
 import 'package:agriflock360/features/farmer/vet/completed_orders_screen.dart';
 import 'package:agriflock360/features/farmer/vet/models/my_order_list_item.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_farmer_model.dart';
@@ -448,6 +449,10 @@ class AppRoutes {
         GoRoute(
           path: completeProfile,
           builder: (context, state) => const CompleteProfileScreen(),
+        ),
+        GoRoute(
+          path: '/update-profile',
+          builder: (context, state) => const UpdateProfileScreen(),
         ),
         GoRoute(
           path: congratulations,

@@ -714,6 +714,7 @@ class _AddEditHouseDialogState extends State<_AddEditHouseDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      backgroundColor: Colors.grey.shade50,
       title: Text(widget.house == null ? 'Add New House' : 'Edit House'),
       content: Form(
         key: _formKey,

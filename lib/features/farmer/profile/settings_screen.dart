@@ -73,7 +73,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   icon: Icons.person_outline,
                   title: 'Edit Profile',
                   subtitle: 'Update your personal information',
-                  onTap: () {},
+                  onTap: () {
+                    context.push('/update-profile');
+                  },
                 ),
                 // _SettingsTile(
                 //   icon: Icons.security_outlined,
