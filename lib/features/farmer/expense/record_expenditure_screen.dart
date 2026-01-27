@@ -529,7 +529,7 @@ class _RecordExpenditureScreenState extends State<RecordExpenditureScreen> {
                   ),
                 ),
                 Text(
-                  '${batch.age} weeks',
+                  '${batch.age} days',
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -702,7 +702,7 @@ class _RecordExpenditureScreenState extends State<RecordExpenditureScreen> {
               ),
             ),
           );
-        }).toList(),
+        }),
       ],
       onChanged: (String? newValue) {
         setState(() {

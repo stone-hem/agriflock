@@ -623,7 +623,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                       children: [
                         Text('${batch.birdsAlive} birds'),
                         const SizedBox(width: 12),
-                        Text('${batch.age} weeks'),
+                        Text('${batch.age} days'),
 
                       ],
                     ),
