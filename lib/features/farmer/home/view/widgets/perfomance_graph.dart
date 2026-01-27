@@ -1,33 +1,58 @@
 import 'dart:math';
 
+import 'package:agriflock360/features/farmer/home/model/financial_overview_model.dart';
 import 'package:flutter/material.dart';
 
 class FinancialPerformanceGraph extends StatefulWidget {
-  const FinancialPerformanceGraph({super.key});
+  final FinancialOverview financialData;
+
+  const FinancialPerformanceGraph({
+    super.key,
+    required this.financialData,
+  });
 
   @override
   State<FinancialPerformanceGraph> createState() => _FinancialPerformanceGraphState();
 }
 
 class _FinancialPerformanceGraphState extends State<FinancialPerformanceGraph> {
-  // Sample data - replace with your actual data
-  final List<FinancialDataPoint> _dataPoints = [
-    FinancialDataPoint(month: 'Jan', expenditure: 12000, income: 15000),
-    FinancialDataPoint(month: 'Feb', expenditure: 14000, income: 18000),
-    FinancialDataPoint(month: 'Mar', expenditure: 11000, income: 16000),
-    FinancialDataPoint(month: 'Apr', expenditure: 13000, income: 19000),
-    FinancialDataPoint(month: 'May', expenditure: 16000, income: 22000),
-    FinancialDataPoint(month: 'Jun', expenditure: 15000, income: 21000),
-  ];
-
+  List<FinancialDataPoint> _dataPoints = [];
   double _maxValue = 0;
   late List<double> _profitValues;
 
   @override
   void initState() {
     super.initState();
+    _convertData();
     _calculateMetrics();
   }
+
+  @override
+  void didUpdateWidget(FinancialPerformanceGraph oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.financialData != widget.financialData) {
+      _convertData();
+      _calculateMetrics();
+    }
+  }
+
+  void _convertData() {
+    _dataPoints = widget.financialData.graph
+        .map((data) => FinancialDataPoint(
+      month: _formatMonth(data.month),
+      expenditure: data.totalExpenditure.toInt(),
+      income: data.totalIncome.toInt(),
+    ))
+        .toList()
+        .reversed // Reverse to show oldest to newest
+        .toList();
+  }
+
+  String _formatMonth(String monthYear) {
+    // Convert "Jan 2026" to "Jan"
+    return monthYear.split(' ').first;
+  }
+
 
   void _calculateMetrics() {
     // Find max value for scaling
@@ -45,6 +70,19 @@ class _FinancialPerformanceGraphState extends State<FinancialPerformanceGraph> {
 
     // Add some padding to max value for better visualization
     _maxValue *= 1.1;
+  }
+
+
+  int _calculateTotalIncome() {
+    return widget.financialData.totalIncome.toInt();
+  }
+
+  int _calculateTotalExpenditure() {
+    return widget.financialData.totalExpenditure.toInt();
+  }
+
+  int _calculateNetProfit() {
+    return widget.financialData.netProfit.toInt();
   }
 
   @override
@@ -204,17 +242,7 @@ class _FinancialPerformanceGraphState extends State<FinancialPerformanceGraph> {
     );
   }
 
-  int _calculateTotalIncome() {
-    return _dataPoints.fold(0, (sum, point) => sum + point.income);
-  }
 
-  int _calculateTotalExpenditure() {
-    return _dataPoints.fold(0, (sum, point) => sum + point.expenditure);
-  }
-
-  int _calculateNetProfit() {
-    return _calculateTotalIncome() - _calculateTotalExpenditure();
-  }
 }
 
 class FinancialDataPoint {

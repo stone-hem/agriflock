@@ -5,6 +5,7 @@ import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:agriflock360/core/utils/shared_prefs.dart';
 import 'package:agriflock360/features/farmer/home/model/dashboard_model.dart';
+import 'package:agriflock360/features/farmer/home/model/financial_overview_model.dart';
 import 'package:agriflock360/features/farmer/home/repo/dashboard_repo.dart';
 import 'package:agriflock360/features/farmer/home/view/widgets/action_tile.dart';
 import 'package:agriflock360/features/farmer/home/view/widgets/activities_loading.dart';
@@ -32,11 +33,14 @@ class _HomeScreenState extends State<HomeScreen> {
   final SecureStorage _secureStorage = SecureStorage();
 
   DashboardSummary? _summary;
+  FinancialOverview? _financialOverview;
   List<DashboardActivity> _activities = [];
   bool _isSummaryLoading = true;
   bool _isActivitiesLoading = true;
+  bool _isFinancialLoading = true;
   String? _summaryError;
   String? _activitiesError;
+  String? _financialError;
   DateTime? _userFirstLoginDate;
   bool _isLoadingUser = true;
   int _daysSinceFirstLogin = 0;
@@ -56,6 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadUserData();
     _loadSummary();
     _loadActivities();
+    _loadFinancialOverview();
   }
 
   @override
@@ -252,6 +257,43 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _loadFinancialOverview() async {
+    if (!mounted) return;
+
+    setState(() {
+      _isFinancialLoading = true;
+      _financialError = null;
+    });
+
+    try {
+      final result = await _repository.getFinancialOverview();
+
+      if (!mounted) return;
+
+      switch (result) {
+        case Success<FinancialOverview>(data: final data):
+          setState(() {
+            _financialOverview = data;
+            _isFinancialLoading = false;
+          });
+          break;
+        case Failure<FinancialOverview>(message: final error):
+          setState(() {
+            _financialError = error;
+            _isFinancialLoading = false;
+          });
+          break;
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _financialError = e.toString();
+          _isFinancialLoading = false;
+        });
+      }
+    }
+  }
+
   Future<void> _loadActivities() async {
     if (!mounted) return;
 
@@ -302,8 +344,10 @@ class _HomeScreenState extends State<HomeScreen> {
           setState(() {
             _summary = data['summary'] as DashboardSummary;
             _activities = data['activities'] as List<DashboardActivity>;
+            _financialOverview = data['financial'] as FinancialOverview?; // ADD THIS
             _summaryError = null;
             _activitiesError = null;
+            _financialError = null; // ADD THIS
           });
           break;
         case Failure<Map<String, dynamic>>(message: final error):
@@ -323,7 +367,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  bool get _isLoading => _isSummaryLoading || _isActivitiesLoading;
+  bool get _isLoading => _isSummaryLoading || _isActivitiesLoading || _isFinancialLoading;
   bool get _hasError => _summaryError != null || _activitiesError != null;
   String? get _error => _summaryError ?? _activitiesError;
 
@@ -452,7 +496,38 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  FinancialPerformanceGraph(),
+                  if (_isFinancialLoading)
+                    SizedBox(
+                      height: 300,
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  else if (_financialError != null)
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            'Failed to load financial data',
+                            style: TextStyle(color: Colors.red.shade700),
+                          ),
+                          const SizedBox(height: 8),
+                          ElevatedButton(
+                            onPressed: _loadFinancialOverview,
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    )
+                  else if (_financialOverview != null)
+                      FinancialPerformanceGraph(
+                        financialData: _financialOverview!,
+                      )
+                    else
+                      const SizedBox.shrink(),
                   const SizedBox(height: 20),
 
                   _buildRecentActivitySection(context),
