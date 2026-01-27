@@ -412,6 +412,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         centerTitle: false,
         backgroundColor: Colors.transparent,
+        automaticallyImplyLeading: false,
         elevation: 0,
         actions: [
           IconButton(

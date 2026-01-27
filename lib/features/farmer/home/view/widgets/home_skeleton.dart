@@ -33,6 +33,7 @@ class HomeSkeleton extends StatelessWidget {
         ),
         centerTitle: false,
         backgroundColor: Colors.transparent,
+        automaticallyImplyLeading: false,
         elevation: 0,
         actions: [
           // Notification icon skeleton

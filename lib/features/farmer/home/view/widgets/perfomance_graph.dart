@@ -42,12 +42,12 @@ class _FinancialPerformanceGraphState extends State<FinancialPerformanceGraph> {
       month: _formatMonth(data.month),
       expenditure: data.totalExpenditure.toInt(),
       income: data.totalIncome.toInt(),
+      profit: data.netProfit, // ADD THIS
     ))
         .toList()
-        .reversed // Reverse to show oldest to newest
+        .reversed
         .toList();
   }
-
   String _formatMonth(String monthYear) {
     // Convert "Jan 2026" to "Jan"
     return monthYear.split(' ').first;
@@ -60,18 +60,15 @@ class _FinancialPerformanceGraphState extends State<FinancialPerformanceGraph> {
     for (var point in _dataPoints) {
       if (point.income > _maxValue) _maxValue = point.income.toDouble();
       if (point.expenditure > _maxValue) _maxValue = point.expenditure.toDouble();
+      if (point.profit.abs() > _maxValue) _maxValue = point.profit.abs(); // ADD THIS
     }
 
-    // Calculate profit values
-    _profitValues = _dataPoints
-        .map((point) => point.income - point.expenditure)
-        .map((profit) => profit.toDouble())
-        .toList();
+    // Get profit values directly from data points
+    _profitValues = _dataPoints.map((point) => point.profit).toList();
 
     // Add some padding to max value for better visualization
     _maxValue *= 1.1;
   }
-
 
   int _calculateTotalIncome() {
     return widget.financialData.totalIncome.toInt();
@@ -249,11 +246,13 @@ class FinancialDataPoint {
   final String month;
   final int expenditure;
   final int income;
+  final double profit; // ADD THIS
 
   FinancialDataPoint({
     required this.month,
     required this.expenditure,
     required this.income,
+    required this.profit, // ADD THIS
   });
 }
 
@@ -329,7 +328,17 @@ class FinancialGraphPainter extends CustomPainter {
 
       // Profit points (blue)
       // Adjust profit to be centered around the middle
-      final profitY = size.height / 2 - (profitValues[i] / maxValue) * size.height * 0.5;
+      final profitValue = profitValues[i];
+      double profitY;
+
+      if (profitValue >= 0) {
+        // Positive profit - draw from bottom up
+        profitY = size.height - (profitValue / maxValue) * size.height;
+      } else {
+        // Negative profit - draw below baseline (optional, or keep at baseline)
+        // For now, we'll just keep it at the bottom
+        profitY = size.height;
+      }
       profitPoints.add(Offset(x, profitY));
 
       // Draw month labels at bottom
