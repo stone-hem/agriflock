@@ -1,4 +1,3 @@
-import 'package:agriflock360/core/utils/date_util.dart';
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -333,6 +332,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
             ReusableInput(
               controller: _idNumberController,
               focusNode: _idNumberFocus,
+              topLabel: 'Your National ID *',
               labelText: 'ID Number *',
               hintText: 'Enter your national ID number',
               icon: Icons.badge,
@@ -470,6 +470,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
             ReusableInput(
               controller: _houseCapacityController,
               focusNode: _houseCapacityFocus,
+              topLabel: 'Chicken House Capacity *',
               labelText: 'Chicken House Capacity *',
               hintText: 'Maximum number of chickens your house can hold',
               icon: Icons.home_work,
