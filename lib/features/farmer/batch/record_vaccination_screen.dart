@@ -4,6 +4,7 @@ import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
+import 'package:agriflock360/core/widgets/reusable_time_input.dart';
 import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/vaccination_repo.dart';
 import 'package:flutter/material.dart';
@@ -243,17 +244,9 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
             const SizedBox(height: 24),
 
             // Vaccine Name Selection
-            Text(
-              'Vaccine Name',
-              style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
-              ),
-            ),
-            const SizedBox(height: 8),
             ReusableDropdown<String>(
               value: _selectedVaccineName,
-              labelText: 'Vaccine Name',
+              topLabel: 'Vaccination Name',
               hintText: 'Select vaccine name',
               items: _vaccineNames.map((String name) {
                 return DropdownMenuItem<String>(
@@ -276,15 +269,8 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
             const SizedBox(height: 20),
 
             // Administration Method
-            Text(
-              'Administration Method',
-              style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
-              ),
-            ),
-            const SizedBox(height: 8),
             ReusableDropdown<String>(
+              topLabel: 'Administration Method',
               value: _selectedAdministration,
               hintText: 'Select administration method',
               items: _administrationMethods.map((String method) {
@@ -304,43 +290,20 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
                 }
                 return null;
               },
-              labelText: 'Method',
             ),
             const SizedBox(height: 20),
 
             // Dosage with unit
-            Text(
-              'Dosage',
-              style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
-              ),
-            ),
-            const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
                   flex: 2,
-                  child: TextFormField(
+                  child: ReusableInput(
                     controller: _dosageAmountController,
+                    topLabel: 'Dosage',
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(
-                      labelText: 'Amount',
-                      hintText: 'e.g., 1.5',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade400),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade400),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.blue),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                    ),
+                    labelText: 'Amount',
+                    hintText: 'e.g., 1.5',
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter dosage amount';
@@ -357,7 +320,7 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
                   flex: 3,
                   child: ReusableDropdown<String>(
                     value: _selectedDosageUnit,
-                    labelText: 'Unit',
+                    topLabel: 'Unit Used',
                     hintText: 'Select unit',
                     items: _dosageUnits.map((String unit) {
                       return DropdownMenuItem<String>(
@@ -394,38 +357,25 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
             const SizedBox(height: 20),
 
             // Scheduled Time
-            Text(
-              'Scheduled Time',
-              style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
-              ),
-            ),
-            const SizedBox(height: 8),
-            InkWell(
-              onTap: () => _selectTime(context, true),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade400),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.access_time, color: Colors.grey.shade600),
-                    const SizedBox(width: 12),
-                    Text(
-                      _scheduledTime.format(context),
-                      style: TextStyle(color: Colors.grey.shade800),
-                    ),
-                  ],
-                ),
-              ),
+            ReusableTimeInput(
+              topLabel: 'Scheduled Time',
+              showIconOutline: true,
+              hintText: 'HH:MM',
+              suffixText: '24h format',
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter a time';
+                }
+                return null;
+              },
+              onTimeChanged: (time) {
+                _scheduledTime=time;
+              },
             ),
             const SizedBox(height: 20),
 
             ReusableInput(
+              topLabel: 'Notes',
               controller: _notesController,
               maxLines: 3,
               labelText: 'Notes (Optional)',
@@ -568,18 +518,10 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
             const SizedBox(height: 24),
 
             // Vaccine Name Selection
-            Text(
-              'Vaccine Name',
-              style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
-              ),
-            ),
-            const SizedBox(height: 8),
             ReusableDropdown<String>(
+              topLabel: 'Vaccination Name',
               value: _selectedVaccineName,
               hintText: 'Select vaccine name',
-              labelText: 'Vaccine name',
               items: _vaccineNames.map((String name) {
                 return DropdownMenuItem<String>(
                   value: name,
@@ -601,18 +543,10 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
             const SizedBox(height: 20),
 
             // Administration Method
-            Text(
-              'Administration Method',
-              style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
-              ),
-            ),
-            const SizedBox(height: 8),
             ReusableDropdown<String>(
+              topLabel: 'Administration Method',
               value: _selectedAdministration,
               hintText: 'Select administration method',
-              labelText: 'Method',
               items: _administrationMethods.map((String method) {
                 return DropdownMenuItem<String>(
                   value: method,
@@ -634,38 +568,16 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
             const SizedBox(height: 20),
 
             // Dosage with unit
-            Text(
-              'Dosage',
-              style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
-              ),
-            ),
-            const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
                   flex: 3,
-                  child: TextFormField(
+                  child: ReusableInput(
+                    topLabel: 'Dosage',
                     controller: _dosageAmountController,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(
-                      labelText: 'Amount',
-                      hintText: 'e.g., 1.5',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade400),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade400),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.green),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                    ),
+                    labelText: 'Amount',
+                    hintText: 'e.g., 1.5',
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter dosage amount';
@@ -682,7 +594,7 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
                   flex: 2,
                   child: ReusableDropdown<String>(
                     value: _selectedDosageUnit,
-                    labelText: 'Unit',
+                    topLabel: 'Unit used',
                     hintText: 'Select unit',
                     items: _dosageUnits.map((String unit) {
                       return DropdownMenuItem<String>(
@@ -710,6 +622,7 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
             ReusableInput(
               controller: _birdsVaccinatedController,
               keyboardType: TextInputType.number,
+              topLabel: 'Number of Birds Vaccinated',
               labelText: 'Number of Birds Vaccinated',
               hintText: 'e.g., 450',
               validator: (value) {
@@ -729,6 +642,7 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
               label: 'Completion Date',
               icon: Icons.calendar_today,
               required: true,
+              initialDate: DateTime.now(),
               minYear: DateTime.now().year - 1,
               returnFormat: DateReturnFormat.isoString,
               maxYear: DateTime.now().year,
@@ -737,38 +651,25 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
             const SizedBox(height: 20),
 
             // Completion Time
-            Text(
-              'Completion Time',
-              style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
-              ),
-            ),
-            const SizedBox(height: 8),
-            InkWell(
-              onTap: () => _selectTime(context, false),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade400),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.access_time, color: Colors.grey.shade600),
-                    const SizedBox(width: 12),
-                    Text(
-                      _completionTime.format(context),
-                      style: TextStyle(color: Colors.grey.shade800),
-                    ),
-                  ],
-                ),
-              ),
+            ReusableTimeInput(
+              topLabel: 'Completion Time',
+              showIconOutline: true,
+              hintText: 'HH:MM',
+              suffixText: '24h format',
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter a time';
+                }
+                return null;
+              },
+              onTimeChanged: (time) {
+                _completionTime=time;
+              },
             ),
             const SizedBox(height: 20),
 
             ReusableInput(
+              topLabel: 'Notes',
               controller: _notesController,
               maxLines: 3,
               labelText: 'Notes (Optional)',
@@ -862,22 +763,6 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
     );
   }
 
-  Future<void> _selectTime(BuildContext context, bool isSchedule) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: isSchedule ? _scheduledTime : _completionTime,
-    );
-    if (picked != null) {
-      setState(() {
-        if (isSchedule) {
-          _scheduledTime = picked;
-        } else {
-          _completionTime = picked;
-        }
-      });
-    }
-  }
-
   Future<void> _submitSchedule() async {
     if (_scheduleFormKey.currentState!.validate()) {
       setState(() {
@@ -886,7 +771,7 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
 
       try {
         // Create dosage string from amount and unit
-        final dosage = '${_dosageAmountController.text} ${_selectedDosageUnit}';
+        final dosage = '${_dosageAmountController.text} $_selectedDosageUnit';
 
         final request = VaccinationScheduleRequest(
           vaccineName: _selectedVaccineName!,

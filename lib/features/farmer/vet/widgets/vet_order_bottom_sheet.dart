@@ -1,4 +1,5 @@
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
+import 'package:agriflock360/core/widgets/reusable_time_input.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_farmer_model.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_order_model.dart';
 import 'package:agriflock360/features/farmer/vet/repo/vet_farmer_repository.dart';
@@ -141,42 +142,20 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                       const SizedBox(height: 20),
 
                       // Preferred Time
-                      Text(
-                        'Preferred Time',
-                        style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey.shade800,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      InkWell(
-                        onTap: _selectTime,
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.shade400),
-                            borderRadius: BorderRadius.circular(12),
-                            color: Colors.grey.shade50,
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(Icons.access_time,
-                                  color: Colors.grey.shade600),
-                              const SizedBox(width: 12),
-                              Text(
-                                _selectedTime == null
-                                    ? 'Select preferred time'
-                                    : _selectedTime!.format(context),
-                                style: TextStyle(
-                                  color: _selectedTime == null
-                                      ? Colors.grey.shade600
-                                      : Colors.grey.shade800,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                      ReusableTimeInput(
+                        topLabel: 'Preferred Time',
+                        showIconOutline: true,
+                        hintText: 'HH:MM',
+                        suffixText: '24h format',
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a time';
+                          }
+                          return null;
+                        },
+                        onTimeChanged: (time) {
+                          _selectedTime=time;
+                        },
                       ),
                       const SizedBox(height: 24),
 
@@ -668,17 +647,6 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
     );
   }
 
-  Future<void> _selectTime() async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: const TimeOfDay(hour: 9, minute: 0),
-    );
-    if (picked != null && picked != _selectedTime) {
-      setState(() {
-        _selectedTime = picked;
-      });
-    }
-  }
 
   Future<void> _submitOrder() async {
     if (_selectedDateController.text.isEmpty) {

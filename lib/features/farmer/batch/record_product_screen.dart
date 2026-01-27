@@ -2,6 +2,7 @@ import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
+import 'package:agriflock360/core/widgets/reusable_time_input.dart';
 import 'package:agriflock360/features/farmer/batch/model/product_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/batch_mgt_repo.dart';
 import 'package:flutter/material.dart';
@@ -51,15 +52,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
   }
 
 
-  Future<void> _selectTime() async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: _selectedTime,
-    );
-    if (picked != null) {
-      setState(() => _selectedTime = picked);
-    }
-  }
+
 
   Future<void> _saveRecord() async {
     if (!_formKey.currentState!.validate()) {
@@ -328,15 +321,8 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
               const SizedBox(height: 32),
 
               // Product Type
-              Text(
-                'Product Type',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
               ReusableDropdown<String>(
+                topLabel: 'Product Type',
                 value: _selectedProductType,
                icon: Icons.category,
                 items: _productTypes.map((type) {
@@ -361,6 +347,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
               if (_selectedProductType == 'eggs') ...[
                 ReusableInput(
                   controller: _quantityController,
+                  topLabel: 'Number of Eggs Collected',
                   labelText: 'Number of Eggs Collected',
                   hintText: 'e.g., 245',
                   keyboardType: TextInputType.number,
@@ -369,6 +356,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
                 ),
                 const SizedBox(height: 20),
                 ReusableInput(
+                  topLabel: 'Cracked or Broken Eggs',
                   controller: _crackedEggsController,
                   labelText: 'Cracked or Broken Eggs',
                   hintText: 'e.g., 5',
@@ -381,6 +369,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
               if (_selectedProductType == 'meat') ...[
                 ReusableInput(
                   controller: _quantityController,
+                  topLabel: 'Number of Birds Sold',
                   labelText: 'Number of Birds Sold',
                   hintText: 'e.g., 12',
                   keyboardType: TextInputType.number,
@@ -390,6 +379,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
                 const SizedBox(height: 20),
                 ReusableInput(
                   controller: _weightController,
+                  topLabel: 'Total Weight (kg)',
                   labelText: 'Total Weight (kg) - Optional',
                   hintText: 'e.g., 28.5',
                   keyboardType: const TextInputType.numberWithOptions(
@@ -403,6 +393,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
               if (_selectedProductType == 'other') ...[
                 ReusableInput(
                   controller: _quantityController,
+                  topLabel: 'Quantity',
                   labelText: 'Quantity',
                   hintText: 'e.g., 50',
                   keyboardType: const TextInputType.numberWithOptions(
@@ -419,6 +410,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
               // Price (common for all types)
               ReusableInput(
                 controller: _priceController,
+                topLabel: 'Price per Unit',
                 labelText: 'Price per Unit',
                 hintText: 'e.g., 10.50',
                 keyboardType: const TextInputType.numberWithOptions(
@@ -443,14 +435,22 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
                     controller: _selectedDateController,
                   ),
                   const SizedBox(height: 12),
-                  InkWell(
-                    onTap: _selectTime,
-                    child: _dateTimeTile(
-                      icon: Icons.access_time,
-                      label: 'Time',
-                      value: _selectedTime.format(context),
-                    ),
-                  ),
+
+              ReusableTimeInput(
+                topLabel: 'Time',
+                showIconOutline: true,
+                hintText: 'HH:MM',
+                suffixText: '24h format',
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a time';
+                  }
+                  return null;
+                },
+                onTimeChanged: (time) {
+                  _selectedTime=time;
+                },
+              ),
 
 
               const SizedBox(height: 24),
@@ -458,6 +458,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
               // Notes
               ReusableInput(
                 controller: _notesController,
+                topLabel: 'Notes',
                 labelText: 'Notes (Optional)',
                 hintText: 'e.g., Grade A eggs, sold to local market...',
                 maxLines: 3,
@@ -485,38 +486,6 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
     }
   }
 
-  Widget _dateTimeTile({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade400),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.grey.shade600),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-              ),
-              Text(
-                value,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   void dispose() {

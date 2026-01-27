@@ -1,10 +1,10 @@
 import 'package:agriflock360/core/utils/api_error_handler.dart';
-import 'package:agriflock360/core/utils/date_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
+import 'package:agriflock360/core/widgets/reusable_time_input.dart';
 import 'package:agriflock360/features/farmer/batch/model/feeding_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/feeding_repo.dart';
 import 'package:flutter/material.dart';
@@ -236,7 +236,7 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
 
     // Check if there are any recommendations
     final hasCurrentRec = currentRec != null &&
-        (currentRec.stageName != null && currentRec.stageName!.isNotEmpty);
+        (currentRec.stageName.isNotEmpty);
 
     final hasAllRecs = allRecs != null && allRecs.isNotEmpty;
 
@@ -291,7 +291,7 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
   }
 
   Widget _buildCurrentRecommendationCard() {
-    final currentRec = _recommendations!.currentRecommendation!;
+    final currentRec = _recommendations!.currentRecommendation;
 
     return Card(
       elevation: 0,
@@ -333,7 +333,7 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
             if (currentRec.feedType.isNotEmpty)
               _buildRecommendationRow(
                 label: 'Recommended Feed',
-                value: currentRec.feedType!,
+                value: currentRec.feedType,
                 icon: Icons.restaurant,
                 color: Colors.green,
               ),
@@ -378,7 +378,7 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
                   Wrap(
                     spacing: 6,
                     runSpacing: 4,
-                    children: currentRec.feedingTimes!.slots!
+                    children: currentRec.feedingTimes.slots
                         .map((time) => Chip(
                       label: Text(
                         time,
@@ -398,7 +398,7 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
   }
 
   Widget _buildAllRecommendationsCard() {
-    final allRecs = _recommendations!.allRecommendations!;
+    final allRecs = _recommendations!.allRecommendations;
 
     return Card(
       elevation: 0,
@@ -589,15 +589,21 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
           controller: _selectedDateController,
         ),
         const SizedBox(height: 12),
-        InkWell(
-          onTap: _selectTime,
-          child: _dateTimeTile(
-            icon: Icons.access_time,
-            label: 'Time',
-            value: _selectedTime.format(context),
-          ),
+        ReusableTimeInput(
+          topLabel: 'Feeding Time',
+          showIconOutline: true,
+          hintText: 'HH:MM',
+          suffixText: '24h format',
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please enter a time';
+            }
+            return null;
+          },
+          onTimeChanged: (time) {
+            _selectedTime=time;
+          },
         ),
-
         const SizedBox(height: 20),
 
         ReusableInput(
@@ -669,48 +675,10 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
           labelText: 'Current Average Weight (kg)',
         ),
         const SizedBox(height: 20),
-        // ReusableInput(
-        //   controller: _expectedWeightController,
-        //   keyboardType: TextInputType.number,
-        //   hintText: 'e.g., 330',
-        //   labelText: 'Expected Weight (kg)',
-        // ),
       ],
     );
   }
 
-  Widget _dateTimeTile({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade400),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.grey.shade600),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-              ),
-              Text(
-                value,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildSummaryCard() {
     return Card(
@@ -750,15 +718,6 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
     );
   }
 
-  Future<void> _selectTime() async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: _selectedTime,
-    );
-    if (picked != null) {
-      setState(() => _selectedTime = picked);
-    }
-  }
 
   Future<void> _logFeeding() async {
     if (_formKey.currentState!.validate()) {

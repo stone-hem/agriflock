@@ -1,6 +1,8 @@
 import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
+import 'package:agriflock360/core/widgets/reusable_time_input.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:agriflock360/core/utils/date_util.dart';
@@ -19,21 +21,23 @@ class UpdateVaccinationStatusScreen extends StatefulWidget {
   });
 
   @override
-  State<UpdateVaccinationStatusScreen> createState() => _UpdateVaccinationStatusScreenState();
+  State<UpdateVaccinationStatusScreen> createState() =>
+      _UpdateVaccinationStatusScreenState();
 }
 
-class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusScreen> {
+class _UpdateVaccinationStatusScreenState
+    extends State<UpdateVaccinationStatusScreen> {
   final _repository = VaccinationRepository();
   final _notesController = TextEditingController();
   final _administeredByController = TextEditingController();
   final _rescheduleReasonController = TextEditingController();
+  final _actualDateController = TextEditingController();
+  final _rescheduleDateController = TextEditingController();
 
   String? _selectedOutcome;
-  DateTime? _actualDate;
   TimeOfDay? _actualTime;
   String? _selectedFailureReason;
   String? _selectedCancellationReason;
-  DateTime? _newScheduledDate;
   TimeOfDay? _newScheduledTime;
   bool _rescheduleAfterFailure = true;
   int? _birdsVaccinated;
@@ -49,7 +53,7 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
     'weather_conditions',
     'equipment_failure',
     'adverse_reaction',
-    'other'
+    'other',
   ];
 
   final Map<String, String> _failureReasonDisplay = {
@@ -59,7 +63,7 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
     'weather_conditions': 'Weather conditions',
     'equipment_failure': 'Equipment failure',
     'adverse_reaction': 'Adverse reaction',
-    'other': 'Other'
+    'other': 'Other',
   };
 
   final List<String> _cancellationReasons = [
@@ -67,7 +71,7 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
     'animal_sold',
     'animal_died',
     'vet_instruction_changed',
-    'other'
+    'other',
   ];
 
   final Map<String, String> _cancellationReasonDisplay = {
@@ -75,7 +79,7 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
     'animal_sold': 'Animal sold',
     'animal_died': 'Animal died',
     'vet_instruction_changed': 'Vet instruction changed',
-    'other': 'Other'
+    'other': 'Other',
   };
 
   @override
@@ -101,26 +105,26 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
         actions: [
           _isSubmitting
               ? Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.green,
-              ),
-            ),
-          )
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.green,
+                    ),
+                  ),
+                )
               : TextButton(
-            onPressed: _canSubmit() ? _submitStatus : null,
-            child: Text(
-              'Submit',
-              style: TextStyle(
-                color: _canSubmit() ? Colors.green : Colors.grey,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
+                  onPressed: _canSubmit() ? _submitStatus : null,
+                  child: Text(
+                    'Submit',
+                    style: TextStyle(
+                      color: _canSubmit() ? Colors.green : Colors.grey,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
         ],
       ),
       body: SingleChildScrollView(
@@ -134,7 +138,9 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
                 side: BorderSide(
-                  color: widget.vaccination.isOverdue ? Colors.red.shade200 : Colors.blue.shade200,
+                  color: widget.vaccination.isOverdue
+                      ? Colors.red.shade200
+                      : Colors.blue.shade200,
                 ),
               ),
               child: Padding(
@@ -145,8 +151,12 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
                     Row(
                       children: [
                         Icon(
-                          widget.vaccination.isOverdue ? Icons.warning : Icons.medical_services,
-                          color: widget.vaccination.isOverdue ? Colors.red.shade600 : Colors.blue.shade600,
+                          widget.vaccination.isOverdue
+                              ? Icons.warning
+                              : Icons.medical_services,
+                          color: widget.vaccination.isOverdue
+                              ? Colors.red.shade600
+                              : Colors.blue.shade600,
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -160,16 +170,18 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
                                   fontSize: 16,
                                 ),
                               ),
-                              if(widget.vaccination.scheduledDate != null)
+                              if (widget.vaccination.scheduledDate != null)
                                 Text(
-                                widget.vaccination.isOverdue
-                                    ? 'Overdue: ${widget.vaccination.scheduledDate}'
-                                    : 'Scheduled: ${DateUtil.toDateWithDay(widget.vaccination.scheduledDate!)}',
-                                style: TextStyle(
-                                  color: widget.vaccination.isOverdue ? Colors.red.shade700 : Colors.grey.shade600,
-                                  fontSize: 14,
+                                  widget.vaccination.isOverdue
+                                      ? 'Overdue: ${widget.vaccination.scheduledDate}'
+                                      : 'Scheduled: ${DateUtil.toDateWithDay(widget.vaccination.scheduledDate!)}',
+                                  style: TextStyle(
+                                    color: widget.vaccination.isOverdue
+                                        ? Colors.red.shade700
+                                        : Colors.grey.shade600,
+                                    fontSize: 14,
+                                  ),
                                 ),
-                              ),
                             ],
                           ),
                         ),
@@ -185,7 +197,11 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.info_outline, size: 16, color: Colors.red.shade700),
+                            Icon(
+                              Icons.info_outline,
+                              size: 16,
+                              color: Colors.red.shade700,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
@@ -286,13 +302,14 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
                 child: Text(
                   outcome,
                   style: TextStyle(
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
                     fontSize: 16,
                   ),
                 ),
               ),
-              if (isSelected)
-                Icon(Icons.check, color: color),
+              if (isSelected) Icon(Icons.check, color: color),
             ],
           ),
         ),
@@ -314,66 +331,27 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
         const SizedBox(height: 12),
 
         // Actual Date
-        Text('Actual Date', style: TextStyle(fontWeight: FontWeight.w500)),
-        const SizedBox(height: 8),
-        InkWell(
-          onTap: _selectActualDate,
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade400),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.calendar_today, color: Colors.grey.shade600),
-                const SizedBox(width: 12),
-                Text(
-                  _actualDate == null
-                      ? 'Select actual date (default: today)'
-                      : '${_actualDate!.day}/${_actualDate!.month}/${_actualDate!.year}',
-                  style: TextStyle(
-                    color: _actualDate == null
-                        ? Colors.grey.shade600
-                        : Colors.grey.shade800,
-                  ),
-                ),
-              ],
-            ),
-          ),
+        CustomDateTextField(
+          label: 'Date & Time',
+          icon: Icons.calendar_today,
+          required: true,
+          minYear: DateTime.now().year - 1,
+          initialDate: DateTime.now(),
+          returnFormat: DateReturnFormat.isoString,
+          maxYear: DateTime.now().year,
+          controller: _actualDateController,
         ),
         const SizedBox(height: 16),
 
         // Actual Time
-        Text('Actual Time (Optional)', style: TextStyle(fontWeight: FontWeight.w500)),
-        const SizedBox(height: 8),
-        InkWell(
-          onTap: _selectActualTime,
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade400),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.access_time, color: Colors.grey.shade600),
-                const SizedBox(width: 12),
-                Text(
-                  _actualTime == null
-                      ? 'Select actual time'
-                      : _actualTime!.format(context),
-                  style: TextStyle(
-                    color: _actualTime == null
-                        ? Colors.grey.shade600
-                        : Colors.grey.shade800,
-                  ),
-                ),
-              ],
-            ),
-          ),
+        ReusableTimeInput(
+          topLabel: 'Actual Time (Optional)',
+          showIconOutline: true,
+          hintText: 'HH:MM',
+          suffixText: '24h format',
+          onTimeChanged: (time) {
+            _actualTime = time;
+          },
         ),
         const SizedBox(height: 16),
 
@@ -394,7 +372,10 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
         const SizedBox(height: 16),
 
         // Administered By
-        Text('Administered By (Optional)', style: TextStyle(fontWeight: FontWeight.w500)),
+        Text(
+          'Administered By (Optional)',
+          style: TextStyle(fontWeight: FontWeight.w500),
+        ),
         const SizedBox(height: 8),
         ReusableInput(
           controller: _administeredByController,
@@ -449,14 +430,17 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
 
         // Reschedule Option
         SwitchListTile(
-          title: Text('Reschedule after failure',
-              style: TextStyle(fontWeight: FontWeight.w500)),
+          title: Text(
+            'Reschedule after failure',
+            style: TextStyle(fontWeight: FontWeight.w500),
+          ),
           subtitle: Text('Schedule a new date for this vaccination'),
           value: _rescheduleAfterFailure,
           activeThumbColor: Colors.orange,
           onChanged: (value) {
             setState(() {
               _rescheduleAfterFailure = value;
+              _rescheduleDateController.text = '';
             });
           },
         ),
@@ -464,73 +448,37 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
         if (_rescheduleAfterFailure) ...[
           const SizedBox(height: 16),
           // New Date
-          Text('New Scheduled Date', style: TextStyle(fontWeight: FontWeight.w500)),
-          const SizedBox(height: 8),
-          InkWell(
-            onTap: _selectNewScheduledDate,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade400),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.calendar_today, color: Colors.grey.shade600),
-                  const SizedBox(width: 12),
-                  Text(
-                    _newScheduledDate == null
-                        ? 'Select new date (default: 14 days from now)'
-                        : '${_newScheduledDate!.day}/${_newScheduledDate!.month}/${_newScheduledDate!.year}',
-                    style: TextStyle(
-                      color: _newScheduledDate == null
-                          ? Colors.grey.shade600
-                          : Colors.grey.shade800,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          CustomDateTextField(
+            label: 'New Scheduled Date',
+            icon: Icons.calendar_today,
+            required: true,
+            minYear: DateTime.now().year - 1,
+            initialDate: DateTime.now(),
+            returnFormat: DateReturnFormat.isoString,
+            maxYear: DateTime.now().year,
+            controller: _rescheduleDateController,
           ),
           const SizedBox(height: 16),
 
           // New Time
-          Text('New Scheduled Time (Optional)', style: TextStyle(fontWeight: FontWeight.w500)),
-          const SizedBox(height: 8),
-          InkWell(
-            onTap: _selectNewScheduledTime,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade400),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.access_time, color: Colors.grey.shade600),
-                  const SizedBox(width: 12),
-                  Text(
-                    _newScheduledTime == null
-                        ? 'Select new time (default: 09:00)'
-                        : _newScheduledTime!.format(context),
-                    style: TextStyle(
-                      color: _newScheduledTime == null
-                          ? Colors.grey.shade600
-                          : Colors.grey.shade800,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          ReusableTimeInput(
+            topLabel: 'New Scheduled Time (Optional)',
+            showIconOutline: true,
+            hintText: 'HH:MM',
+            suffixText: '24h format',
+            onTimeChanged: (time) {
+              _newScheduledTime = time;
+            },
           ),
         ],
 
         const SizedBox(height: 16),
 
         // Notes
-        Text('Additional Notes (Optional)', style: TextStyle(fontWeight: FontWeight.w500)),
+        Text(
+          'Additional Notes (Optional)',
+          style: TextStyle(fontWeight: FontWeight.w500),
+        ),
         const SizedBox(height: 8),
         ReusableInput(
           controller: _notesController,
@@ -555,7 +503,10 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
         const SizedBox(height: 12),
 
         // Cancellation Reason
-        Text('Cancellation Reason', style: TextStyle(fontWeight: FontWeight.w500)),
+        Text(
+          'Cancellation Reason',
+          style: TextStyle(fontWeight: FontWeight.w500),
+        ),
         const SizedBox(height: 8),
         ReusableDropdown<String>(
           value: _selectedCancellationReason,
@@ -575,7 +526,10 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
         const SizedBox(height: 16),
 
         // Notes
-        Text('Additional Notes (Optional)', style: TextStyle(fontWeight: FontWeight.w500)),
+        Text(
+          'Additional Notes (Optional)',
+          style: TextStyle(fontWeight: FontWeight.w500),
+        ),
         const SizedBox(height: 8),
         ReusableInput(
           controller: _notesController,
@@ -625,71 +579,35 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
         const SizedBox(height: 12),
 
         // New Date
-        Text('New Scheduled Date', style: TextStyle(fontWeight: FontWeight.w500)),
-        const SizedBox(height: 8),
-        InkWell(
-          onTap: _selectNewScheduledDate,
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade400),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.calendar_today, color: Colors.grey.shade600),
-                const SizedBox(width: 12),
-                Text(
-                  _newScheduledDate == null
-                      ? 'Select new date'
-                      : '${_newScheduledDate!.day}/${_newScheduledDate!.month}/${_newScheduledDate!.year}',
-                  style: TextStyle(
-                    color: _newScheduledDate == null
-                        ? Colors.grey.shade600
-                        : Colors.grey.shade800,
-                  ),
-                ),
-              ],
-            ),
-          ),
+        CustomDateTextField(
+          label: 'New Scheduled Date',
+          icon: Icons.calendar_today,
+          required: true,
+          minYear: DateTime.now().year - 1,
+          initialDate: DateTime.now(),
+          returnFormat: DateReturnFormat.isoString,
+          maxYear: DateTime.now().year,
+          controller: _rescheduleDateController,
         ),
         const SizedBox(height: 16),
 
         // New Time
-        Text('New Scheduled Time (Optional)', style: TextStyle(fontWeight: FontWeight.w500)),
-        const SizedBox(height: 8),
-        InkWell(
-          onTap: _selectNewScheduledTime,
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade400),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.access_time, color: Colors.grey.shade600),
-                const SizedBox(width: 12),
-                Text(
-                  _newScheduledTime == null
-                      ? 'Select new time (default: 09:00)'
-                      : _newScheduledTime!.format(context),
-                  style: TextStyle(
-                    color: _newScheduledTime == null
-                        ? Colors.grey.shade600
-                        : Colors.grey.shade800,
-                  ),
-                ),
-              ],
-            ),
-          ),
+        ReusableTimeInput(
+          topLabel: 'New Scheduled Time (Optional)',
+          showIconOutline: true,
+          hintText: 'HH:MM',
+          suffixText: '24h format',
+          onTimeChanged: (time) {
+            _newScheduledTime = time;
+          },
         ),
         const SizedBox(height: 16),
 
         // Reschedule Reason
-        Text('Reschedule Reason (Optional)', style: TextStyle(fontWeight: FontWeight.w500)),
+        Text(
+          'Reschedule Reason (Optional)',
+          style: TextStyle(fontWeight: FontWeight.w500),
+        ),
         const SizedBox(height: 8),
         ReusableInput(
           controller: _rescheduleReasonController,
@@ -699,7 +617,10 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
         const SizedBox(height: 16),
 
         // Additional Notes
-        Text('Additional Notes (Optional)', style: TextStyle(fontWeight: FontWeight.w500)),
+        Text(
+          'Additional Notes (Optional)',
+          style: TextStyle(fontWeight: FontWeight.w500),
+        ),
         const SizedBox(height: 8),
         ReusableInput(
           controller: _notesController,
@@ -717,63 +638,11 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
       case 'Failed':
         return _selectedFailureReason != null;
       case 'Rescheduled':
-        return _newScheduledDate != null;
+        return _rescheduleDateController.text.isNotEmpty;
       case 'Canceled':
         return _selectedCancellationReason != null;
       default:
         return true;
-    }
-  }
-
-  Future<void> _selectActualDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null) {
-      setState(() {
-        _actualDate = picked;
-      });
-    }
-  }
-
-  Future<void> _selectActualTime() async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-    if (picked != null) {
-      setState(() {
-        _actualTime = picked;
-      });
-    }
-  }
-
-  Future<void> _selectNewScheduledDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now().add(Duration(days: _selectedOutcome == 'Failed' ? 14 : 1)),
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2030),
-    );
-    if (picked != null) {
-      setState(() {
-        _newScheduledDate = picked;
-      });
-    }
-  }
-
-  Future<void> _selectNewScheduledTime() async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay(hour: 9, minute: 0), // Default to 09:00
-    );
-    if (picked != null) {
-      setState(() {
-        _newScheduledTime = picked;
-      });
     }
   }
 
@@ -795,7 +664,7 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
 
       switch (result) {
         case Success<Vaccination>(data: final data):
-        // Show success message
+          // Show success message
           _showSuccessMessage();
 
           // Navigate back with success indicator
@@ -803,7 +672,10 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
             context.pop(true);
           }
 
-        case Failure<Vaccination>(message: final e, statusCode: final statusCode):
+        case Failure<Vaccination>(
+          message: final e,
+          statusCode: final statusCode,
+        ):
           _showErrorMessage('$e (Status: $statusCode)');
       }
     } catch (e) {
@@ -822,9 +694,7 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
 
     switch (_selectedOutcome) {
       case 'Done':
-        final actualDate = _actualDate != null
-            ? DateUtil.toISO8601(_actualDate!)
-            : DateUtil.toISO8601(DateTime.now());
+        final actualDate = _actualDateController.text;
 
         final actualTime = _actualTime != null
             ? '${_actualTime!.hour.toString().padLeft(2, '0')}:${_actualTime!.minute.toString().padLeft(2, '0')}'
@@ -838,14 +708,18 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
           administeredBy: _administeredByController.text.isNotEmpty
               ? _administeredByController.text
               : null,
-          notes: _notesController.text.isNotEmpty ? _notesController.text : null,
+          notes: _notesController.text.isNotEmpty
+              ? _notesController.text
+              : null,
         );
 
       case 'Failed':
-      // Prepare new scheduled date (default 14 days from now)
+        // Prepare new scheduled date (default 14 days from now)
         DateTime newDate;
-        if (_newScheduledDate != null) {
-          newDate = _newScheduledDate!;
+        if (_rescheduleDateController.text.isNotEmpty) {
+          newDate = _rescheduleDateController.text.isNotEmpty
+              ? DateTime.parse(_rescheduleDateController.text)
+              : DateTime.now();
         } else {
           newDate = DateTime.now().add(const Duration(days: 14));
         }
@@ -854,7 +728,8 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
             ? DateUtil.toISO8601(newDate)
             : null;
 
-        final newScheduledTime = _rescheduleAfterFailure && _newScheduledTime != null
+        final newScheduledTime =
+            _rescheduleAfterFailure && _newScheduledTime != null
             ? '${_newScheduledTime!.hour.toString().padLeft(2, '0')}:${_newScheduledTime!.minute.toString().padLeft(2, '0')}'
             : _rescheduleAfterFailure
             ? '09:00' // Default time
@@ -863,7 +738,9 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
         return UpdateVaccinationStatusRequest(
           status: status,
           failureReason: _selectedFailureReason,
-          notes: _notesController.text.isNotEmpty ? _notesController.text : null,
+          notes: _notesController.text.isNotEmpty
+              ? _notesController.text
+              : null,
           rescheduleAfterFailure: _rescheduleAfterFailure,
           newScheduledDate: newScheduledDate,
           newScheduledTime: newScheduledTime,
@@ -873,12 +750,15 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
         return UpdateVaccinationStatusRequest(
           status: status,
           cancellationReason: _selectedCancellationReason,
-          notes: _notesController.text.isNotEmpty ? _notesController.text : null,
+          notes: _notesController.text.isNotEmpty
+              ? _notesController.text
+              : null,
         );
 
       case 'Rescheduled':
-        final newDate = _newScheduledDate ??
-            DateTime.now().add(const Duration(days: 1));
+        final newDate = _rescheduleDateController.text.isNotEmpty
+            ? DateTime.parse(_rescheduleDateController.text)
+            : DateTime.now().add(const Duration(days: 1));
         final newScheduledDate = DateUtil.toISO8601(newDate);
 
         final newScheduledTime = _newScheduledTime != null
@@ -886,13 +766,16 @@ class _UpdateVaccinationStatusScreenState extends State<UpdateVaccinationStatusS
             : '09:00';
 
         return UpdateVaccinationStatusRequest(
-          status: 'scheduled', // When rescheduling, status goes back to scheduled
+          status:
+              'scheduled', // When rescheduling, status goes back to scheduled
           newScheduledDate: newScheduledDate,
           newScheduledTime: newScheduledTime,
           rescheduleReason: _rescheduleReasonController.text.isNotEmpty
               ? _rescheduleReasonController.text
               : null,
-          notes: _notesController.text.isNotEmpty ? _notesController.text : null,
+          notes: _notesController.text.isNotEmpty
+              ? _notesController.text
+              : null,
         );
 
       default:
