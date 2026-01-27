@@ -134,7 +134,7 @@ class ReusableInput extends StatelessWidget {
             ),
             contentPadding: EdgeInsets.symmetric(
               horizontal: icon != null ? 16 : 10,
-              vertical: 16,
+              vertical: 12,
               // Adjust left padding when there's no icon
             ),
             floatingLabelBehavior: FloatingLabelBehavior.auto,

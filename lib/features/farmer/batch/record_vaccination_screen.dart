@@ -129,12 +129,19 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: TabBar(
               controller: _tabController,
-              indicatorSize: TabBarIndicatorSize.tab,
+              isScrollable: true,
+              tabAlignment: TabAlignment.start,
+              indicatorSize: TabBarIndicatorSize.label,
               indicator: BoxDecoration(
-                color: Colors.green,
+                color: Colors.green.shade50, // Light green background
                 borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Colors.green, // Green border for active
+                  width: 1.5,
+                ),
               ),
-              labelColor: Colors.white,
+              labelColor: Colors.green.shade700,
+              labelPadding: const EdgeInsets.symmetric(horizontal: 4),
               unselectedLabelColor: Colors.grey.shade600,
               labelStyle: const TextStyle(
                 fontSize: 11,
@@ -150,28 +157,8 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
               splashFactory: NoSplash.splashFactory,
               overlayColor: WidgetStateProperty.all(Colors.transparent),
               tabs: [
-                Tab(
-                  height: 36,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.calendar_today, size: 16),
-                      SizedBox(width: 4),
-                      Text('Schedule'),
-                    ],
-                  ),
-                ),
-                Tab(
-                  height: 36,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.check_circle, size: 16),
-                      SizedBox(width: 4),
-                      Text('Quick Record'),
-                    ],
-                  ),
-                ),
+                _buildTab(Icons.calendar_today, 'Schedule New', false),
+                _buildTab(Icons.check_circle, 'Quick Record', false)
               ],
             ),
           ),
@@ -360,8 +347,7 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
             ReusableTimeInput(
               topLabel: 'Scheduled Time',
               showIconOutline: true,
-              hintText: 'HH:MM',
-              suffixText: '24h format',
+              suffixText: '12 hr format',
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter a time';
@@ -571,7 +557,7 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
             Row(
               children: [
                 Expanded(
-                  flex: 3,
+                  flex: 2,
                   child: ReusableInput(
                     topLabel: 'Dosage',
                     controller: _dosageAmountController,
@@ -591,7 +577,7 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  flex: 2,
+                  flex: 3,
                   child: ReusableDropdown<String>(
                     value: _selectedDosageUnit,
                     topLabel: 'Unit used',
@@ -654,8 +640,7 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
             ReusableTimeInput(
               topLabel: 'Completion Time',
               showIconOutline: true,
-              hintText: 'HH:MM',
-              suffixText: '24h format',
+              suffixText: '!2 hr format',
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter a time';
@@ -759,6 +744,29 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTab(IconData icon, String label, bool isActive) {
+    return Container(
+      height: 36,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: Colors.grey.shade300, // Grey border for inactive
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 16),
+          const SizedBox(width: 4),
+          Text(label),
+        ],
       ),
     );
   }

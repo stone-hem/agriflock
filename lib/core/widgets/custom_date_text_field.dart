@@ -236,10 +236,10 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
       children: [
         Text(
           widget.label,
-          style: const TextStyle(
-            fontSize: 16,
+          style: TextStyle(
+            fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: Colors.black87,
+            color: Colors.grey.shade800,
           ),
         ),
         const SizedBox(height: 8),
@@ -254,9 +254,18 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
-              Icon(
-                widget.icon,
-                color: _errorText != null ? Colors.red : Colors.green,
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration:BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                )
+                    ,
+                child: Icon(
+                  widget.icon,
+                  color: _errorText != null ? Colors.red : Colors.green,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -273,12 +282,23 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
                   ],
                   style: const TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                   ),
-                  decoration: const InputDecoration(
+                  decoration:  InputDecoration(
                     hintText: 'DD',
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.zero,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.green.shade600, width: 2),
+                    ),
                     isDense: true,
                   ),
                   onChanged: (value) {
@@ -310,12 +330,23 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
                   ],
                   style: const TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                   ),
-                  decoration: const InputDecoration(
+                  decoration:  InputDecoration(
                     hintText: 'MM',
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.zero,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.green.shade600, width: 2),
+                    ),
                     isDense: true,
                   ),
                   onChanged: (value) {
@@ -346,12 +377,23 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
                   ],
                   style: const TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                   ),
-                  decoration: const InputDecoration(
+                  decoration:  InputDecoration(
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
                     hintText: 'YYYY',
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.zero,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.green.shade600, width: 2),
+                    ),
                     isDense: true,
                   ),
                 ),

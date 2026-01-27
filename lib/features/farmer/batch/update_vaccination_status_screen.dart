@@ -347,8 +347,7 @@ class _UpdateVaccinationStatusScreenState
         ReusableTimeInput(
           topLabel: 'Actual Time (Optional)',
           showIconOutline: true,
-          hintText: 'HH:MM',
-          suffixText: '24h format',
+          suffixText: '12 hr format',
           onTimeChanged: (time) {
             _actualTime = time;
           },
@@ -464,8 +463,7 @@ class _UpdateVaccinationStatusScreenState
           ReusableTimeInput(
             topLabel: 'New Scheduled Time (Optional)',
             showIconOutline: true,
-            hintText: 'HH:MM',
-            suffixText: '24h format',
+            suffixText: '12 hr format',
             onTimeChanged: (time) {
               _newScheduledTime = time;
             },
@@ -595,8 +593,7 @@ class _UpdateVaccinationStatusScreenState
         ReusableTimeInput(
           topLabel: 'New Scheduled Time (Optional)',
           showIconOutline: true,
-          hintText: 'HH:MM',
-          suffixText: '24h format',
+          suffixText: '12 hr format',
           onTimeChanged: (time) {
             _newScheduledTime = time;
           },

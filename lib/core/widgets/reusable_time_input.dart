@@ -1,39 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class ReusableTimeInput extends StatefulWidget {
   final TimeOfDay? initialTime;
   final ValueChanged<TimeOfDay>? onTimeChanged;
   final String? labelText;
-  final String? hintText;
   final String? errorText;
   final bool readOnly;
-  final TimePickerEntryMode initialEntryMode;
   final IconData? icon;
   final String? Function(String?)? validator;
-  final FocusNode? focusNode;
   final bool enabled;
   final String? topLabel;
   final bool showIconOutline;
   final Color? iconColor;
   final String? suffixText;
+  final bool use24HourFormat; // New parameter
 
   const ReusableTimeInput({
     super.key,
     this.initialTime,
     this.onTimeChanged,
     this.labelText,
-    this.hintText = 'HH:MM',
     this.errorText,
     this.readOnly = false,
-    this.initialEntryMode = TimePickerEntryMode.dial,
     this.icon,
     this.validator,
-    this.focusNode,
     this.enabled = true,
     this.topLabel,
     this.showIconOutline = false,
     this.iconColor,
     this.suffixText,
+    this.use24HourFormat = false, // Default to 12-hour format
   });
 
   @override
@@ -41,91 +38,99 @@ class ReusableTimeInput extends StatefulWidget {
 }
 
 class _ReusableTimeInputState extends State<ReusableTimeInput> {
-  late TextEditingController _textController;
-  late FocusNode _focusNode;
+  late TextEditingController _hourController;
+  late TextEditingController _minuteController;
+  late FocusNode _hourFocusNode;
+  late FocusNode _minuteFocusNode;
+
   TimeOfDay? _selectedTime;
+  String _selectedPeriod = 'AM'; // AM or PM
   String? _errorText;
 
   @override
   void initState() {
     super.initState();
     _selectedTime = widget.initialTime ?? TimeOfDay.now();
-    _textController = TextEditingController();
-    _focusNode = widget.focusNode ?? FocusNode();
 
-    // Initialize text if initial time is provided
-    if (_selectedTime != null) {
-      _textController.text = _formatTime(_selectedTime!);
-    }
+    _hourController = TextEditingController();
+    _minuteController = TextEditingController();
+    _hourFocusNode = FocusNode();
+    _minuteFocusNode = FocusNode();
 
-    // Listen to focus changes
-    _focusNode.addListener(() {
-      if (!_focusNode.hasFocus && _textController.text.isNotEmpty) {
-        _validateAndParseTime(_textController.text);
+    // Initialize controllers with initial time
+    _initializeFromTime(_selectedTime!);
+
+    // Auto-advance from hour to minute when 2 digits entered
+    _hourController.addListener(() {
+      if (_hourController.text.length == 2 && _hourFocusNode.hasFocus) {
+        _minuteFocusNode.requestFocus();
+      }
+    });
+
+    // Validate and update time when focus is lost
+    _hourFocusNode.addListener(() {
+      if (!_hourFocusNode.hasFocus) {
+        _validateAndUpdateTime();
+      }
+    });
+
+    _minuteFocusNode.addListener(() {
+      if (!_minuteFocusNode.hasFocus) {
+        _validateAndUpdateTime();
       }
     });
   }
 
+  void _initializeFromTime(TimeOfDay time) {
+    if (widget.use24HourFormat) {
+      _hourController.text = time.hour.toString().padLeft(2, '0');
+      _minuteController.text = time.minute.toString().padLeft(2, '0');
+    } else {
+      final hour12 = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
+      _hourController.text = hour12.toString().padLeft(2, '0');
+      _minuteController.text = time.minute.toString().padLeft(2, '0');
+      _selectedPeriod = time.period == DayPeriod.am ? 'AM' : 'PM';
+    }
+  }
+
   @override
   void dispose() {
-    _textController.dispose();
-    _focusNode.dispose();
+    _hourController.dispose();
+    _minuteController.dispose();
+    _hourFocusNode.dispose();
+    _minuteFocusNode.dispose();
     super.dispose();
   }
 
-  String _formatTime(TimeOfDay time) {
-    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
-  }
+  void _validateAndUpdateTime() {
+    final hourText = _hourController.text;
+    final minuteText = _minuteController.text;
 
-  void _selectTime() async {
-    // Hide keyboard if open
-    FocusScope.of(context).unfocus();
-
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: _selectedTime ?? TimeOfDay.now(),
-      initialEntryMode: widget.initialEntryMode,
-    );
-
-    if (picked != null) {
-      _updateTime(picked);
-    }
-  }
-
-  void _updateTime(TimeOfDay time) {
-    setState(() {
-      _selectedTime = time;
-      _textController.text = _formatTime(time);
-      _errorText = null;
-    });
-
-    widget.onTimeChanged?.call(time);
-  }
-
-  void _validateAndParseTime(String text) {
-    if (text.isEmpty) {
-      setState(() => _errorText = 'Please enter a time');
-      widget.onTimeChanged?.call(TimeOfDay.now()); // Default to current time
+    if (hourText.isEmpty || minuteText.isEmpty) {
+      setState(() => _errorText = 'Please enter both hour and minute');
       return;
     }
 
-    final parts = text.split(':');
-    if (parts.length != 2) {
-      setState(() => _errorText = 'Invalid time format (HH:MM)');
-      return;
-    }
-
-    final hour = int.tryParse(parts[0]);
-    final minute = int.tryParse(parts[1]);
+    final hour = int.tryParse(hourText);
+    final minute = int.tryParse(minuteText);
 
     if (hour == null || minute == null) {
       setState(() => _errorText = 'Please enter valid numbers');
       return;
     }
 
-    if (hour < 0 || hour > 23) {
-      setState(() => _errorText = 'Hour must be 0-23');
-      return;
+    if (widget.use24HourFormat) {
+      // 24-hour format validation
+      if (hour < 0 || hour > 23) {
+        setState(() => _errorText = 'Hour must be 0-23');
+        return;
+      }
+    } else {
+      // 12-hour format validation
+      if (hour < 1 || hour > 12) {
+        setState(() => _errorText = 'Hour must be 1-12');
+        return;
+      }
     }
 
     if (minute < 0 || minute > 59) {
@@ -133,8 +138,34 @@ class _ReusableTimeInputState extends State<ReusableTimeInput> {
       return;
     }
 
-    final newTime = TimeOfDay(hour: hour, minute: minute);
-    _updateTime(newTime);
+    // Convert to 24-hour format for TimeOfDay
+    int hour24;
+    if (widget.use24HourFormat) {
+      hour24 = hour;
+    } else {
+      if (_selectedPeriod == 'PM') {
+        hour24 = hour == 12 ? 12 : hour + 12;
+      } else {
+        hour24 = hour == 12 ? 0 : hour;
+      }
+    }
+
+    final newTime = TimeOfDay(hour: hour24, minute: minute);
+    setState(() {
+      _selectedTime = newTime;
+      _errorText = null;
+    });
+
+    widget.onTimeChanged?.call(newTime);
+  }
+
+  void _togglePeriod() {
+    if (!widget.enabled || widget.readOnly) return;
+
+    setState(() {
+      _selectedPeriod = _selectedPeriod == 'AM' ? 'PM' : 'AM';
+    });
+    _validateAndUpdateTime();
   }
 
   @override
@@ -155,81 +186,208 @@ class _ReusableTimeInputState extends State<ReusableTimeInput> {
           const SizedBox(height: 8),
         ],
 
-        // Time Input Field with InkWell
-        InkWell(
-          onTap: widget.enabled ? _selectTime : null,
-          borderRadius: BorderRadius.circular(12),
-          child: AbsorbPointer(
-            absorbing: widget.readOnly,
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: _errorText != null ? Colors.red.shade400 : Colors.grey.shade300,
-                  width: 1,
-                ),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  // Icon Container
-                  if (widget.icon != null || widget.showIconOutline) ...[
-                    Container(
-                      margin: const EdgeInsets.only(left: 12, right: 12),
-                      padding: const EdgeInsets.all(10),
-                      decoration: widget.showIconOutline
-                          ? BoxDecoration(
-                        color: Colors.green.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      )
-                          : null,
-                      child: Icon(
-                        widget.icon??Icons.access_time,
-                            color: widget.iconColor ?? Colors.green.shade600,
-                            size: 20,
-                          ),
+        // Time Input Container
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: _errorText != null ? Colors.red.shade400 : Colors.grey.shade300,
+              width: 1,
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              children: [
+                // Icon
+                if (widget.icon != null || widget.showIconOutline) ...[
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: widget.showIconOutline
+                        ? BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    )
+                        : null,
+                    child: Icon(
+                      widget.icon ?? Icons.access_time,
+                      color: widget.iconColor ?? Colors.green.shade600,
+                      size: 20,
                     ),
-                  ],
+                  ),
+                  const SizedBox(width: 12),
+                ],
 
-                  // Text Field
-                  Expanded(
-                    child: TextFormField(
-                      controller: _textController,
-                      focusNode: _focusNode,
-                      enabled: widget.enabled,
-                      readOnly: widget.readOnly,
-                      keyboardType: TextInputType.datetime,
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        labelText: widget.labelText,
-                        hintText: widget.hintText,
-                        errorText: _errorText ?? widget.errorText,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 16),
-                        suffixText: widget.suffixText,
-                        suffixIcon: widget.enabled
-                            ? IconButton(
-                          icon: const Icon(Icons.access_time),
-                          onPressed: _selectTime,
-                          color: Colors.grey.shade600,
-                        )
-                            : null,
+                // Label
+                if (widget.labelText != null) ...[
+                  Text(
+                    widget.labelText!,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                ],
+
+                const Spacer(),
+
+                // Hour Input
+                SizedBox(
+                  width: 45,
+                  child: TextField(
+                    controller: _hourController,
+                    focusNode: _hourFocusNode,
+                    enabled: widget.enabled,
+                    readOnly: widget.readOnly,
+                    textAlign: TextAlign.center,
+                    keyboardType: TextInputType.number,
+                    maxLength: 2,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    decoration: InputDecoration(
+                      counterText: '',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
                       ),
-                      onChanged: (value) {
-                        // Clear error when user types
-                        if (_errorText != null) {
-                          setState(() => _errorText = null);
-                        }
-                      },
-                      onFieldSubmitted: (value) {
-                        _validateAndParseTime(value);
-                      },
-                      validator: widget.validator,
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.green.shade600, width: 2),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                      hintText: 'HH',
+                      hintStyle: TextStyle(color: Colors.grey.shade400),
+                    ),
+                    onChanged: (value) {
+                      if (_errorText != null) {
+                        setState(() => _errorText = null);
+                      }
+                    },
+                  ),
+                ),
+
+                // Colon separator
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Text(
+                    ':',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                ),
+
+                // Minute Input
+                SizedBox(
+                  width: 45,
+                  child: TextField(
+                    controller: _minuteController,
+                    focusNode: _minuteFocusNode,
+                    enabled: widget.enabled,
+                    readOnly: widget.readOnly,
+                    textAlign: TextAlign.center,
+                    keyboardType: TextInputType.number,
+                    maxLength: 2,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    decoration: InputDecoration(
+                      counterText: '',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.green.shade600, width: 2),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                      hintText: 'MM',
+                      hintStyle: TextStyle(color: Colors.grey.shade400),
+                    ),
+                    onChanged: (value) {
+                      if (_errorText != null) {
+                        setState(() => _errorText = null);
+                      }
+                    },
+                  ),
+                ),
+
+                // AM/PM Toggle (only for 12-hour format)
+                if (!widget.use24HourFormat) ...[
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: _togglePeriod,
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        border: Border.all(color: Colors.green.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        _selectedPeriod,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.green.shade700,
+                        ),
+                      ),
                     ),
                   ),
                 ],
-              ),
+
+                // Suffix Text
+                if (widget.suffixText != null) ...[
+                  const SizedBox(width: 8),
+                  Text(
+                    widget.suffixText!,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ),
+
+        // Error Text
+        if (_errorText != null || widget.errorText != null) ...[
+          const SizedBox(height: 4),
+          Padding(
+            padding: const EdgeInsets.only(left: 12),
+            child: Text(
+              _errorText ?? widget.errorText!,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.red.shade600,
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }

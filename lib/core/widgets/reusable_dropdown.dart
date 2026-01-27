@@ -97,8 +97,8 @@ class ReusableDropdown<T> extends StatelessWidget {
                 topLabel!,
                 style: TextStyle(
                   fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey.shade700,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade800,
                 ),
               ),
             ],
@@ -108,10 +108,10 @@ class ReusableDropdown<T> extends StatelessWidget {
         if (labelText != null) ...[
           Text(
             labelText!,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Colors.black87,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade800,
             ),
           ),
           const SizedBox(height: 8),
@@ -210,8 +210,8 @@ class ReusableDropdownFormField<T> extends StatelessWidget {
                   topLabel!,
                   style: TextStyle(
                     fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey.shade700,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade800,
                   ),
                 ),
               ],
@@ -233,7 +233,7 @@ class ReusableDropdownFormField<T> extends StatelessWidget {
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButtonFormField<T>(
-              value: value,
+              initialValue: value,
               items: items,
               onChanged: enabled ? onChanged : null,
               validator: validator,

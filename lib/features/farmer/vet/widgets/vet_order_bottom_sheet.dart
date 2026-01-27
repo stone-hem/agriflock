@@ -145,8 +145,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                       ReusableTimeInput(
                         topLabel: 'Preferred Time',
                         showIconOutline: true,
-                        hintText: 'HH:MM',
-                        suffixText: '24h format',
+                        suffixText: '12 hr format',
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please enter a time';
