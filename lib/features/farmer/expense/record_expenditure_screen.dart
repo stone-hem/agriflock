@@ -2,6 +2,7 @@ import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/date_util.dart';
 import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
@@ -64,7 +65,6 @@ class _RecordExpenditureScreenState extends State<RecordExpenditureScreen> {
   final TextEditingController _supplierController = TextEditingController();
 
   bool _isSubmitting = false;
-  String? _submitErrorMessage;
 
   final List<String> _units = [
     'bag',
@@ -244,7 +244,6 @@ class _RecordExpenditureScreenState extends State<RecordExpenditureScreen> {
 
     setState(() {
       _isSubmitting = true;
-      _submitErrorMessage = null;
     });
 
 
@@ -280,16 +279,11 @@ class _RecordExpenditureScreenState extends State<RecordExpenditureScreen> {
           }
           break;
         case Failure(message: final error):
-          setState(() {
-            _submitErrorMessage = error;
-          });
           ApiErrorHandler.handle(error);
           break;
       }
     } catch (e) {
-      setState(() {
-        _submitErrorMessage = 'Failed to record expenditure: ${e.toString()}';
-      });
+      ToastUtil.showError('Failed to record expenditure: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -951,32 +945,7 @@ class _RecordExpenditureScreenState extends State<RecordExpenditureScreen> {
               ),
               const SizedBox(height: 24),
 
-              if (_submitErrorMessage != null)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.red.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.red.shade200),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.error_outline, color: Colors.red.shade600, size: 20),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          _submitErrorMessage!,
-                          style: TextStyle(
-                            color: Colors.red.shade600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+
 
               // Farm Selection (only if not passed from previous screen)
               _buildFarmDropdown(),
@@ -1096,6 +1065,7 @@ class _RecordExpenditureScreenState extends State<RecordExpenditureScreen> {
                 label: 'Date',
                 icon: Icons.calendar_today,
                 required: true,
+                initialDate: DateTime.now(),
                 minYear: DateTime.now().year - 1,
                 returnFormat: DateReturnFormat.isoString,
                 maxYear: DateTime.now().year,

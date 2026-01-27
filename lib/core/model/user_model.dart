@@ -61,6 +61,16 @@ class User {
   final String? deletedAt;
   final bool agreedToTerms;
   final String? agreedToTermsAt;
+  final String? nationalId;
+  final String? dateOfBirth;
+  final String? gender;
+  final String? poultryType;
+  final num? chickenHouseCapacity;
+  final num? yearsOfExperience;
+  final num? currentNumberOfChickens;
+  final String? preferredAgrovetName;
+  final String? preferredFeedCompany;
+
 
   User({
     required this.id,
@@ -88,6 +98,11 @@ class User {
     this.deletedAt,
     required this.agreedToTerms,
     this.agreedToTermsAt,
+    this.nationalId,
+    this.dateOfBirth,
+    this.gender,
+    this.poultryType,
+    this.chickenHouseCapacity, this.yearsOfExperience, this.currentNumberOfChickens, this.preferredAgrovetName, this.preferredFeedCompany,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -117,6 +132,16 @@ class User {
       deletedAt: json['deleted_at'],
       agreedToTerms: json['agreed_to_terms'] ?? false,
       agreedToTermsAt: json['agreed_to_terms_at'],
+      nationalId: json['national_id'],
+      dateOfBirth: json['date_of_birth'],
+      gender: json['gender'],
+      poultryType: json['poultry_type'],
+      chickenHouseCapacity: json['chicken_house_capacity'],
+      yearsOfExperience: json['years_of_experience'],
+      currentNumberOfChickens: json['current_number_of_chickens'],
+        preferredAgrovetName: json['preferred_agrovet_name'],
+        preferredFeedCompany: json['preferred_feed_company'],
+
     );
   }
 
@@ -147,6 +172,15 @@ class User {
       'deleted_at': deletedAt,
       'agreed_to_terms': agreedToTerms,
       'agreed_to_terms_at': agreedToTermsAt,
+      'national_id': nationalId,
+      'date_of_birth': dateOfBirth,
+      'gender': gender,
+      'poultry_type': poultryType,
+      'chicken_house_capacity': chickenHouseCapacity,
+      'years_of_experience': yearsOfExperience,
+      'current_number_of_chickens': currentNumberOfChickens,
+      'preferred_agrovet_name': preferredAgrovetName,
+      'preferred_feed_company': preferredFeedCompany,
     };
   }
 }

@@ -1,12 +1,15 @@
 // features/profile/update_profile_screen.dart
 
+import 'package:agriflock360/core/model/user_model.dart';
 import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/core/widgets/location_picker_step.dart';
 import 'package:agriflock360/features/auth/shared/auth_text_field.dart';
 import 'package:agriflock360/features/farmer/profile/models/profile_model.dart';
 import 'package:agriflock360/features/farmer/profile/repo/profile_repository.dart';
+import 'package:agriflock360/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -25,6 +28,7 @@ class UpdateProfileScreen extends StatefulWidget {
 }
 
 class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
+  final SecureStorage _secureStorage = SecureStorage();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   bool _isFetching = true;
@@ -108,34 +112,106 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
       _isLoading = true;
     });
 
-    final request = UpdateProfileRequest(
-      fullName: _fullNameController.text.trim(),
-      phoneNumber: _phoneNumberController.text.trim(),
-      location: Location(
-        address: _selectedAddress!,
-        latitude: _latitude!,
-        longitude: _longitude!,
-      ),
-      yearsOfExperience: int.tryParse(_yearsOfExperienceController.text) ?? 0,
-      poultryType: _selectedPoultryType!,
-      chickenHouseCapacity: int.tryParse(_chickenHouseCapacityController.text) ?? 0,
-      currentNumberOfChickens: int.tryParse(_currentChickensController.text) ?? 0,
-      preferredAgrovetName: _preferredAgrovetController.text.trim(),
-      preferredFeedCompany: _preferredFeedCompanyController.text.trim(),
-    );
+    try {
+      // First, get current user data from secure storage
+      final currentUser = await _secureStorage.getUserData();
+      if (currentUser == null) {
+        ToastUtil.showError('User session expired. Please login again.');
+        setState(() { _isLoading = false; });
+        apiClient.logout();
+        return;
+      }
 
-    final result = await widget.profileRepository.updateProfile(request);
+      final request = UpdateProfileRequest(
+        fullName: _fullNameController.text.trim(),
+        phoneNumber: _phoneNumberController.text.trim(),
+        location: Location(
+          address: _selectedAddress!,
+          latitude: _latitude!,
+          longitude: _longitude!,
+        ),
+        yearsOfExperience: int.tryParse(_yearsOfExperienceController.text) ?? 0,
+        poultryType: _selectedPoultryType!,
+        chickenHouseCapacity: int.tryParse(_chickenHouseCapacityController.text) ?? 0,
+        currentNumberOfChickens: int.tryParse(_currentChickensController.text) ?? 0,
+        preferredAgrovetName: _preferredAgrovetController.text.trim(),
+        preferredFeedCompany: _preferredFeedCompanyController.text.trim(),
+      );
 
-    setState(() {
-      _isLoading = false;
-    });
+      final result = await widget.profileRepository.updateProfile(request);
 
-    switch(result) {
-      case Success<ProfileData>():
-        ToastUtil.showSuccess('Profile updated successfully');
-        context.pop(); // Go back to previous screen
-      case Failure<ProfileData>(message:final msg):
-        ToastUtil.showError('Failed to update profile: $msg');
+      setState(() {
+        _isLoading = false;
+      });
+
+      switch(result) {
+        case Success<ProfileData>(data:final profileData):
+        // Update user in secure storage with new profile data
+          await _updateSecureStorageUser(currentUser, profileData);
+
+          ToastUtil.showSuccess('Profile updated successfully');
+          context.pop(); // Go back to previous screen
+
+        case Failure<ProfileData>(message:final msg):
+          ToastUtil.showError('Failed to update profile: $msg');
+      }
+    } catch (e) {
+      setState(() { _isLoading = false; });
+      ToastUtil.showError('Error updating profile: ${e.toString()}');
+    }
+  }
+
+  Future<void> _updateSecureStorageUser(User currentUser, ProfileData profileData) async {
+    try {
+      // Create updated user with profile data
+      final updatedUser = User(
+        // Preserve existing user data
+        id: currentUser.id,
+        email: currentUser.email,
+        name: profileData.fullName,
+        phoneNumber: profileData.phoneNumber,
+        is2faEnabled: currentUser.is2faEnabled,
+        emailVerificationExpiresAt: currentUser.emailVerificationExpiresAt,
+        refreshTokenExpiresAt: currentUser.refreshTokenExpiresAt,
+        passwordResetExpiresAt: currentUser.passwordResetExpiresAt,
+        status: currentUser.status,
+        avatar: currentUser.avatar,
+        googleId: currentUser.googleId,
+        appleId: currentUser.appleId,
+        oauthProvider: currentUser.oauthProvider,
+        roleId: currentUser.roleId,
+        role: currentUser.role,
+        isActive: currentUser.isActive,
+        lockedUntil: currentUser.lockedUntil,
+        createdAt: currentUser.createdAt,
+        updatedAt: currentUser.updatedAt, // Update timestamp
+        deletedAt: currentUser.deletedAt,
+        agreedToTerms: currentUser.agreedToTerms,
+        agreedToTermsAt: currentUser.agreedToTermsAt,
+        firstLogin: currentUser.firstLogin,
+        lastLogin: currentUser.lastLogin,
+
+        // Add profile-specific fields (if your User model has these)
+        nationalId: currentUser.nationalId, // Keep existing or update if available
+        dateOfBirth: currentUser.dateOfBirth,
+        gender: currentUser.gender,
+        poultryType: profileData.poultryType,
+        chickenHouseCapacity: profileData.chickenHouseCapacity,
+        yearsOfExperience: profileData.yearsOfExperience,
+        currentNumberOfChickens: profileData.currentNumberOfChickens,
+        preferredAgrovetName: profileData.preferredAgrovetName,
+        preferredFeedCompany: profileData.preferredFeedCompany,
+      );
+
+      // Save updated user to secure storage
+      await _secureStorage.saveUser(updatedUser);
+
+      LogUtil.info('User data updated in secure storage');
+
+    } catch (e) {
+      LogUtil.error('Error updating secure storage: $e');
+      // Don't throw error here - profile was updated successfully on server
+      // Just log the storage error
     }
   }
 

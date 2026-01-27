@@ -1,6 +1,9 @@
+import 'package:agriflock360/features/farmer/quotation/models/housing_quotation_model.dart';
+import 'package:agriflock360/features/farmer/quotation/repo/quotation_repository.dart';
 import 'package:agriflock360/features/farmer/quotation/widgets/image_with_desc.dart';
 import 'package:agriflock360/features/farmer/quotation/widgets/market_disclaimer.dart';
 import 'package:flutter/material.dart';
+import 'package:agriflock360/core/utils/result.dart';
 
 class PoultryHouseQuotationScreen extends StatefulWidget {
   const PoultryHouseQuotationScreen({super.key});
@@ -12,224 +15,68 @@ class PoultryHouseQuotationScreen extends StatefulWidget {
 class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScreen> {
   // Color scheme
   static const Color primaryColor = Color(0xFF2E7D32);
-  static const Color secondaryColor = Color(0xFF4CAF50);
-  static const Color accentColor = Color(0xFFFF9800);
   static const Color backgroundColor = Color(0xFFF8F9FA);
 
   // Bird capacity options
   final List<Map<String, dynamic>> _capacityOptions = [
     {
-      'id': '100',
+      'id': 100,
       'label': '100 Birds',
       'description': 'Small-scale setup',
       'icon': Icons.eco_outlined,
     },
     {
-      'id': '300',
+      'id': 300,
       'label': '300 Birds',
       'description': 'Medium-scale setup',
       'icon': Icons.business_outlined,
     },
     {
-      'id': '500',
+      'id': 500,
       'label': '500 Birds',
       'description': 'Commercial farm',
       'icon': Icons.agriculture_outlined,
     },
     {
-      'id': '1000',
+      'id': 1000,
       'label': '1000 Birds',
       'description': 'Large operation',
       'icon': Icons.factory_outlined,
     },
   ];
 
-  String? _selectedCapacity;
-  Map<String, dynamic>? _selectedQuotation;
+  int? _selectedCapacity;
+  HousingQuotationData? _quotationData;
+  bool _isLoading = false;
+  String? _errorMessage;
 
-  // Corrected quotation data from the table image
-  final Map<String, Map<String, dynamic>> _quotationsData = {
-    '100': {
-      'recommendedHouseSize': 'Small-scale house for 100 birds',
-      'grandTotal': '77,164',
-      'tableData': {
-        'headers': ['NO', 'MATERIAL', 'UNIT', '@', 'QUANTITY', 'AMOUNT'],
-        'rows': [
-          ['1', 'Roofing Sheets 32 gauge 10ft', 'pcs', '740', '4', '2,960'],
-          ['2', 'Roofing sheets 32gauge 8ft', 'pcs', '640', '', ''],
-          ['3', 'Wall sheets 32 gauge 10 ft', 'pcs', '740', '9', '6,660'],
-          ['4', 'Wire mesh', 'pcs', '800', '2', '1,600'],
-          ['5', 'Chicken mesh 6ft', 'pc', '4,000', '1', '4,000'],
-          ['6', 'Fito for wall', 'pcs', '30', '50', '1,500'],
-          ['7', 'Cedar Posts', 'pcs', '500', '7', '3,500'],
-          ['8', 'Round poles for roof', 'pcs', '250', '11', '2,750'],
-          ['9', 'King posts', 'pcs', '350', '2', '700'],
-          ['10', 'Assorted nails', 'kg', '140', '6', '840'],
-          ['11', 'Roofing nails', 'kg', '200', '4', '800'],
-          ['12', 'Door', 'pc', '3,500', '1', '3,500'],
-          ['13', 'Cement', 'pcs', '720', '4', '2,880'],
-          ['14', 'Sand', 'Tones', '1,000', '2', '2,000'],
-          ['15', 'Power installation', '', '15,000', '1', '15,000'],
-          ['16', 'Polythine Roll', 'pc', '4,500', '1', '4,500'],
-          ['17', 'Gladiator', 'pc', '1,000', '1', '1,000'],
-          ['18', 'Marram', 'Tones', '7,000', '1', '5,000'],
-          ['19', 'Shatter', 'pcs', '250', '2', '500'],
-          ['20', 'Hinges', 'pcs', '200', '2', '400'],
-          ['21', 'Ballast', 'Tones', '1,857', '1', '1,857'],
-          ['22', 'Waterproof cement', 'pc', '200', '1', '200'],
-          ['23', 'Plywood', 'pcs', '750', '2', '1,500'],
-          ['24', 'Padlock', 'pcs', '500', '1', '500'],
-          ['25', 'Edge strip', 'ft', '30', '32', '960'],
-          ['26', 'Transport', '', '10,000', '', '3,000'],
-          ['27', 'Cedar posts for fencing', 'pcs', '500', '', ''],
-          ['28', 'Trashes', 'pcs', '250', '7', '1,750'],
-          ['29', 'Chain Link', 'rolls', '3,300', '', ''],
-          ['30', 'U Nail', 'kg', '200', '', ''],
-          ['31', 'Barbed Wire (610 mtr)', 'rolls', '5,500', '', ''],
-          ['', 'SUB TOTAL', '', '', '', '59,357'],
-          ['32', 'Labour (26%)', '', '', '', '17,807'],
-          ['', 'GRAND TOTAL', '', '', '', '77,164'],
-        ]
-      },
-      'labourCost': '17,807',
-      'materialCostSubtotal': '59,357',
-    },
-    '300': {
-      'recommendedHouseSize': 'Medium-scale house for 300 birds',
-      'grandTotal': '146,465',
-      'tableData': {
-        'headers': ['NO', 'MATERIAL', 'UNIT', '@', 'QUANTITY', 'AMOUNT'],
-        'rows': [
-          ['1', 'Roofing Sheets 32 gauge 10ft', 'pcs', '740', '14', '10,360'],
-          ['2', 'Roofing sheets 32gauge 8ft', 'pcs', '640', '', ''],
-          ['3', 'Wall sheets 32 gauge 10 ft', 'pcs', '740', '18', '13,320'],
-          ['4', 'Wire mesh', 'pcs', '800', '5', '4,000'],
-          ['5', 'Chicken mesh 6ft', 'pc', '4,000', '1', '4,000'],
-          ['6', 'Fito for wall', 'pcs', '30', '80', '2,400'],
-          ['7', 'Cedar Posts', 'pcs', '500', '14', '7,000'],
-          ['8', 'Round poles for roof', 'pcs', '250', '14', '3,500'],
-          ['9', 'King posts', 'pcs', '350', '4', '1,400'],
-          ['10', 'Assorted nails', 'kg', '140', '9', '1,260'],
-          ['11', 'Roofing nails', 'kg', '200', '5', '1,000'],
-          ['12', 'Door', 'pc', '3,500', '1', '3,500'],
-          ['13', 'Cement', 'pcs', '720', '7', '5,040'],
-          ['14', 'Sand', 'Tones', '1,000', '5', '5,000'],
-          ['15', 'Power installation', '', '15,000', '1', '15,000'],
-          ['16', 'Polythine Roll', 'pc', '4,500', '1', '4,500'],
-          ['17', 'Gladiator', 'pc', '1,000', '1', '1,000'],
-          ['18', 'Marram', 'Tones', '7,000', '1', '5,600'],
-          ['19', 'Shatter', 'pcs', '250', '2', '500'],
-          ['20', 'Hinges', 'pcs', '200', '2', '400'],
-          ['21', 'Ballast', 'Tones', '1,857', '5', '9,286'],
-          ['22', 'Waterproof cement', 'pc', '200', '2', '400'],
-          ['23', 'Plywood', 'pcs', '750', '2', '1,500'],
-          ['24', 'Padlock', 'pcs', '500', '2', '1,000'],
-          ['25', 'Edge strip', 'ft', '30', '40', '1,200'],
-          ['26', 'Transport', '', '10,000', '', '4,000'],
-          ['27', 'Cedar posts for fencing', 'pcs', '500', '', ''],
-          ['28', 'Trashes', 'pcs', '250', '12', '3,000'],
-          ['29', 'Chain Link', 'rolls', '3,300', '', ''],
-          ['30', 'U Nail', 'kg', '200', '1', '200'],
-          ['31', 'Barbed Wire (610 mtr)', 'rolls', '5,500', '', ''],
-          ['', 'SUB TOTAL', '', '', '', '112,666'],
-          ['32', 'Labour (26%)', '', '', '', '33,800'],
-          ['', 'GRAND TOTAL', '', '', '', '146,465'],
-        ]
-      },
-      'labourCost': '33,800',
-      'materialCostSubtotal': '112,666',
-    },
-    '500': {
-      'recommendedHouseSize': 'Commercial house for 500 birds',
-      'grandTotal': '201,455',
-      'tableData': {
-        'headers': ['NO', 'MATERIAL', 'UNIT', '@', 'QUANTITY', 'AMOUNT'],
-        'rows': [
-          ['1', 'Roofing Sheets 32 gauge 10ft', 'pcs', '740', '24', '17,760'],
-          ['2', 'Roofing sheets 32gauge 8ft', 'pcs', '640', '', ''],
-          ['3', 'Wall sheets 32 gauge 10 ft', 'pcs', '740', '28', '20,720'],
-          ['4', 'Wire mesh', 'pcs', '800', '6', '4,800'],
-          ['5', 'Chicken mesh 6ft', 'pc', '4,000', '1', '4,000'],
-          ['6', 'Fito for wall', 'pcs', '30', '160', '4,800'],
-          ['7', 'Cedar Posts', 'pcs', '500', '18', '9,000'],
-          ['8', 'Round poles for roof', 'pcs', '250', '30', '7,500'],
-          ['9', 'King posts', 'pcs', '350', '6', '2,100'],
-          ['10', 'Assorted nails', 'kg', '140', '15', '2,100'],
-          ['11', 'Roofing nails', 'kg', '200', '12', '2,400'],
-          ['12', 'Door', 'pc', '3,500', '1', '3,500'],
-          ['13', 'Cement', 'pcs', '720', '10', '7,200'],
-          ['14', 'Sand', 'Tones', '1,000', '7', '7,000'],
-          ['15', 'Power installation', '', '15,000', '1', '15,000'],
-          ['16', 'Polythine Roll', 'pc', '4,500', '1', '4,500'],
-          ['17', 'Gladiator', 'pc', '1,000', '1', '1,000'],
-          ['18', 'Marram', 'Tones', '7,000', '1', '7,000'],
-          ['19', 'Shatter', 'pcs', '250', '2', '500'],
-          ['20', 'Hinges', 'pcs', '200', '2', '400'],
-          ['21', 'Ballast', 'Tones', '1,857', '5', '9,286'],
-          ['22', 'Waterproof cement', 'pc', '200', '2', '400'],
-          ['23', 'Plywood', 'pcs', '750', '2', '1,500'],
-          ['24', 'Padlock', 'pcs', '500', '2', '1,000'],
-          ['25', 'Edge strip', 'ft', '30', '50', '1,500'],
-          ['26', 'Transport', '', '10,000', '1', '5,000'],
-          ['27', 'Cedar posts for fencing', 'pcs', '500', '15', '7,500'],
-          ['28', 'Trashes', 'pcs', '250', '16', '4,000'],
-          ['29', 'Chain Link', 'rolls', '3,300', '1', '3,300'],
-          ['30', 'U Nail', 'kg', '200', '1', '200'],
-          ['31', 'Barbed Wire (610 mtr)', 'rolls', '5,500', '', ''],
-          ['', 'SUB TOTAL', '', '', '', '154,966'],
-          ['32', 'Labour (26%)', '', '', '', '46,490'],
-          ['', 'GRAND TOTAL', '', '', '', '201,455'],
-        ]
-      },
-      'labourCost': '46,490',
-      'materialCostSubtotal': '154,966',
-    },
-    '1000': {
-      'recommendedHouseSize': 'Large-scale house for 1000 birds',
-      'grandTotal': '287,465',
-      'tableData': {
-        'headers': ['NO', 'MATERIAL', 'UNIT', '@', 'QUANTITY', 'AMOUNT'],
-        'rows': [
-          ['1', 'Roofing Sheets 32 gauge 10ft', 'pcs', '740', '42', '31,080'],
-          ['2', 'Roofing sheets 32gauge 8ft', 'pcs', '640', '12', '7,680'],
-          ['3', 'Wall sheets 32 gauge 10 ft', 'pcs', '740', '38', '28,120'],
-          ['4', 'Wire mesh', 'pcs', '800', '10', '8,000'],
-          ['5', 'Chicken mesh 6ft', 'pc', '4,000', '1', '4,000'],
-          ['6', 'Fito for wall', 'pcs', '30', '180', '5,400'],
-          ['7', 'Cedar Posts', 'pcs', '500', '32', '16,000'],
-          ['8', 'Round poles for roof', 'pcs', '250', '45', '11,250'],
-          ['9', 'King posts', 'pcs', '350', '10', '3,500'],
-          ['10', 'Assorted nails', 'kg', '140', '18', '2,520'],
-          ['11', 'Roofing nails', 'kg', '200', '16', '3,200'],
-          ['12', 'Door', 'pc', '3,500', '1', '3,500'],
-          ['13', 'Cement', 'pcs', '720', '20', '14,400'],
-          ['14', 'Sand', 'Tones', '1,000', '12', '12,000'],
-          ['15', 'Power installation', '', '15,000', '1', '15,000'],
-          ['16', 'Polythine Roll', 'pc', '4,500', '1', '4,500'],
-          ['17', 'Gladiator', 'pc', '1,000', '1', '1,000'],
-          ['18', 'Marram', 'Tones', '7,000', '1', '7,000'],
-          ['19', 'Shatter', 'pcs', '250', '2', '500'],
-          ['20', 'Hinges', 'pcs', '200', '2', '400'],
-          ['21', 'Ballast', 'Tones', '1,857', '7', '13,000'],
-          ['22', 'Waterproof cement', 'pc', '200', '2', '400'],
-          ['23', 'Plywood', 'pcs', '750', '2', '1,500'],
-          ['24', 'Padlock', 'pcs', '500', '2', '1,000'],
-          ['25', 'Edge strip', 'ft', '30', '100', '3,000'],
-          ['26', 'Transport', '', '10,000', '1', '10,000'],
-          ['27', 'Cedar posts for fencing', 'pcs', '500', '20', '10,000'],
-          ['28', 'Trashes', 'pcs', '250', '18', '4,500'],
-          ['29', 'Chain Link', 'rolls', '3,300', '1', '3,300'],
-          ['30', 'U Nail', 'kg', '200', '1', '200'],
-          ['31', 'Barbed Wire (610 mtr)', 'rolls', '5,500', '1', '5,500'],
-          ['', 'SUB TOTAL', '', '', '', '228,150'],
-          ['32', 'Labour (26%)', '', '', '', '59,319'],
-          ['', 'GRAND TOTAL', '', '', '', '287,465'],
-        ]
-      },
-      'labourCost': '59,319',
-      'materialCostSubtotal': '228,150',
-    },
-  };
+  final QuotationRepository _repository = QuotationRepository();
+
+  Future<void> _fetchQuotation(int birdCapacity) async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+      _quotationData = null;
+    });
+
+    final result = await _repository.housingQuotation(birdCapacity: birdCapacity);
+
+    switch(result) {
+      case Success<HousingQuotationData>():
+        setState(() {
+          _isLoading = false;
+        });        _quotationData = result.data;
+      case Failure<HousingQuotationData>():
+        setState(() {
+          _isLoading = false;
+          _errorMessage = result.message;
+        });
+
+
+    }
+
+
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -320,14 +167,48 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
                 ),
                 const SizedBox(height: 26),
 
-                // Quotation Display
-                if (_selectedQuotation != null) ...[
-                  _buildQuotationSection(),
-                  const SizedBox(height: 40),
-                ] else if (_selectedCapacity != null) ...[
+                // Error Message
+                if (_errorMessage != null) ...[
+                  Card(
+                    elevation: 0,
+                    color: Colors.red.shade50,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(color: Colors.red.shade200),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Icon(Icons.error_outline, color: Colors.red.shade700),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              _errorMessage!,
+                              style: TextStyle(
+                                color: Colors.red.shade700,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+
+                // Loading Indicator
+                if (_isLoading) ...[
                   const Center(
                     child: CircularProgressIndicator(color: primaryColor),
                   ),
+                  const SizedBox(height: 40),
+                ],
+
+                // Quotation Display
+                if (_quotationData != null && !_isLoading) ...[
+                  _buildQuotationSection(),
                   const SizedBox(height: 40),
                 ],
               ]),
@@ -345,12 +226,8 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
       onTap: () {
         setState(() {
           _selectedCapacity = capacity['id'];
-          Future.delayed(const Duration(milliseconds: 300), () {
-            setState(() {
-              _selectedQuotation = _quotationsData[capacity['id']];
-            });
-          });
         });
+        _fetchQuotation(capacity['id']);
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
@@ -422,11 +299,7 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
   }
 
   Widget _buildQuotationSection() {
-    if (_selectedQuotation == null) return Container();
-
-    final tableData = _selectedQuotation!['tableData'] as Map<String, dynamic>;
-    final headers = tableData['headers'] as List<String>;
-    final rows = tableData['rows'] as List<List<String>>;
+    if (_quotationData == null) return Container();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -455,7 +328,7 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
                       ),
                     ),
                     Text(
-                      'Exact material quantities and costs for ${_selectedCapacity!} birds',
+                      'Exact material quantities and costs for ${_quotationData!.birdCapacity} birds',
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.9),
                         fontSize: 12,
@@ -475,11 +348,20 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
           icon: Icons.dashboard,
           color: primaryColor,
           children: [
-            _buildOverviewItem('Recommended House Size', _selectedQuotation!['recommendedHouseSize']),
+            _buildOverviewItem(
+              'Bird Capacity',
+              '${_quotationData!.birdCapacity} Birds',
+            ),
             const SizedBox(height: 8),
-            _buildOverviewItem('Material Cost Subtotal', 'KSh ${_selectedQuotation!['materialCostSubtotal']}'),
+            _buildOverviewItem(
+              'Material Cost Subtotal',
+              '${_quotationData!.currency} ${_formatNumber(_quotationData!.materialsSubtotal)}',
+            ),
             const SizedBox(height: 8),
-            _buildOverviewItem('Labour Cost (26%)', 'KSh ${_selectedQuotation!['labourCost']}'),
+            _buildOverviewItem(
+              'Labour Cost (${_quotationData!.laborPercentage}%)',
+              '${_quotationData!.currency} ${_formatNumber(_quotationData!.laborCost)}',
+            ),
             const Divider(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -492,7 +374,7 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
                   ),
                 ),
                 Text(
-                  'KSh ${_selectedQuotation!['grandTotal']}',
+                  '${_quotationData!.currency} ${_formatNumber(_quotationData!.grandTotal)}',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
@@ -506,183 +388,351 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
         const SizedBox(height: 20),
 
         // Material Table
-        Card(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: primaryColor.withOpacity(0.2)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: primaryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(Icons.table_chart, color: primaryColor, size: 20),
-                    ),
-                    const SizedBox(width: 12),
-                    const Text(
-                      'MATERIALS BREAKDOWN',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: primaryColor,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: DataTable(
-                    columnSpacing: 24,
-                    dataRowMaxHeight: 40,
-                    dataRowMinHeight: 40,
-                    headingRowHeight: 40,
-                    columns: headers.map((header) {
-                      return DataColumn(
-                        label: Text(
-                          header,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                    rows: rows.map((row) {
-                      final isSubtotal = row[0] == '' && row[1].contains('SUB TOTAL');
-                      final isLabour = row[0] == '32';
-                      final isGrandTotal = row[0] == '' && row[1].contains('GRAND TOTAL');
+        _buildMaterialsTable(),
+        const SizedBox(height: 10),
 
-                      return DataRow(
-                        cells: row.asMap().entries.map((entry) {
-                          final index = entry.key;
-                          final cell = entry.value;
-
-                          TextStyle cellStyle = const TextStyle(fontSize: 11);
-                          Color backgroundColor = Colors.transparent;
-
-                          if (isSubtotal) {
-                            cellStyle = const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue,
-                            );
-                            backgroundColor = Colors.blue.withOpacity(0.1);
-                          } else if (isLabour) {
-                            cellStyle = const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.orange,
-                            );
-                            backgroundColor = Colors.orange.withOpacity(0.1);
-                          } else if (isGrandTotal) {
-                            cellStyle = const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green,
-                            );
-                            backgroundColor = Colors.green.withOpacity(0.1);
-                          } else if (index == headers.length - 1 && cell.isNotEmpty) {
-                            cellStyle = const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            );
-                          }
-
-                          return DataCell(
-                            Container(
-                              color: backgroundColor,
-                              child: Text(
-                                cell,
-                                style: cellStyle,
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ],
-            ),
+        Text(
+          'Visual Representations',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey.shade800,
           ),
         ),
         const SizedBox(height: 10),
 
-        Text('Visual Representations'),
-
-        const SizedBox(height: 10),
-
-        ImageWithDescriptionWidget(imageAssetPath: 'assets/quotation/img.png', description: 'This is the first image description'),
-        ImageWithDescriptionWidget(imageAssetPath: 'assets/quotation/img_1.png', description: 'This is the first image description'),
-        ImageWithDescriptionWidget(imageAssetPath: 'assets/quotation/img_2.png', description: 'This is the first image description'),
-        ImageWithDescriptionWidget(imageAssetPath: 'assets/quotation/img_3.png', description: 'This is the first image description'),
-        ImageWithDescriptionWidget(imageAssetPath: 'assets/quotation/img_4.png', description: 'This is the first image description'),
-        ImageWithDescriptionWidget(imageAssetPath: 'assets/quotation/img_5.png', description: 'This is the first image description'),
+        ImageWithDescriptionWidget(
+          imageAssetPath: 'assets/quotation/img.png',
+          description: 'This is the first image description',
+        ),
+        ImageWithDescriptionWidget(
+          imageAssetPath: 'assets/quotation/img_1.png',
+          description: 'This is the second image description',
+        ),
+        ImageWithDescriptionWidget(
+          imageAssetPath: 'assets/quotation/img_2.png',
+          description: 'This is the third image description',
+        ),
+        ImageWithDescriptionWidget(
+          imageAssetPath: 'assets/quotation/img_3.png',
+          description: 'This is the fourth image description',
+        ),
+        ImageWithDescriptionWidget(
+          imageAssetPath: 'assets/quotation/img_4.png',
+          description: 'This is the fifth image description',
+        ),
+        ImageWithDescriptionWidget(
+          imageAssetPath: 'assets/quotation/img_5.png',
+          description: 'This is the sixth image description',
+        ),
 
         const SizedBox(height: 10),
 
         // Important Notes
-        Card(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: Colors.orange.withOpacity(0.2)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        _buildImportantNotes(),
+
+        MarketDisclaimerWidget(),
+      ],
+    );
+  }
+
+  Widget _buildMaterialsTable() {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: primaryColor.withOpacity(0.2)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(Icons.info_outline, color: Colors.orange, size: 20),
-                    ),
-                    const SizedBox(width: 12),
-                    const Text(
-                      'IMPORTANT NOTES',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange,
-                      ),
-                    ),
-                  ],
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.table_chart, color: primaryColor, size: 20),
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  '• Prices are estimates and may vary based on location and market conditions\n'
-                      '• Labour cost is calculated at 26% of material cost\n'
-                      '• Blank cells indicate item not required for this capacity\n'
-                      '• All prices are in Kenyan Shillings (KSh)',
+                const SizedBox(width: 12),
+                const Text(
+                  'MATERIALS BREAKDOWN',
                   style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade700,
-                    height: 1.6,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: primaryColor,
                   ),
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: 16),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                columnSpacing: 24,
+                dataRowMaxHeight: 40,
+                dataRowMinHeight: 40,
+                headingRowHeight: 40,
+                columns: const [
+                  DataColumn(
+                    label: Text(
+                      'NO',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                    ),
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'MATERIAL',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                    ),
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'CATEGORY',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                    ),
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'UNIT',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                    ),
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'UNIT PRICE',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                    ),
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'QTY',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                    ),
+                  ),
+                  DataColumn(
+                    label: Text(
+                      'TOTAL',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                    ),
+                  ),
+                ],
+                rows: [
+                  // Material rows
+                  ..._quotationData!.materials.asMap().entries.map((entry) {
+                    final index = entry.key + 1;
+                    final material = entry.value;
+                    return DataRow(
+                      cells: [
+                        DataCell(Text(index.toString(), style: const TextStyle(fontSize: 11))),
+                        DataCell(
+                          SizedBox(
+                            width: 150,
+                            child: Text(
+                              material.materialName,
+                              style: const TextStyle(fontSize: 11),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          Text(
+                            material.category.toUpperCase(),
+                            style: const TextStyle(fontSize: 11),
+                          ),
+                        ),
+                        DataCell(Text(material.unit, style: const TextStyle(fontSize: 11))),
+                        DataCell(
+                          Text(
+                            _formatNumber(material.unitPrice),
+                            style: const TextStyle(fontSize: 11),
+                          ),
+                        ),
+                        DataCell(
+                          Text(
+                            material.quantity.toString(),
+                            style: const TextStyle(fontSize: 11),
+                          ),
+                        ),
+                        DataCell(
+                          Text(
+                            _formatNumber(material.totalCost),
+                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    );
+                  }).toList(),
+                  // Subtotal row
+                  DataRow(
+                    cells: [
+                      const DataCell(Text('')),
+                      DataCell(
+                        Container(
+                          color: Colors.blue.withOpacity(0.1),
+                          child: const Text(
+                            'SUB TOTAL',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const DataCell(Text('')),
+                      const DataCell(Text('')),
+                      const DataCell(Text('')),
+                      const DataCell(Text('')),
+                      DataCell(
+                        Container(
+                          color: Colors.blue.withOpacity(0.1),
+                          child: Text(
+                            _formatNumber(_quotationData!.materialsSubtotal),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  // Labour row
+                  DataRow(
+                    cells: [
+                      const DataCell(Text('')),
+                      DataCell(
+                        Container(
+                          color: Colors.orange.withOpacity(0.1),
+                          child: Text(
+                            'Labour (${_quotationData!.laborPercentage}%)',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const DataCell(Text('')),
+                      const DataCell(Text('')),
+                      const DataCell(Text('')),
+                      const DataCell(Text('')),
+                      DataCell(
+                        Container(
+                          color: Colors.orange.withOpacity(0.1),
+                          child: Text(
+                            _formatNumber(_quotationData!.laborCost),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  // Grand Total row
+                  DataRow(
+                    cells: [
+                      const DataCell(Text('')),
+                      DataCell(
+                        Container(
+                          color: Colors.green.withOpacity(0.1),
+                          child: const Text(
+                            'GRAND TOTAL',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const DataCell(Text('')),
+                      const DataCell(Text('')),
+                      const DataCell(Text('')),
+                      const DataCell(Text('')),
+                      DataCell(
+                        Container(
+                          color: Colors.green.withOpacity(0.1),
+                          child: Text(
+                            _formatNumber(_quotationData!.grandTotal),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
+      ),
+    );
+  }
 
-        MarketDisclaimerWidget()
-      ],
+  Widget _buildImportantNotes() {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.orange.withOpacity(0.2)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.info_outline, color: Colors.orange, size: 20),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'IMPORTANT NOTES',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '• Prices are estimates and may vary based on location and market conditions\n'
+                  '• Labour cost is calculated at ${_quotationData!.laborPercentage}% of material cost\n'
+                  '• All prices are in ${_quotationData!.currency == 'KES' ? 'Kenyan Shillings (KSh)' : _quotationData!.currency}\n'
+                  '• Quotation status: ${_quotationData!.status.toUpperCase()}\n'
+                  '• Generated on: ${_formatDate(_quotationData!.createdAt)}',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade700,
+                height: 1.6,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -751,15 +801,30 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
         Expanded(
           child: Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
               fontWeight: FontWeight.bold,
-              color: label == 'GRAND TOTAL' ? Colors.green : Colors.black87,
-              fontSize: label == 'GRAND TOTAL' ? 18 : 14,
+              color: Colors.black87,
+              fontSize: 14,
             ),
             textAlign: TextAlign.right,
           ),
         ),
       ],
     );
+  }
+
+  String _formatNumber(double number) {
+    return number.toStringAsFixed(2).replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+          (Match m) => '${m[1]},',
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    final months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 }

@@ -1,3 +1,5 @@
+import 'package:agriflock360/core/model/user_model.dart';
+import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -18,8 +20,11 @@ class CompleteProfileScreen extends StatefulWidget {
 }
 
 class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
+  final SecureStorage _secureStorage = SecureStorage();
+
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  User? _user; // Make it nullable
 
   // Color scheme - matching onboarding
   static const Color primaryGreen = Color(0xFF2E7D32);
@@ -35,6 +40,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
   // Loading state
   bool _isLoading = false;
+  bool _isLoadingUser = true; // Start as true
 
   // Focus nodes for text fields
   final FocusNode _idNumberFocus = FocusNode();
@@ -69,7 +75,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   @override
   void initState() {
     super.initState();
-
+    _loadUserData();
     // Add listeners to update UI when fields change
     _idNumberController.addListener(_updateValidationState);
     _dobController.addListener(_updateValidationState);
@@ -115,7 +121,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     }
   }
 
-
   bool _isCurrentStepValid() {
     switch (_currentPage) {
       case 0: // Personal Information
@@ -136,7 +141,43 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     }
   }
 
+  Future<void> _loadUserData() async {
+    try {
+      // Get user data from secure storage as User object
+      final userData = await _secureStorage.getUserData();
+
+      if (userData != null && mounted) {
+        setState(() {
+          _user = userData;
+          _isLoadingUser = false;
+        });
+      } else {
+        if (mounted) {
+          setState(() {
+            _isLoadingUser = false;
+          });
+          ToastUtil.showError('No user data found. Please login again.');
+          await apiClient.logout();
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingUser = false;
+        });
+        ToastUtil.showError('Error loading user data');
+        await apiClient.logout();
+      }
+    }
+  }
+
   Future<void> _completeProfile() async {
+    // Check if user is loaded
+    if (_user == null) {
+      ToastUtil.showError('User data not loaded. Please try again.');
+      return;
+    }
+
     // Dismiss keyboard before submitting
     FocusScope.of(context).unfocus();
 
@@ -163,7 +204,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
       // Make API call
       final response = await apiClient.put(
-        '/users/profile', // Your API endpoint
+        '/users/profile',
         body: profileData,
         headers: {
           'Content-Type': 'application/json',
@@ -174,8 +215,47 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
+        // Create updated user with profile data
+        final updatedUser = User(
+          id: _user!.id,
+          email: _user!.email,
+          name: _user!.name,
+          phoneNumber: _user!.phoneNumber,
+          is2faEnabled: _user!.is2faEnabled,
+          emailVerificationExpiresAt: _user!.emailVerificationExpiresAt,
+          refreshTokenExpiresAt: _user!.refreshTokenExpiresAt,
+          passwordResetExpiresAt: _user!.passwordResetExpiresAt,
+          status: _user!.status,
+          avatar: _user!.avatar,
+          googleId: _user!.googleId,
+          appleId: _user!.appleId,
+          oauthProvider: _user!.oauthProvider,
+          roleId: _user!.roleId,
+          role: _user!.role,
+          isActive: _user!.isActive,
+          lockedUntil: _user!.lockedUntil,
+          createdAt: _user!.createdAt,
+          updatedAt: _user!.updatedAt,
+          deletedAt: _user!.deletedAt,
+          agreedToTerms: _user!.agreedToTerms,
+          agreedToTermsAt: _user!.agreedToTermsAt,
+          firstLogin: _user!.firstLogin,
+          lastLogin: _user!.lastLogin,
+          // Add profile-specific fields (make sure your User model has these)
+          nationalId: _idNumberController.text.trim(),
+          dateOfBirth: _dobController.text.trim(),
+          gender: _selectedGender,
+          poultryType: _selectedPoultryType == 'Other'
+              ? _otherPoultryTypeController.text.trim()
+              : _selectedPoultryType,
+          chickenHouseCapacity: int.tryParse(_houseCapacityController.text.trim()) ?? 0,
+        );
+
+        // Save updated user to secure storage
+        await _secureStorage.saveUser(updatedUser);
+
         ToastUtil.showSuccess(
-          'Profile completed successfully! Please Log in again to use the app.',
+          'Profile completed successfully!',
         );
 
         // Navigate to quotation
@@ -201,9 +281,90 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Show loading screen while loading user
+    if (_isLoadingUser) {
+      return Scaffold(
+        backgroundColor: backgroundColor,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const CircularProgressIndicator(color: primaryGreen),
+              const SizedBox(height: 20),
+              Text(
+                'Loading your profile...',
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Show error if user not loaded
+    if (_user == null) {
+      return Scaffold(
+        backgroundColor: backgroundColor,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.black54),
+            onPressed: () {
+              apiClient.logout();
+            },
+          ),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Colors.red,
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Unable to load user data',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade700,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Please login again to continue',
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 30),
+              ElevatedButton(
+                onPressed: () {
+                  apiClient.logout();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryGreen,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                ),
+                child: const Text('Go to Login'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return GestureDetector(
       onTap: _dismissKeyboard,
-      behavior: HitTestBehavior.opaque, // Important for proper tap handling
+      behavior: HitTestBehavior.opaque,
       child: Scaffold(
         backgroundColor: backgroundColor,
         appBar: AppBar(
@@ -273,7 +434,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: _profileSteps.length,
                 onPageChanged: (page) {
-                  _dismissKeyboard(); // Dismiss keyboard when changing pages
+                  _dismissKeyboard();
                   setState(() {
                     _currentPage = page;
                   });
@@ -345,7 +506,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
               label: 'Date of Birth *',
               icon: Icons.calendar_today,
               required: true,
-              initialDate: DateTime.now().subtract(Duration(days:365*10)),
+              initialDate: DateTime.now().subtract(const Duration(days: 365 * 10)),
               returnFormat: DateReturnFormat.isoString,
               minYear: DateTime.now().year - 100,
               maxYear: DateTime.now().year - 10,
@@ -358,7 +519,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
             GenderSelector(
               selectedGender: _selectedGender,
               onGenderSelected: (String gender) {
-                _dismissKeyboard(); // Dismiss keyboard when selecting gender
+                _dismissKeyboard();
                 setState(() {
                   _selectedGender = gender.toLowerCase();
                 });
@@ -397,10 +558,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
             ),
             const SizedBox(height: 30),
 
-            // Primary Poultry Type (Dropdown)
+            // Primary Poultry Type
             GestureDetector(
               onTap: () {
-                _dismissKeyboard(); // Dismiss keyboard before opening dropdown
+                _dismissKeyboard();
               },
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -432,7 +593,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                           fontSize: 16,
                         ),
                         onChanged: (String? newValue) {
-                          _dismissKeyboard(); // Dismiss keyboard when selecting from dropdown
+                          _dismissKeyboard();
                           setState(() {
                             _selectedPoultryType = newValue;
                             if (newValue != 'Other') {
@@ -486,90 +647,84 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   Widget _buildBottomNavigation() {
     final isValid = _isCurrentStepValid();
 
-    return GestureDetector(
-      onTap: _dismissKeyboard,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            if (_currentPage > 0)
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: _isLoading ? null : _previousPage,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: primaryGreen,
-                    side: const BorderSide(color: primaryGreen),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text('Back'),
-                ),
-              ),
-            if (_currentPage > 0) const SizedBox(width: 12),
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          if (_currentPage > 0)
             Expanded(
-              flex: _currentPage > 0 ? 1 : 2,
-              child: ElevatedButton(
-                onPressed: (_isLoading || !isValid)
-                    ? null
-                    : () {
-                  _dismissKeyboard(); // Dismiss keyboard before navigation/submission
-                  if (_currentPage < _profileSteps.length - 1) {
-                    _nextPage();
-                  } else {
-                    _completeProfile();
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryGreen,
-                  foregroundColor: Colors.white,
+              child: OutlinedButton(
+                onPressed: _isLoading ? null : _previousPage,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: primaryGreen,
+                  side: const BorderSide(color: primaryGreen),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  disabledBackgroundColor: Colors.grey.shade300,
                 ),
-                child: _isLoading
-                    ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
-                    : Text(
-                  _currentPage == _profileSteps.length - 1
-                      ? 'Complete Profile'
-                      : 'Continue',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
+                child: const Text('Back'),
+              ),
+            ),
+          if (_currentPage > 0) const SizedBox(width: 12),
+          Expanded(
+            flex: _currentPage > 0 ? 1 : 2,
+            child: ElevatedButton(
+              onPressed: (_isLoading || !isValid)
+                  ? null
+                  : () {
+                _dismissKeyboard();
+                if (_currentPage < _profileSteps.length - 1) {
+                  _nextPage();
+                } else {
+                  _completeProfile();
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryGreen,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                disabledBackgroundColor: Colors.grey.shade300,
+              ),
+              child: _isLoading
+                  ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+                  : Text(
+                _currentPage == _profileSteps.length - 1
+                    ? 'Complete Profile'
+                    : 'Continue',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
-
 }
 
-// Data Model
 class ProfileStep {
   final String title;
   final String subtitle;

@@ -24,8 +24,6 @@ class ProfileRepository {
         '/users/profile',
         headers: {
           'Content-Type': 'application/json',
-          // Add authentication header if needed
-          // 'Authorization': 'Bearer $token',
         },
         body: jsonEncode(request.toJson()),
       );
