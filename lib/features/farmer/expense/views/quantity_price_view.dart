@@ -1,4 +1,3 @@
-import 'package:agriflock360/core/utils/date_util.dart';
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
@@ -14,7 +13,6 @@ class QuantityPriceView extends StatefulWidget {
   final String? methodOfAdministration;
   final String? notes;
   final DateTime selectedDate;
-  final String paymentMethod;
   final Function({
   required double quantity,
   required double unitPrice,
@@ -36,7 +34,6 @@ class QuantityPriceView extends StatefulWidget {
     this.methodOfAdministration,
     this.notes,
     required this.selectedDate,
-    required this.paymentMethod,
     required this.onContinue,
     required this.onBack,
   });
@@ -64,12 +61,6 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
     'Other',
   ];
 
-  final List<String> _paymentMethods = [
-    'Cash',
-    'Mobile Money',
-    'Bank Transfer',
-    'Credit',
-  ];
 
   @override
   void initState() {
@@ -85,7 +76,6 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
       text: widget.selectedDate.toIso8601String(),
     );
     _methodOfAdministration = widget.methodOfAdministration;
-    _paymentMethod = widget.paymentMethod;
     _totalPrice = widget.totalPrice ?? 0.0;
 
     _quantityController.addListener(_calculateTotal);
@@ -353,35 +343,6 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
                     returnFormat: DateReturnFormat.isoString,
                     controller: _dateController,
                   ),
-
-                  // Payment method
-                  ReusableDropdown<String>(
-                    value: _paymentMethod,
-                    topLabel: 'Payment Method *',
-                    icon: Icons.payment,
-                    hintText: 'Select payment method',
-                    items: _paymentMethods.map((method) {
-                      return DropdownMenuItem<String>(
-                        value: method,
-                        child: Row(
-                          children: [
-                            Icon(
-                              _getPaymentIcon(method),
-                              size: 18,
-                              color: Colors.grey.shade600,
-                            ),
-                            const SizedBox(width: 12),
-                            Text(method),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() => _paymentMethod = value);
-                      }
-                    },
-                  ),
                   const SizedBox(height: 32),
 
                   // Continue button
@@ -451,20 +412,6 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
     }
   }
 
-  IconData _getPaymentIcon(String method) {
-    switch (method.toLowerCase()) {
-      case 'cash':
-        return Icons.money;
-      case 'mobile money':
-        return Icons.phone_android;
-      case 'bank transfer':
-        return Icons.account_balance;
-      case 'credit':
-        return Icons.credit_card;
-      default:
-        return Icons.payment;
-    }
-  }
 
   @override
   void dispose() {

@@ -259,7 +259,6 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
                   methodOfAdministration: _methodOfAdministration,
                   notes: _notes,
                   selectedDate: _selectedDate,
-                  paymentMethod: _paymentMethod,
                   onContinue: ({
                     required double quantity,
                     required double unitPrice,
