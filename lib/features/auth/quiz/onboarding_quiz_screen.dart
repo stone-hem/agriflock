@@ -1,4 +1,5 @@
 import 'package:agriflock360/app_routes.dart';
+import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/core/utils/shared_prefs.dart';
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/features/auth/quiz/repo/onboarding_repository.dart';
@@ -276,6 +277,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     setState(() => _isSubmitting = true);
 
     try {
+      LogUtil.warning(DateTime.parse(_dobController.text).toUtc().toIso8601String());
       final result = await _repository.submitVetOnboarding(
         token: widget.token,
         address: _selectedAddress!,
@@ -728,6 +730,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
             controller: _dobController,
             label: 'Date of Birth *Required',
             icon: Icons.calendar_today,
+            returnFormat: DateReturnFormat.isoString,
             required: true,
             minYear: 1900,
             maxYear: currentYear - 18, // Must be at least 18 years old
