@@ -2,7 +2,7 @@ import 'package:agriflock360/core/utils/date_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/product_model.dart';
-import 'package:agriflock360/features/farmer/batch/repo/batch_mgt_repo.dart';
+import 'package:agriflock360/features/farmer/batch/repo/product_repo.dart';
 import 'package:agriflock360/features/farmer/batch/shared/stat_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -17,7 +17,7 @@ class BatchProductsTab extends StatefulWidget {
 }
 
 class _BatchProductsTabState extends State<BatchProductsTab> {
-  final BatchMgtRepository _repository = BatchMgtRepository();
+  final ProductRepo _repository = ProductRepo();
 
   ProductDashboard? _dashboard;
   List<Product> _recentProducts = [];

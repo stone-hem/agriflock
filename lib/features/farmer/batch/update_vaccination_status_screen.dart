@@ -691,7 +691,15 @@ class _UpdateVaccinationStatusScreenState
 
     switch (_selectedOutcome) {
       case 'Done':
-        final actualDate = _actualDateController.text;
+        DateTime selectedActualDate = DateTime.parse(_actualDateController.text);
+        _actualTime ??= TimeOfDay.now();
+        DateTime actualDate = DateTime(
+          selectedActualDate.year,
+          selectedActualDate.month,
+          selectedActualDate.day,
+          _actualTime!.hour,
+          _actualTime!.minute,
+        );
 
         final actualTime = _actualTime != null
             ? '${_actualTime!.hour.toString().padLeft(2, '0')}:${_actualTime!.minute.toString().padLeft(2, '0')}'
@@ -699,7 +707,7 @@ class _UpdateVaccinationStatusScreenState
 
         return UpdateVaccinationStatusRequest(
           status: status,
-          actualDate: actualDate,
+          actualDate: actualDate.toUtc().toIso8601String(),
           actualTime: actualTime,
           birdsVaccinated: _birdsVaccinated ?? widget.batch.birdsAlive,
           administeredBy: _administeredByController.text.isNotEmpty
@@ -711,22 +719,29 @@ class _UpdateVaccinationStatusScreenState
         );
 
       case 'Failed':
-        // Prepare new scheduled date (default 14 days from now)
+      // Prepare new scheduled date (default 14 days from now)
         DateTime newDate;
+
         if (_rescheduleDateController.text.isNotEmpty) {
-          newDate = _rescheduleDateController.text.isNotEmpty
-              ? DateTime.parse(_rescheduleDateController.text)
-              : DateTime.now();
+          newDate = DateTime.parse(_rescheduleDateController.text);
         } else {
           newDate = DateTime.now().add(const Duration(days: 14));
         }
 
+        _newScheduledTime ??= TimeOfDay.now();
+
         final newScheduledDate = _rescheduleAfterFailure
-            ? DateUtil.toISO8601(newDate)
+            ? DateTime(
+          newDate.year,
+          newDate.month,
+          newDate.day,
+          _newScheduledTime!.hour,
+          _newScheduledTime!.minute,
+        )
             : null;
 
         final newScheduledTime =
-            _rescheduleAfterFailure && _newScheduledTime != null
+        _rescheduleAfterFailure && _newScheduledTime != null
             ? '${_newScheduledTime!.hour.toString().padLeft(2, '0')}:${_newScheduledTime!.minute.toString().padLeft(2, '0')}'
             : _rescheduleAfterFailure
             ? '09:00' // Default time
@@ -739,7 +754,7 @@ class _UpdateVaccinationStatusScreenState
               ? _notesController.text
               : null,
           rescheduleAfterFailure: _rescheduleAfterFailure,
-          newScheduledDate: newScheduledDate,
+          newScheduledDate: newScheduledDate?.toUtc().toIso8601String(),
           newScheduledTime: newScheduledTime,
         );
 
@@ -756,16 +771,24 @@ class _UpdateVaccinationStatusScreenState
         final newDate = _rescheduleDateController.text.isNotEmpty
             ? DateTime.parse(_rescheduleDateController.text)
             : DateTime.now().add(const Duration(days: 1));
-        final newScheduledDate = DateUtil.toISO8601(newDate);
+
+        _newScheduledTime ??= TimeOfDay.now();
 
         final newScheduledTime = _newScheduledTime != null
             ? '${_newScheduledTime!.hour.toString().padLeft(2, '0')}:${_newScheduledTime!.minute.toString().padLeft(2, '0')}'
             : '09:00';
 
+        final newScheduledDate = DateTime(
+          newDate.year,
+          newDate.month,
+          newDate.day,
+          _newScheduledTime != null ? _newScheduledTime!.hour : 9,
+          _newScheduledTime != null ? _newScheduledTime!.minute : 0,
+        );
+
         return UpdateVaccinationStatusRequest(
-          status:
-              'scheduled', // When rescheduling, status goes back to scheduled
-          newScheduledDate: newScheduledDate,
+          status: 'scheduled', // When rescheduling, status goes back to scheduled
+          newScheduledDate: newScheduledDate.toUtc().toIso8601String(),
           newScheduledTime: newScheduledTime,
           rescheduleReason: _rescheduleReasonController.text.isNotEmpty
               ? _rescheduleReasonController.text
@@ -779,7 +802,6 @@ class _UpdateVaccinationStatusScreenState
         throw Exception('Invalid outcome selected');
     }
   }
-
   String _getStatusFromOutcome() {
     switch (_selectedOutcome) {
       case 'Done':

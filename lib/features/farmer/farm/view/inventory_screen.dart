@@ -526,29 +526,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
           // Main content with pull-to-refresh
           _buildMainContent(),
 
-          // Floating Add Button
-          // AnimatedPositioned(
-          //   duration: const Duration(milliseconds: 300),
-          //   curve: Curves.easeInOut,
-          //   right: 20,
-          //   bottom: _showFloatingButton ? 20 : -100, // Hide button off-screen when not shown
-          //   child: FloatingActionButton.extended(
-          //     onPressed: () {
-          //       context.push('/farms/inventory/add/${widget.farmId}');
-          //     },
-          //     backgroundColor: Colors.green,
-          //     foregroundColor: Colors.white,
-          //     elevation: 6,
-          //     icon: const Icon(Icons.add),
-          //     label: const Text(
-          //       'Add Item',
-          //       style: TextStyle(
-          //         fontWeight: FontWeight.w600,
-          //         fontSize: 16,
-          //       ),
-          //     ),
-          //   ),
-          // ),
         ],
       ),
     );
@@ -605,15 +582,15 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Add your first inventory item',
+                    'These are automatically populated when an new expense is added. Go to home screen and add an expense.',
                     style: TextStyle(color: Colors.grey.shade500),
                   ),
                   const SizedBox(height: 16),
                   FilledButton(
                     onPressed: () {
-                      context.push('/farms/inventory/add/${widget.farmId}');
+                      context.push('/record-expenditures');
                     },
-                    child: const Text('Add Item'),
+                    child: const Text('New expenditure'),
                   ),
                 ],
               ),

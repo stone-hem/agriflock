@@ -129,7 +129,7 @@ class _FarmsHomeScreenState extends State<FarmsHomeScreen> {
         ],
       ),
       floatingActionButton: _showFab
-          ? FloatingActionButton(
+          ? FloatingActionButton.extended(
         onPressed: () async {
           final result = await context.push('/farms/add');
           if (result == true) {
@@ -141,7 +141,12 @@ class _FarmsHomeScreenState extends State<FarmsHomeScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        child: const Icon(Icons.add),
+        label: Row(
+      children: [
+      Text('Add Farm'),
+      const Icon(Icons.add),
+      ],
+    ),
       )
           : null,
       body: RefreshIndicator(

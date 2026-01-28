@@ -1064,7 +1064,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
         'batch_type': _selectedBatchType,
         'initial_count': int.parse(_initialQuantityController.text.trim()),
         'current_count': int.parse(_birdsAliveController.text.trim()),
-        'hatch_date': _hatchController.text, // Date only
+        'hatch_date': DateTime.parse(_hatchController.text).toUtc().toIso8601String(), // Date only
         'birds_alive': int.parse(_birdsAliveController.text.trim()),
         'current_weight': _currentWeightController.text.isNotEmpty?double.parse(_currentWeightController.text.trim()):null,
         'expected_weight': _expectedWeightController.text.isNotEmpty?double.parse(_expectedWeightController.text.trim()):null,

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock360/features/farmer/batch/model/batch_list_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_mgt_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/product_model.dart';
 import 'package:agriflock360/main.dart';
@@ -51,123 +52,56 @@ class BatchMgtRepository {
     return getBatchDetails(batchId);
   }
 
-  /// Create a new product record (eggs, meat, or other)
-  Future<Result> createProduct(CreateProductRequest request) async {
+
+  /// NEW: Get batches with pagination
+  Future<Result<BatchListResponse>> getBatches({
+    int page = 1,
+    int limit = 20,
+    String? farmId,
+    String? houseId,
+    String? birdTypeId,
+    String? currentStatus,
+    // String? search,
+  }) async {
     try {
-      final response = await apiClient.post(
-        '/products',
-        body: request.toJson(),
-      );
+      Map<String, String> queryParams = {
+        'page': page.toString(),
+        'limit': limit.toString(),
+      };
+
+      if (farmId != null && farmId.isNotEmpty) queryParams['farm_id'] = farmId;
+      if (houseId != null && houseId.isNotEmpty) queryParams['house_id'] = houseId;
+      if (birdTypeId != null && birdTypeId.isNotEmpty) queryParams['bird_type_id'] = birdTypeId;
+      if (currentStatus != null && currentStatus.isNotEmpty) queryParams['status'] = currentStatus;
+      // if (search != null && search.isNotEmpty) queryParams['search'] = search;
+
+      final queryString = Uri(queryParameters: queryParams).query;
+      final response = await apiClient.get('/batches?$queryString');
 
       final jsonResponse = jsonDecode(response.body);
-      LogUtil.info('Create Product API Response: $jsonResponse');
+      LogUtil.info('Get Batches API Response: $jsonResponse');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        return Success(null);
+        return Success(BatchListResponse.fromJson(jsonResponse));
       } else {
         return Failure(
-          message: jsonResponse['message'] ?? 'Failed to create product',
+          message: jsonResponse['message'] ?? 'Failed to fetch batches',
           response: response,
           statusCode: response.statusCode,
         );
       }
     } on SocketException catch (e) {
-      LogUtil.error('Network error in createProduct: $e');
+      LogUtil.error('Network error in getBatches: $e');
       return const Failure(
         message: 'No internet connection',
         statusCode: 0,
       );
     } catch (e) {
-      LogUtil.error('Error in createProduct: $e');
+      LogUtil.error('Error in getBatches: $e');
 
       if (e is http.Response) {
         return Failure(
-          message: 'Failed to create product',
-          response: e,
-          statusCode: e.statusCode,
-        );
-      }
-
-      return Failure(message: e.toString());
-    }
-  }
-
-  /// Get all products with optional batch filter
-  Future<Result<List<Product>>> getProducts({String? batchId}) async {
-    try {
-      final queryParam = batchId != null ? '?batch_id=$batchId' : '';
-      final response = await apiClient.get('/products$queryParam');
-
-      final jsonResponse = jsonDecode(response.body);
-      LogUtil.info('Get Products API Response: $jsonResponse');
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        List<Product> products = [];
-        if (jsonResponse is List) {
-          products = jsonResponse.map((product) => Product.fromJson(product)).toList();
-        } else if (jsonResponse['data'] != null) {
-          final data = jsonResponse['data'] as List;
-          products = data.map((product) => Product.fromJson(product)).toList();
-        }
-
-        return Success(products);
-      } else {
-        return Failure(
-          message: jsonResponse['message'] ?? 'Failed to fetch products',
-          response: response,
-          statusCode: response.statusCode,
-        );
-      }
-    } on SocketException catch (e) {
-      LogUtil.error('Network error in getProducts: $e');
-      return const Failure(
-        message: 'No internet connection',
-        statusCode: 0,
-      );
-    } catch (e) {
-      LogUtil.error('Error in getProducts: $e');
-
-      if (e is http.Response) {
-        return Failure(
-          message: 'Failed to fetch products',
-          response: e,
-          statusCode: e.statusCode,
-        );
-      }
-
-      return Failure(message: e.toString());
-    }
-  }
-
-  /// Get product dashboard statistics
-  Future<Result<ProductDashboard>> getProductDashboard({int days = 1000000}) async {
-    try {
-      final response = await apiClient.get('/products/dashboard?days=$days');
-
-      final jsonResponse = jsonDecode(response.body);
-      LogUtil.info('Product Dashboard API Response: $jsonResponse');
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return Success(ProductDashboard.fromJson(jsonResponse));
-      } else {
-        return Failure(
-          message: jsonResponse['message'] ?? 'Failed to fetch product dashboard',
-          response: response,
-          statusCode: response.statusCode,
-        );
-      }
-    } on SocketException catch (e) {
-      LogUtil.error('Network error in getProductDashboard: $e');
-      return const Failure(
-        message: 'No internet connection',
-        statusCode: 0,
-      );
-    } catch (e) {
-      LogUtil.error('Error in getProductDashboard: $e');
-
-      if (e is http.Response) {
-        return Failure(
-          message: 'Failed to fetch product dashboard',
+          message: 'Failed to fetch batches',
           response: e,
           statusCode: e.statusCode,
         );

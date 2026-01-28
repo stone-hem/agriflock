@@ -1,8 +1,9 @@
 import 'package:agriflock360/app_routes.dart';
+import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock360/features/farmer/profile/models/profile_model.dart';
+import 'package:agriflock360/features/farmer/profile/repo/profile_repository.dart';
 import 'package:agriflock360/features/farmer/quotation/poultry_house_quotation.dart';
 import 'package:agriflock360/features/farmer/quotation/production_estimate.dart';
-import 'package:agriflock360/core/model/user_model.dart';
-import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -17,12 +18,16 @@ class _QuotationScreenState extends State<QuotationScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final Color primaryColor = const Color(0xFF2E7D32);
-  final SecureStorage _secureStorage = SecureStorage();
+  ProfileData? _profileData;
+
+
+  // Create instance of ProfileRepository
+  final ProfileRepository _profileRepository = ProfileRepository();
 
   // Profile completion check variables
   bool _isCheckingProfile = true;
   double _profileCompletion = 0.0;
-  User? _currentUser;
+  String? _errorMessage;
 
   // Profile completion threshold
   static const double PROFILE_COMPLETION_THRESHOLD = 100.0;
@@ -31,66 +36,81 @@ class _QuotationScreenState extends State<QuotationScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _checkProfileCompletion();
+    _fetchAndCheckProfileCompletion();
   }
 
-  Future<void> _checkProfileCompletion() async {
+  Future<void> _fetchAndCheckProfileCompletion() async {
     try {
-      final userData = await _secureStorage.getUserData();
-
-      if (userData != null && mounted) {
-        final completion = _calculateProfileCompletion(userData);
-
-        setState(() {
-          _currentUser = userData;
-          _profileCompletion = completion;
-          _isCheckingProfile = false;
-        });
-      } else {
-        if (mounted) {
-          setState(() {
-            _isCheckingProfile = false;
-            _profileCompletion = 0.0;
-          });
-        }
-      }
-    } catch (e) {
-      print('Error checking profile completion: $e');
       if (mounted) {
         setState(() {
+          _isCheckingProfile = true;
+          _errorMessage = null;
+        });
+      }
+
+      // Fetch profile from API
+      final result = await _profileRepository.getProfile();
+
+      if (mounted) {
+        switch(result) {
+          case Success<ProfileData>():
+            _profileData = result.data;
+            final completion = _calculateProfileCompletion(_profileData!);
+
+            setState(() {
+              _profileCompletion = completion;
+              _isCheckingProfile = false;
+            });
+          case Failure<ProfileData>():
+            setState(() {
+              _profileCompletion = 0.0;
+              _isCheckingProfile = false;
+              _errorMessage = result.message;
+            });
+        }
+
+      }
+    } catch (e) {
+      print('Error fetching profile completion: $e');
+      if (mounted) {
+        setState(() {
+          _profileCompletion = 0.0;
           _isCheckingProfile = false;
+          _errorMessage = 'An error occurred. Please try again.';
         });
       }
     }
   }
 
-  double _calculateProfileCompletion(User user) {
+  double _calculateProfileCompletion(ProfileData profile) {
     int completedFields = 0;
-    int totalFields = 6;
+    int totalFields = 5;
 
-    if (user.agreedToTerms == true) completedFields++;
-
-    if (user.nationalId != null && user.nationalId!.isNotEmpty) {
+    // Check national ID
+    if (profile.nationalId != null && profile.nationalId!.isNotEmpty) {
       completedFields++;
     }
 
-    if (user.dateOfBirth != null && user.dateOfBirth!.isNotEmpty) {
+    // Check date of birth
+    if (profile.dateOfBirth != null && profile.dateOfBirth!.isNotEmpty) {
       completedFields++;
     }
 
-    if (user.gender != null && user.gender!.isNotEmpty) completedFields++;
-
-    if (user.poultryType != null && user.poultryType!.isNotEmpty) {
-      if (user.poultryType!.toLowerCase() != 'other' ||
-          (user.poultryType!.toLowerCase() == 'other' &&
-              user.poultryType!.length > 1)) {
-        completedFields++;
-      }
-    }
-
-    if (user.chickenHouseCapacity != null && user.chickenHouseCapacity! > 0) {
+    // Check gender
+    if (profile.gender != null && profile.gender!.isNotEmpty) {
       completedFields++;
     }
+
+    // Check poultry type
+    if (profile.poultryTypeId.isNotEmpty) {
+      completedFields++;
+    }
+
+    // Check chicken house capacity
+    if (profile.chickenHouseCapacity > 0) {
+      completedFields++;
+    }
+
 
     return (completedFields / totalFields) * 100;
   }
@@ -104,6 +124,45 @@ class _QuotationScreenState extends State<QuotationScreen>
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const SizedBox(height: 40),
+
+          // Error message if any
+          if (_errorMessage != null)
+            Container(
+              padding: const EdgeInsets.all(16),
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.red.shade100),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    color: Colors.red.shade700,
+                    size: 22,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      _errorMessage!,
+                      style: TextStyle(
+                        color: Colors.red.shade800,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.refresh,
+                      color: Colors.red.shade700,
+                      size: 20,
+                    ),
+                    onPressed: _fetchAndCheckProfileCompletion,
+                  ),
+                ],
+              ),
+            ),
 
           // Header with icon
           Container(
@@ -258,7 +317,14 @@ class _QuotationScreenState extends State<QuotationScreen>
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    context.push('/complete-profile');
+                    // Navigate to complete profile screen
+                    // This will push and wait for result if profile is updated
+                    context.push('/complete-profile',extra: _profileData).then((value) {
+                      // Refresh profile data after returning from complete profile screen
+                      if (value == true) {
+                        _fetchAndCheckProfileCompletion();
+                      }
+                    });
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
@@ -280,6 +346,34 @@ class _QuotationScreenState extends State<QuotationScreen>
               ),
 
               const SizedBox(height: 12),
+
+              // Refresh button for error state
+              if (_errorMessage != null)
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: _fetchAndCheckProfileCompletion,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.blue.shade700,
+                      side: BorderSide(color: Colors.blue.shade400),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.refresh, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'Retry Loading Profile',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
 
               // Cancel button
               SizedBox(
@@ -379,7 +473,7 @@ class _QuotationScreenState extends State<QuotationScreen>
             ),
             const SizedBox(height: 20),
             Text(
-              'Verifying profile...',
+              'Fetching profile data...',
               style: TextStyle(
                 color: Colors.grey.shade700,
                 fontSize: 16,

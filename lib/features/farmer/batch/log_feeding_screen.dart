@@ -737,7 +737,7 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
         final request= {
           'feed_type': _selectedFeedType,
           'quantity': double.parse(_quantityController.text),
-          'fed_at': _selectedDateController.text,
+          'fed_at': selectedFeedingTime.toUtc().toIso8601String(),
           'notes': _notesController.text,
           'mortality_today': _mortalityTodayController.text.isEmpty ? null : int.parse(_mortalityTodayController.text),
           'current_total_weight': _currentWeightController.text.isEmpty ? null : double.parse(_currentWeightController.text),

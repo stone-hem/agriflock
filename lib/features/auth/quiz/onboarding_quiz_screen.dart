@@ -281,7 +281,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         address: _selectedAddress!,
         latitude: _latitude!,
         longitude: _longitude!,
-        dateOfBirth: _dobController.text,
+        dateOfBirth: DateTime.parse(_dobController.text).toUtc().toIso8601String(),
         gender: _selectedGender!,
         yearsOfExperience: _vetExperienceController.text,
         professionalSummary: _vetProfileController.text,
@@ -701,7 +701,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
           AuthTextField(
             controller: _vetFieldOfStudyController,
             labelText: 'Field of Study *Required',
-            hintText: 'Enter your field of study',
+            hintText: 'Poultry Health and Management',
             icon: Icons.description,
             focusNode: _vetFieldOfStudyFocus,
             nextFocusNode: _vetProfileFocus,
@@ -799,6 +799,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
             description: 'Upload a recent clear photo of yourself',
             primaryColor: primaryGreen,
             showSelfieFirst: true,
+            cameraOnly: true,
           ),
           const SizedBox(height: 20),
       

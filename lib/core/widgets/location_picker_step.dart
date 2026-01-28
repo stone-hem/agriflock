@@ -9,6 +9,8 @@ class LocationPickerStep extends StatefulWidget {
   final String? selectedAddress;
   final double? latitude;
   final double? longitude;
+  final String? title;
+  final String? text;
   final Function(String address, double lat, double lng) onLocationSelected;
   final Color primaryColor;
 
@@ -18,7 +20,7 @@ class LocationPickerStep extends StatefulWidget {
     this.latitude,
     this.longitude,
     required this.onLocationSelected,
-    this.primaryColor = Colors.green,
+    this.primaryColor = Colors.green, this.title, this.text,
   });
 
   @override
@@ -257,8 +259,8 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Select Your Location',
+        Text(
+          widget.title ?? 'Select Your Location',
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
@@ -266,8 +268,8 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
           ),
         ),
         const SizedBox(height: 8),
-        const Text(
-          'Search and select your farm or practice location',
+        Text(
+          widget.text??'Search and select your practice location',
           style: TextStyle(
             fontSize: 16,
             color: Colors.black54,

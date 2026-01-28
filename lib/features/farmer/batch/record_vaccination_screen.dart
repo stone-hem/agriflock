@@ -778,13 +778,22 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
       });
 
       try {
+
+        DateTime selectedScheduledDate = DateTime.parse(_scheduledDateController.text);
+        DateTime selectedCompletedTime=DateTime(
+          selectedScheduledDate.year,
+          selectedScheduledDate.month,
+          selectedScheduledDate.day,
+          _scheduledTime.hour,
+          _scheduledTime.minute,
+        );
         // Create dosage string from amount and unit
         final dosage = '${_dosageAmountController.text} $_selectedDosageUnit';
 
         final request = VaccinationScheduleRequest(
           vaccineName: _selectedVaccineName!,
           vaccineType: _selectedVaccineName!, // Using the same as name for type
-          scheduledDate: _scheduledDate,
+          scheduledDate: selectedCompletedTime.toUtc().toIso8601String(),
           scheduleTime: '${_scheduledTime.hour}:${_scheduledTime.minute}',
           dosage: dosage,
           administrationMethod: _selectedAdministration!,
@@ -819,7 +828,19 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
         _isSaving = true;
       });
 
+
+
       try {
+
+        DateTime selectedCompletedDate = DateTime.parse(_completedDateController.text);
+        DateTime selectedCompletedTime=DateTime(
+          selectedCompletedDate.year,
+          selectedCompletedDate.month,
+          selectedCompletedDate.day,
+          _completionTime.hour,
+          _completionTime.minute,
+        );
+
         // Create dosage string from amount and unit
         final dosage = '${_dosageAmountController.text} $_selectedDosageUnit';
 
@@ -829,7 +850,7 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> with 
           dosage: dosage,
           administrationMethod: _selectedAdministration!,
           birdsVaccinated: int.parse(_birdsVaccinatedController.text),
-          completedDate: _completedDateController.text,
+          completedDate: selectedCompletedTime.toUtc().toIso8601String(),
           completedTime: '${_completionTime.hour}:${_completionTime.minute}',
           notes: _notesController.text.isEmpty ? null : _notesController.text,
         );

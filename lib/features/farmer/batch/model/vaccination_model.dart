@@ -477,7 +477,7 @@ class UpdateVaccinationStatusRequest {
 class VaccinationScheduleRequest {
   final String vaccineName;
   final String vaccineType;
-  final DateTime scheduledDate;
+  final String scheduledDate;
   final String scheduleTime;
   final String dosage;
   final String administrationMethod;
@@ -498,7 +498,7 @@ class VaccinationScheduleRequest {
   Map<String, dynamic> toJson() => {
     'vaccine_name': vaccineName,
     'vaccine_type': vaccineType,
-    'scheduled_date': scheduledDate.toIso8601String(),
+    'scheduled_date': scheduledDate,
     'scheduled_time': scheduleTime,
     'dosage': dosage,
     'administration_method': administrationMethod,

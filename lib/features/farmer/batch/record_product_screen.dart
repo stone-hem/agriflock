@@ -4,7 +4,7 @@ import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/core/widgets/reusable_time_input.dart';
 import 'package:agriflock360/features/farmer/batch/model/product_model.dart';
-import 'package:agriflock360/features/farmer/batch/repo/batch_mgt_repo.dart';
+import 'package:agriflock360/features/farmer/batch/repo/product_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -24,7 +24,7 @@ class RecordProductScreen extends StatefulWidget {
 
 class _RecordProductScreenState extends State<RecordProductScreen> {
   final _formKey = GlobalKey<FormState>();
-  final BatchMgtRepository _repository = BatchMgtRepository();
+  final ProductRepo _repository = ProductRepo();
 
   String? _selectedProductType = 'eggs';
   final List<Map<String, String>> _productTypes = [
@@ -63,6 +63,15 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
 
     try {
 
+      DateTime selectedScheduledDate = DateTime.parse(_selectedDateController.text);
+      DateTime selectedCompletedTime=DateTime(
+        selectedScheduledDate.year,
+        selectedScheduledDate.month,
+        selectedScheduledDate.day,
+        _selectedTime.hour,
+        _selectedTime.hour,
+      );
+
       // Create request based on product type
       CreateProductRequest request;
 
@@ -73,7 +82,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
           eggsCollected: int.parse(_quantityController.text),
           crackedEggs: int.tryParse(_crackedEggsController.text) ?? 0,
           price: num.parse(_priceController.text),
-          collectionDate: _selectedDateController.text,
+          collectionDate: selectedCompletedTime.toUtc().toIso8601String(),
           notes: _notesController.text.isNotEmpty ? _notesController.text : null,
         );
       } else if (_selectedProductType == 'meat') {
@@ -426,7 +435,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
               // Date & Time
 
                   CustomDateTextField(
-                    label: 'Date & Time',
+                    label: 'Date',
                     icon: Icons.calendar_today,
                     required: true,
                     minYear: DateTime.now().year - 1,

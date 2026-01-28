@@ -63,18 +63,6 @@ class _BatchDetailsScreenState extends State<BatchDetailsScreen>
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.edit, color: Colors.grey.shade700),
-            onPressed: () {
-              context.push('/batches/edit', extra: {
-                'batch': widget.batch,
-                'farm': widget.farm,
-                'houseId': widget.batch.houseId,
-              });
-            },
-          ),
-        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
           child: Padding(

@@ -239,15 +239,23 @@ class _RecordExpenditureScreenState extends State<RecordExpenditureScreen> {
           content: Text('Please select a date'),));
     }
 
-    final DateTime? selectedDate =DateUtil.parseDDMMYYYY(_selectedDateController.text);
 
 
     setState(() {
       _isSubmitting = true;
     });
 
-
     try {
+
+      DateTime selectedFeedingDate = DateTime.parse(_selectedDateController.text);
+      DateTime selectedDate=DateTime(
+        selectedFeedingDate.year,
+        selectedFeedingDate.month,
+        selectedFeedingDate.day,
+        TimeOfDay.now().hour,
+        TimeOfDay.now().minute,
+      );
+
       // Prepare expenditure data
       final expenditureData = {
         'farm_id': _selectedFarm,
@@ -258,7 +266,7 @@ class _RecordExpenditureScreenState extends State<RecordExpenditureScreen> {
         'amount': double.parse(_amountController.text),
         'quantity': int.parse(_quantityController.text),
         'unit': _selectedUnit!,
-        'date': DateUtil.toISO8601(selectedDate!),
+        'date': selectedDate.toUtc().toIso8601String(),
         if (_supplierController.text.isNotEmpty) 'supplier': _supplierController.text,
       };
 

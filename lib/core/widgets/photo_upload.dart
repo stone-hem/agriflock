@@ -11,6 +11,7 @@ class PhotoUpload extends StatefulWidget {
   final String description;
   final Color primaryColor;
   final bool showSelfieFirst;
+  final bool cameraOnly;
 
   const PhotoUpload({
     super.key,
@@ -21,6 +22,7 @@ class PhotoUpload extends StatefulWidget {
     this.description = 'Upload photo',
     this.primaryColor = Colors.green,
     this.showSelfieFirst = false,
+    this.cameraOnly = false,
   });
 
   @override
@@ -168,7 +170,18 @@ class _PhotoUploadState extends State<PhotoUpload> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Row(
+                // Show only camera button if cameraOnly is true
+                widget.cameraOnly
+                    ? ElevatedButton.icon(
+                  onPressed: _openCamera,
+                  icon: const Icon(Icons.camera),
+                  label: const Text('Take Photo'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: widget.primaryColor,
+                    foregroundColor: Colors.white,
+                  ),
+                )
+                    : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     ElevatedButton.icon(
