@@ -37,6 +37,7 @@ import 'package:agriflock360/features/farmer/profile/models/profile_model.dart';
 import 'package:agriflock360/features/farmer/profile/settings_screen.dart';
 import 'package:agriflock360/features/farmer/profile/telemetry_data_screen.dart';
 import 'package:agriflock360/features/farmer/profile/update_profile_screen.dart';
+import 'package:agriflock360/features/farmer/record/quick_record.dart';
 import 'package:agriflock360/features/farmer/vet/completed_orders_screen.dart';
 import 'package:agriflock360/features/farmer/vet/models/my_order_list_item.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_farmer_model.dart';
@@ -381,6 +382,14 @@ class AppRoutes {
             return BuyInputsPageView(farm: farm,);
           },
         ),
+        GoRoute(
+          path: '/quick-recording',
+          builder: (context, state) {
+            final farm = state.extra as FarmModel?;
+            return UseFromStorePageView(farm: farm,);
+          },
+        ),
+
         GoRoute(
           path: '/my-expenditures',
           builder: (context, state) {

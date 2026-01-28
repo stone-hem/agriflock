@@ -267,7 +267,7 @@ class UsageChoiceView extends StatelessWidget {
                       const SizedBox(width: 16),
                       const Expanded(
                         child: Text(
-                          'USED IT NOW',
+                          'USED IMMEDIATELY',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,

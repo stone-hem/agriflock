@@ -488,6 +488,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     onTap: () => context.push('/my-expenditures'),
                   ),
                   const SizedBox(height: 20),
+
+                  HomeActionTile(
+                    icon: Icons.outbond,
+                    title: 'A quick recording',
+                    subtitle: 'Record a feed or a vaccination',
+                    color: Colors.red,
+                    onTap: () => context.push('/quick-recording'),
+                  ),
+                  const SizedBox(height: 20),
                   HomeActionTile(
                     icon: Icons.restaurant,
                     title: 'My Subscription',
