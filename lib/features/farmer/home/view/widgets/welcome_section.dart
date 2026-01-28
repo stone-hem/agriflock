@@ -77,7 +77,7 @@ class WelcomeSection extends StatelessWidget {
               backgroundColor: Colors.red.shade800,
             ),
             icon: Icon(Icons.arrow_forward, color: Colors.white),
-            label: Text('Record an expense'),
+            label: Text('Quick expense'),
           ),
         ],
       ),

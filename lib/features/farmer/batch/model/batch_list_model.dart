@@ -183,8 +183,13 @@ class BatchListItem {
       actualEndDate: json['actual_end_date'] as String?,
       currentStatus: json['current_status'] as String,
       notes: json['notes'] as String?,
-      purchaseCost: (json['purchase_cost'] as num?)?.toDouble(),
-      costPerBird: (json['cost_per_bird'] as num?)?.toDouble(),
+
+      // FIXED: Handle both string and numeric values for purchase_cost
+      purchaseCost: _parseDouble(json['purchase_cost']),
+
+      // FIXED: Handle both string and numeric values for cost_per_bird
+      costPerBird: _parseDouble(json['cost_per_bird']),
+
       currency: json['currency'] as String? ?? 'KES',
       ageAtPurchase: json['age_at_purchase'] as String?,
       hatcherySource: json['hatchery_source'] as String?,
@@ -206,6 +211,21 @@ class BatchListItem {
     );
   }
 
+// Helper method to parse double from dynamic value (handles both string and num)
+  static double? _parseDouble(dynamic value) {
+    if (value == null) return null;
+
+    if (value is num) {
+      return value.toDouble();
+    } else if (value is String) {
+      try {
+        return double.tryParse(value);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  }
   Map<String, dynamic> toJson() => {
     'id': id,
     'user_id': userId,

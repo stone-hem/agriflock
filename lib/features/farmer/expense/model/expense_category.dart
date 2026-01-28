@@ -4,17 +4,13 @@ class InventoryCategory {
   final String id;
   final String name;
   final String description;
-  final bool isActive;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final List<CategoryItem> categoryItems;
 
   InventoryCategory({
     required this.id,
     required this.name,
     required this.description,
-    required this.isActive,
-    required this.createdAt,
-    required this.updatedAt,
+    required this.categoryItems,
   });
 
   factory InventoryCategory.fromJson(Map<String, dynamic> json) {
@@ -22,9 +18,12 @@ class InventoryCategory {
       id: json['id'] as String,
       name: json['name'] as String,
       description: json['description'] as String,
-      isActive: json['is_active'] as bool,
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
+      categoryItems: json['category_items'] != null
+          ? List<CategoryItem>.from(
+        (json['category_items'] as List)
+            .map((x) => CategoryItem.fromJson(x)),
+      )
+          : [],
     );
   }
 
@@ -33,9 +32,41 @@ class InventoryCategory {
       'id': id,
       'name': name,
       'description': description,
-      'is_active': isActive,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
+      'category_items': categoryItems.map((x) => x.toJson()).toList(),
+    };
+  }
+}
+
+class CategoryItem {
+  final String id;
+  final String categoryItemName;
+  final String description;
+  final List<String> components;
+
+  CategoryItem({
+    required this.id,
+    required this.categoryItemName,
+    required this.description,
+    required this.components,
+  });
+
+  factory CategoryItem.fromJson(Map<String, dynamic> json) {
+    return CategoryItem(
+      id: json['id'] as String,
+      categoryItemName: json['category_item_name'] as String,
+      description: json['description'] as String,
+      components: json['components'] != null
+          ? List<String>.from(json['components'] as List)
+          : [],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'category_item_name': categoryItemName,
+      'description': description,
+      'components': components,
     };
   }
 }

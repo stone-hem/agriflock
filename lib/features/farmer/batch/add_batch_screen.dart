@@ -702,7 +702,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                   }
                   return null;
                 },
-                labelText: 'Initial count from hatchery',
+                labelText: 'Initial count from hatchery Or other sources',
                 hintText: 'e.g., $_availableCapacity',
               ),
               const SizedBox(height: 20),
