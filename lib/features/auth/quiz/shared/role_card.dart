@@ -41,7 +41,7 @@ class RoleCard extends StatelessWidget {
                 height: 50,
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? Colors.green.withOpacity(0.1)
+                      ? Colors.green.withValues(alpha: 0.1)
                       : Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(12),
                 ),
