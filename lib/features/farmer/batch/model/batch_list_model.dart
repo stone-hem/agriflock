@@ -1,7 +1,5 @@
 import 'dart:convert';
 
-import 'package:agriflock360/core/utils/date_util.dart';
-
 class BatchListResponse {
   final List<BatchListItem> batches;
   final Pagination pagination;
@@ -17,7 +15,7 @@ class BatchListResponse {
         (json['batchs'] as List<dynamic>? ?? json['batches'] as List<dynamic>? ?? [])
             .map((batch) => BatchListItem.fromJson(batch)),
       ),
-      pagination: Pagination.fromJson(json['pagination']),
+      pagination: Pagination.fromJson(json['pagination'] ?? {}),
     );
   }
 
@@ -156,23 +154,23 @@ class BatchListItem {
 
   factory BatchListItem.fromJson(Map<String, dynamic> json) {
     return BatchListItem(
-      id: json['id'] as String,
-      userId: json['user_id'] as String,
-      farmId: json['farm_id'] as String,
+      id: json['id'] as String? ?? '',
+      userId: json['user_id'] as String? ?? '',
+      farmId: json['farm_id'] as String? ?? '',
       farm: json['farm'] != null ? Farm.fromJson(json['farm'] as Map<String, dynamic>) : null,
       houseId: json['house_id'] as String?,
       house: json['house'] != null ? House.fromJson(json['house'] as Map<String, dynamic>) : null,
       deviceId: json['device_id'] as String?,
       device: json['device'],
       breed: json['breed'] as String?,
-      batchName: json['batch_name'] as String,
-      birdTypeId: json['bird_type_id'] as String,
-      batchType: json['batch_type'] as String,
+      batchName: json['batch_name'] as String? ?? '',
+      birdTypeId: json['bird_type_id'] as String? ?? '',
+      batchType: json['batch_type'] as String? ?? '',
       birdType: json['bird_type'] != null ? BirdType.fromJson(json['bird_type'] as Map<String, dynamic>) : null,
       age: json['age'] as String?,
       birdsAlive: json['birds_alive'] as String?,
-      currentWeight: (json['current_weight'] as num?)?.toDouble(),
-      expectedWeight: (json['expected_weight'] as num?)?.toDouble(),
+      currentWeight: _parseDouble(json['current_weight']),
+      expectedWeight: _parseDouble(json['expected_weight']),
       feedingTime: json['feeding_time'] as String?,
       feedingSchedule: json['feeding_schedule'] as String?,
       currentCount: (json['current_count'] as num?)?.toInt() ?? 0,
@@ -181,15 +179,10 @@ class BatchListItem {
       startDate: json['start_date'] as String?,
       expectedEndDate: json['expected_end_date'] as String?,
       actualEndDate: json['actual_end_date'] as String?,
-      currentStatus: json['current_status'] as String,
+      currentStatus: json['current_status'] as String? ?? 'unknown',
       notes: json['notes'] as String?,
-
-      // FIXED: Handle both string and numeric values for purchase_cost
       purchaseCost: _parseDouble(json['purchase_cost']),
-
-      // FIXED: Handle both string and numeric values for cost_per_bird
       costPerBird: _parseDouble(json['cost_per_bird']),
-
       currency: json['currency'] as String? ?? 'KES',
       ageAtPurchase: json['age_at_purchase'] as String?,
       hatcherySource: json['hatchery_source'] as String?,
@@ -203,29 +196,33 @@ class BatchListItem {
       deletedBy: json['deleted_by'] as String?,
       deleteByDate: json['delete_by_date'] as String?,
       deleted: (json['deleted'] as bool?) ?? false,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      createdAt: _parseDateTime(json['created_at']) ?? DateTime.now(),
+      updatedAt: _parseDateTime(json['updated_at']) ?? DateTime.now(),
       mortalityStats: json['mortality_stats'] != null
           ? MortalityStats.fromJson(json['mortality_stats'] as Map<String, dynamic>)
           : null,
     );
   }
 
-// Helper method to parse double from dynamic value (handles both string and num)
   static double? _parseDouble(dynamic value) {
     if (value == null) return null;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
 
-    if (value is num) {
-      return value.toDouble();
-    } else if (value is String) {
+  static DateTime? _parseDateTime(dynamic value) {
+    if (value == null) return null;
+    if (value is String) {
       try {
-        return double.tryParse(value);
+        return DateTime.parse(value);
       } catch (e) {
         return null;
       }
     }
     return null;
   }
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'user_id': userId,
@@ -274,7 +271,6 @@ class BatchListItem {
     'mortality_stats': mortalityStats?.toJson(),
   };
 
-  // Helper methods
   bool get isActive => currentStatus == 'active';
   bool get isCompleted => currentStatus == 'completed';
   double get utilizationPercentage => initialCount > 0 ? (currentCount / initialCount) * 100 : 0.0;
@@ -331,19 +327,31 @@ class Farm {
 
   factory Farm.fromJson(Map<String, dynamic> json) {
     return Farm(
-      id: json['id'] as String,
-      userId: json['user_id'] as String,
-      farmName: json['farm_name'] as String,
+      id: json['id'] as String? ?? '',
+      userId: json['user_id'] as String? ?? '',
+      farmName: json['farm_name'] as String? ?? '',
       location: json['location'],
       totalArea: json['total_area'] as String? ?? '0.00',
-      farmType: json['farm_type'] as String,
+      farmType: json['farm_type'] as String? ?? '',
       description: json['description'] as String?,
       contactInfo: json['contact_info'] as String?,
       isActive: (json['is_active'] as bool?) ?? true,
       farmPhoto: json['farm_photo'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      createdAt: _parseDateTime(json['created_at']) ?? DateTime.now(),
+      updatedAt: _parseDateTime(json['updated_at']) ?? DateTime.now(),
     );
+  }
+
+  static DateTime? _parseDateTime(dynamic value) {
+    if (value == null) return null;
+    if (value is String) {
+      try {
+        return DateTime.parse(value);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
   }
 
   Map<String, dynamic> toJson() => {
@@ -361,7 +369,6 @@ class Farm {
     'updated_at': updatedAt.toIso8601String(),
   };
 
-  // Helper method to get location data
   Map<String, dynamic>? get parsedLocation {
     if (location is String) {
       try {
@@ -411,10 +418,10 @@ class House {
 
   factory House.fromJson(Map<String, dynamic> json) {
     return House(
-      id: json['id'] as String,
-      userId: json['user_id'] as String,
-      farmId: json['farm_id'] as String,
-      name: json['name'] as String,
+      id: json['id'] as String? ?? '',
+      userId: json['user_id'] as String? ?? '',
+      farmId: json['farm_id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
       maximumCapacity: (json['maximum_capacity'] as num?)?.toInt() ?? 0,
       minimumCapacity: (json['minimum_capacity'] as num?)?.toInt() ?? 0,
       description: json['description'] as String?,
@@ -423,9 +430,21 @@ class House {
       housePhoto: json['house_photo'] as String?,
       currentOccupancy: (json['current_occupancy'] as num?)?.toInt() ?? 0,
       utilizationPercentage: (json['utilization_percentage'] as num?)?.toDouble() ?? 0.0,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      createdAt: _parseDateTime(json['created_at']) ?? DateTime.now(),
+      updatedAt: _parseDateTime(json['updated_at']) ?? DateTime.now(),
     );
+  }
+
+  static DateTime? _parseDateTime(dynamic value) {
+    if (value == null) return null;
+    if (value is String) {
+      try {
+        return DateTime.parse(value);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
   }
 
   Map<String, dynamic> toJson() => {
@@ -473,17 +492,29 @@ class BirdType {
 
   factory BirdType.fromJson(Map<String, dynamic> json) {
     return BirdType(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      type: json['type'] as String,
-      description: json['description'] as String,
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      type: json['type'] as String? ?? '',
+      description: json['description'] as String? ?? '',
       maturityDays: (json['maturity_days'] as num?)?.toInt() ?? 0,
       dayOldChickPrice: json['day_old_chick_price'] as String? ?? '0.00',
       expectedSellingPrice: json['expected_selling_price'] as String? ?? '0.00',
       isActive: (json['is_active'] as bool?) ?? true,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      createdAt: _parseDateTime(json['created_at']) ?? DateTime.now(),
+      updatedAt: _parseDateTime(json['updated_at']) ?? DateTime.now(),
     );
+  }
+
+  static DateTime? _parseDateTime(dynamic value) {
+    if (value == null) return null;
+    if (value is String) {
+      try {
+        return DateTime.parse(value);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
   }
 
   Map<String, dynamic> toJson() => {

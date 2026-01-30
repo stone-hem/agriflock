@@ -51,13 +51,33 @@ class CategoryItem {
   });
 
   factory CategoryItem.fromJson(Map<String, dynamic> json) {
+    // Handle different component formats
+    List<String> parseComponents(dynamic componentsData) {
+      if (componentsData == null) {
+        return [];
+      }
+
+      if (componentsData is List) {
+        // Already a list - convert to List<String>
+        return List<String>.from(componentsData);
+      }
+
+      if (componentsData is Map) {
+        // Convert map to list of "key: value" strings
+        return componentsData.entries
+            .map((entry) => '${entry.key}: ${entry.value}')
+            .toList();
+      }
+
+      // Fallback for unexpected types
+      return [componentsData.toString()];
+    }
+
     return CategoryItem(
       id: json['id'] as String,
       categoryItemName: json['category_item_name'] as String,
       description: json['description'] as String,
-      components: json['components'] != null
-          ? List<String>.from(json['components'] as List)
-          : [],
+      components: parseComponents(json['components']),
     );
   }
 
