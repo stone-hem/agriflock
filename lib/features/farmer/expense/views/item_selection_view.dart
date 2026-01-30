@@ -259,13 +259,13 @@ class _ItemSelectionViewState extends State<ItemSelectionView> {
                                           ),
                                         ),
                                       ),
-                                    if (item.components.isNotEmpty)
+                                    if (item.components != null && item.components is List && (item.components as List).isNotEmpty)
                                       Padding(
                                         padding: const EdgeInsets.only(top: 6),
                                         child: Wrap(
                                           spacing: 6,
                                           runSpacing: 6,
-                                          children: item.components.take(3).map((component) {
+                                          children: (item.components as List).take(3).map<Widget>((component) {
                                             return Container(
                                               padding: const EdgeInsets.symmetric(
                                                 horizontal: 8,
@@ -279,7 +279,7 @@ class _ItemSelectionViewState extends State<ItemSelectionView> {
                                                 ),
                                               ),
                                               child: Text(
-                                                component,
+                                                component.toString(),
                                                 style: TextStyle(
                                                   fontSize: 10,
                                                   color: categoryColor,

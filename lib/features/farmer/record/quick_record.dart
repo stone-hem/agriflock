@@ -100,7 +100,10 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
       switch (result) {
         case Success<List<InventoryCategory>>(data: final categories):
           setState(() {
-            _categories = categories;
+            // Filter categories where useFromStore is true and have at least one item with useFromStore true
+            _categories = categories
+                .where((cat) => cat.useFromStore && cat.categoryItems.any((item) => item.useFromStore))
+                .toList();
             _isLoadingCategories = false;
           });
           break;

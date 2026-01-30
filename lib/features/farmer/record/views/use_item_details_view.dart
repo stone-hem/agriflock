@@ -111,10 +111,13 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
   }
 
   List<CategoryItem> get _filteredItems {
+    // First filter to only items that can be used from store
+    final usableItems = widget.category.categoryItems.where((item) => item.useFromStore).toList();
+
     if (_searchQuery.isEmpty) {
-      return widget.category.categoryItems;
+      return usableItems;
     }
-    return widget.category.categoryItems.where((item) {
+    return usableItems.where((item) {
       return item.categoryItemName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           item.description.toLowerCase().contains(_searchQuery.toLowerCase());
     }).toList();

@@ -474,34 +474,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   _buildStatsOverview(),
                   const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      // Method 1: Using the utility class
-                      PopupUtil.show(
-                        context: context,
-                        direction: PopupDirection.bottom,
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          constraints: const BoxConstraints(maxWidth: 250),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Quick Actions',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                            ],
-                          ),
-                        ), targetKey: _buttonKey,
-                      );
-                    },
-                    child: const Text('Show Popup'),
-                  ),
                   Text(
                     'Quick Actions',
                     style: Theme.of(context).textTheme.titleLarge!.copyWith(

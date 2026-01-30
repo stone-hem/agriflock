@@ -132,8 +132,24 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
     }
   }
 
+  void _goToPage(int page) {
+    _pageController.animateToPage(
+      page,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
   void _previousPage() {
     if (_currentPage > 0) {
+      // If on batch selection (page 4) and usage choice was skipped, go back to quantity page
+      if (_currentPage == 4 &&
+          _selectedCategory != null &&
+          _selectedItem != null &&
+          (!_selectedCategory!.useFromStore || !_selectedItem!.useFromStore)) {
+        _goToPage(2); // Go back to quantity/price page
+        return;
+      }
       _pageController.previousPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -270,12 +286,20 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
                       _methodOfAdministration = methodOfAdministration;
                       _selectedDate = selectedDate;
                     });
-                    _nextPage();
+                    // Check if category and item can use from store
+                    // If not, skip usage choice and go directly to batch selection
+                    if (_selectedCategory!.useFromStore && _selectedItem!.useFromStore) {
+                      _nextPage();
+                    } else {
+                      // Cannot store, use immediately - skip to batch selection
+                      setState(() => _useNow = true);
+                      _goToPage(4); // Skip usage choice, go to batch selection
+                    }
                   },
                   onBack: _previousPage,
                 ),
 
-                // Step 4: Usage Choice
+                // Step 4: Usage Choice (only shown if useFromStore is true for both category and item)
                 if(_selectedItem != null  && _quantity != null && _totalPrice != null)
                 UsageChoiceView(
                   item: _selectedItem!,

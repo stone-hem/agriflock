@@ -4,12 +4,16 @@ class InventoryCategory {
   final String id;
   final String name;
   final String description;
+  final bool useFromStore;
+  final dynamic metadata;
   final List<CategoryItem> categoryItems;
 
   InventoryCategory({
     required this.id,
     required this.name,
     required this.description,
+    required this.useFromStore,
+    required this.metadata,
     required this.categoryItems,
   });
 
@@ -18,6 +22,8 @@ class InventoryCategory {
       id: json['id'] as String,
       name: json['name'] as String,
       description: json['description'] as String,
+      useFromStore: json['use_from_store'] as bool,
+      metadata: json['metadata'],
       categoryItems: json['category_items'] != null
           ? List<CategoryItem>.from(
         (json['category_items'] as List)
@@ -32,6 +38,8 @@ class InventoryCategory {
       'id': id,
       'name': name,
       'description': description,
+      'use_from_store': useFromStore,
+      'metadata': metadata,
       'category_items': categoryItems.map((x) => x.toJson()).toList(),
     };
   }
@@ -41,43 +49,24 @@ class CategoryItem {
   final String id;
   final String categoryItemName;
   final String description;
-  final List<String> components;
+  final dynamic components;
+  final bool useFromStore;
 
   CategoryItem({
     required this.id,
     required this.categoryItemName,
     required this.description,
     required this.components,
+    required this.useFromStore,
   });
 
   factory CategoryItem.fromJson(Map<String, dynamic> json) {
-    // Handle different component formats
-    List<String> parseComponents(dynamic componentsData) {
-      if (componentsData == null) {
-        return [];
-      }
-
-      if (componentsData is List) {
-        // Already a list - convert to List<String>
-        return List<String>.from(componentsData);
-      }
-
-      if (componentsData is Map) {
-        // Convert map to list of "key: value" strings
-        return componentsData.entries
-            .map((entry) => '${entry.key}: ${entry.value}')
-            .toList();
-      }
-
-      // Fallback for unexpected types
-      return [componentsData.toString()];
-    }
-
     return CategoryItem(
       id: json['id'] as String,
       categoryItemName: json['category_item_name'] as String,
       description: json['description'] as String,
-      components: parseComponents(json['components']),
+      components: json['components'],
+      useFromStore: json['use_from_store'] as bool,
     );
   }
 
@@ -87,6 +76,7 @@ class CategoryItem {
       'category_item_name': categoryItemName,
       'description': description,
       'components': components,
+      'use_from_store': useFromStore,
     };
   }
 }

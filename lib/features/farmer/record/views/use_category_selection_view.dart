@@ -54,8 +54,22 @@ class UseCategorySelectionView extends StatelessWidget {
     }
   }
 
+  // Filter categories to only show those with useFromStore true
+  List<InventoryCategory> get _filteredCategories {
+    return categories
+        .where((cat) => cat.useFromStore && cat.categoryItems.any((item) => item.useFromStore))
+        .toList();
+  }
+
+  // Get count of items that can be used from store
+  int _getUsableItemsCount(InventoryCategory category) {
+    return category.categoryItems.where((item) => item.useFromStore).length;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final filteredCategories = _filteredCategories;
+
     return Column(
       children: [
         // Batch info banner
@@ -102,7 +116,7 @@ class UseCategorySelectionView extends StatelessWidget {
         Expanded(
           child: isLoading
               ? const Center(child: CircularProgressIndicator())
-              : categories.isEmpty
+              : filteredCategories.isEmpty
               ? Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -155,9 +169,9 @@ class UseCategorySelectionView extends StatelessWidget {
                     mainAxisSpacing: 12,
                     childAspectRatio: 1.1,
                   ),
-                  itemCount: categories.length,
+                  itemCount: filteredCategories.length,
                   itemBuilder: (context, index) {
-                    final category = categories[index];
+                    final category = filteredCategories[index];
                     final color = _getCategoryColor(category.name);
                     final icon = _getCategoryIcon(category.name);
                     final isSelected = selectedCategory?.id == category.id;
@@ -210,11 +224,11 @@ class UseCategorySelectionView extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            if (category.categoryItems.isNotEmpty)
+                            if (_getUsableItemsCount(category) > 0)
                               Padding(
                                 padding: const EdgeInsets.only(top: 4),
                                 child: Text(
-                                  '${category.categoryItems.length} items',
+                                  '${_getUsableItemsCount(category)} items',
                                   style: TextStyle(
                                     fontSize: 11,
                                     color: Colors.grey.shade500,
