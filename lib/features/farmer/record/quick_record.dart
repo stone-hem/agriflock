@@ -252,6 +252,9 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
                     onItemSelected: (item) {
                       setState(() => _selectedItem = item);
                     },
+                    onItemCleared: () {
+                      setState(() => _selectedItem = null);
+                    },
                     onSave: ({
                       required double quantity,
                       String? methodOfAdministration,

@@ -12,6 +12,8 @@ import 'package:agriflock360/features/farmer/expense/repo/expenditure_repository
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+enum RecordType { schedule, quickRecord }
+
 class VaccinationRecordScreen extends StatefulWidget {
   final String batchId;
   final String? farmId;
@@ -28,26 +30,23 @@ class VaccinationRecordScreen extends StatefulWidget {
   State<VaccinationRecordScreen> createState() => _VaccinationRecordScreenState();
 }
 
-class _VaccinationRecordScreenState extends State<VaccinationRecordScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> {
   final _categoriesRepository = CategoriesRepository();
   final _expenditureRepository = ExpenditureRepository();
 
-  // Page controllers for each tab
-  final _schedulePageController = PageController();
-  final _quickRecordPageController = PageController();
+  // Page controller for the flow
+  final _pageController = PageController();
 
   // Form keys
   final _scheduleFormKey = GlobalKey<FormState>();
   final _quickRecordFormKey = GlobalKey<FormState>();
 
-  // Schedule tab controllers
+  // Schedule controllers
   final _scheduleQuantityController = TextEditingController();
   final _scheduleNotesController = TextEditingController();
   final _scheduleDateController = TextEditingController();
 
-  // Quick record tab controllers
+  // Quick record controllers
   final _quickQuantityController = TextEditingController();
   final _quickDosesController = TextEditingController();
   final _quickNotesController = TextEditingController();
@@ -56,16 +55,15 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen>
   // State
   InventoryCategory? _vaccineCategory;
   List<CategoryItem> _vaccineItems = [];
+  int _currentPage = 0;
+  CategoryItem? _selectedItem;
+  RecordType? _selectedRecordType;
 
-  // Schedule tab state
-  int _scheduleCurrentPage = 0;
-  CategoryItem? _scheduleSelectedItem;
+  // Schedule state
   String? _scheduleMethodOfAdministration;
   TimeOfDay _scheduleTime = TimeOfDay.now();
 
-  // Quick record tab state
-  int _quickCurrentPage = 0;
-  CategoryItem? _quickSelectedItem;
+  // Quick record state
   String? _quickMethodOfAdministration;
   TimeOfDay _quickTime = TimeOfDay.now();
 
@@ -85,7 +83,6 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
     _loadCategories();
   }
 
@@ -130,38 +127,30 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen>
     }
   }
 
-  // Schedule tab navigation
-  void _scheduleNextPage() {
-    _schedulePageController.nextPage(
+  void _nextPage() {
+    _pageController.nextPage(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
   }
 
-  void _schedulePreviousPage() {
-    _schedulePageController.previousPage(
+  void _previousPage() {
+    _pageController.previousPage(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
   }
 
-  // Quick record tab navigation
-  void _quickNextPage() {
-    _quickRecordPageController.nextPage(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
-  }
-
-  void _quickPreviousPage() {
-    _quickRecordPageController.previousPage(
+  void _goToPage(int page) {
+    _pageController.animateToPage(
+      page,
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
   }
 
   Future<void> _scheduleVaccination() async {
-    if (_scheduleSelectedItem == null) {
+    if (_selectedItem == null) {
       ToastUtil.showError('Please select a vaccine');
       return;
     }
@@ -182,7 +171,6 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen>
         }
       }
 
-      // Combine date and time
       final combinedDateTime = DateTime(
         selectedDate.year,
         selectedDate.month,
@@ -196,8 +184,8 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen>
         'batch_id': widget.batchId,
         if (widget.houseId != null) 'house_id': widget.houseId,
         'category_id': _vaccineCategory!.id,
-        'category_item_id': _scheduleSelectedItem!.id,
-        'description': _scheduleSelectedItem!.categoryItemName,
+        'category_item_id': _selectedItem!.id,
+        'description': _selectedItem!.categoryItemName,
         'quantity': double.parse(_scheduleQuantityController.text),
         'unit': 'doses',
         'scheduled_date': combinedDateTime.toUtc().toIso8601String(),
@@ -231,7 +219,7 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen>
   }
 
   Future<void> _recordVaccination() async {
-    if (_quickSelectedItem == null) {
+    if (_selectedItem == null) {
       ToastUtil.showError('Please select a vaccine');
       return;
     }
@@ -252,7 +240,6 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen>
         }
       }
 
-      // Combine date and time
       final combinedDateTime = DateTime(
         selectedDate.year,
         selectedDate.month,
@@ -266,8 +253,8 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen>
         'batch_id': widget.batchId,
         if (widget.houseId != null) 'house_id': widget.houseId,
         'category_id': _vaccineCategory!.id,
-        'category_item_id': _quickSelectedItem!.id,
-        'description': _quickSelectedItem!.categoryItemName,
+        'category_item_id': _selectedItem!.id,
+        'description': _selectedItem!.categoryItemName,
         'quantity': double.parse(_quickQuantityController.text),
         'unit': 'doses',
         'date': combinedDateTime.toUtc().toIso8601String(),
@@ -301,95 +288,101 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen>
     }
   }
 
+  String get _pageTitle {
+    switch (_currentPage) {
+      case 0:
+        return 'Select Vaccine';
+      case 1:
+        return 'Record Type';
+      case 2:
+        return _selectedRecordType == RecordType.schedule
+            ? 'Schedule Details'
+            : 'Record Details';
+      default:
+        return 'Vaccination';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Vaccination'),
+        title: Text(_pageTitle),
         centerTitle: false,
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.grey.shade700),
           onPressed: () {
-            // Check if we need to go back in PageView first
-            if (_tabController.index == 0 && _scheduleCurrentPage > 0) {
-              _schedulePreviousPage();
-            } else if (_tabController.index == 1 && _quickCurrentPage > 0) {
-              _quickPreviousPage();
+            if (_currentPage > 0) {
+              _previousPage();
             } else {
               context.pop();
             }
           },
-        ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(48),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: TabBar(
-              controller: _tabController,
-              isScrollable: true,
-              tabAlignment: TabAlignment.start,
-              indicatorSize: TabBarIndicatorSize.label,
-              indicator: BoxDecoration(
-                color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue, width: 1.5),
-              ),
-              labelColor: Colors.blue.shade700,
-              labelPadding: const EdgeInsets.symmetric(horizontal: 4),
-              unselectedLabelColor: Colors.grey.shade600,
-              labelStyle: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-              ),
-              unselectedLabelStyle: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-              ),
-              dividerColor: Colors.transparent,
-              splashFactory: NoSplash.splashFactory,
-              overlayColor: WidgetStateProperty.all(Colors.transparent),
-              tabs: [
-                _buildTab(Icons.calendar_today, 'Schedule New'),
-                _buildTab(Icons.check_circle, 'Quick Record'),
-              ],
-            ),
-          ),
         ),
       ),
       body: _isLoadingCategories
           ? const Center(child: CircularProgressIndicator())
           : _error != null
               ? _buildErrorView()
-              : TabBarView(
-                  controller: _tabController,
+              : Column(
                   children: [
-                    _buildScheduleTab(),
-                    _buildQuickRecordTab(),
+                    // Progress indicator
+                    LinearProgressIndicator(
+                      value: (_currentPage + 1) / 3,
+                      backgroundColor: Colors.grey.shade200,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        _selectedRecordType == RecordType.schedule
+                            ? Colors.blue
+                            : _selectedRecordType == RecordType.quickRecord
+                                ? Colors.green
+                                : Colors.blue,
+                      ),
+                    ),
+                    // Page indicator dots
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(3, (index) {
+                          final isActive = index == _currentPage;
+                          final isCompleted = index < _currentPage;
+                          return Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            width: isActive ? 24 : 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: isActive || isCompleted
+                                  ? (_selectedRecordType == RecordType.schedule
+                                      ? Colors.blue
+                                      : _selectedRecordType == RecordType.quickRecord
+                                          ? Colors.green
+                                          : Colors.blue)
+                                  : Colors.grey.shade300,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
+                    Expanded(
+                      child: PageView(
+                        controller: _pageController,
+                        physics: const NeverScrollableScrollPhysics(),
+                        onPageChanged: (page) {
+                          setState(() => _currentPage = page);
+                        },
+                        children: [
+                          _buildVaccineSelectionPage(),
+                          _buildRecordTypeSelectionPage(),
+                          _buildDetailsPage(),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
-    );
-  }
-
-  Widget _buildTab(IconData icon, String label) {
-    return Container(
-      height: 36,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade300, width: 1),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 16),
-          const SizedBox(width: 4),
-          Text(label),
-        ],
-      ),
     );
   }
 
@@ -411,37 +404,217 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen>
     );
   }
 
-  // ==================== SCHEDULE TAB ====================
-  Widget _buildScheduleTab() {
-    return Column(
-      children: [
-        LinearProgressIndicator(
-          value: (_scheduleCurrentPage + 1) / 2,
-          backgroundColor: Colors.grey.shade200,
-          valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
-        ),
-        Expanded(
-          child: PageView(
-            controller: _schedulePageController,
-            physics: const NeverScrollableScrollPhysics(),
-            onPageChanged: (page) {
-              setState(() => _scheduleCurrentPage = page);
-            },
-            children: [
-              _buildVaccineSelectionPage(
-                selectedItem: _scheduleSelectedItem,
-                onSelect: (item) {
-                  setState(() => _scheduleSelectedItem = item);
-                  _scheduleNextPage();
-                },
-                color: Colors.blue,
-              ),
-              _buildScheduleDetailsPage(),
-            ],
+  // ==================== PAGE 1: VACCINE SELECTION ====================
+  Widget _buildVaccineSelectionPage() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Select Vaccine',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
-        ),
-      ],
+          const SizedBox(height: 8),
+          Text(
+            'Choose the vaccine to administer',
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+          ),
+          const SizedBox(height: 24),
+
+          if (_vaccineItems.isEmpty)
+            _buildEmptyState()
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _vaccineItems.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final item = _vaccineItems[index];
+                final isSelected = _selectedItem?.id == item.id;
+
+                return GestureDetector(
+                  onTap: () {
+                    setState(() => _selectedItem = item);
+                    _nextPage();
+                  },
+                  child: _buildItemCard(item, isSelected),
+                );
+              },
+            ),
+        ],
+      ),
     );
+  }
+
+  // ==================== PAGE 2: RECORD TYPE SELECTION ====================
+  Widget _buildRecordTypeSelectionPage() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'How would you like to record?',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Choose to schedule a future vaccination or record a completed one',
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+          ),
+          const SizedBox(height: 16),
+
+          // Selected vaccine summary
+          if (_selectedItem != null)
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(Icons.vaccines, color: Colors.blue.shade600, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Selected Vaccine',
+                          style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                        ),
+                        Text(
+                          _selectedItem!.categoryItemName,
+                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => _goToPage(0),
+                    child: const Text('Change'),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 24),
+
+          // Schedule option
+          _buildRecordTypeOption(
+            type: RecordType.schedule,
+            icon: Icons.calendar_today,
+            title: 'Schedule Vaccination',
+            description: 'Plan a future vaccination for your batch',
+            color: Colors.blue,
+          ),
+          const SizedBox(height: 16),
+
+          // Quick Record option
+          _buildRecordTypeOption(
+            type: RecordType.quickRecord,
+            icon: Icons.check_circle,
+            title: 'Quick Record',
+            description: 'Record a vaccination that has already been completed',
+            color: Colors.green,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecordTypeOption({
+    required RecordType type,
+    required IconData icon,
+    required String title,
+    required String description,
+    required Color color,
+  }) {
+    final isSelected = _selectedRecordType == type;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() => _selectedRecordType = type);
+        _nextPage();
+      },
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? color : Colors.grey.shade200,
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, size: 32, color: color),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: isSelected ? color : Colors.grey.shade800,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 18,
+              color: Colors.grey.shade400,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ==================== PAGE 3: DETAILS ====================
+  Widget _buildDetailsPage() {
+    if (_selectedRecordType == RecordType.schedule) {
+      return _buildScheduleDetailsPage();
+    } else {
+      return _buildQuickRecordDetailsPage();
+    }
   }
 
   Widget _buildScheduleDetailsPage() {
@@ -493,8 +666,8 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen>
             const SizedBox(height: 16),
 
             // Selected vaccine card
-            if (_scheduleSelectedItem != null)
-              _buildSelectedItemCard(_scheduleSelectedItem!, Colors.blue, _schedulePreviousPage),
+            if (_selectedItem != null)
+              _buildSelectedItemCard(_selectedItem!, Colors.blue),
             const SizedBox(height: 20),
 
             // Administration Method
@@ -536,7 +709,7 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen>
             ),
             const SizedBox(height: 20),
 
-            // Scheduled Date (from tomorrow)
+            // Scheduled Date
             CustomDateTextField(
               label: 'Scheduled Date',
               icon: Icons.calendar_today,
@@ -621,39 +794,6 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen>
     );
   }
 
-  // ==================== QUICK RECORD TAB ====================
-  Widget _buildQuickRecordTab() {
-    return Column(
-      children: [
-        LinearProgressIndicator(
-          value: (_quickCurrentPage + 1) / 2,
-          backgroundColor: Colors.grey.shade200,
-          valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
-        ),
-        Expanded(
-          child: PageView(
-            controller: _quickRecordPageController,
-            physics: const NeverScrollableScrollPhysics(),
-            onPageChanged: (page) {
-              setState(() => _quickCurrentPage = page);
-            },
-            children: [
-              _buildVaccineSelectionPage(
-                selectedItem: _quickSelectedItem,
-                onSelect: (item) {
-                  setState(() => _quickSelectedItem = item);
-                  _quickNextPage();
-                },
-                color: Colors.green,
-              ),
-              _buildQuickRecordDetailsPage(),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildQuickRecordDetailsPage() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -703,8 +843,8 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen>
             const SizedBox(height: 16),
 
             // Selected vaccine card
-            if (_quickSelectedItem != null)
-              _buildSelectedItemCard(_quickSelectedItem!, Colors.green, _quickPreviousPage),
+            if (_selectedItem != null)
+              _buildSelectedItemCard(_selectedItem!, Colors.green),
             const SizedBox(height: 20),
 
             // Administration Method
@@ -826,51 +966,7 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen>
   }
 
   // ==================== SHARED WIDGETS ====================
-  Widget _buildVaccineSelectionPage({
-    required CategoryItem? selectedItem,
-    required Function(CategoryItem) onSelect,
-    required Color color,
-  }) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Select Vaccine',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Choose the vaccine to administer',
-            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-          ),
-          const SizedBox(height: 24),
-
-          if (_vaccineItems.isEmpty)
-            _buildEmptyState(color)
-          else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _vaccineItems.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final item = _vaccineItems[index];
-                final isSelected = selectedItem?.id == item.id;
-
-                return GestureDetector(
-                  onTap: () => onSelect(item),
-                  child: _buildItemCard(item, isSelected, color),
-                );
-              },
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSelectedItemCard(CategoryItem item, Color color, VoidCallback onEdit) {
+  Widget _buildSelectedItemCard(CategoryItem item, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -907,14 +1003,15 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen>
           ),
           IconButton(
             icon: Icon(Icons.edit, color: color),
-            onPressed: onEdit,
+            onPressed: () => _goToPage(0),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildItemCard(CategoryItem item, bool isSelected, Color color) {
+  Widget _buildItemCard(CategoryItem item, bool isSelected) {
+    const color = Colors.blue;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -940,7 +1037,7 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen>
               color: color.withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(Icons.vaccines, size: 24, color: color),
+            child: const Icon(Icons.vaccines, size: 24, color: color),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -974,26 +1071,26 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen>
     );
   }
 
-  Widget _buildEmptyState(Color color) {
+  Widget _buildEmptyState() {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: Colors.blue.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: Colors.blue.withOpacity(0.3)),
       ),
       child: Column(
         children: [
-          Icon(Icons.warning_amber, size: 48, color: color),
+          const Icon(Icons.warning_amber, size: 48, color: Colors.blue),
           const SizedBox(height: 12),
-          Text(
+          const Text(
             'No vaccines available',
-            style: TextStyle(fontWeight: FontWeight.bold, color: color),
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
           ),
           const SizedBox(height: 4),
           Text(
             'Please add vaccines to your inventory first',
-            style: TextStyle(color: color.withOpacity(0.8), fontSize: 13),
+            style: TextStyle(color: Colors.blue.withOpacity(0.8), fontSize: 13),
           ),
         ],
       ),
@@ -1002,9 +1099,7 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen>
 
   @override
   void dispose() {
-    _tabController.dispose();
-    _schedulePageController.dispose();
-    _quickRecordPageController.dispose();
+    _pageController.dispose();
     _scheduleQuantityController.dispose();
     _scheduleNotesController.dispose();
     _scheduleDateController.dispose();

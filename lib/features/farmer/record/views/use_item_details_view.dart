@@ -14,6 +14,7 @@ class UseItemDetailsView extends StatefulWidget {
   final DateTime selectedDate;
   final double? dosesUsed;
   final Function(CategoryItem) onItemSelected;
+  final VoidCallback onItemCleared;
   final Function({
   required double quantity,
   String? methodOfAdministration,
@@ -35,6 +36,7 @@ class UseItemDetailsView extends StatefulWidget {
     required this.selectedDate,
     this.dosesUsed,
     required this.onItemSelected,
+    required this.onItemCleared,
     required this.onSave,
     required this.onBack,
     required this.isSubmitting,
@@ -422,13 +424,10 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.edit),
+                            icon: const Icon(Icons.close),
                             color: categoryColor,
-                            onPressed: () {
-                              setState(() {
-                                widget.onItemSelected(widget.selectedItem!);
-                              });
-                            },
+                            tooltip: 'Change item',
+                            onPressed: widget.onItemCleared,
                           ),
                         ],
                       ),

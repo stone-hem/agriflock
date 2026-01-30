@@ -759,6 +759,10 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Quick Actions Section - At the bottom
+              _buildChipsSection(),
+              const SizedBox(height: 10),
+
               // Loading state
               if (_isLoading && !_hasAnyData)
                 _buildLoadingIndicator(),
@@ -1026,9 +1030,7 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                     ],
                   ),
 
-                // Quick Actions Section - At the bottom
-                const SizedBox(height: 24),
-                _buildChipsSection(),
+
                 const SizedBox(height: 20),
               ],
             ],
