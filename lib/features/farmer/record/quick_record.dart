@@ -150,7 +150,6 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
         'quantity': _quantity,
         'unit': 'unit',
         'date': _selectedDate.toUtc().toIso8601String(),
-        'used_immediately': true,
         if (_notes != null && _notes!.isNotEmpty) 'notes': _notes,
         if (_methodOfAdministration != null) 'method_of_administration': _methodOfAdministration,
         if (_dosesUsed != null) 'doses_used': _dosesUsed,

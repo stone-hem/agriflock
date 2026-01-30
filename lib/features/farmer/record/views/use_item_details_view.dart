@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_list_model.dart';
 import 'package:agriflock360/features/farmer/expense/model/expense_category.dart';
@@ -49,15 +50,14 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
   final TextEditingController _dosesController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _dateController = TextEditingController();
 
   String _searchQuery = '';
   String? _selectedMethodOfAdministration;
-  DateTime _selectedDate = DateTime.now();
 
   @override
   void initState() {
     super.initState();
-    _selectedDate = widget.selectedDate;
 
     if (widget.quantity != null) {
       _quantityController.text = widget.quantity.toString();
@@ -140,25 +140,24 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
         ? double.tryParse(_dosesController.text)
         : null;
 
+    // Parse date from controller (ISO format from CustomDateTextField)
+    DateTime selectedDate = DateTime.now();
+    if (_dateController.text.isNotEmpty) {
+      try {
+        selectedDate = DateTime.parse(_dateController.text);
+      } catch (e) {
+        // Fallback to current date if parsing fails
+        selectedDate = DateTime.now();
+      }
+    }
+
     widget.onSave(
       quantity: quantity,
       methodOfAdministration: _selectedMethodOfAdministration,
       notes: _notesController.text.isNotEmpty ? _notesController.text : null,
-      selectedDate: _selectedDate,
+      selectedDate: selectedDate,
       dosesUsed: dosesUsed,
     );
-  }
-
-  Future<void> _selectDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null && picked != _selectedDate) {
-      setState(() => _selectedDate = picked);
-    }
   }
 
   @override
@@ -562,39 +561,15 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                     ],
 
                     // Date selection
-                    const Text(
-                      'Date Used',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    GestureDetector(
-                      onTap: _selectDate,
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey.shade200),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.calendar_today, color: categoryColor),
-                            const SizedBox(width: 12),
-                            Text(
-                              '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const Spacer(),
-                            Icon(Icons.chevron_right, color: Colors.grey.shade400),
-                          ],
-                        ),
-                      ),
+                    CustomDateTextField(
+                      label: 'Date Used',
+                      icon: Icons.calendar_today,
+                      required: true,
+                      initialDate: widget.selectedDate,
+                      minYear: DateTime.now().year - 1,
+                      maxYear: DateTime.now().year,
+                      returnFormat: DateReturnFormat.isoString,
+                      controller: _dateController,
                     ),
                     const SizedBox(height: 16),
 
@@ -656,6 +631,7 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
     _dosesController.dispose();
     _notesController.dispose();
     _searchController.dispose();
+    _dateController.dispose();
     super.dispose();
   }
 }
