@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class ValueConfirmationBanner extends StatelessWidget {
   final VoidCallback? onViewActivity;
@@ -94,6 +95,16 @@ class ValueConfirmationBanner extends StatelessWidget {
               ),
             ),
           ),
+
+          FilledButton.icon(
+            onPressed: () => context.push('/record-expenditure'),
+            style: TextButton.styleFrom(
+              backgroundColor: Colors.red.shade800,
+            ),
+            icon: Icon(Icons.arrow_forward, color: Colors.white),
+            label: Text('Quick expense'),
+          ),
+
         ],
       ),
     );

@@ -11,16 +11,13 @@ class QuantityPriceView extends StatefulWidget {
   final double? unitPrice;
   final double? totalPrice;
   final String? methodOfAdministration;
-  final String? notes;
   final DateTime selectedDate;
   final Function({
   required double quantity,
   required double unitPrice,
   required double totalPrice,
   String? methodOfAdministration,
-  String? notes,
   required DateTime selectedDate,
-  required String paymentMethod,
   }) onContinue;
   final VoidCallback onBack;
 
@@ -32,7 +29,6 @@ class QuantityPriceView extends StatefulWidget {
     this.unitPrice,
     this.totalPrice,
     this.methodOfAdministration,
-    this.notes,
     required this.selectedDate,
     required this.onContinue,
     required this.onBack,
@@ -46,11 +42,9 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _quantityController;
   late TextEditingController _unitPriceController;
-  late TextEditingController _notesController;
   late TextEditingController _dateController;
 
   String? _methodOfAdministration;
-  String _paymentMethod = 'Cash';
   double _totalPrice = 0.0;
 
   final List<String> _administrationMethods = [
@@ -71,7 +65,6 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
     _unitPriceController = TextEditingController(
       text: widget.unitPrice?.toString() ?? '',
     );
-    _notesController = TextEditingController(text: widget.notes ?? '');
     _dateController = TextEditingController(
       text: widget.selectedDate.toIso8601String(),
     );
@@ -134,9 +127,7 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
       unitPrice: unitPrice,
       totalPrice: _totalPrice,
       methodOfAdministration: _methodOfAdministration,
-      notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
       selectedDate: DateTime.parse(_dateController.text),
-      paymentMethod: _paymentMethod,
     );
   }
 
@@ -323,15 +314,6 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
                       },
                     ),
 
-                  // Notes
-                  ReusableInput(
-                    topLabel: 'Notes (Optional)',
-                    icon: Icons.notes,
-                    controller: _notesController,
-                    hintText: 'Any additional notes...',
-                    maxLines: 3,
-                  ),
-
                   // Date
                   CustomDateTextField(
                     label: 'Date *',
@@ -417,7 +399,6 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
   void dispose() {
     _quantityController.dispose();
     _unitPriceController.dispose();
-    _notesController.dispose();
     _dateController.dispose();
     super.dispose();
   }

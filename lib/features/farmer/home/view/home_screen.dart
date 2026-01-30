@@ -4,6 +4,7 @@ import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:agriflock360/core/utils/shared_prefs.dart';
+import 'package:agriflock360/core/widgets/popup_wdget.dart';
 import 'package:agriflock360/features/farmer/home/model/dashboard_model.dart';
 import 'package:agriflock360/features/farmer/home/model/financial_overview_model.dart';
 import 'package:agriflock360/features/farmer/home/repo/dashboard_repo.dart';
@@ -45,6 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoadingUser = true;
   int _daysSinceFirstLogin = 0;
   bool _showDay27Modal = false;
+  final GlobalKey _buttonKey = GlobalKey();
 
   // Constants for day thresholds
   static const int VALUE_CONFIRMATION_START_DAY = 5;
@@ -472,6 +474,34 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   _buildStatsOverview(),
                   const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      // Method 1: Using the utility class
+                      PopupUtil.show(
+                        context: context,
+                        direction: PopupDirection.bottom,
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          constraints: const BoxConstraints(maxWidth: 250),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Quick Actions',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                            ],
+                          ),
+                        ), targetKey: _buttonKey,
+                      );
+                    },
+                    child: const Text('Show Popup'),
+                  ),
                   Text(
                     'Quick Actions',
                     style: Theme.of(context).textTheme.titleLarge!.copyWith(

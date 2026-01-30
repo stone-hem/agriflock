@@ -49,9 +49,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
   double? _unitPrice;
   double? _totalPrice;
   String? _methodOfAdministration;
-  String? _notes;
   DateTime _selectedDate = DateTime.now();
-  String _paymentMethod = 'Cash';
 
   // Usage choice
   bool _useNow=true; // true = use now, false = store
@@ -156,8 +154,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
         'quantity': _quantity,
         'unit': 'unit', // You can add unit selection if needed
         'date': _selectedDate.toUtc().toIso8601String(),
-        'payment_method': _paymentMethod,
-        if (_notes != null && _notes!.isNotEmpty) 'notes': _notes,
+        'notes': null,
         if (_methodOfAdministration != null) 'method_of_administration': _methodOfAdministration,
         if (_selectedBatch != null) 'batch_id': _selectedBatch!.id,
         if (_selectedBatch != null && _selectedBatch!.houseId != null) 'house_id': _selectedBatch!.houseId,
@@ -257,7 +254,6 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
                   unitPrice: _unitPrice,
                   totalPrice: _totalPrice,
                   methodOfAdministration: _methodOfAdministration,
-                  notes: _notes,
                   selectedDate: _selectedDate,
                   onContinue: ({
                     required double quantity,
@@ -266,16 +262,13 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
                     String? methodOfAdministration,
                     String? notes,
                     required DateTime selectedDate,
-                    required String paymentMethod,
                   }) {
                     setState(() {
                       _quantity = quantity;
                       _unitPrice = unitPrice;
                       _totalPrice = totalPrice;
                       _methodOfAdministration = methodOfAdministration;
-                      _notes = notes;
                       _selectedDate = selectedDate;
-                      _paymentMethod = paymentMethod;
                     });
                     _nextPage();
                   },

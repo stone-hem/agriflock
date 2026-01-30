@@ -373,9 +373,37 @@ class _LoginScreenState extends State<LoginScreen> {
         context.push(
           '${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(email)}',
         );
+      } else {
+        // Handle other errors (including generic errors)
+        final errorMessage = result['message']?.toString() ?? 'An unexpected error occurred';
+
+        // Show snackbar with error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+
+        // Also keep the original ToastUtil if you want both
+        ToastUtil.showError(errorMessage);
       }
     } catch (e) {
-      // Error already handled by repository
+      // Handle exceptions thrown by the repository
+      final errorMessage = e.toString();
+
+      // Show snackbar for exceptions too
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+
+      // Also keep the original ToastUtil if you want both
+      ToastUtil.showError('Login failed: $errorMessage');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

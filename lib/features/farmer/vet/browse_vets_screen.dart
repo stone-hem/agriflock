@@ -455,180 +455,6 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
     );
   }
 
-  Widget _buildRecommendedVetCard(VetFarmerRecommendation vet) {
-    final rating = double.tryParse(vet.averageRating) ?? 0.0;
-
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.amber.shade200, width: 2),
-      ),
-      margin: const EdgeInsets.only(bottom: 16),
-      child: InkWell(
-        onTap: () => _navigateToVetDetails(vet.id),
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-
-              // Vet Avatar
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.pets,
-                    color: Colors.green,
-                    size: 30,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-
-              // Vet Details
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            vet.name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.amber.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.amber,
-                            ),
-                          ),
-                          child: const Text(
-                            'Recommended',
-                            style: TextStyle(
-                              color: Colors.amber,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      vet.educationLevel,
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.location_on,
-                          color: Colors.grey.shade500,
-                          size: 14,
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            vet.location.address!.formattedAddress,
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 12,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-
-                    Row(
-                          children: [
-                            Icon(
-                              Icons.star,
-                              color: Colors.amber.shade700,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              rating.toStringAsFixed(1),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              '${vet.yearsOfExperience} years exp',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.green.shade700,
-                              ),
-                            ),
-                          ],
-                        ),
-
-
-                    if (vet.isVerified)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.verified,
-                              color: Colors.green,
-                              size: 12,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Verified',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.green,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildEmptyState({
     required IconData icon,
     required String title,
@@ -667,61 +493,72 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
   }
 
   Widget _buildChipsSection() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Quick Actions'),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 10,
-          runSpacing: 8,
-          alignment: WrapAlignment.center,
-          children: [
-            ActionChip(
-              avatar: const Icon(Icons.list_alt, size: 16),
-              label: const Text('My Orders'),
-              onPressed: () {
-                context.push('/my-vet-orders');
-              },
-              backgroundColor: Colors.transparent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-                side: BorderSide(
-                  color: Colors.grey.shade400,
-                  width: 1.5,
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.flash_on, size: 18, color: Colors.grey.shade700),
+              const SizedBox(width: 8),
+              Text(
+                'Quick Actions',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade800,
                 ),
               ),
-              labelStyle: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
-              ),
-            ),
-
-            ActionChip(
-              avatar: const Icon(Icons.check_circle, size: 16),
-              label: const Text('Completed Orders'),
-              onPressed: () {
-                context.push('/my-completed-orders');
-              },
-              backgroundColor: Colors.transparent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-                side: BorderSide(
-                  color: Colors.grey.shade400,
-                  width: 1.5,
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    context.push('/my-vet-orders');
+                  },
+                  icon: const Icon(Icons.list_alt, size: 18),
+                  label: const Text('My Orders'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.grey.shade700,
+                    side: BorderSide(color: Colors.grey.shade300),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
                 ),
               ),
-              labelStyle: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    context.push('/my-completed-orders');
+                  },
+                  icon: const Icon(Icons.check_circle, size: 18),
+                  label: const Text('Completed'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.green.shade700,
+                    side: BorderSide(color: Colors.green.shade300),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ],
-        ),
-      ],
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -729,6 +566,160 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
   bool get _isLoading => _isLoadingAllVets || _isLoadingRecommended;
   bool get _hasError => _hasAllVetsError && _hasRecommendedError;
   bool get _hasAnyData => _allVets.isNotEmpty || _recommendedVets.isNotEmpty;
+
+  Widget _buildHorizontalRecommendedVetCard(VetFarmerRecommendation vet) {
+    final rating = double.tryParse(vet.averageRating) ?? 0.0;
+
+    return Container(
+      width: 280,
+      margin: const EdgeInsets.only(right: 12),
+      child: Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: Colors.amber.shade200, width: 1.5),
+        ),
+        child: InkWell(
+          onTap: () => _navigateToVetDetails(vet.id),
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: vet.faceSelfieUrl != null
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.network(
+                                vet.faceSelfieUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => const Icon(
+                                  Icons.pets,
+                                  color: Colors.green,
+                                  size: 24,
+                                ),
+                              ),
+                            )
+                          : const Icon(
+                              Icons.pets,
+                              color: Colors.green,
+                              size: 24,
+                            ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  vet.name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (vet.isVerified)
+                                Icon(
+                                  Icons.verified,
+                                  color: Colors.green,
+                                  size: 16,
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            vet.educationLevel,
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 11,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Icon(Icons.location_on, color: Colors.grey.shade500, size: 14),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        vet.location.address?.formattedAddress ?? 'Location not specified',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 11,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.star, color: Colors.amber.shade700, size: 14),
+                        const SizedBox(width: 2),
+                        Text(
+                          rating.toStringAsFixed(1),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${vet.yearsOfExperience}y exp',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.green.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Text(
+                        'Recommended',
+                        style: TextStyle(
+                          color: Colors.amber,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -768,50 +759,6 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
-              Card(
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(color: Colors.green.shade200),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Icon(Icons.medical_services, color: Colors.green.shade600),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Professional Veterinary Services',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Book appointments, emergency visits, or consultations with certified veterinarians',
-                              style: TextStyle(
-                                color: Colors.grey.shade600,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 14),
-              _buildChipsSection(),
-              const SizedBox(height: 18),
-
-
               // Loading state
               if (_isLoading && !_hasAnyData)
                 _buildLoadingIndicator(),
@@ -825,84 +772,86 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
 
               // Content when data is loaded
               if (!_isLoading || _hasAnyData) ...[
-                // Recommended Section (only show if we have data)
+                // Recommended Section - Horizontal Scroll (Priority: show vets first)
                 if (_recommendedVets.isNotEmpty &&
                     _searchController.text.isEmpty &&
-                    !_hasRecommendedError)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    !_hasRecommendedError) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Recommended Vets',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green,
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              '${_recommendedVets.length} available',
-                              style: const TextStyle(
-                                color: Colors.green,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Top-rated veterinarians in your area',
+                      const Text(
+                        'Recommended Vets',
                         style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 14,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      ..._recommendedVets.map(_buildRecommendedVetCard),
-                      const SizedBox(height: 24),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Text(
+                          '${_recommendedVets.length} nearby',
+                          style: const TextStyle(
+                            color: Colors.green,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Top-rated veterinarians in your area',
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 155,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _recommendedVets.length,
+                      itemBuilder: (context, index) {
+                        return _buildHorizontalRecommendedVetCard(_recommendedVets[index]);
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
 
                 // Error for recommended section only
                 if (_hasRecommendedError && _recommendedVets.isEmpty && _searchController.text.isEmpty)
-                  Card(
-                    elevation: 0,
-                    color: Colors.red.shade50,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.red.shade200),
+                      ),
+                      child: Row(
                         children: [
-                          Row(
-                            children: [
-                              Icon(Icons.error_outline, color: Colors.red),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Failed to load recommendations',
-                                style: TextStyle(
-                                  color: Colors.red,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                          Icon(Icons.error_outline, color: Colors.red, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Failed to load recommendations',
+                              style: TextStyle(
+                                color: Colors.red.shade700,
+                                fontSize: 12,
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _recommendedErrorMessage ?? 'Please try again',
-                            style: TextStyle(color: Colors.red.shade700),
+                            ),
                           ),
                         ],
                       ),
@@ -927,13 +876,14 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                             decoration: const InputDecoration(
                               hintText: 'Search by name, education, or specialization...',
                               border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(vertical: 16),
+                              contentPadding: EdgeInsets.symmetric(vertical: 14),
                             ),
+                            style: const TextStyle(fontSize: 14),
                           ),
                         ),
                         if (_searchController.text.isNotEmpty)
                           IconButton(
-                            icon: const Icon(Icons.clear),
+                            icon: const Icon(Icons.clear, size: 20),
                             onPressed: () {
                               _searchController.clear();
                             },
@@ -942,7 +892,7 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
 
                 // Filter Chips
                 SingleChildScrollView(
@@ -963,7 +913,9 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                         labelStyle: TextStyle(
                           color: _isVerified == true ? Colors.white : Colors.green,
                           fontWeight: FontWeight.bold,
+                          fontSize: 12,
                         ),
+                        visualDensity: VisualDensity.compact,
                       ),
                       const SizedBox(width: 8),
                       FilterChip(
@@ -980,7 +932,9 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                         labelStyle: TextStyle(
                           color: _selectedStatus == 'active' ? Colors.white : Colors.blue,
                           fontWeight: FontWeight.bold,
+                          fontSize: 12,
                         ),
+                        visualDensity: VisualDensity.compact,
                       ),
                       const SizedBox(width: 8),
                       FilterChip(
@@ -997,22 +951,24 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                         labelStyle: TextStyle(
                           color: _selectedOfficerType == 'vet' ? Colors.white : Colors.purple,
                           fontWeight: FontWeight.bold,
+                          fontSize: 12,
                         ),
+                        visualDensity: VisualDensity.compact,
                       ),
                       const SizedBox(width: 8),
                       if (_isLoadingAllVets)
                         const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 8),
                           child: SizedBox(
-                            width: 20,
-                            height: 20,
+                            width: 18,
+                            height: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           ),
                         ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
 
                 // All Vets Section
                 if (_hasAllVetsError && _allVets.isEmpty)
@@ -1032,14 +988,14 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                           Text(
                             _searchController.text.isEmpty ? 'All Veterinary Officers' : 'Search Results',
                             style: const TextStyle(
-                              fontSize: 18,
+                              fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           if (_totalVets > 0)
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
+                                horizontal: 10,
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
@@ -1049,22 +1005,14 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                               child: Text(
                                 '$_totalVets total',
                                 style: const TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '${_filteredVets.length} vets found',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 12),
                       if (_filteredVets.isEmpty && !_isLoadingAllVets)
                         _buildEmptyState(
                           icon: Icons.search_off,
@@ -1077,6 +1025,11 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                         ..._filteredVets.map(_buildVetCard),
                     ],
                   ),
+
+                // Quick Actions Section - At the bottom
+                const SizedBox(height: 24),
+                _buildChipsSection(),
+                const SizedBox(height: 20),
               ],
             ],
           ),

@@ -23,6 +23,7 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
   final VaccinationRepository _repository = VaccinationRepository();
 
   bool _isFabVisible = true;
+  bool _isStatsVisible = true;
   final Map<int, ScrollController> _scrollControllers = {};
 
   // State
@@ -174,13 +175,18 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
 
   void _handleScroll(ScrollController controller, int tabIndex) {
     if (controller.hasClients) {
-      if (controller.position.pixels > 0 && _isFabVisible) {
+      final pixels = controller.position.pixels;
+      final shouldHide = pixels > 50;
+
+      if (shouldHide && (_isFabVisible || _isStatsVisible)) {
         setState(() {
           _isFabVisible = false;
+          _isStatsVisible = false;
         });
-      } else if (controller.position.pixels <= 0 && !_isFabVisible) {
+      } else if (!shouldHide && (!_isFabVisible || !_isStatsVisible)) {
         setState(() {
           _isFabVisible = true;
+          _isStatsVisible = true;
         });
       }
     }
@@ -192,13 +198,18 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
 
     if (currentController != null && currentController.hasClients) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (currentController.position.pixels > 0 && _isFabVisible) {
+        final pixels = currentController.position.pixels;
+        final shouldHide = pixels > 50;
+
+        if (shouldHide && (_isFabVisible || _isStatsVisible)) {
           setState(() {
             _isFabVisible = false;
+            _isStatsVisible = false;
           });
-        } else if (currentController.position.pixels <= 0 && !_isFabVisible) {
+        } else if (!shouldHide && (!_isFabVisible || !_isStatsVisible)) {
           setState(() {
             _isFabVisible = true;
+            _isStatsVisible = true;
           });
         }
       });
@@ -220,12 +231,27 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       body: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildDashboardStats(),
-            const SizedBox(height: 16),
+            // Collapsible Stats Section
+            ClipRect(
+              child: AnimatedAlign(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                alignment: Alignment.topCenter,
+                heightFactor: _isStatsVisible ? 1.0 : 0.0,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 200),
+                  opacity: _isStatsVisible ? 1 : 0,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 20, bottom: 16),
+                    child: _buildDashboardStats(),
+                  ),
+                ),
+              ),
+            ),
             Expanded(
               child: Column(
                 children: [
@@ -235,18 +261,18 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
                     tabAlignment: TabAlignment.start,
                     indicatorSize: TabBarIndicatorSize.tab,
                     indicator: BoxDecoration(
-                      color: Colors.grey.shade300, // Light grey for active tab
+                      color: Colors.grey.shade300,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    labelColor: Colors.grey.shade800, // Darker text for active
+                    labelColor: Colors.grey.shade800,
                     unselectedLabelColor: Colors.grey.shade600,
                     labelStyle: const TextStyle(
-                      fontSize: 11, // Smaller font
+                      fontSize: 11,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 0.1,
                     ),
                     unselectedLabelStyle: const TextStyle(
-                      fontSize: 11, // Smaller font
+                      fontSize: 11,
                       fontWeight: FontWeight.w500,
                       letterSpacing: 0.1,
                     ),
@@ -259,7 +285,7 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
                       _buildTabWithIcon(Icons.schedule, 'Recommended'),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   Expanded(
                     child: TabBarView(
                       controller: _tabController,

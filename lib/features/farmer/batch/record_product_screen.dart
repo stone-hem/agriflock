@@ -94,7 +94,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
               ? num.parse(_weightController.text)
               : null,
           price: num.parse(_priceController.text),
-          collectionDate: _selectedDateController.text,
+          collectionDate: selectedCompletedTime.toUtc().toIso8601String(),
           notes: _notesController.text.isNotEmpty ? _notesController.text : null,
         );
       } else {
@@ -104,7 +104,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
           batchId: widget.batchId,
           quantity: num.parse(_quantityController.text),
           price: num.parse(_priceController.text),
-          collectionDate: _selectedDateController.text,
+          collectionDate: selectedCompletedTime.toUtc().toIso8601String(),
           notes: _notesController.text.isNotEmpty ? _notesController.text : null,
         );
       }

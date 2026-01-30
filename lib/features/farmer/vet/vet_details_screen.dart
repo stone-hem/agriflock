@@ -516,6 +516,193 @@ class _VetDetailsScreenState extends State<VetDetailsScreen> {
                               const SizedBox(height: 20),
                             ],
 
+                            // Professional Details
+                            const Text(
+                              'Professional Details',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: darkGray,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            _buildInfoCard(
+                              icon: Icons.badge,
+                              label: 'Officer Type',
+                              value: _vet!.officerType.isNotEmpty
+                                  ? _vet!.officerType[0].toUpperCase() + _vet!.officerType.substring(1).replaceAll('_', ' ')
+                                  : 'Not specified',
+                            ),
+                            _buildInfoCard(
+                              icon: Icons.military_tech,
+                              label: 'Tier',
+                              value: _vet!.tier.isNotEmpty
+                                  ? _vet!.tier[0].toUpperCase() + _vet!.tier.substring(1)
+                                  : 'Standard',
+                            ),
+                            _buildInfoCard(
+                              icon: Icons.work,
+                              label: 'Jobs Completed',
+                              value: '${_vet!.totalJobsCompleted} jobs',
+                            ),
+                            if (_vet!.licenseNumber != null && _vet!.licenseNumber!.isNotEmpty)
+                              _buildInfoCard(
+                                icon: Icons.card_membership,
+                                label: 'License Number',
+                                value: _maskContactInfo(_vet!.licenseNumber),
+                              ),
+
+                            const SizedBox(height: 20),
+
+                            // Specializations
+                            if (_vet!.specializations != null &&
+                                (_vet!.specializations!.areas.isNotEmpty ||
+                                 _vet!.specializations!.certifications.isNotEmpty)) ...[
+                              const Text(
+                                'Specializations',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: darkGray,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              if (_vet!.specializations!.areas.isNotEmpty)
+                                Wrap(
+                                  children: _vet!.specializations!.areas
+                                      .map((area) => _buildServiceChip(area))
+                                      .toList(),
+                                ),
+                              if (_vet!.specializations!.certifications.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Certifications',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: mediumGray,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Wrap(
+                                  children: _vet!.specializations!.certifications
+                                      .map((cert) => Container(
+                                        margin: const EdgeInsets.only(right: 6, bottom: 6),
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: Colors.blue.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(16),
+                                          border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                                        ),
+                                        child: Text(
+                                          cert,
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.blue.shade700,
+                                          ),
+                                        ),
+                                      ))
+                                      .toList(),
+                                ),
+                              ],
+                              const SizedBox(height: 20),
+                            ],
+
+                            // Coverage Areas
+                            if (_vet!.coverageAreas != null &&
+                                (_vet!.coverageAreas!.counties.isNotEmpty ||
+                                 _vet!.coverageAreas!.subCounties.isNotEmpty)) ...[
+                              const Text(
+                                'Coverage Areas',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: darkGray,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Container(
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: borderColor),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (_vet!.coverageAreas!.counties.isNotEmpty) ...[
+                                      Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Icon(Icons.map, color: primaryGreen, size: 18),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                const Text(
+                                                  'Counties',
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: mediumGray,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  _vet!.coverageAreas!.counties.join(', '),
+                                                  style: const TextStyle(
+                                                    fontSize: 13,
+                                                    color: darkGray,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                    if (_vet!.coverageAreas!.subCounties.isNotEmpty) ...[
+                                      const SizedBox(height: 12),
+                                      Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Icon(Icons.location_city, color: primaryGreen, size: 18),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                const Text(
+                                                  'Sub-Counties',
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: mediumGray,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  _vet!.coverageAreas!.subCounties.join(', '),
+                                                  style: const TextStyle(
+                                                    fontSize: 13,
+                                                    color: darkGray,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                            ],
+
                             // Services
                             const Text(
                               'Services Offered',
@@ -528,7 +715,7 @@ class _VetDetailsScreenState extends State<VetDetailsScreen> {
                             const SizedBox(height: 10),
                             Wrap(
                               children: [
-                                _buildServiceChip('Advisory Call (Remote) Transport'),
+                                _buildServiceChip('Advisory Call (Remote)'),
                                 _buildServiceChip('Disease Investigation'),
                                 _buildServiceChip('Farm Visit & Assessment'),
                                 _buildServiceChip('Training / Group Session'),
@@ -551,8 +738,14 @@ class _VetDetailsScreenState extends State<VetDetailsScreen> {
                             _buildInfoCard(
                               icon: Icons.location_on,
                               label: 'Location',
-                              value: _vet!.location.address!.formattedAddress,
+                              value: _vet!.location.address?.formattedAddress ?? 'Not specified',
                             ),
+                            if (_vet!.region != null && _vet!.region!.isNotEmpty)
+                              _buildInfoCard(
+                                icon: Icons.public,
+                                label: 'Region',
+                                value: _vet!.region!,
+                              ),
                             _buildInfoCard(
                               icon: Icons.email,
                               label: 'Email',
@@ -563,10 +756,24 @@ class _VetDetailsScreenState extends State<VetDetailsScreen> {
                               label: 'Phone',
                               value: _maskContactInfo(_vet!.user?.phoneNumber),
                             ),
+                            if (_vet!.contactInfo != null) ...[
+                              if (_vet!.contactInfo!.whatsapp.isNotEmpty)
+                                _buildInfoCard(
+                                  icon: Icons.chat,
+                                  label: 'WhatsApp',
+                                  value: _maskContactInfo(_vet!.contactInfo!.whatsapp),
+                                ),
+                              if (_vet!.contactInfo!.alternativePhone.isNotEmpty)
+                                _buildInfoCard(
+                                  icon: Icons.phone_android,
+                                  label: 'Alternative Phone',
+                                  value: _maskContactInfo(_vet!.contactInfo!.alternativePhone),
+                                ),
+                            ],
 
                             // Certificates
-                            if (_vet!.certificateUrls.isNotEmpty) ...[
-                              const SizedBox(height: 4),
+                            if (_vet!.certificateUrls.isNotEmpty || _vet!.additionalCertificateUrls.isNotEmpty) ...[
+                              const SizedBox(height: 16),
                               Container(
                                 padding: const EdgeInsets.all(14),
                                 decoration: BoxDecoration(
@@ -587,7 +794,7 @@ class _VetDetailsScreenState extends State<VetDetailsScreen> {
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Text(
-                                        '${_vet!.certificateUrls.length} certificate(s) verified',
+                                        '${_vet!.certificateUrls.length + _vet!.additionalCertificateUrls.length} certificate(s) verified',
                                         style: TextStyle(
                                           fontSize: 13,
                                           fontWeight: FontWeight.w600,

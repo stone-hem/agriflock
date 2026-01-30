@@ -7,46 +7,6 @@ class HomeSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
-      appBar: AppBar(
-        title: Row(
-          children: [
-            // Logo skeleton
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            const SizedBox(width: 12),
-            // App title skeleton
-            Container(
-              width: 120,
-              height: 24,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(6),
-              ),
-            ),
-          ],
-        ),
-        centerTitle: false,
-        backgroundColor: Colors.transparent,
-        automaticallyImplyLeading: false,
-        elevation: 0,
-        actions: [
-          // Notification icon skeleton
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade300,
-              shape: BoxShape.circle,
-            ),
-          ),
-        ],
-      ),
       body: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(20),
