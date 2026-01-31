@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:flutter/material.dart';
@@ -29,9 +30,9 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
   String? _selectedHouse;
   String? _selectedBatch;
   String? _selectedCategory;
-  DateTime? _startDate;
-  DateTime? _endDate;
   final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _startDateController = TextEditingController();
+  final TextEditingController _endDateController = TextEditingController();
 
   // Data states
   FarmsResponse? _farmsResponse;
@@ -70,6 +71,8 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
   void dispose() {
     _scrollController.dispose();
     _searchController.dispose();
+    _startDateController.dispose();
+    _endDateController.dispose();
     super.dispose();
   }
 
@@ -78,8 +81,7 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
       if (_scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent - 100 &&
           !_isLoadingNextPage &&
-          _hasMore &&
-          _selectedFarm != null) {
+          _hasMore) {
         _loadMoreExpenditures();
       }
     });
@@ -87,6 +89,7 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
 
   void _initializeData() {
     _loadFarms();
+    _loadExpenditures(reset: true);
   }
 
   Future<void> _loadFarms() async {
@@ -187,11 +190,11 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
         houseId: _selectedHouse,
         batchId: _selectedBatch,
         categoryId: _selectedCategory,
-        startDate: _startDate != null
-            ? DateUtil.toISO8601(_startDate!)
+        startDate: _startDateController.text.isNotEmpty
+            ? _startDateController.text
             : null,
-        endDate: _endDate != null
-            ? DateUtil.toISO8601(_endDate!)
+        endDate: _endDateController.text.isNotEmpty
+            ? _endDateController.text
             : null,
         searchQuery: _searchController.text.isNotEmpty
             ? _searchController.text
@@ -318,70 +321,20 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
 
   void _clearFilters() {
     setState(() {
+      _selectedFarm = null;
       _selectedHouse = null;
       _selectedBatch = null;
       _selectedCategory = null;
-      _startDate = null;
-      _endDate = null;
+      _houses = [];
+      _availableBatches = [];
       _searchController.clear();
+      _startDateController.clear();
+      _endDateController.clear();
     });
     _loadExpenditures(reset: true);
   }
 
-  Widget _buildFarmSelection() {
-    if (_isLoadingFarms) {
-      return _buildLoadingIndicator('Loading farms...');
-    }
-
-    if (_hasError) {
-      return _buildErrorWidget(_errorMessage ?? 'Failed to load farms');
-    }
-
-    if (_farmsResponse == null || _farmsResponse!.farms.isEmpty) {
-      return _buildEmptyState('No farms available');
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: Text(
-            'Select a Farm',
-            style: Theme.of(context).textTheme.titleLarge!.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Colors.grey.shade800,
-            ),
-          ),
-        ),
-        SizedBox(
-          height: 160,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemCount: _farmsResponse!.farms.length,
-            itemBuilder: (context, index) {
-              final farm = _farmsResponse!.farms[index];
-              return _FarmCard(
-                farm: farm,
-                isSelected: farm.id == _selectedFarm,
-                onTap: () {
-                  setState(() {
-                    _selectedFarm = farm.id;
-                  });
-                  _loadHousesForSelectedFarm();
-                },
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildFilterSection() {
-    if (_selectedFarm == null) return const SizedBox();
-
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -404,10 +357,11 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
                   ),
                 ),
               ),
-              if (_selectedHouse != null ||
+              if (_selectedFarm != null ||
+                  _selectedHouse != null ||
                   _selectedBatch != null ||
-                  _startDate != null ||
-                  _endDate != null ||
+                  _startDateController.text.isNotEmpty ||
+                  _endDateController.text.isNotEmpty ||
                   _searchController.text.isNotEmpty)
                 TextButton.icon(
                   onPressed: _clearFilters,
@@ -421,27 +375,70 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
           ),
           const SizedBox(height: 16),
 
+          // Farm Dropdown
+          if (_farmsResponse != null && _farmsResponse!.farms.isNotEmpty)
+            ReusableDropdown(
+              value: _selectedFarm,
+              items: [
+                const DropdownMenuItem<String>(
+                  value: null,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: Text('All Farms'),
+                  ),
+                ),
+                ..._farmsResponse!.farms.map((farm) {
+                  return DropdownMenuItem<String>(
+                    value: farm.id,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(farm.farmName),
+                    ),
+                  );
+                }),
+              ],
+              hintText: 'All Farms',
+              onChanged: (String? newValue) {
+                setState(() {
+                  _selectedFarm = newValue;
+                  _selectedHouse = null;
+                  _selectedBatch = null;
+                  _houses = [];
+                  _availableBatches = [];
+                });
+                if (newValue != null) {
+                  _loadHousesForSelectedFarm();
+                } else {
+                  _loadExpenditures(reset: true);
+                }
+              },
+            ),
+
+          const SizedBox(height: 8),
+
           // House Dropdown
           if (_houses.isNotEmpty)
             ReusableDropdown(
-            value: _selectedHouse, items: [
-              const DropdownMenuItem<String>(
-                value: null,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Text('All Houses'),
-                ),
-              ),
-              ..._houses.map((house) {
-                return DropdownMenuItem<String>(
-                  value: house.id,
+              value: _selectedHouse,
+              items: [
+                const DropdownMenuItem<String>(
+                  value: null,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Text(house.houseName),
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: Text('All Houses'),
                   ),
-                );
-              }),
-            ], hintText: 'All Houses',
+                ),
+                ..._houses.map((house) {
+                  return DropdownMenuItem<String>(
+                    value: house.id,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(house.houseName),
+                    ),
+                  );
+                }),
+              ],
+              hintText: 'All Houses',
               onChanged: (String? newValue) {
                 setState(() {
                   _selectedHouse = newValue;
@@ -450,17 +447,16 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
 
                   if (newValue != null) {
                     final selectedHouse = _houses.firstWhere(
-                          (house) => house.id == newValue,
+                      (house) => house.id == newValue,
                     );
                     _availableBatches = selectedHouse.batches;
                   }
                 });
                 _loadExpenditures(reset: true);
               },
-
             ),
 
-          const SizedBox(height: 8),
+          if (_houses.isNotEmpty) const SizedBox(height: 8),
 
           // Batch Dropdown
           if (_selectedHouse != null && _availableBatches.isNotEmpty)
@@ -493,7 +489,8 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
               value: _selectedBatch,
             ),
 
-          const SizedBox(height: 12),
+          if (_selectedHouse != null && _availableBatches.isNotEmpty)
+            const SizedBox(height: 12),
 
           // Search
           ReusableInput(
@@ -501,15 +498,14 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
             hintText: 'Search expenditures...',
             suffixIcon: _searchController.text.isNotEmpty
                 ? IconButton(
-              icon: const Icon(Icons.clear, size: 18),
-              onPressed: () {
-                _searchController.clear();
-                _loadExpenditures(reset: true);
-              },
-            )
+                    icon: const Icon(Icons.clear, size: 18),
+                    onPressed: () {
+                      _searchController.clear();
+                      _loadExpenditures(reset: true);
+                    },
+                  )
                 : null,
             prefixIcon: const Icon(Icons.search),
-
             onChanged: (value) {
               // Debounce search
               Future.delayed(const Duration(milliseconds: 500), () {
@@ -521,94 +517,42 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
           ),
 
           const SizedBox(height: 12),
+          CustomDateTextField(
+            label: 'Start Date',
+            icon: Icons.calendar_today,
+            controller: _startDateController,
+            minYear: 2023,
+            maxYear: DateTime.now().year,
+            returnFormat: DateReturnFormat.isoString,
+          ),
+          const SizedBox(height: 12),
+          CustomDateTextField(
+            label: 'End Date',
+            icon: Icons.calendar_today,
+            controller: _endDateController,
+            minYear: 2023,
+            maxYear: DateTime.now().year,
+            returnFormat: DateReturnFormat.isoString,
+          ),
 
-          // Date Range
-          Row(
-            children: [
-              Expanded(
-                child: InkWell(
-                  onTap: () async {
-                    final selectedDate = await showDatePicker(
-                      context: context,
-                      initialDate: _startDate ?? DateTime.now(),
-                      firstDate: DateTime(2023),
-                      lastDate: DateTime.now(),
-                    );
-                    if (selectedDate != null) {
-                      setState(() {
-                        _startDate = selectedDate;
-                      });
-                      _loadExpenditures(reset: true);
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.calendar_today, size: 16),
-                        const SizedBox(width: 8),
-                        Text(
-                          _startDate != null
-                              ? DateUtil.toMMDDYYYY(_startDate!)
-                              : 'Start Date',
-                          style: TextStyle(
-                            color: _startDate != null
-                                ? Colors.black
-                                : Colors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+          const SizedBox(height: 12),
+
+          // Apply Date Filter Button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => _loadExpenditures(reset: true),
+              icon: const Icon(Icons.filter_list, size: 18),
+              label: const Text('Apply Date Filter'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: InkWell(
-                  onTap: () async {
-                    final selectedDate = await showDatePicker(
-                      context: context,
-                      initialDate: _endDate ?? DateTime.now(),
-                      firstDate: _startDate ?? DateTime(2023),
-                      lastDate: DateTime.now(),
-                    );
-                    if (selectedDate != null) {
-                      setState(() {
-                        _endDate = selectedDate;
-                      });
-                      _loadExpenditures(reset: true);
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.calendar_today, size: 16),
-                        const SizedBox(width: 8),
-                        Text(
-                          _endDate != null
-                              ? DateUtil.toMMDDYYYY(_endDate!)
-                              : 'End Date',
-                          style: TextStyle(
-                            color: _endDate != null
-                                ? Colors.black
-                                : Colors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),
@@ -616,7 +560,7 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
   }
 
   Widget _buildStatsSection() {
-    if (_selectedFarm == null || _isLoadingExpenditures) return const SizedBox();
+    if (_isLoadingExpenditures && _expenditures.isEmpty) return const SizedBox();
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -720,10 +664,6 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
   }
 
   Widget _buildExpendituresList() {
-    if (_selectedFarm == null) {
-      return const SizedBox();
-    }
-
     if (_isLoadingExpenditures && _expenditures.isEmpty) {
       return _buildLoadingIndicator('Loading expenditures...');
     }
@@ -809,17 +749,15 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
             style: TextStyle(color: Colors.grey.shade600),
             textAlign: TextAlign.center,
           ),
-          if (_selectedFarm != null)
+          if (_farmsResponse != null && _farmsResponse!.farms.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 16),
               child: ElevatedButton.icon(
                 onPressed: () {
-                  context.push(
-                    '/record-expenditure',
-                    extra: _farmsResponse!.farms.firstWhere(
-                          (farm) => farm.id == _selectedFarm,
-                    ),
-                  );
+                  final farm = _selectedFarm != null
+                      ? _farmsResponse!.farms.firstWhere((f) => f.id == _selectedFarm)
+                      : _farmsResponse!.farms.first;
+                  context.push('/record-expenditure', extra: farm);
                 },
                 icon: const Icon(Icons.add),
                 label: const Text('Add Expenditure'),
@@ -865,12 +803,11 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
           onPressed: () => context.pop(),
         ),
         actions: [
-          if (_selectedFarm != null)
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: () => _loadExpenditures(reset: true),
-              tooltip: 'Refresh',
-            ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => _loadExpenditures(reset: true),
+            tooltip: 'Refresh',
+          ),
         ],
       ),
       body: RefreshIndicator(
@@ -881,169 +818,35 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Farm Selection Section
-              _buildFarmSelection(),
+              // Filter Section
+              _buildFilterSection(),
 
-              if (_selectedFarm != null) ...[
-                // Filter Section
-                _buildFilterSection(),
+              // Stats Section
+              _buildStatsSection(),
 
-                // Stats Section
-                _buildStatsSection(),
+              // Expenditures List
+              _buildExpendituresList(),
 
-                // Expenditures List
-                _buildExpendituresList(),
-
-                // Bottom padding
-                const SizedBox(height: 80),
-              ] else if (_hasError) ...[
-                _buildErrorWidget(_errorMessage!),
-              ] else if (!_isLoadingFarms && _farmsResponse?.farms.isEmpty == true) ...[
-                _buildEmptyState('No farms available'),
-              ] else if (!_isLoadingFarms && _selectedFarm == null) ...[
-                Container(
-                  padding: const EdgeInsets.all(40),
-                  child: Column(
-                    children: [
-                      Icon(Icons.agriculture, size: 64, color: Colors.grey.shade400),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Select a farm to view expenditures',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 16,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+              // Bottom padding
+              const SizedBox(height: 80),
             ],
           ),
         ),
       ),
-      floatingActionButton: _selectedFarm != null
+      floatingActionButton: _farmsResponse != null && _farmsResponse!.farms.isNotEmpty
           ? FloatingActionButton.extended(
-        onPressed: () {
-          context.push(
-            '/record-expenditure',
-            extra: _farmsResponse!.farms.firstWhere(
-                  (farm) => farm.id == _selectedFarm,
-            ),
-          );
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('New Expense'),
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
-      )
+              onPressed: () {
+                final farm = _selectedFarm != null
+                    ? _farmsResponse!.farms.firstWhere((f) => f.id == _selectedFarm)
+                    : _farmsResponse!.farms.first;
+                context.push('/record-expenditure', extra: farm);
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('New Expense'),
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+            )
           : null,
-    );
-  }
-}
-
-class _FarmCard extends StatelessWidget {
-  final FarmModel farm;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _FarmCard({
-    required this.farm,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 140,
-        margin: const EdgeInsets.only(right: 12),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.green.shade50 : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? Colors.green : Colors.grey.shade300,
-            width: isSelected ? 2 : 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.shade200,
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Farm Image/Icon
-            Container(
-              height: 80,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: isSelected ? Colors.green.shade100 : Colors.grey.shade100,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  topRight: Radius.circular(16),
-                ),
-              ),
-              child: Icon(
-                Icons.agriculture,
-                size: 40,
-                color: isSelected ? Colors.green : Colors.grey.shade600,
-              ),
-            ),
-
-            // Farm Info
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    farm.farmName,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                      color: isSelected ? Colors.green.shade800 : Colors.grey.shade800,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (farm.location != null && farm.location!.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.location_on,
-                            size: 12,
-                            color: Colors.grey.shade500,
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              farm.location!,
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.grey.shade600,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
