@@ -80,8 +80,8 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
     _yearsOfExperienceController.text = profileData.yearsOfExperience.toString();
     _chickenHouseCapacityController.text = profileData.chickenHouseCapacity.toString();
     _currentChickensController.text = profileData.currentNumberOfChickens.toString();
-    _preferredAgrovetController.text = profileData.preferredAgrovetName;
-    _preferredFeedCompanyController.text = profileData.preferredFeedCompany;
+    _preferredAgrovetController.text = profileData.preferredAgrovetName!=null ? profileData.preferredAgrovetName! : '';
+    _preferredFeedCompanyController.text = profileData.preferredFeedCompany!=null ? profileData.preferredFeedCompany! : '';
 
     _selectedPoultryType = profileData.poultryType;
     _selectedAddress = profileData.location.address;

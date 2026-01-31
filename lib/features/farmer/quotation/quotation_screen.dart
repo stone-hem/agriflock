@@ -102,12 +102,12 @@ class _QuotationScreenState extends State<QuotationScreen>
     }
 
     // Check poultry type
-    if (profile.poultryTypeId.isNotEmpty) {
+    if (profile.poultryTypeId==null) {
       completedFields++;
     }
 
     // Check chicken house capacity
-    if (profile.chickenHouseCapacity > 0) {
+    if (profile.chickenHouseCapacity != null) {
       completedFields++;
     }
 
