@@ -8,7 +8,7 @@ import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/core/widgets/reusable_time_input.dart';
 import 'package:agriflock360/features/farmer/expense/model/expense_category.dart';
 import 'package:agriflock360/features/farmer/expense/repo/categories_repository.dart';
-import 'package:agriflock360/features/farmer/expense/repo/expenditure_repository.dart';
+import 'package:agriflock360/features/farmer/record/repo/recording_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -32,7 +32,7 @@ class VaccinationRecordScreen extends StatefulWidget {
 
 class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> {
   final _categoriesRepository = CategoriesRepository();
-  final _expenditureRepository = ExpenditureRepository();
+  final _recordRepo = RecordingRepo();
 
   // Page controller for the flow
   final _pageController = PageController();
@@ -180,7 +180,6 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> {
       );
 
       final recordData = {
-        if (widget.farmId != null) 'farm_id': widget.farmId,
         'batch_id': widget.batchId,
         if (widget.houseId != null) 'house_id': widget.houseId,
         'category_id': _vaccineCategory!.id,
@@ -188,17 +187,18 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> {
         'description': _selectedItem!.categoryItemName,
         'quantity': double.parse(_scheduleQuantityController.text),
         'unit': 'doses',
-        'scheduled_date': combinedDateTime.toUtc().toIso8601String(),
-        'status': 'scheduled',
+        'date': combinedDateTime.toUtc().toIso8601String(),
         if (_scheduleNotesController.text.isNotEmpty)
           'notes': _scheduleNotesController.text,
         if (_scheduleMethodOfAdministration != null)
           'method_of_administration': _scheduleMethodOfAdministration,
+        'is_scheduled': true
       };
+
 
       LogUtil.info('Schedule Vaccination Payload: $recordData');
 
-      final result = await _expenditureRepository.createExpenditure(recordData);
+      final result = await _recordRepo.createFeedingRecord(recordData);
 
       switch (result) {
         case Success():
@@ -249,7 +249,6 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> {
       );
 
       final recordData = {
-        if (widget.farmId != null) 'farm_id': widget.farmId,
         'batch_id': widget.batchId,
         if (widget.houseId != null) 'house_id': widget.houseId,
         'category_id': _vaccineCategory!.id,
@@ -268,7 +267,7 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> {
 
       LogUtil.info('Record Vaccination Payload: $recordData');
 
-      final result = await _expenditureRepository.createExpenditure(recordData);
+      final result = await _recordRepo.createFeedingRecord(recordData);
 
       switch (result) {
         case Success():

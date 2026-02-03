@@ -7,6 +7,7 @@ import 'package:agriflock360/features/farmer/batch/repo/batch_mgt_repo.dart';
 import 'package:agriflock360/features/farmer/expense/model/expense_category.dart';
 import 'package:agriflock360/features/farmer/expense/repo/categories_repository.dart';
 import 'package:agriflock360/features/farmer/expense/repo/expenditure_repository.dart';
+import 'package:agriflock360/features/farmer/record/repo/recording_repo.dart';
 import 'package:agriflock360/features/farmer/record//views/use_batch_selection_view.dart';
 import 'package:agriflock360/features/farmer/record/views/use_category_selection_view.dart';
 import 'package:agriflock360/features/farmer/record/views/use_item_details_view.dart';
@@ -35,6 +36,7 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
   final _categoriesRepository = CategoriesRepository();
   final _batchMgtRepository = BatchMgtRepository();
   final _expenditureRepository = ExpenditureRepository();
+  final _recordingRepo = RecordingRepo();
 
   // Data
   List<InventoryCategory> _categories = [];
@@ -100,7 +102,6 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
       switch (result) {
         case Success<List<InventoryCategory>>(data: final categories):
           setState(() {
-            // Filter categories where useFromStore is true and have at least one item with useFromStore true
             _categories = categories
                 .where((cat) => cat.useFromStore && cat.categoryItems.any((item) => item.useFromStore))
                 .toList();
@@ -136,41 +137,104 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
     }
   }
 
+  String _getRecordType() {
+    final categoryName = _selectedCategory?.name.toLowerCase() ?? '';
+    if (categoryName.contains('feed')) {
+      return 'feed';
+    } else if (categoryName.contains('vaccine')) {
+      return 'vaccination';
+    } else if (categoryName.contains('medication') || categoryName.contains('medicine')) {
+      return 'medication';
+    }
+    return 'feed'; // default to feed
+  }
+
   Future<void> _saveRecord() async {
     setState(() => _isSubmitting = true);
 
     try {
-      final recordData = {
-        if (widget.farm != null) 'farm_id': widget.farm!.id,
-        'batch_id': _selectedBatch!.id,
-        if (_selectedBatch!.houseId != null) 'house_id': _selectedBatch!.houseId,
-        'category_id': _selectedCategory!.id,
-        'category_item_id': _selectedItem!.id,
-        'description': _selectedItem!.categoryItemName,
-        'quantity': _quantity,
-        'unit': 'unit',
-        'date': _selectedDate.toUtc().toIso8601String(),
-        if (_notes != null && _notes!.isNotEmpty) 'notes': _notes,
-        if (_methodOfAdministration != null) 'method_of_administration': _methodOfAdministration,
-        if (_dosesUsed != null) 'doses_used': _dosesUsed,
-      };
+      final recordType = _getRecordType();
+      Result result;
 
-      LogUtil.warning(recordData);
+      if (recordType == 'feed') {
+        // Feed record payload
+        final recordData = {
+          'batch_id': _selectedBatch!.id,
+          if (_selectedBatch!.houseId != null) 'house_id': _selectedBatch!.houseId,
+          'category_id': _selectedCategory!.id,
+          'category_item_id': _selectedItem!.id,
+          'description': _selectedItem!.categoryItemName,
+          'quantity': _quantity,
+          'unit': 'kg',
+          'date': _selectedDate.toUtc().toIso8601String(),
+          if (_notes != null && _notes!.isNotEmpty) 'notes': _notes,
+        };
 
-      // final result = await _expenditureRepository.saveRecord(recordData);
-      //
-      // switch (result) {
-      //   case Success():
-      //     _nextPage();
-      //     break;
-      //   case Failure(message: final error):
-      //     ApiErrorHandler.handle(error);
-      //     setState(() => _isSubmitting = false);
-      //     break;
-      // }
+        LogUtil.warning('Feed Record Payload: $recordData');
+        result = await _recordingRepo.createFeedingRecord(recordData);
+      } else if (recordType == 'vaccination') {
+        // Vaccination record payload
+        final recordData = {
+          'batch_id': _selectedBatch!.id,
+          if (_selectedBatch!.houseId != null) 'house_id': _selectedBatch!.houseId,
+          'category_id': _selectedCategory!.id,
+          'category_item_id': _selectedItem!.id,
+          'description': _selectedItem!.categoryItemName,
+          'quantity': _quantity,
+          'unit': 'doses',
+          'date': _selectedDate.toUtc().toIso8601String(),
+          if (_notes != null && _notes!.isNotEmpty) 'notes': _notes,
+          if (_methodOfAdministration != null) 'administration_method': _methodOfAdministration,
+          if (_dosesUsed != null) 'doses_used': _dosesUsed,
+        };
+
+        LogUtil.warning('Vaccination Record Payload: $recordData');
+        result = await _recordingRepo.recordVaccination(recordData);
+      } else {
+        // Medication record payload
+        final recordData = {
+          'batch_id': _selectedBatch!.id,
+          if (_selectedBatch!.houseId != null) 'house_id': _selectedBatch!.houseId,
+          'category_id': _selectedCategory!.id,
+          'category_item_id': _selectedItem!.id,
+          'quantity': _quantity,
+          'unit': 'doses',
+          'date': _selectedDate.toUtc().toIso8601String(),
+          'dosage': '${_quantity ?? 1} dose(s)',
+          if (_methodOfAdministration != null) 'administration_method': _methodOfAdministration,
+          if (_notes != null && _notes!.isNotEmpty) 'reason': _notes,
+          if (_dosesUsed != null) 'birds_treated': _dosesUsed?.toInt() ?? 0,
+          'treatment_duration_days': 1,
+          'withdrawal_period_days': 0,
+          'cost': 0,
+          if (_notes != null && _notes!.isNotEmpty) 'notes': _notes,
+        };
+
+        LogUtil.warning('Medication Record Payload: $recordData');
+        result = await _recordingRepo.recordMedication(recordData);
+      }
+
+      switch (result) {
+        case Success():
+          ToastUtil.showSuccess('Record saved successfully!');
+          if (mounted) {
+            // Move to success page
+            _pageController.nextPage(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+            );
+          }
+          break;
+        case Failure(message: final error):
+          ApiErrorHandler.handle(error);
+          break;
+      }
     } catch (e) {
       ToastUtil.showError('Failed to save record: $e');
-      setState(() => _isSubmitting = false);
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
     }
   }
 

@@ -481,31 +481,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: Colors.grey.shade800,
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  HomeActionTile(
-                    icon: Icons.outbond,
-                    title: 'My Expenditures',
-                    subtitle: 'Help the application to generate the correct finance report',
-                    color: Colors.red,
-                    onTap: () => context.push('/my-expenditures'),
-                  ),
-                  const SizedBox(height: 20),
-
-                  HomeActionTile(
-                    icon: Icons.outbond,
-                    title: 'A quick recording',
-                    subtitle: 'Record a feed or a vaccination',
-                    color: Colors.red,
-                    onTap: () => context.push('/quick-recording'),
-                  ),
-                  const SizedBox(height: 20),
-                  HomeActionTile(
-                    icon: Icons.restaurant,
-                    title: 'My Subscription',
-                    subtitle: 'Manage my subscriptions',
-                    color: Colors.orange,
-                    onTap: () => context.push('/payg'),
-                  ),
+                  const SizedBox(height: 16),
+                  _buildQuickActionsGrid(),
                   const SizedBox(height: 20),
 
                   if (_isFinancialLoading)
@@ -577,64 +554,360 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Column(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: HomeStatCard(
-                value: '${_summary!.numberOfFarms}',
-                label: 'Farms',
-                color: Colors.green.shade100,
-                textColor: Colors.green.shade800,
-                buttonText: 'View',
-               onButtonPressed: (){
-                  context.push('/farms');
-               },
+        // Card 1: Farms, Houses, Batches
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade200),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: HomeStatCard(
-                value: '${_summary!.numberOfHouses}',
-                label: 'Houses',
-                color: Colors.teal.shade100,
-                textColor: Colors.teal.shade800,
+            ],
+          ),
+          child: Row(
+            children: [
+              _buildCompactStat(
+                '${_summary!.numberOfFarms}',
+                'Farms',
+                Icons.agriculture,
+                Colors.green,
+                onTap: () => context.push('/farms'),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: HomeStatCard(
-                value: '${_summary!.totalBatches}',
-                label: 'All Batches',
-                color: Colors.purple.shade100,
-                textColor: Colors.purple.shade800,
+              _buildStatDivider(),
+              _buildCompactStat(
+                '${_summary!.numberOfHouses}',
+                'Houses',
+                Icons.home_work,
+                Colors.teal,
               ),
-            ),
-          ],
+              _buildStatDivider(),
+              _buildCompactStat(
+                '${_summary!.totalBatches}',
+                'Batches',
+                Icons.layers,
+                Colors.purple,
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 12),
-        Row(
+
+        // Card 2: Bird Types (Broilers, Layers, Kienyeji)
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade200),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Bird Types',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  _buildBirdTypeItem('Broilers', 0, Colors.orange, Icons.restaurant),
+                  const SizedBox(width: 12),
+                  _buildBirdTypeItem('Layers', 0, Colors.blue, Icons.egg),
+                  const SizedBox(width: 12),
+                  _buildBirdTypeItem('Kienyeji', 0, Colors.brown, Icons.eco),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // Card 3: Eggs Today and Number of Layers
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.orange.shade400, Colors.orange.shade600],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.orange.withOpacity(0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.egg, color: Colors.white, size: 20),
+                        ),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _summary!.eggsToday.toString(),
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const Text(
+                              'Eggs Today',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.white70,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                width: 1,
+                height: 50,
+                color: Colors.white.withOpacity(0.3),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        '0',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const Text(
+                        'Layer Birds',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCompactStat(String value, String label, IconData icon, Color color, {VoidCallback? onTap}) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Column(
           children: [
-            Expanded(
-              child: HomeStatCard(
-                value: _summary!.totalBirds.toString(),
-                label: 'Total Birds',
-                color: Colors.blue.shade100,
-                textColor: Colors.blue.shade800,
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: color,
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: HomeStatCard(
-                value: _summary!.eggsToday.toString(),
-                label: 'Eggs Today',
-                color: Colors.orange.shade100,
-                textColor: Colors.orange.shade800,
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey.shade600,
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
 
+  Widget _buildStatDivider() {
+    return Container(
+      width: 1,
+      height: 60,
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      color: Colors.grey.shade200,
+    );
+  }
+
+  Widget _buildBirdTypeItem(String label, int count, Color color, IconData icon) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(height: 6),
+            Text(
+              '$count',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                color: color.withOpacity(0.8),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickActionsGrid() {
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      mainAxisSpacing: 12,
+      crossAxisSpacing: 12,
+      childAspectRatio: 1.5,
+      children: [
+        _buildQuickActionCard(
+          icon: Icons.receipt_long,
+          title: 'Expenditures',
+          subtitle: 'Record expenses',
+          color: Colors.red,
+          onTap: () => context.push('/my-expenditures'),
+        ),
+        _buildQuickActionCard(
+          icon: Icons.edit_note,
+          title: 'Quick Record',
+          subtitle: 'Feed or vaccine',
+          color: Colors.green,
+          onTap: () => context.push('/quick-recording'),
+        ),
+        _buildQuickActionCard(
+          icon: Icons.assessment,
+          title: 'Reports',
+          subtitle: 'View batch reports',
+          color: Colors.blue,
+          onTap: () => context.push('/quick-report'),
+        ),
+        _buildQuickActionCard(
+          icon: Icons.card_membership,
+          title: 'Subscription',
+          subtitle: 'Manage plans',
+          color: Colors.purple,
+          onTap: () => context.push('/payg'),
+        ),
       ],
+    );
+  }
+
+  Widget _buildQuickActionCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade800,
+              ),
+            ),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey.shade500,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

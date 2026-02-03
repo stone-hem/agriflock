@@ -38,6 +38,8 @@ import 'package:agriflock360/features/farmer/profile/settings_screen.dart';
 import 'package:agriflock360/features/farmer/profile/telemetry_data_screen.dart';
 import 'package:agriflock360/features/farmer/profile/update_profile_screen.dart';
 import 'package:agriflock360/features/farmer/record/quick_record.dart';
+import 'package:agriflock360/features/farmer/report/quick_report_screen.dart';
+import 'package:agriflock360/features/farmer/report/farm_reports_screen.dart';
 import 'package:agriflock360/features/farmer/vet/completed_orders_screen.dart';
 import 'package:agriflock360/features/farmer/vet/models/my_order_list_item.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_farmer_model.dart';
@@ -388,6 +390,17 @@ class AppRoutes {
             final farm = state.extra as FarmModel?;
             return UseFromStorePageView(farm: farm,);
           },
+        ),
+        GoRoute(
+          path: '/quick-report',
+          builder: (context, state) {
+            final farm = state.extra as FarmModel?;
+            return QuickReportScreen(farm: farm);
+          },
+        ),
+        GoRoute(
+          path: '/farm-reports',
+          builder: (context, state) => const FarmReportsScreen(),
         ),
 
         GoRoute(

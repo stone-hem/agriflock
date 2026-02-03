@@ -7,7 +7,7 @@ import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/core/widgets/reusable_time_input.dart';
 import 'package:agriflock360/features/farmer/expense/model/expense_category.dart';
 import 'package:agriflock360/features/farmer/expense/repo/categories_repository.dart';
-import 'package:agriflock360/features/farmer/expense/repo/expenditure_repository.dart';
+import 'package:agriflock360/features/farmer/record/repo/recording_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -30,13 +30,14 @@ class LogFeedingScreen extends StatefulWidget {
 class _LogFeedingScreenState extends State<LogFeedingScreen> {
   final _formKey = GlobalKey<FormState>();
   final _categoriesRepository = CategoriesRepository();
-  final _expenditureRepository = ExpenditureRepository();
+  final _recordingRepository = RecordingRepo();
   final _pageController = PageController();
 
   // Controllers
   final _quantityController = TextEditingController();
   final _notesController = TextEditingController();
   final _dateController = TextEditingController();
+
 
   // State
   int _currentPage = 0;
@@ -146,7 +147,6 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
       );
 
       final recordData = {
-        if (widget.farmId != null) 'farm_id': widget.farmId,
         'batch_id': widget.batchId,
         if (widget.houseId != null) 'house_id': widget.houseId,
         'category_id': _feedCategory!.id,
@@ -155,12 +155,12 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
         'quantity': double.parse(_quantityController.text),
         'unit': 'kg',
         'date': combinedDateTime.toUtc().toIso8601String(),
-        if (_notesController.text.isNotEmpty) 'notes': _notesController.text,
-      };
+    if (_notesController.text.isNotEmpty) 'notes': _notesController.text
+    };
 
       LogUtil.info('Log Feeding Payload: $recordData');
 
-      final result = await _expenditureRepository.createExpenditure(recordData);
+      final result = await _recordingRepository.createFeedingRecord(recordData);
 
       switch (result) {
         case Success():
@@ -402,6 +402,15 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
             ),
             const SizedBox(height: 20),
 
+            // Mortality Rate
+            ReusableInput(
+              topLabel: 'Mortality Now (Optional)',
+              icon: Icons.note,
+              controller: _notesController,
+              maxLines: 3,
+              hintText: 'Number of chicks that have died at this time...',
+            ),
+            const SizedBox(height: 32),
             // Notes
             ReusableInput(
               topLabel: 'Notes (Optional)',

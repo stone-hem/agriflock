@@ -131,51 +131,6 @@ class FeedingRepository {
     }
   }
 
-  /// Create a new feeding record
-  Future<Result> createFeedingRecord(
-      String batchId,
-      Map<String, dynamic> request,
-      ) async {
-    try {
-      LogUtil.warning(request);
-      final response = await apiClient.post(
-        '/batches/$batchId/feeding/records',
-        body: request,
-      );
-
-      final jsonResponse = jsonDecode(response.body);
-      LogUtil.info('Create Feeding Record API Response: $jsonResponse');
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return Success(null);
-      } else {
-        return Failure(
-          message: jsonResponse['message'] ?? 'Failed to create feeding record',
-          response: response,
-          statusCode: response.statusCode,
-        );
-      }
-    } on SocketException catch (e) {
-      LogUtil.error('Network error in createFeedingRecord: $e');
-      return const Failure(
-        message: 'No internet connection',
-        statusCode: 0,
-      );
-    } catch (e) {
-      LogUtil.error('Error in createFeedingRecord: $e');
-
-      if (e is http.Response) {
-        return Failure(
-          message: 'Failed to create feeding record',
-          response: e,
-          statusCode: e.statusCode,
-        );
-      }
-
-      return Failure(message: e.toString());
-    }
-  }
-
   /// Refresh feeding recommendations
   Future<Result<FeedingRecommendationsResponse>> refreshFeedingRecommendations(String batchId) async {
     return getFeedingRecommendations(batchId);
