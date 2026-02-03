@@ -820,7 +820,7 @@ class _HomeScreenState extends State<HomeScreen> {
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 12,
       crossAxisSpacing: 12,
-      childAspectRatio: 1.5,
+      childAspectRatio: 1.2,
       children: [
         _buildQuickActionCard(
           icon: Icons.receipt_long,
@@ -841,7 +841,7 @@ class _HomeScreenState extends State<HomeScreen> {
           title: 'Reports',
           subtitle: 'View batch reports',
           color: Colors.blue,
-          onTap: () => context.push('/quick-report'),
+          onTap: () => context.push('/batch-report/batch-selection'),
         ),
         _buildQuickActionCard(
           icon: Icons.card_membership,

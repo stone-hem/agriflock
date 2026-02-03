@@ -6,12 +6,12 @@ import 'package:agriflock360/features/farmer/batch/completed_batches_screen.dart
 import 'package:agriflock360/features/farmer/batch/edit_batch_screen.dart';
 import 'package:agriflock360/features/farmer/batch/houses_screen.dart';
 import 'package:agriflock360/features/farmer/batch/log_feeding_screen.dart';
+import 'package:agriflock360/features/farmer/batch/model/batch_list_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/recommended_vaccination_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
 import 'package:agriflock360/features/farmer/expense/buy_inputs_screen.dart';
 import 'package:agriflock360/features/farmer/expense/expenditures_screen.dart';
-import 'package:agriflock360/features/farmer/expense/record_expenditure_screen.dart';
 import 'package:agriflock360/features/farmer/batch/record_vaccination_screen.dart';
 import 'package:agriflock360/features/farmer/batch/record_product_screen.dart';
 import 'package:agriflock360/features/farmer/batch/update_vaccination_status_screen.dart';
@@ -38,7 +38,8 @@ import 'package:agriflock360/features/farmer/profile/settings_screen.dart';
 import 'package:agriflock360/features/farmer/profile/telemetry_data_screen.dart';
 import 'package:agriflock360/features/farmer/profile/update_profile_screen.dart';
 import 'package:agriflock360/features/farmer/record/quick_record.dart';
-import 'package:agriflock360/features/farmer/report/quick_report_screen.dart';
+import 'package:agriflock360/features/farmer/report/batch/batch_report_screen.dart';
+import 'package:agriflock360/features/farmer/report/batch/batch_selection_screen.dart';
 import 'package:agriflock360/features/farmer/report/farm_reports_screen.dart';
 import 'package:agriflock360/features/farmer/vet/completed_orders_screen.dart';
 import 'package:agriflock360/features/farmer/vet/models/my_order_list_item.dart';
@@ -392,10 +393,17 @@ class AppRoutes {
           },
         ),
         GoRoute(
-          path: '/quick-report',
+          path: '/batch-report/batch-selection',
           builder: (context, state) {
             final farm = state.extra as FarmModel?;
-            return QuickReportScreen(farm: farm);
+            return BatchSelectionScreen(farm: farm);
+          },
+        ),
+        GoRoute(
+          path: '/batch-report',
+          builder: (context, state) {
+            final batch = state.extra as BatchListItem;
+            return BatchReportScreen(batch: batch,);
           },
         ),
         GoRoute(
