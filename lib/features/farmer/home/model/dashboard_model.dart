@@ -9,6 +9,7 @@ class DashboardSummary {
   final num averageWeightKg;
   final num numberOfHouses;
   final num numberOfFarms;
+  final List<BreedBreakdown> breedBreakdown;
 
   const DashboardSummary({
     required this.totalBirds,
@@ -21,6 +22,7 @@ class DashboardSummary {
     required this.averageWeightKg,
     required this.numberOfHouses,
     required this.numberOfFarms,
+    required this.breedBreakdown,
   });
 
   factory DashboardSummary.fromJson(Map<String, dynamic> json) {
@@ -35,6 +37,10 @@ class DashboardSummary {
       averageWeightKg: json['average_weight_kg'] ?? 0,
       numberOfHouses: json['number_of_houses'] ?? 0,
       numberOfFarms: json['number_of_farms'] ?? 0,
+      breedBreakdown: (json['breed_breakdown'] as List<dynamic>?)
+          ?.map((item) => BreedBreakdown.fromJson(item))
+          .toList() ??
+          [],
     );
   }
 
@@ -50,6 +56,31 @@ class DashboardSummary {
       'average_weight_kg': averageWeightKg,
       'number_of_houses': numberOfHouses,
       'number_of_farms': numberOfFarms,
+      'breed_breakdown': breedBreakdown.map((b) => b.toJson()).toList(),
+    };
+  }
+}
+
+class BreedBreakdown {
+  final String breedName;
+  final num liveCount;
+
+  const BreedBreakdown({
+    required this.breedName,
+    required this.liveCount,
+  });
+
+  factory BreedBreakdown.fromJson(Map<String, dynamic> json) {
+    return BreedBreakdown(
+      breedName: json['breed_name'] ?? '',
+      liveCount: json['live_count'] ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'breed_name': breedName,
+      'live_count': liveCount,
     };
   }
 }

@@ -63,20 +63,21 @@ class HomeStatCard extends StatelessWidget {
                 ),
               ),
 
-              // Additional stats in compact layout
-              if (additionalStats != null && additionalStats!.isNotEmpty) ...[
-                Container(
-                  margin: const EdgeInsets.only(left: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: textColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: _buildCompactStats(),
-                ),
-              ],
+
             ],
           ),
+          // Additional stats in compact layout
+          if (additionalStats != null && additionalStats!.isNotEmpty) ...[
+            Container(
+              margin: const EdgeInsets.only(left: 6,top: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              decoration: BoxDecoration(
+                color: textColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: _buildCompactStats(context),
+            ),
+          ],
 
           // Button
           if (onButtonPressed != null) ...[
@@ -109,24 +110,27 @@ class HomeStatCard extends StatelessWidget {
     );
   }
 
-  Widget _buildCompactStats() {
+  Widget _buildCompactStats(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: additionalStats!
           .take(5) // Limit to 5 stats for compact view
           .map((stat) => ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: 80, // Set a maximum width for each stat line
+          maxWidth: MediaQuery.of(context).size.width * 0.4, // Set a maximum width for each stat line
         ),
-        child: Text(
-          '${stat.value} ${stat.label}',
-          style: TextStyle(
-            color: textColor.withOpacity(0.9),
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
+        child:   ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.4, // Set a maximum width for each stat line
           ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+          child: Text(
+            '${stat.value} ${stat.label}',
+            style: TextStyle(
+              color: textColor.withOpacity(0.9),
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
       ))
           .toList(),

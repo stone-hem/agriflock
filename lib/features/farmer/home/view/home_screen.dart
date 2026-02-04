@@ -530,25 +530,19 @@ class _HomeScreenState extends State<HomeScreen> {
                                 color: Colors.orange.shade100,
                                 textColor: Colors.orange,
                                 additionalStats: [
-                                  StatItem(
-                                    value: '${_summary!.numberOfHouses}',
-                                    label: 'Broilers',
-                                  ),
-                                  StatItem(
-                                    value: '${_summary!.totalBatches}',
-                                    label: 'Layers',
-                                  ),
-                                  StatItem(
-                                    value: '${_summary!.totalBatches}',
-                                    label: 'Kienyeji',
-                                  ),
-                                  StatItem(
-                                    value: '${_summary!.totalBatches}',
-                                    label: 'Layers',
-                                  ),
+
+                                  // Breed breakdown stats
+                                  ..._summary!.breedBreakdown.map((BreedBreakdown item){
+                                    return StatItem(
+                                      value: '${item.liveCount}',
+                                      label: item.breedName,
+                                    );
+                                  }),
+
+                                  // Eggs count
                                   StatItem(
                                     value: '${_summary!.eggsToday}',
-                                    label: 'Eggs Today',
+                                    label: 'Eggs',
                                   ),
                                 ],
                               ),
