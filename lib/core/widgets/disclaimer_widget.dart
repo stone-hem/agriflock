@@ -27,22 +27,21 @@ class DisclaimerWidget extends StatelessWidget {
     this.padding,
     this.crossAxisAlignment = CrossAxisAlignment.start,
     this.iconSize = 24.0,
-    this.titleSize = 18.0,
-    this.messageSize = 14.0,
+    this.titleSize = 16.0,
+    this.messageSize = 13.0,
     this.titleWeight = FontWeight.bold,
   });
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colorScheme = Theme.of(context).colorScheme;
 
     // Use provided colors or fallback to red shades
-    final Color bgColor = backgroundColor ?? colorScheme.errorContainer;
-    final Color brdColor = borderColor ?? colorScheme.error.withOpacity(0.3);
-    final Color txtColor = textColor ?? colorScheme.onErrorContainer;
+    final Color bgColor = backgroundColor ?? Colors.red.shade100;
+    final Color brdColor = borderColor ?? Colors.red.shade200;
+    final Color txtColor = textColor ?? Colors.red;
 
     return Container(
-      padding: padding ?? const EdgeInsets.all(16.0),
+      padding: padding ?? const EdgeInsets.all(12.0),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(borderRadius!),
@@ -59,7 +58,7 @@ class DisclaimerWidget extends StatelessWidget {
                   size: iconSize,
                   color: txtColor,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
               ],
               Expanded(
                 child: Text(
@@ -73,16 +72,12 @@ class DisclaimerWidget extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: EdgeInsets.only(left: icon != null ? 36 : 0),
-            child: Text(
-              message,
-              style: TextStyle(
-                color: txtColor,
-                fontSize: messageSize,
-                height: 1.4,
-              ),
+          const SizedBox(height: 4),
+          Text(
+            message,
+            style: TextStyle(
+              color: txtColor,
+              fontSize: messageSize,
             ),
           ),
         ],
@@ -91,69 +86,3 @@ class DisclaimerWidget extends StatelessWidget {
   }
 }
 
-// Usage examples:
-class ExampleUsage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Default red disclaimer
-        const DisclaimerWidget(
-          title: 'Disclaimer',
-          message: 'Record all activities for accurate reports. '
-              'This information will be used for analytics and compliance purposes.',
-        ),
-
-        const SizedBox(height: 16),
-
-        // Blue info variant
-        DisclaimerWidget(
-          title: 'Information',
-          message: 'Your data is encrypted and stored securely. '
-              'You can export your records anytime.',
-          icon: Icons.info_outline,
-          backgroundColor: Colors.blue.shade50,
-          borderColor: Colors.blue.shade200,
-          textColor: Colors.blue.shade900,
-        ),
-
-        const SizedBox(height: 16),
-
-        // Green success variant
-        DisclaimerWidget(
-          title: 'Success',
-          message: 'All changes have been saved successfully.',
-          icon: Icons.check_circle_outline,
-          backgroundColor: Colors.green.shade50,
-          borderColor: Colors.green.shade200,
-          textColor: Colors.green.shade900,
-        ),
-
-        const SizedBox(height: 16),
-
-        // Custom styled variant
-        DisclaimerWidget(
-          title: 'Important Note',
-          message: 'This action cannot be undone. '
-              'Please review before proceeding.',
-          icon: Icons.error_outline,
-          backgroundColor: Colors.orange.shade50,
-          borderColor: Colors.orange,
-          borderRadius: 16.0,
-          padding: const EdgeInsets.all(20),
-        ),
-
-        const SizedBox(height: 16),
-
-        // Without icon
-        DisclaimerWidget(
-          title: 'Reminder',
-          message: 'Please submit your report by Friday.',
-          icon: null,
-          backgroundColor: Colors.grey.shade100,
-          borderColor: Colors.grey.shade300,
-        ),
-      ],
-    );
-  }
-}

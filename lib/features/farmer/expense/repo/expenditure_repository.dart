@@ -29,6 +29,9 @@ class ExpenditureRepository {
       if (endDate != null) queryParams['end_date'] = endDate;
       if (searchQuery != null) queryParams['search'] = searchQuery;
 
+      LogUtil.info('Get Expenditures API Query Parameters: $queryParams');
+
+
       final response = await apiClient.get(
         '/expenditures',
         queryParameters: queryParams,

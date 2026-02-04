@@ -1,7 +1,9 @@
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/core/widgets/disclaimer_widget.dart';
+import 'package:agriflock360/core/widgets/expense/expense_button.dart';
 import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
+import 'package:agriflock360/core/widgets/search_input.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
@@ -335,225 +337,339 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
     _loadExpenditures(reset: true);
   }
 
-  Widget _buildFilterSection() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.shade200),
+  void _showFilterBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Filters',
+                        style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey.shade800,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // Farm Dropdown
+                if (_farmsResponse != null && _farmsResponse!.farms.isNotEmpty)
+                  ReusableDropdown(
+                    value: _selectedFarm,
+                    items: [
+                      const DropdownMenuItem<String>(
+                        value: null,
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 12),
+                          child: Text('All Farms'),
+                        ),
+                      ),
+                      ..._farmsResponse!.farms.map((farm) {
+                        return DropdownMenuItem<String>(
+                          value: farm.id,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Text(farm.farmName),
+                          ),
+                        );
+                      }),
+                    ],
+                    hintText: 'All Farms',
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _selectedFarm = newValue;
+                        _selectedHouse = null;
+                        _selectedBatch = null;
+                        _houses = [];
+                        _availableBatches = [];
+                      });
+                      if (newValue != null) {
+                        _loadHousesForSelectedFarm();
+                      } else {
+                        _loadExpenditures(reset: true);
+                      }
+                      Navigator.pop(context);
+                    },
+                  ),
+
+                const SizedBox(height: 12),
+
+                // House Dropdown
+                if (_houses.isNotEmpty)
+                  ReusableDropdown(
+                    value: _selectedHouse,
+                    items: [
+                      const DropdownMenuItem<String>(
+                        value: null,
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 12),
+                          child: Text('All Houses'),
+                        ),
+                      ),
+                      ..._houses.map((house) {
+                        return DropdownMenuItem<String>(
+                          value: house.id,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Text(house.houseName),
+                          ),
+                        );
+                      }),
+                    ],
+                    hintText: 'All Houses',
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _selectedHouse = newValue;
+                        _selectedBatch = null;
+                        _availableBatches = [];
+
+                        if (newValue != null) {
+                          final selectedHouse = _houses.firstWhere(
+                                (house) => house.id == newValue,
+                          );
+                          _availableBatches = selectedHouse.batches;
+                        }
+                      });
+                      _loadExpenditures(reset: true);
+                      Navigator.pop(context);
+                    },
+                  ),
+
+                if (_houses.isNotEmpty) const SizedBox(height: 12),
+
+                // Batch Dropdown
+                if (_selectedHouse != null && _availableBatches.isNotEmpty)
+                  ReusableDropdown(
+                    items: [
+                      const DropdownMenuItem<String>(
+                        value: null,
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 12),
+                          child: Text('All Batches'),
+                        ),
+                      ),
+                      ..._availableBatches.map((batch) {
+                        return DropdownMenuItem<String>(
+                          value: batch.id,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Text(batch.batchName),
+                          ),
+                        );
+                      }).toList(),
+                    ],
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _selectedBatch = newValue;
+                      });
+                      _loadExpenditures(reset: true);
+                      Navigator.pop(context);
+                    },
+                    hintText: 'All Batches',
+                    value: _selectedBatch,
+                  ),
+
+                if (_selectedHouse != null && _availableBatches.isNotEmpty)
+                  const SizedBox(height: 12),
+
+                // Date Filters
+                CustomDateTextField(
+                  label: 'Start Date',
+                  icon: Icons.calendar_today,
+                  controller: _startDateController,
+                  minYear: 2023,
+                  maxYear: DateTime.now().year,
+                  returnFormat: DateReturnFormat.isoString,
+                ),
+                const SizedBox(height: 12),
+                CustomDateTextField(
+                  label: 'End Date',
+                  icon: Icons.calendar_today,
+                  controller: _endDateController,
+                  minYear: 2023,
+                  maxYear: DateTime.now().year,
+                  returnFormat: DateReturnFormat.isoString,
+                ),
+
+                const SizedBox(height: 20),
+
+                // Apply Date Filter Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _loadExpenditures(reset: true);
+                    },
+                    icon: const Icon(Icons.filter_list, size: 18),
+                    label: const Text('Apply Date Filter'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildFilterChips() {
+    final filters = <Widget>[];
+
+    if (_selectedFarm != null && _farmsResponse != null) {
+      final farm = _farmsResponse!.farms.firstWhere((f) => f.id == _selectedFarm);
+      filters.add(
+        Chip(
+          label: Text('Farm: ${farm.farmName}'),
+          deleteIcon: const Icon(Icons.close, size: 16),
+          onDeleted: () {
+            setState(() {
+              _selectedFarm = null;
+              _selectedHouse = null;
+              _selectedBatch = null;
+              _houses = [];
+              _availableBatches = [];
+            });
+            _loadExpenditures(reset: true);
+          },
+        ),
+      );
+    }
+
+    if (_selectedHouse != null) {
+      final house = _houses.firstWhere((h) => h.id == _selectedHouse);
+      filters.add(
+        Chip(
+          label: Text('House: ${house.houseName}'),
+          deleteIcon: const Icon(Icons.close, size: 16),
+          onDeleted: () {
+            setState(() {
+              _selectedHouse = null;
+              _selectedBatch = null;
+              _availableBatches = [];
+            });
+            _loadExpenditures(reset: true);
+          },
+        ),
+      );
+    }
+
+    if (_selectedBatch != null) {
+      final batch = _availableBatches.firstWhere((b) => b.id == _selectedBatch);
+      filters.add(
+        Chip(
+          label: Text('Batch: ${batch.batchName}'),
+          deleteIcon: const Icon(Icons.close, size: 16),
+          onDeleted: () {
+            setState(() {
+              _selectedBatch = null;
+            });
+            _loadExpenditures(reset: true);
+          },
+        ),
+      );
+    }
+
+    if (_startDateController.text.isNotEmpty) {
+      filters.add(
+        Chip(
+          label: Text('From: ${_startDateController.text}'),
+          deleteIcon: const Icon(Icons.close, size: 16),
+          onDeleted: () {
+            setState(() {
+              _startDateController.clear();
+            });
+            _loadExpenditures(reset: true);
+          },
+        ),
+      );
+    }
+
+    if (_endDateController.text.isNotEmpty) {
+      filters.add(
+        Chip(
+          label: Text('To: ${_endDateController.text}'),
+          deleteIcon: const Icon(Icons.close, size: 16),
+          onDeleted: () {
+            setState(() {
+              _endDateController.clear();
+            });
+            _loadExpenditures(reset: true);
+          },
+        ),
+      );
+    }
+
+    if (filters.isEmpty) {
+      return const SizedBox();
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: Colors.grey.shade50,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Expanded(
+              Text(
+                'Active Filters',
+                style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              const Spacer(),
+              TextButton(
+                onPressed: _clearFilters,
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
                 child: Text(
-                  'Filters',
-                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade800,
+                  'Clear All',
+                  style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                    color: Colors.red,
                   ),
                 ),
               ),
-              if (_selectedFarm != null ||
-                  _selectedHouse != null ||
-                  _selectedBatch != null ||
-                  _startDateController.text.isNotEmpty ||
-                  _endDateController.text.isNotEmpty ||
-                  _searchController.text.isNotEmpty)
-                TextButton.icon(
-                  onPressed: _clearFilters,
-                  icon: const Icon(Icons.clear, size: 16),
-                  label: const Text('Clear'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.grey,
-                  ),
-                ),
             ],
           ),
-          const SizedBox(height: 16),
-
-          // Farm Dropdown
-          if (_farmsResponse != null && _farmsResponse!.farms.isNotEmpty)
-            ReusableDropdown(
-              value: _selectedFarm,
-              items: [
-                const DropdownMenuItem<String>(
-                  value: null,
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12),
-                    child: Text('All Farms'),
-                  ),
-                ),
-                ..._farmsResponse!.farms.map((farm) {
-                  return DropdownMenuItem<String>(
-                    value: farm.id,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Text(farm.farmName),
-                    ),
-                  );
-                }),
-              ],
-              hintText: 'All Farms',
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedFarm = newValue;
-                  _selectedHouse = null;
-                  _selectedBatch = null;
-                  _houses = [];
-                  _availableBatches = [];
-                });
-                if (newValue != null) {
-                  _loadHousesForSelectedFarm();
-                } else {
-                  _loadExpenditures(reset: true);
-                }
-              },
-            ),
-
           const SizedBox(height: 8),
-
-          // House Dropdown
-          if (_houses.isNotEmpty)
-            ReusableDropdown(
-              value: _selectedHouse,
-              items: [
-                const DropdownMenuItem<String>(
-                  value: null,
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12),
-                    child: Text('All Houses'),
-                  ),
-                ),
-                ..._houses.map((house) {
-                  return DropdownMenuItem<String>(
-                    value: house.id,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Text(house.houseName),
-                    ),
-                  );
-                }),
-              ],
-              hintText: 'All Houses',
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedHouse = newValue;
-                  _selectedBatch = null;
-                  _availableBatches = [];
-
-                  if (newValue != null) {
-                    final selectedHouse = _houses.firstWhere(
-                      (house) => house.id == newValue,
-                    );
-                    _availableBatches = selectedHouse.batches;
-                  }
-                });
-                _loadExpenditures(reset: true);
-              },
-            ),
-
-          if (_houses.isNotEmpty) const SizedBox(height: 8),
-
-          // Batch Dropdown
-          if (_selectedHouse != null && _availableBatches.isNotEmpty)
-            ReusableDropdown(
-              items: [
-                const DropdownMenuItem<String>(
-                  value: null,
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12),
-                    child: Text('All Batches'),
-                  ),
-                ),
-                ..._availableBatches.map((batch) {
-                  return DropdownMenuItem<String>(
-                    value: batch.id,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Text(batch.batchName),
-                    ),
-                  );
-                }).toList(),
-              ],
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedBatch = newValue;
-                });
-                _loadExpenditures(reset: true);
-              },
-              hintText: 'All Batches',
-              value: _selectedBatch,
-            ),
-
-          if (_selectedHouse != null && _availableBatches.isNotEmpty)
-            const SizedBox(height: 12),
-
-          // Search
-          ReusableInput(
-            controller: _searchController,
-            hintText: 'Search expenditures...',
-            suffixIcon: _searchController.text.isNotEmpty
-                ? IconButton(
-                    icon: const Icon(Icons.clear, size: 18),
-                    onPressed: () {
-                      _searchController.clear();
-                      _loadExpenditures(reset: true);
-                    },
-                  )
-                : null,
-            prefixIcon: const Icon(Icons.search),
-            onChanged: (value) {
-              // Debounce search
-              Future.delayed(const Duration(milliseconds: 500), () {
-                if (value == _searchController.text) {
-                  _loadExpenditures(reset: true);
-                }
-              });
-            },
-          ),
-
-          const SizedBox(height: 12),
-          CustomDateTextField(
-            label: 'Start Date',
-            icon: Icons.calendar_today,
-            controller: _startDateController,
-            minYear: 2023,
-            maxYear: DateTime.now().year,
-            returnFormat: DateReturnFormat.isoString,
-          ),
-          const SizedBox(height: 12),
-          CustomDateTextField(
-            label: 'End Date',
-            icon: Icons.calendar_today,
-            controller: _endDateController,
-            minYear: 2023,
-            maxYear: DateTime.now().year,
-            returnFormat: DateReturnFormat.isoString,
-          ),
-
-          const SizedBox(height: 12),
-
-          // Apply Date Filter Button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () => _loadExpenditures(reset: true),
-              icon: const Icon(Icons.filter_list, size: 18),
-              label: const Text('Apply Date Filter'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: filters,
           ),
         ],
       ),
@@ -716,27 +832,6 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
     );
   }
 
-  Widget _buildErrorWidget(String error) {
-    return Container(
-      padding: const EdgeInsets.all(40),
-      child: Column(
-        children: [
-          Icon(Icons.error_outline, size: 48, color: Colors.red.shade400),
-          const SizedBox(height: 16),
-          Text(
-            error,
-            style: TextStyle(color: Colors.red.shade600),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _loadFarms,
-            child: const Text('Retry'),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildEmptyState(String message) {
     return Container(
@@ -750,19 +845,11 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
             style: TextStyle(color: Colors.grey.shade600),
             textAlign: TextAlign.center,
           ),
-          if (_farmsResponse != null && _farmsResponse!.farms.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  final farm = _selectedFarm != null
-                      ? _farmsResponse!.farms.firstWhere((f) => f.id == _selectedFarm)
-                      : _farmsResponse!.farms.first;
-                  context.push('/record-expenditure', extra: farm);
-                },
-                icon: const Icon(Icons.add),
-                label: const Text('Add Expenditure'),
-              ),
+            ExpenseActionButton(
+              buttonColor: Colors.red,
+              onPressed: () {
+              context.push('/record-expenditure');
+            },
             ),
         ],
       ),
@@ -803,21 +890,54 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
           icon: Icon(Icons.arrow_back, color: Colors.grey.shade700),
           onPressed: () => context.pop(),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            onPressed: _showFilterBottomSheet,
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: () => _loadExpenditures(reset: true),
         child: SingleChildScrollView(
           controller: _scrollController,
+          padding: EdgeInsets.symmetric(horizontal: 16),
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const DisclaimerWidget(
                   title: 'Disclaimer',
-                  message: 'Record all activities for accurate reports.'
+                  message: 'Record all expenditures for accurate reports.'
               ),
-              // Filter Section
-              _buildFilterSection(),
+              SizedBox(height: 16,),
+              // Search Bar
+              SearchInput(
+                controller: _searchController,
+                hintText: 'Search expenditures...',
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                  icon: const Icon(Icons.clear, size: 18),
+                  onPressed: () {
+                    _searchController.clear();
+                    _loadExpenditures(reset: true);
+                  },
+                )
+                    : null,
+                prefixIcon: Icon(Icons.search),
+                onChanged: (value) {
+                  // Debounce search
+                  Future.delayed(const Duration(milliseconds: 500), () {
+                    if (value == _searchController.text) {
+                      _loadExpenditures(reset: true);
+                    }
+                  });
+                },
+              ),
+              SizedBox(height: 16,),
+
+              // Filter Chips
+              _buildFilterChips(),
 
               // Stats Section
               _buildStatsSection(),
@@ -833,17 +953,14 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
       ),
       floatingActionButton: _farmsResponse != null && _farmsResponse!.farms.isNotEmpty
           ? FloatingActionButton.extended(
-              onPressed: () {
-                final farm = _selectedFarm != null
-                    ? _farmsResponse!.farms.firstWhere((f) => f.id == _selectedFarm)
-                    : _farmsResponse!.farms.first;
-                context.push('/record-expenditure', extra: farm);
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('New Expense'),
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-            )
+        onPressed: () {
+          context.push('/record-expenditure');
+        },
+        icon: const Icon(Icons.add),
+        label: const Text('New Expense'),
+        backgroundColor: Colors.green,
+        foregroundColor: Colors.white,
+      )
           : null,
     );
   }

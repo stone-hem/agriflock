@@ -640,7 +640,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _buildQuickActionCard(
           icon: Icons.receipt_long,
           title: 'Expenditures',
-          subtitle: 'Record expenses',
+          subtitle: 'Record or View expenses',
           color: Colors.red,
           onTap: () => context.push('/my-expenditures'),
         ),
