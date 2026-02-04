@@ -35,31 +35,22 @@ class HomeStatCard extends StatelessWidget {
         children: [
           // Main stat - emphasized
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Fixed: Removed maxLines and overflow from main value
-                    Text(
-                      mainValue,
-                      style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: textColor,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      mainLabel,
-                      style: TextStyle(
-                        color: textColor.withOpacity(0.8),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
+              Text(
+                mainValue,
+                style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: textColor,
+                ),
+              ),
+              const SizedBox(width: 2),
+              Text(
+                mainLabel,
+                style: TextStyle(
+                  color: textColor.withOpacity(0.8),
+                  fontWeight: FontWeight.w500,
                 ),
               ),
 
@@ -117,11 +108,11 @@ class HomeStatCard extends StatelessWidget {
           .take(5) // Limit to 5 stats for compact view
           .map((stat) => ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.4, // Set a maximum width for each stat line
+          maxWidth: MediaQuery.of(context).size.width * 0.42, // Set a maximum width for each stat line
         ),
         child:   ConstrainedBox(
           constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.4, // Set a maximum width for each stat line
+            maxWidth: MediaQuery.of(context).size.width * 0.42, // Set a maximum width for each stat line
           ),
           child: Text(
             '${stat.value} ${stat.label}',
