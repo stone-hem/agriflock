@@ -275,42 +275,57 @@ class _HousesScreenState extends State<HousesScreen> {
   }
 
   Widget _buildChipsSection() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Quick Actions'),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 10,
-          runSpacing: 8,
-          alignment: WrapAlignment.center,
-          children: [
-            ActionChip(
-              avatar: const Icon(Icons.check_circle, size: 16),
-              label: const Text('View Completed Batches'),
-              onPressed: () {
-                context.push('/batches/my-completed-batches',extra: widget.farm);
-              },
-              backgroundColor: Colors.transparent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-                side: BorderSide(
-                  color: Colors.grey.shade400,
-                  width: 1.5,
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.flash_on, size: 18, color: Colors.grey.shade700),
+              const SizedBox(width: 8),
+              Text(
+                'Quick Actions',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade800,
                 ),
               ),
-              labelStyle: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    context.push('/batches/my-completed-batches',extra: widget.farm);
+                  },
+                  icon: const Icon(Icons.agriculture, size: 18),
+                  label: const Text('My Completed/Removed Batches'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.green.shade700,
+                    side: BorderSide(color: Colors.green.shade300),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ],
-        ),
-      ],
+            ],
+          ),
+        ],
+      ),
     );
   }
+
 
 }
 

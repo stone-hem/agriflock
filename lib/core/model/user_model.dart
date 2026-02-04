@@ -4,6 +4,8 @@ class LoginResponse {
   final String sessionId;
   final int expiresIn;
   final User user;
+  final String? currency;
+
 
   LoginResponse({
     required this.accessToken,
@@ -11,6 +13,7 @@ class LoginResponse {
     required this.sessionId,
     required this.expiresIn,
     required this.user,
+    this.currency,
   });
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
@@ -20,6 +23,7 @@ class LoginResponse {
       sessionId: json['session_id'],
       expiresIn: json['expires_in'],
       user: User.fromJson(json['user']),
+      currency: json['currency'],
     );
   }
 
@@ -30,6 +34,7 @@ class LoginResponse {
       'session_id': sessionId,
       'expires_in': expiresIn,
       'user': user.toJson(),
+      'currency':currency
     };
   }
 }

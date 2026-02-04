@@ -35,6 +35,7 @@ class ManualAuthRepository {
           sessionId: loginResponse.sessionId,
           userData: loginResponse.user.toJson(),
           expiresInSeconds: loginResponse.expiresIn,
+          currency: loginResponse.currency??'USD',
         );
 
         return {
@@ -150,6 +151,7 @@ class ManualAuthRepository {
         // Extract tokens and user data
         final accessToken = data['data']?['access_token'] as String?;
         final refreshToken = data['data']?['refresh_token'] as String?;
+        final currency=data['data']?['currency'] as String?;
         final user = data['data']?['user'] as Map<String, dynamic>?;
         final expiresIn = data['data']?['expires_in'] as int?;
 
@@ -160,7 +162,7 @@ class ManualAuthRepository {
             refreshToken: refreshToken,
             sessionId: user['session_id'] as String,
             userData: user,
-            expiresInSeconds: expiresIn ?? 3600,
+            expiresInSeconds: expiresIn ?? 3600, currency: currency??'USD',
           );
 
           return {

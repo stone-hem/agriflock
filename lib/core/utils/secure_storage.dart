@@ -17,6 +17,9 @@ class SecureStorage {
   static const String _emailKey = 'user_email';
   static const String _nameKey = 'user_name';
   static const String _tokenExpiryKey = 'token_expiry';
+  static const String _currencyKey = 'currency';
+
+
 
   // Token operations
   Future<void> saveToken(String token) async {
@@ -163,6 +166,16 @@ class SecureStorage {
     await _storage.deleteAll();
   }
 
+  //save currency
+  Future<void> saveCurrency(String currency) async {
+    await _storage.write(key: _currencyKey, value: currency);
+  }
+
+  //get currency
+  Future<String> getCurrency() async {
+    return await _storage.read(key: _currencyKey)??'USD';
+  }
+
   // Save complete login response
   Future<void> saveLoginData({
     required String token,
@@ -171,9 +184,11 @@ class SecureStorage {
     required String sessionId,
     DateTime? tokenExpiry,
     int? expiresInSeconds, // If API returns expiry in seconds
+    required String currency,
   }) async {
     await saveToken(token);
     await saveSessionId(sessionId);
+    await saveCurrency(currency);
 
     // Save refresh token
 
@@ -202,6 +217,9 @@ class SecureStorage {
         await saveUserName(userData['name'].toString());
       }
     }
+
+
+
   }
 
   // Update tokens after refresh
