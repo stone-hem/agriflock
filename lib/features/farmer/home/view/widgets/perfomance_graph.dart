@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:agriflock360/features/farmer/home/model/financial_overview_model.dart';
+import 'package:agriflock360/main.dart';
 import 'package:flutter/material.dart';
 
 class FinancialPerformanceGraph extends StatefulWidget {
@@ -19,12 +20,22 @@ class _FinancialPerformanceGraphState extends State<FinancialPerformanceGraph> {
   List<FinancialDataPoint> _dataPoints = [];
   double _maxValue = 0;
   late List<double> _profitValues;
+  String _currency='';
+
 
   @override
   void initState() {
     super.initState();
+    _loadCurrency();
     _convertData();
     _calculateMetrics();
+  }
+
+  Future<void> _loadCurrency() async {
+      var currency = await secureStorage.getCurrency();
+      setState(() {
+        _currency = currency;
+      });
   }
 
   @override
@@ -107,7 +118,7 @@ class _FinancialPerformanceGraphState extends State<FinancialPerformanceGraph> {
                 Icon(Icons.calendar_month, size: 16, color: Colors.grey),
                 SizedBox(width: 4),
                 Text(
-                  'Last 6 Months',
+                  'Last 6 Months in $_currency',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey,
@@ -171,17 +182,17 @@ class _FinancialPerformanceGraphState extends State<FinancialPerformanceGraph> {
                 children: [
                   _buildStatCard(
                     'Total Income',
-                    '${_calculateTotalIncome()}',
+                    '${_calculateTotalIncome()} $_currency',
                     Colors.green,
                   ),
                   _buildStatCard(
                     'Total Expenditure',
-                    '${_calculateTotalExpenditure()}',
+                    '${_calculateTotalExpenditure()} $_currency',
                     Colors.red,
                   ),
                   _buildStatCard(
                     'Net Profit',
-                    '${_calculateNetProfit()}',
+                    '${_calculateNetProfit()} $_currency',
                     _calculateNetProfit() >= 0 ? Colors.blue : Colors.orange,
                   ),
                 ],

@@ -12,6 +12,7 @@ import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/bird_type.dart';
 import 'package:agriflock360/features/farmer/batch/repo/batch_house_repo.dart';
 import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
+import 'package:agriflock360/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -55,6 +56,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
     'Breeding',
     'Dual Purpose',
   ];
+  String _currency='';
 
   final Map<String, List<String>> _feedingTimeOptions = {
     'Day': ['06:00AM', '09:00AM', '12:00 Noon', '3:00PM', '6:00PM'],
@@ -83,9 +85,17 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
   @override
   void initState() {
     super.initState();
+    _loadCurrency();
     _initializeForm();
     _loadBirdTypes();
     _calculateAvailableCapacity();
+  }
+
+  Future<void> _loadCurrency() async {
+    var currency = await secureStorage.getCurrency();
+    setState(() {
+      _currency = currency;
+    });
   }
 
   void _calculateAvailableCapacity() {
@@ -627,7 +637,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                             }
                             return null;
                           },
-                          labelText: 'Cost per chick (KSH)',
+                          labelText: 'Cost per chick ($_currency)',
                           hintText: _isOwnHatch
                               ? 'e.g., 0 (no cost)'
                               : 'e.g., 50, 75, 100',
@@ -636,8 +646,8 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                         Text(
                           _chickCostController.text.isNotEmpty &&
                               _initialQuantityController.text.isNotEmpty
-                              ? 'Total cost: KSH ${_calculateTotalChickCost().toStringAsFixed(2)}'
-                              : 'Total cost: KSH 0.00',
+                              ? 'Total cost: $_currency ${_calculateTotalChickCost().toStringAsFixed(2)}'
+                              : 'Total cost: $_currency 0.00',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.green.shade700,

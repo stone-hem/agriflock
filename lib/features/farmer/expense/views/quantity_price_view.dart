@@ -2,6 +2,7 @@ import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/expense/model/expense_category.dart';
+import 'package:agriflock360/main.dart';
 import 'package:flutter/material.dart';
 
 class QuantityPriceView extends StatefulWidget {
@@ -46,6 +47,8 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
 
   String? _methodOfAdministration;
   double _totalPrice = 0.0;
+  String _currency='';
+
 
   final List<String> _administrationMethods = [
     'Water',
@@ -59,6 +62,7 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
   @override
   void initState() {
     super.initState();
+    _loadCurrency();
     _quantityController = TextEditingController(
       text: widget.quantity?.toString() ?? '',
     );
@@ -73,6 +77,14 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
 
     _quantityController.addListener(_calculateTotal);
     _unitPriceController.addListener(_calculateTotal);
+  }
+
+
+  Future<void> _loadCurrency() async {
+    var currency = await secureStorage.getCurrency();
+    setState(() {
+      _currency = currency;
+    });
   }
 
   void _calculateTotal() {
@@ -232,7 +244,7 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
 
                   // Unit Price
                   ReusableInput(
-                    topLabel: 'Unit Price (KES) *',
+                    topLabel: 'Unit Price ($_currency) *',
                     icon: Icons.attach_money,
                     controller: _unitPriceController,
                     hintText: '0.00',
@@ -274,7 +286,7 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
                           ),
                         ),
                         Text(
-                          'KES ${_totalPrice.toStringAsFixed(2)}',
+                          '$_currency ${_totalPrice.toStringAsFixed(2)}',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,

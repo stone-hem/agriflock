@@ -7,6 +7,7 @@ import 'package:agriflock360/features/farmer/batch/repo/batch_mgt_repo.dart';
 import 'package:agriflock360/features/farmer/batch/shared/stat_card.dart';
 import 'package:agriflock360/features/farmer/expense/model/expenditure_model.dart' as expense_model;
 import 'package:agriflock360/features/farmer/expense/repo/expenditure_repository.dart';
+import 'package:agriflock360/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -20,7 +21,6 @@ class BatchExpendituresTab extends StatefulWidget {
 }
 
 class _BatchExpendituresTabState extends State<BatchExpendituresTab> {
-  final BatchMgtRepository _batchRepository = BatchMgtRepository();
   final ExpenditureRepository _expenditureRepository = ExpenditureRepository();
 
   ExpenditureDashboard? _dashboard;
@@ -35,11 +35,21 @@ class _BatchExpendituresTabState extends State<BatchExpendituresTab> {
   double _totalAmount = 0;
   int _totalItems = 0;
   Map<String, double> _categoryTotals = {};
+  String _currency='';
+
 
   @override
   void initState() {
     super.initState();
+    _loadCurrency();
     _loadExpenditureData();
+  }
+
+  Future<void> _loadCurrency() async {
+    var currency = await secureStorage.getCurrency();
+    setState(() {
+      _currency = currency;
+    });
   }
 
   Future<void> _loadExpenditureData() async {
@@ -338,7 +348,7 @@ class _BatchExpendituresTabState extends State<BatchExpendituresTab> {
   }
 
   String _formatCurrency(double amount) {
-    return 'Ksh ${amount.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}';
+    return '$_currency ${amount.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}';
   }
 
   Widget _buildCategoryBreakdown() {

@@ -173,7 +173,12 @@ class SecureStorage {
 
   //get currency
   Future<String> getCurrency() async {
-    return await _storage.read(key: _currencyKey)??'USD';
+    try{
+      return await _storage.read(key: _currencyKey)??'USD';
+    }catch(e){
+      return 'USD';
+    }
+
   }
 
   // Save complete login response

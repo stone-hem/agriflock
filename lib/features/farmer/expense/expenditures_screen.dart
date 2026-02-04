@@ -2,14 +2,13 @@ import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/core/widgets/disclaimer_widget.dart';
 import 'package:agriflock360/core/widgets/expense/expense_button.dart';
 import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
-import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/core/widgets/search_input.dart';
+import 'package:agriflock360/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/date_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
-import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
 import 'package:agriflock360/features/farmer/farm/repositories/farm_repository.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/batch_house_repo.dart';
@@ -42,6 +41,8 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
   List<House> _houses = [];
   List<BatchModel> _availableBatches = [];
   List<Expenditure> _expenditures = [];
+  String _currency='';
+
 
   // Loading states
   bool _isLoadingFarms = false;
@@ -63,11 +64,20 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
   final ScrollController _scrollController = ScrollController();
   bool _isLoadingNextPage = false;
 
+
   @override
   void initState() {
     super.initState();
+    _loadCurrency();
     _initializeData();
     _setupScrollListener();
+  }
+
+  Future<void> _loadCurrency() async {
+    var currency = await secureStorage.getCurrency();
+    setState(() {
+      _currency = currency;
+    });
   }
 
   @override
@@ -692,7 +702,7 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
         children: [
           Expanded(
             child: _buildStatCard(
-              value: 'Ksh ${_totalAmount.toStringAsFixed(2)}',
+              value: '${_totalAmount.toStringAsFixed(2)} $_currency',
               label: 'Total Amount',
               icon: Icons.attach_money,
               color: Colors.blue.shade100,
@@ -793,7 +803,7 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
       children: [
         ..._expenditures.map((expenditure) => _ExpenditureCard(
           expenditure: expenditure,
-          onDelete: () => _showDeleteDialog(expenditure),
+          onDelete: () => _showDeleteDialog(expenditure), currency: _currency,
         )),
         if (_isLoadingNextPage)
           Container(
@@ -969,10 +979,13 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
 class _ExpenditureCard extends StatelessWidget {
   final Expenditure expenditure;
   final VoidCallback onDelete;
+  final String currency;
+
 
   const _ExpenditureCard({
     required this.expenditure,
     required this.onDelete,
+    required this.currency,
   });
 
   @override
@@ -1065,7 +1078,7 @@ class _ExpenditureCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      'Ksh ${expenditure.amount.toStringAsFixed(2)}',
+                      '${expenditure.amount.toStringAsFixed(2)} $currency',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
