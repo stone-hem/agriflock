@@ -1,5 +1,6 @@
 import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock360/core/widgets/disclaimer_widget.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_list_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/batch_mgt_repo.dart';
 import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
@@ -133,6 +134,10 @@ class _BatchSelectionScreenState extends State<BatchSelectionScreen> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const DisclaimerWidget(
+                  title: 'Disclaimer',
+                  message: 'Record all activities for accurate reports.'
+              ),
               const Text(
                 'Select Batch',
                 style: TextStyle(
@@ -149,6 +154,7 @@ class _BatchSelectionScreenState extends State<BatchSelectionScreen> {
                 ),
               ),
               const SizedBox(height: 24),
+
             ],
           );
         }

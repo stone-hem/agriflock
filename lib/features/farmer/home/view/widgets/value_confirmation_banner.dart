@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/widgets/expense/expense_button.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -93,6 +94,12 @@ class ValueConfirmationBanner extends StatelessWidget {
               ),
             ),
           ),
+          ExpenseActionButton(
+            onPressed: () {
+              context.push('/record-expenditure');
+            },
+            buttonColor: Colors.red,
+          )
         ],
       ),
     );

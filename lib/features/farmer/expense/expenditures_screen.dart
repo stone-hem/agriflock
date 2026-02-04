@@ -1,4 +1,5 @@
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
+import 'package:agriflock360/core/widgets/disclaimer_widget.dart';
 import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:flutter/material.dart';
@@ -802,13 +803,6 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
           icon: Icon(Icons.arrow_back, color: Colors.grey.shade700),
           onPressed: () => context.pop(),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => _loadExpenditures(reset: true),
-            tooltip: 'Refresh',
-          ),
-        ],
       ),
       body: RefreshIndicator(
         onRefresh: () => _loadExpenditures(reset: true),
@@ -818,6 +812,10 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const DisclaimerWidget(
+                  title: 'Disclaimer',
+                  message: 'Record all activities for accurate reports.'
+              ),
               // Filter Section
               _buildFilterSection(),
 

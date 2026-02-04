@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/widgets/expense/expense_button.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -73,16 +74,12 @@ class WelcomeSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          FilledButton.icon(
-            onPressed: () => context.push('/record-expenditure'),
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.red.shade800,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              minimumSize: const Size(0, 36),
-            ),
-            icon: const Icon(Icons.arrow_forward, size: 16),
-            label: const Text('Quick expense', style: TextStyle(fontSize: 13)),
-          ),
+          ExpenseActionButton(
+            onPressed: () {
+              context.push('/record-expenditure');
+            },
+            buttonColor: Colors.red,
+          )
         ],
       ),
     );

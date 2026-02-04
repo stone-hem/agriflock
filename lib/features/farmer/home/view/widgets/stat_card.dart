@@ -25,7 +25,7 @@ class HomeStatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(12),
@@ -42,14 +42,13 @@ class HomeStatCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Fixed: Removed maxLines and overflow from main value
                     Text(
                       mainValue,
                       style: Theme.of(context).textTheme.headlineSmall!.copyWith(
                         fontWeight: FontWeight.bold,
                         color: textColor,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -78,7 +77,6 @@ class HomeStatCard extends StatelessWidget {
               ],
             ],
           ),
-
 
           // Button
           if (onButtonPressed != null) ...[
@@ -115,19 +113,25 @@ class HomeStatCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: additionalStats!
-          .take(5) // Limit to 4 stats for compact view
-          .map((stat) => Text(
-        '${stat.value} ${stat.label}',
-        style: TextStyle(
-          color: textColor.withOpacity(0.9),
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
+          .take(5) // Limit to 5 stats for compact view
+          .map((stat) => ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 80, // Set a maximum width for each stat line
+        ),
+        child: Text(
+          '${stat.value} ${stat.label}',
+          style: TextStyle(
+            color: textColor.withOpacity(0.9),
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
       ))
           .toList(),
     );
   }
-
 }
 
 // Helper class for additional stats

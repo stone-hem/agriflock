@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/widgets/expense/expense_button.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -65,7 +66,7 @@ class FutureFramingBanner extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 6),
           Wrap(
             children:[
               const Text(
@@ -80,23 +81,20 @@ class FutureFramingBanner extends StatelessWidget {
               TextButton.icon(
                 onPressed: onSeePlans ?? () {},
                 style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.blue,
+                  foregroundColor: Colors.yellow,
                   textStyle: TextStyle(
                     decoration: TextDecoration.underline,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
                   )
                 ),
 
-                icon: Icon(Icons.arrow_forward, size: 16,fontWeight: FontWeight.bold,),
+                icon: Icon(Icons.crisis_alert_outlined, size: 16,fontWeight: FontWeight.bold,),
                 label: const Text(
                   'See what happens after trial',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
                 ),
               ),]
           ),
-          const SizedBox(height: 8),
           const Text(
             'Continue receiving feeding guidance, vaccination reminders, and quotations by choosing the right plan for your farm.',
             style: TextStyle(
@@ -105,16 +103,12 @@ class FutureFramingBanner extends StatelessWidget {
               height: 1.3,
             ),
           ),
-          const SizedBox(height: 12),
-          FilledButton.icon(
-            onPressed: () => context.push('/record-expenditure'),
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.red.shade800,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              minimumSize: const Size(0, 36),
-            ),
-            icon: const Icon(Icons.arrow_forward, size: 16),
-            label: const Text('Quick expense', style: TextStyle(fontSize: 13)),
+          const SizedBox(height: 8),
+          ExpenseActionButton(
+            onPressed: () {
+              context.push('/record-expenditure');
+            },
+            buttonColor: Colors.red,
           )
 
         ],

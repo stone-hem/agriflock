@@ -475,18 +475,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (_shouldShowValueConfirmationBanner)
-                          ValueConfirmationBanner(
-                            onViewActivity: () => context.push('/activity'),
-                          ),
-
-                        if (_shouldShowFutureFramingBanner)
-                          FutureFramingBanner(
-                            onSeePlans: () => context.push('/plans'),
-                          ),
-
-                        if (!_shouldShowValueConfirmationBanner &&
-                            !_shouldShowFutureFramingBanner)
+                        // if (_shouldShowValueConfirmationBanner)
+                        //   ValueConfirmationBanner(
+                        //     onViewActivity: () => context.push('/activity'),
+                        //   ),
+                        //
+                        // if (_shouldShowFutureFramingBanner)
+                        //   FutureFramingBanner(
+                        //     onSeePlans: () => context.push('/plans'),
+                        //   ),
+                        //
+                        // if (!_shouldShowValueConfirmationBanner &&
+                        //     !_shouldShowFutureFramingBanner)
                           WelcomeSection(
                             greeting: _getGreeting(),
                             summaryMsg: _getSummaryMessage(),
@@ -496,66 +496,67 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         const SizedBox(height: 20),
 
-                        GridView.count(
-                          crossAxisCount: 2,
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          mainAxisSpacing: 12,
-                          crossAxisSpacing: 12,
-                          childAspectRatio: 1.2,
+                        Row(
                           children: [
-                            HomeStatCard(
-                              mainValue: '${_summary!.numberOfFarms}',
-                              mainLabel: 'Farms',
-                              color: Colors.green.shade100,
-                              textColor: Colors.green,
-                              additionalStats: [
-                                StatItem(
-                                  value: '${_summary!.numberOfHouses}',
-                                  label: 'Houses',
-                                ),
-                                StatItem(
-                                  value: '${_summary!.totalBatches}',
-                                  label: 'Batches',
-                                ),
-                              ],
-                              onButtonPressed: (){
-                                context.push('/farms');
-                              },
-                              buttonText: 'View farms',
+                            Expanded(
+                              flex: 2,
+                              child: HomeStatCard(
+                                mainValue: '${_summary!.numberOfFarms}',
+                                mainLabel: 'Farms',
+                                color: Colors.green.shade100,
+                                textColor: Colors.green,
+                                additionalStats: [
+                                  StatItem(
+                                    value: '${_summary!.numberOfHouses}',
+                                    label: 'Houses',
+                                  ),
+                                  StatItem(
+                                    value: '${_summary!.totalBatches}',
+                                    label: 'Batches',
+                                  ),
+                                ],
+                                onButtonPressed: (){
+                                  context.push('/farms');
+                                },
+                                buttonText: 'View farms',
+                              ),
                             ),
-                            HomeStatCard(
-                              mainValue: '${_summary!.totalBirds}',
-                              mainLabel: 'Total Birds',
-                              color: Colors.orange.shade100,
-                              textColor: Colors.orange,
-                              additionalStats: [
-                                StatItem(
-                                  value: '${_summary!.numberOfHouses}',
-                                  label: 'Broilers',
-                                ),
-                                StatItem(
-                                  value: '${_summary!.totalBatches}',
-                                  label: 'Layers',
-                                ),
-                                StatItem(
-                                  value: '${_summary!.totalBatches}',
-                                  label: 'Kienyeji',
-                                ),
-                                StatItem(
-                                  value: '${_summary!.totalBatches}',
-                                  label: 'Layers',
-                                ),
-                                StatItem(
-                                  value: '${_summary!.eggsToday}',
-                                  label: 'Eggs Today',
-                                ),
-                              ],
+                            const SizedBox(width: 8),
+                            Expanded(
+                              flex: 3,
+                              child: HomeStatCard(
+                                mainValue: '${_summary!.totalBirds}',
+                                mainLabel: 'Total Birds',
+                                color: Colors.orange.shade100,
+                                textColor: Colors.orange,
+                                additionalStats: [
+                                  StatItem(
+                                    value: '${_summary!.numberOfHouses}',
+                                    label: 'Broilers',
+                                  ),
+                                  StatItem(
+                                    value: '${_summary!.totalBatches}',
+                                    label: 'Layers',
+                                  ),
+                                  StatItem(
+                                    value: '${_summary!.totalBatches}',
+                                    label: 'Kienyeji',
+                                  ),
+                                  StatItem(
+                                    value: '${_summary!.totalBatches}',
+                                    label: 'Layers',
+                                  ),
+                                  StatItem(
+                                    value: '${_summary!.eggsToday}',
+                                    label: 'Eggs Today',
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
 
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 16),
                         Text(
                           'Quick Actions',
                           style: Theme.of(context).textTheme.titleLarge!
@@ -564,9 +565,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 color: Colors.grey.shade800,
                               ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
                         _buildQuickActionsGrid(),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 16),
 
                         if (_isFinancialLoading)
                           SizedBox(
@@ -626,294 +627,14 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildStatsOverview() {
-    if (_summary == null || _isSummaryLoading) {
-      return HomeStatsLoading();
-    }
-
-    if (_summaryError != null) {
-      return _buildStatsError();
-    }
-
-    return Column(
-      children: [
-        // Card 1: Farms, Houses, Batches
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade200),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              _buildCompactStat(
-                '${_summary!.numberOfFarms}',
-                'Farms',
-                Icons.agriculture,
-                Colors.green,
-                onTap: () => context.push('/farms'),
-              ),
-              _buildStatDivider(),
-              _buildCompactStat(
-                '${_summary!.numberOfHouses}',
-                'Houses',
-                Icons.home_work,
-                Colors.teal,
-              ),
-              _buildStatDivider(),
-              _buildCompactStat(
-                '${_summary!.totalBatches}',
-                'Batches',
-                Icons.layers,
-                Colors.purple,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-
-        // Card 2: Bird Types (Broilers, Layers, Kienyeji)
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade200),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Bird Types',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  _buildBirdTypeItem(
-                    'Broilers',
-                    0,
-                    Colors.orange,
-                    Icons.restaurant,
-                  ),
-                  const SizedBox(width: 12),
-                  _buildBirdTypeItem('Layers', 0, Colors.blue, Icons.egg),
-                  const SizedBox(width: 12),
-                  _buildBirdTypeItem('Kienyeji', 0, Colors.brown, Icons.eco),
-                ],
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-
-        // Card 3: Eggs Today and Number of Layers
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.orange.shade400, Colors.orange.shade600],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.orange.withOpacity(0.3),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.egg,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _summary!.eggsToday.toString(),
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const Text(
-                              'Eggs Today',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.white70,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                width: 1,
-                height: 50,
-                color: Colors.white.withOpacity(0.3),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        '0',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const Text(
-                        'Layer Birds',
-                        style: TextStyle(fontSize: 12, color: Colors.white70),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCompactStat(
-    String value,
-    String label,
-    IconData icon,
-    Color color, {
-    VoidCallback? onTap,
-  }) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, color: color, size: 22),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-            Text(
-              label,
-              style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatDivider() {
-    return Container(
-      width: 1,
-      height: 60,
-      margin: const EdgeInsets.symmetric(horizontal: 8),
-      color: Colors.grey.shade200,
-    );
-  }
-
-  Widget _buildBirdTypeItem(
-    String label,
-    int count,
-    Color color,
-    IconData icon,
-  ) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 20),
-            const SizedBox(height: 6),
-            Text(
-              '$count',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-            Text(
-              label,
-              style: TextStyle(fontSize: 10, color: color.withOpacity(0.8)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildQuickActionsGrid() {
     return GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
+      mainAxisSpacing: 10,
+      crossAxisSpacing: 10,
       childAspectRatio: 1.2,
       children: [
         _buildQuickActionCard(
@@ -926,7 +647,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _buildQuickActionCard(
           icon: Icons.edit_note,
           title: 'Quick Record',
-          subtitle: 'Feed or vaccine',
+          subtitle: 'Feed, vaccine or medication',
           color: Colors.green,
           onTap: () => context.push('/quick-recording'),
         ),
@@ -1002,19 +723,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildStatsError() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.red.shade50,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        _summaryError ?? 'Failed to load statistics',
-        style: TextStyle(color: Colors.red.shade700),
-      ),
-    );
-  }
 
   Widget _buildRecentActivitySection(BuildContext context) {
     if (_isActivitiesLoading) {
