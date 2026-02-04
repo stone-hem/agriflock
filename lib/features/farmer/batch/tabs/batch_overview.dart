@@ -2,6 +2,7 @@ import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_mgt_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/batch_mgt_repo.dart';
 import 'package:agriflock360/features/farmer/batch/shared/stat_card.dart';
+import 'package:agriflock360/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -22,10 +23,21 @@ class _BatchOverviewState extends State<BatchOverview> {
   String _selectedPeriod = 'today'; // 'today', 'weekly', 'monthly', 'yearly', 'all_time'
   bool _showAllTime = false;
 
+  String _currency='';
+
+
   @override
   void initState() {
     super.initState();
+    _loadCurrency();
     _loadBatchData();
+  }
+
+  Future<void> _loadCurrency() async {
+    var currency = await secureStorage.getCurrency();
+    setState(() {
+      _currency = currency;
+    });
   }
 
   Future<void> _loadBatchData() async {
@@ -378,8 +390,8 @@ class _BatchOverviewState extends State<BatchOverview> {
                       ),
                       child: Text(
                         _getSelectedStats().netProfit >= 0
-                            ? 'Profit: \$${_getSelectedStats().netProfit.toStringAsFixed(2)}'
-                            : 'Loss: \$${_getSelectedStats().netProfit.abs().toStringAsFixed(2)}',
+                            ? 'Profit: $_currency ${_getSelectedStats().netProfit.toStringAsFixed(2)}'
+                            : 'Loss: $_currency ${_getSelectedStats().netProfit.abs().toStringAsFixed(2)}',
                         style: TextStyle(
                           color: _getSelectedStats().netProfit >= 0
                               ? Colors.green
@@ -490,7 +502,7 @@ class _BatchOverviewState extends State<BatchOverview> {
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
             Text(
-              '\$${totalExpenditure.toStringAsFixed(2)}',
+              '$_currency ${totalExpenditure.toStringAsFixed(2)}',
               style: const TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 16,
@@ -533,7 +545,7 @@ class _BatchOverviewState extends State<BatchOverview> {
                       style: const TextStyle(fontWeight: FontWeight.w500),
                     ),
                     Text(
-                      '\$${amount.toStringAsFixed(2)}',
+                      '$_currency ${amount.toStringAsFixed(2)}',
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         color: color,
@@ -583,7 +595,7 @@ class _BatchOverviewState extends State<BatchOverview> {
               children: [
                 _buildSummaryItem(
                   label: 'Income',
-                  value: '\$${stats.productIncome.toStringAsFixed(2)}',
+                  value: '$_currency ${stats.productIncome.toStringAsFixed(2)}',
                   icon: Icons.arrow_upward,
                   color: Colors.green,
                 ),
@@ -594,7 +606,7 @@ class _BatchOverviewState extends State<BatchOverview> {
                 ),
                 _buildSummaryItem(
                   label: 'Expenditure',
-                  value: '\$${stats.totalExpenditure.toStringAsFixed(2)}',
+                  value: '$_currency ${stats.totalExpenditure.toStringAsFixed(2)}',
                   icon: Icons.arrow_downward,
                   color: Colors.red,
                 ),
@@ -699,19 +711,19 @@ class _BatchOverviewState extends State<BatchOverview> {
             const SizedBox(height: 12),
             _buildComparisonItem(
               label: 'Total Income',
-              value: '\$${allTime.productIncome.toStringAsFixed(2)}',
+              value: '$_currency ${allTime.productIncome.toStringAsFixed(2)}',
             ),
             _buildComparisonItem(
               label: 'Total Feeding Cost',
-              value: '\$${allTime.feedingCost.toStringAsFixed(2)}',
+              value: '$_currency ${allTime.feedingCost.toStringAsFixed(2)}',
             ),
             _buildComparisonItem(
               label: 'Total Vaccination Cost',
-              value: '\$${allTime.vaccinationCost.toStringAsFixed(2)}',
+              value: '$_currency ${allTime.vaccinationCost.toStringAsFixed(2)}',
             ),
             _buildComparisonItem(
               label: 'Overall Net',
-              value: '\$${allTime.netProfit.toStringAsFixed(2)}',
+              value: '$_currency ${allTime.netProfit.toStringAsFixed(2)}',
               isNet: true,
             ),
           ],
