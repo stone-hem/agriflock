@@ -60,6 +60,22 @@ class ValueConfirmationBanner extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
+          TextButton.icon(
+            onPressed: onViewActivity ?? () {},
+            style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.yellow,
+                textStyle: TextStyle(
+                  decoration: TextDecoration.underline,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                )
+            ),
+
+            icon: Icon(Icons.crisis_alert_outlined, size: 16,fontWeight: FontWeight.bold,),
+            label: const Text(
+              'View farm activity',
+            ),
+          ),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 2),
             child: Text(
@@ -72,33 +88,12 @@ class ValueConfirmationBanner extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          Align(
-            alignment: Alignment.centerRight,
-            child: ElevatedButton(
-              onPressed: onViewActivity ?? () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.green,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                minimumSize: const Size(0, 32),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: const Text(
-                'View farm activity',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-          ),
           ExpenseActionButton(
             onPressed: () {
               context.push('/record-expenditure');
             },
             buttonColor: Colors.red,
+              descriptionColor:Colors.white
           )
         ],
       ),

@@ -475,18 +475,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // if (_shouldShowValueConfirmationBanner)
-                        //   ValueConfirmationBanner(
-                        //     onViewActivity: () => context.push('/activity'),
-                        //   ),
-                        //
-                        // if (_shouldShowFutureFramingBanner)
-                        //   FutureFramingBanner(
-                        //     onSeePlans: () => context.push('/plans'),
-                        //   ),
-                        //
-                        // if (!_shouldShowValueConfirmationBanner &&
-                        //     !_shouldShowFutureFramingBanner)
+                        if (_shouldShowValueConfirmationBanner)
+                          ValueConfirmationBanner(
+                            onViewActivity: () => context.push('/activity'),
+                          ),
+
+                        if (_shouldShowFutureFramingBanner)
+                          FutureFramingBanner(
+                            onSeePlans: () => context.push('/plans'),
+                          ),
+
+                        if (!_shouldShowValueConfirmationBanner &&
+                            !_shouldShowFutureFramingBanner)
                           WelcomeSection(
                             greeting: _getGreeting(),
                             summaryMsg: _getSummaryMessage(),

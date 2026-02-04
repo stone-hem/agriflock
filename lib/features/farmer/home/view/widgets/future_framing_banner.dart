@@ -23,7 +23,7 @@ class FutureFramingBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.orange.withOpacity(0.3),
+            color: Colors.orange.shade100,
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -109,6 +109,8 @@ class FutureFramingBanner extends StatelessWidget {
               context.push('/record-expenditure');
             },
             buttonColor: Colors.red,
+              descriptionColor:Colors.white
+
           )
 
         ],
