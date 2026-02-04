@@ -12,7 +12,7 @@ class ValueConfirmationBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -34,7 +34,7 @@ class ValueConfirmationBanner extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.2),
                   shape: BoxShape.circle,
@@ -42,69 +42,57 @@ class ValueConfirmationBanner extends StatelessWidget {
                 child: const Icon(
                   Icons.verified,
                   color: Colors.white,
-                  size: 20,
+                  size: 16,
                 ),
               ),
-              const SizedBox(width: 12),
-              const Text(
-                'You\'re farming  with \n confidence',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'You\'re farming with confidence',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ],
           ),
-
-          const SizedBox(height: 12),
-
+          const SizedBox(height: 8),
           const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 4),
+            padding: EdgeInsets.symmetric(horizontal: 2),
             child: Text(
               'AgriFlock 360 is actively supporting your farm with feeding plans, vaccination schedules, and market-ready quotations.',
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 12,
                 color: Colors.white,
-                height: 1.4,
+                height: 1.3,
               ),
             ),
           ),
-
-          const SizedBox(height: 16),
-
+          const SizedBox(height: 10),
           Align(
             alignment: Alignment.centerRight,
             child: ElevatedButton(
-              onPressed: onViewActivity ?? () {
-                // Navigate to farm activity
-              },
+              onPressed: onViewActivity ?? () {},
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: Colors.green,
-                minimumSize: const Size(150, 40),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                minimumSize: const Size(0, 32),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(16),
                 ),
               ),
               child: const Text(
-                'View your farm activity',
+                'View farm activity',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
+                  fontSize: 12,
                 ),
               ),
             ),
           ),
-
-          FilledButton.icon(
-            onPressed: () => context.push('/record-expenditure'),
-            style: TextButton.styleFrom(
-              backgroundColor: Colors.red.shade800,
-            ),
-            icon: Icon(Icons.arrow_forward, color: Colors.white),
-            label: Text('Quick expense'),
-          ),
-
         ],
       ),
     );

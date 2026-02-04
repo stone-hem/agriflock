@@ -17,8 +17,8 @@ import 'package:agriflock360/features/farmer/home/view/widgets/stat_card.dart';
 import 'package:agriflock360/features/farmer/home/view/widgets/stats_loading.dart';
 import 'package:agriflock360/features/farmer/home/view/widgets/welcome_section.dart';
 import 'package:agriflock360/features/farmer/payg/flow/day_27_decision_modal.dart';
-import 'package:agriflock360/features/farmer/payg/flow/future_framing_banner.dart';
-import 'package:agriflock360/features/farmer/payg/flow/value_confirmation_banner.dart';
+import 'package:agriflock360/features/farmer/home/view/widgets/future_framing_banner.dart';
+import 'package:agriflock360/features/farmer/home/view/widgets/value_confirmation_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -149,7 +149,10 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onDay27ModalContinue() {
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
-    SharedPrefs.setInt('day27_modal_last_shown', todayDate.millisecondsSinceEpoch);
+    SharedPrefs.setInt(
+      'day27_modal_last_shown',
+      todayDate.millisecondsSinceEpoch,
+    );
 
     if (mounted) {
       setState(() {
@@ -162,7 +165,10 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onDay27ModalDismiss() {
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
-    SharedPrefs.setInt('day27_modal_last_shown', todayDate.millisecondsSinceEpoch);
+    SharedPrefs.setInt(
+      'day27_modal_last_shown',
+      todayDate.millisecondsSinceEpoch,
+    );
 
     if (mounted) {
       setState(() {
@@ -198,7 +204,10 @@ class _HomeScreenState extends State<HomeScreen> {
         final todayDate = DateTime(today.year, today.month, today.day);
 
         if (lastShown != todayDate.millisecondsSinceEpoch) {
-          SharedPrefs.setInt('day31_last_shown', todayDate.millisecondsSinceEpoch);
+          SharedPrefs.setInt(
+            'day31_last_shown',
+            todayDate.millisecondsSinceEpoch,
+          );
 
           final planDetails = {
             'features': [
@@ -212,10 +221,13 @@ class _HomeScreenState extends State<HomeScreen> {
           };
 
           if (mounted) {
-            context.push('/day-31-transition', extra: {
-              'recommendedPlan': 'Starter Plan',
-              'planDetails': planDetails,
-            });
+            context.push(
+              '/day-31-transition',
+              extra: {
+                'recommendedPlan': 'Starter Plan',
+                'planDetails': planDetails,
+              },
+            );
           }
         }
       });
@@ -346,7 +358,8 @@ class _HomeScreenState extends State<HomeScreen> {
           setState(() {
             _summary = data['summary'] as DashboardSummary;
             _activities = data['activities'] as List<DashboardActivity>;
-            _financialOverview = data['financial'] as FinancialOverview?; // ADD THIS
+            _financialOverview =
+                data['financial'] as FinancialOverview?; // ADD THIS
             _summaryError = null;
             _activitiesError = null;
             _financialError = null; // ADD THIS
@@ -369,7 +382,8 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  bool get _isLoading => _isSummaryLoading || _isActivitiesLoading || _isFinancialLoading;
+  bool get _isLoading =>
+      _isSummaryLoading || _isActivitiesLoading || _isFinancialLoading;
   bool get _hasError => _summaryError != null || _activitiesError != null;
   String? get _error => _summaryError ?? _activitiesError;
 
@@ -418,7 +432,10 @@ class _HomeScreenState extends State<HomeScreen> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: Icon(Icons.notifications_outlined, color: Colors.grey.shade700),
+            icon: Icon(
+              Icons.notifications_outlined,
+              color: Colors.grey.shade700,
+            ),
             onPressed: () => context.push('/notifications'),
           ),
         ],
@@ -429,101 +446,167 @@ class _HomeScreenState extends State<HomeScreen> {
               ? HomeSkeleton()
               : _hasError
               ? Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                const SizedBox(height: 16),
-                Text('Error: $_error'),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    if (_summaryError != null) _loadSummary();
-                    if (_activitiesError != null) _loadActivities();
-                  },
-                  child: const Text('Retry'),
-                ),
-              ],
-            ),
-          )
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        size: 48,
+                        color: Colors.red,
+                      ),
+                      const SizedBox(height: 16),
+                      Text('Error: $_error'),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          if (_summaryError != null) _loadSummary();
+                          if (_activitiesError != null) _loadActivities();
+                        },
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                )
               : RefreshIndicator(
-            onRefresh: _onRefresh,
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (_shouldShowValueConfirmationBanner)
-                    ValueConfirmationBanner(
-                      onViewActivity: () => context.push('/activity'),
-                    ),
+                  onRefresh: _onRefresh,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (_shouldShowValueConfirmationBanner)
+                          ValueConfirmationBanner(
+                            onViewActivity: () => context.push('/activity'),
+                          ),
 
-                  if (_shouldShowFutureFramingBanner)
-                    FutureFramingBanner(
-                      onSeePlans: () => context.push('/plans'),
-                    ),
+                        if (_shouldShowFutureFramingBanner)
+                          FutureFramingBanner(
+                            onSeePlans: () => context.push('/plans'),
+                          ),
 
-                  if (!_shouldShowValueConfirmationBanner && !_shouldShowFutureFramingBanner)
-                    WelcomeSection(
-                      greeting: _getGreeting(),
-                      summaryMsg: _getSummaryMessage(),
-                      daysSinceLogin: _userFirstLoginDate != null ? _daysSinceFirstLogin : null,
-                    ),
-                  const SizedBox(height: 20),
+                        if (!_shouldShowValueConfirmationBanner &&
+                            !_shouldShowFutureFramingBanner)
+                          WelcomeSection(
+                            greeting: _getGreeting(),
+                            summaryMsg: _getSummaryMessage(),
+                            daysSinceLogin: _userFirstLoginDate != null
+                                ? _daysSinceFirstLogin
+                                : null,
+                          ),
+                        const SizedBox(height: 20),
 
-                  _buildStatsOverview(),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Quick Actions',
-                    style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade800,
+                        GridView.count(
+                          crossAxisCount: 2,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 12,
+                          childAspectRatio: 1.2,
+                          children: [
+                            HomeStatCard(
+                              mainValue: '${_summary!.numberOfFarms}',
+                              mainLabel: 'Farms',
+                              color: Colors.green.shade100,
+                              textColor: Colors.green,
+                              additionalStats: [
+                                StatItem(
+                                  value: '${_summary!.numberOfHouses}',
+                                  label: 'Houses',
+                                ),
+                                StatItem(
+                                  value: '${_summary!.totalBatches}',
+                                  label: 'Batches',
+                                ),
+                              ],
+                              onButtonPressed: (){
+                                context.push('/farms');
+                              },
+                              buttonText: 'View farms',
+                            ),
+                            HomeStatCard(
+                              mainValue: '${_summary!.totalBirds}',
+                              mainLabel: 'Total Birds',
+                              color: Colors.orange.shade100,
+                              textColor: Colors.orange,
+                              additionalStats: [
+                                StatItem(
+                                  value: '${_summary!.numberOfHouses}',
+                                  label: 'Broilers',
+                                ),
+                                StatItem(
+                                  value: '${_summary!.totalBatches}',
+                                  label: 'Layers',
+                                ),
+                                StatItem(
+                                  value: '${_summary!.totalBatches}',
+                                  label: 'Kienyeji',
+                                ),
+                                StatItem(
+                                  value: '${_summary!.totalBatches}',
+                                  label: 'Layers',
+                                ),
+                                StatItem(
+                                  value: '${_summary!.eggsToday}',
+                                  label: 'Eggs Today',
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 20),
+                        Text(
+                          'Quick Actions',
+                          style: Theme.of(context).textTheme.titleLarge!
+                              .copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey.shade800,
+                              ),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildQuickActionsGrid(),
+                        const SizedBox(height: 20),
+
+                        if (_isFinancialLoading)
+                          SizedBox(
+                            height: 300,
+                            child: Center(child: CircularProgressIndicator()),
+                          )
+                        else if (_financialError != null)
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Column(
+                              children: [
+                                Text(
+                                  'Failed to load financial data',
+                                  style: TextStyle(color: Colors.red.shade700),
+                                ),
+                                const SizedBox(height: 8),
+                                ElevatedButton(
+                                  onPressed: _loadFinancialOverview,
+                                  child: const Text('Retry'),
+                                ),
+                              ],
+                            ),
+                          )
+                        else if (_financialOverview != null)
+                          FinancialPerformanceGraph(
+                            financialData: _financialOverview!,
+                          )
+                        else
+                          const SizedBox.shrink(),
+                        const SizedBox(height: 20),
+
+                        _buildRecentActivitySection(context),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  _buildQuickActionsGrid(),
-                  const SizedBox(height: 20),
-
-                  if (_isFinancialLoading)
-                    SizedBox(
-                      height: 300,
-                      child: Center(child: CircularProgressIndicator()),
-                    )
-                  else if (_financialError != null)
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            'Failed to load financial data',
-                            style: TextStyle(color: Colors.red.shade700),
-                          ),
-                          const SizedBox(height: 8),
-                          ElevatedButton(
-                            onPressed: _loadFinancialOverview,
-                            child: const Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    )
-                  else if (_financialOverview != null)
-                      FinancialPerformanceGraph(
-                        financialData: _financialOverview!,
-                      )
-                    else
-                      const SizedBox.shrink(),
-                  const SizedBox(height: 20),
-
-                  _buildRecentActivitySection(context),
-                ],
-              ),
-            ),
-          ),
+                ),
 
           if (_showDay27Modal)
             GestureDetector(
@@ -626,7 +709,12 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  _buildBirdTypeItem('Broilers', 0, Colors.orange, Icons.restaurant),
+                  _buildBirdTypeItem(
+                    'Broilers',
+                    0,
+                    Colors.orange,
+                    Icons.restaurant,
+                  ),
                   const SizedBox(width: 12),
                   _buildBirdTypeItem('Layers', 0, Colors.blue, Icons.egg),
                   const SizedBox(width: 12),
@@ -670,7 +758,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(Icons.egg, color: Colors.white, size: 20),
+                          child: const Icon(
+                            Icons.egg,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Column(
@@ -719,10 +811,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const Text(
                         'Layer Birds',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white70,
-                        ),
+                        style: TextStyle(fontSize: 12, color: Colors.white70),
                       ),
                     ],
                   ),
@@ -735,7 +824,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildCompactStat(String value, String label, IconData icon, Color color, {VoidCallback? onTap}) {
+  Widget _buildCompactStat(
+    String value,
+    String label,
+    IconData icon,
+    Color color, {
+    VoidCallback? onTap,
+  }) {
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -760,10 +855,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 11,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
             ),
           ],
         ),
@@ -780,7 +872,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildBirdTypeItem(String label, int count, Color color, IconData icon) {
+  Widget _buildBirdTypeItem(
+    String label,
+    int count,
+    Color color,
+    IconData icon,
+  ) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(12),
@@ -802,10 +899,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 10,
-                color: color.withOpacity(0.8),
-              ),
+              style: TextStyle(fontSize: 10, color: color.withOpacity(0.8)),
             ),
           ],
         ),
@@ -900,10 +994,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             Text(
               subtitle,
-              style: TextStyle(
-                fontSize: 11,
-                color: Colors.grey.shade500,
-              ),
+              style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
             ),
           ],
         ),
@@ -924,7 +1015,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
 
   Widget _buildRecentActivitySection(BuildContext context) {
     if (_isActivitiesLoading) {
@@ -992,7 +1082,7 @@ class _HomeScreenState extends State<HomeScreen> {
             TextButton(
               onPressed: () => context.push('/activity'),
               child: const Text('View all'),
-            )
+            ),
           ],
         ),
         const SizedBox(height: 16),
@@ -1002,21 +1092,20 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.all(32.0),
               child: Text(
                 'No recent activities',
-                style: TextStyle(
-                  color: Colors.grey.shade500,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
               ),
             ),
           )
         else
-          ..._activities.map((activity) => HomeActivityItem(
-            icon: _getActivityIcon(activity.activityType),
-            title: activity.title,
-            subtitle: activity.description,
-            time: activity.timeAgo,
-            color: _getActivityColor(activity.activityType),
-          )),
+          ..._activities.map(
+            (activity) => HomeActivityItem(
+              icon: _getActivityIcon(activity.activityType),
+              title: activity.title,
+              subtitle: activity.description,
+              time: activity.timeAgo,
+              color: _getActivityColor(activity.activityType),
+            ),
+          ),
       ],
     );
   }

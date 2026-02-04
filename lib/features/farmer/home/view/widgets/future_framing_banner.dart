@@ -12,7 +12,7 @@ class FutureFramingBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -36,16 +36,12 @@ class FutureFramingBanner extends StatelessWidget {
             children: [
               const Row(
                 children: [
-                  Icon(
-                    Icons.timer,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                  SizedBox(width: 8),
+                  Icon(Icons.timer, color: Colors.white, size: 16),
+                  SizedBox(width: 6),
                   Text(
                     '9 Days Remaining',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
@@ -53,79 +49,73 @@ class FutureFramingBanner extends StatelessWidget {
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Text(
                   'Day 21',
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
+                    fontSize: 11,
                   ),
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 10),
+          Wrap(
+            children:[
+              const Text(
+              'Your Full Farm Experience ends in 9 days',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                height: 1.2,
+              ),
+            ),
+              TextButton.icon(
+                onPressed: onSeePlans ?? () {},
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.blue,
+                  textStyle: TextStyle(
+                    decoration: TextDecoration.underline,
+                  )
+                ),
 
-          const SizedBox(height: 16),
-
+                icon: Icon(Icons.arrow_forward, size: 16,fontWeight: FontWeight.bold,),
+                label: const Text(
+                  'See what happens after trial',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+              ),]
+          ),
+          const SizedBox(height: 8),
           const Text(
-            'Your Full Farm Experience ends in 9 days',
+            'Continue receiving feeding guidance, vaccination reminders, and quotations by choosing the right plan for your farm.',
             style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+              fontSize: 12,
               color: Colors.white,
               height: 1.3,
             ),
           ),
-
           const SizedBox(height: 12),
-
-          const Text(
-            'Continue receiving feeding guidance, vaccination reminders, and quotations by choosing the right plan for your farm.',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-              height: 1.5,
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: onSeePlans ?? () {
-                // Navigate to plans preview
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: Colors.orange,
-                minimumSize: const Size(double.infinity, 48),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 2,
-              ),
-              child: const Text(
-                'See what happens after trial',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-
           FilledButton.icon(
             onPressed: () => context.push('/record-expenditure'),
-            style: TextButton.styleFrom(
+            style: FilledButton.styleFrom(
               backgroundColor: Colors.red.shade800,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              minimumSize: const Size(0, 36),
             ),
-            icon: Icon(Icons.arrow_forward, color: Colors.white),
-            label: Text('Quick expense'),
-          ),
+            icon: const Icon(Icons.arrow_forward, size: 16),
+            label: const Text('Quick expense', style: TextStyle(fontSize: 13)),
+          )
 
         ],
       ),
