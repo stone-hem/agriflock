@@ -273,40 +273,10 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Generate Quotation Button
-                  if (_selectedCapacity != null)
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: _isGeneratingQuotation ? null : _generateQuotation,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        icon: _isGeneratingQuotation
-                            ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                            : const Icon(Icons.calculate, size: 24),
-                        label: Text(
-                          _isGeneratingQuotation
-                              ? 'Generating Quotation...'
-                              : 'Generate Production Quotation',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                  // Loading indicator when generating
+                  if (_isGeneratingQuotation)
+                    const Center(
+                      child: CircularProgressIndicator(color: primaryColor),
                     ),
                   const SizedBox(height: 32),
                 ],
@@ -315,6 +285,7 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
                 if (_quotationData != null) ...[
                   _buildQuotationTables(),
                   const SizedBox(height: 40),
+
                   // Images Section
                   const SizedBox(height: 10),
                   ImageWithDescriptionWidget(
@@ -334,8 +305,6 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
                   // Disclaimer
                   _buildDisclaimer(),
                 ],
-
-
               ]),
             ),
           ),
@@ -414,22 +383,30 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
 
   Widget _buildCapacityCard(ProductionCapacity capacity) {
     final isSelected = _selectedCapacity == capacity.value;
+    final isGenerating = _isGeneratingQuotation && _selectedCapacity == capacity.value;
 
     return GestureDetector(
       onTap: () {
-        setState(() {
-          _selectedCapacity = capacity.value;
-          _quotationData = null;
-        });
+        if (!isGenerating && _selectedBreed != null) {
+          setState(() {
+            _selectedCapacity = capacity.value;
+            _quotationData = null;
+          });
+          _generateQuotation(); // Auto-generate on tap
+        }
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         decoration: BoxDecoration(
-          color: isSelected ? primaryColor.withOpacity(0.1) : Colors.white,
+          color: isGenerating
+              ? primaryColor.withOpacity(0.2)
+              : isSelected ? primaryColor.withOpacity(0.1) : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? primaryColor : Colors.grey.shade300,
-            width: isSelected ? 2 : 1,
+            color: isGenerating
+                ? primaryColor
+                : isSelected ? primaryColor : Colors.grey.shade300,
+            width: isGenerating || isSelected ? 2 : 1,
           ),
         ),
         child: Padding(
@@ -437,11 +414,21 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                capacity.icon,
-                color: isSelected ? primaryColor : Colors.grey.shade700,
-                size: 20,
-              ),
+              if (isGenerating)
+                SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: primaryColor,
+                  ),
+                )
+              else
+                Icon(
+                  capacity.icon,
+                  color: isSelected ? primaryColor : Colors.grey.shade700,
+                  size: 20,
+                ),
               const SizedBox(height: 4),
               Text(
                 capacity.label,
@@ -555,30 +542,52 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            DataTable(
-              columnSpacing: 16,
-              dataRowMinHeight: 40,
-              dataRowMaxHeight: 40,
-              columns: const [
-                DataColumn(label: Text('Field')),
-                DataColumn(label: Text('Value')),
-              ],
-              rows: [
-                DataRow(cells: [
-                  DataCell(Text('Breed')),
-                  DataCell(Text(breedName)),
-                ]),
-                DataRow(cells: [
-                  DataCell(Text('Quantity')),
-                  DataCell(Text('${_quotationData!.quantity} birds')),
-                ]),
-                DataRow(cells: [
-                  DataCell(Text('Created')),
-                  DataCell(Text(
-                    '${_quotationData!.createdAt.day}/${_quotationData!.createdAt.month}/${_quotationData!.createdAt.year}',
-                  )),
-                ]),
-              ],
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                columnSpacing: 16,
+                horizontalMargin: 16,
+                dataRowMinHeight: 40,
+                dataRowMaxHeight: 40,
+                columns: const [
+                  DataColumn(label: Text('Field')),
+                  DataColumn(label: Text('Value')),
+                ],
+                rows: [
+                  DataRow(cells: [
+                    DataCell(Container(
+                      constraints: const BoxConstraints(minWidth: 150),
+                      child: Text('Breed'),
+                    )),
+                    DataCell(Container(
+                      constraints: const BoxConstraints(minWidth: 150),
+                      child: Text(breedName),
+                    )),
+                  ]),
+                  DataRow(cells: [
+                    DataCell(Container(
+                      constraints: const BoxConstraints(minWidth: 150),
+                      child: Text('Quantity'),
+                    )),
+                    DataCell(Container(
+                      constraints: const BoxConstraints(minWidth: 150),
+                      child: Text('${_quotationData!.quantity} birds'),
+                    )),
+                  ]),
+                  DataRow(cells: [
+                    DataCell(Container(
+                      constraints: const BoxConstraints(minWidth: 150),
+                      child: Text('Created'),
+                    )),
+                    DataCell(Container(
+                      constraints: const BoxConstraints(minWidth: 150),
+                      child: Text(
+                        '${_quotationData!.createdAt.day}/${_quotationData!.createdAt.month}/${_quotationData!.createdAt.year}',
+                      ),
+                    )),
+                  ]),
+                ],
+              ),
             ),
           ],
         ),
@@ -617,59 +626,95 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            DataTable(
-              columnSpacing: 16,
-              dataRowMinHeight: 40,
-              dataRowMaxHeight: 40,
-              columns: const [
-                DataColumn(label: Text('Item')),
-                DataColumn(label: Text('Amount (KSh)')),
-              ],
-              rows: [
-                DataRow(cells: [
-                  DataCell(Text('Total Production Cost')),
-                  DataCell(Text(_formatCurrency(data.totalProductionCost))),
-                ]),
-                DataRow(cells: [
-                  DataCell(Text('Equipment Cost')),
-                  DataCell(Text(_formatCurrency(data.equipmentCost))),
-                ]),
-                DataRow(cells: [
-                  DataCell(Text('Expected Revenue')),
-                  DataCell(Text(_formatCurrency(data.expectedRevenue))),
-                ]),
-                DataRow(cells: [
-                  DataCell(
-                    Text(
-                      'Expected Profit/Loss',
-                      style: TextStyle(
-                        color: profitColor,
-                        fontWeight: FontWeight.bold,
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                columnSpacing: 16,
+                horizontalMargin: 16,
+                dataRowMinHeight: 40,
+                dataRowMaxHeight: 40,
+                columns: const [
+                  DataColumn(label: Text('Item')),
+                  DataColumn(label: Text('Amount (KSh)')),
+                ],
+                rows: [
+                  DataRow(cells: [
+                    DataCell(Container(
+                      constraints: const BoxConstraints(minWidth: 200),
+                      child: Text('Total Production Cost'),
+                    )),
+                    DataCell(Container(
+                      constraints: const BoxConstraints(minWidth: 150),
+                      child: Text(_formatCurrency(data.totalProductionCost)),
+                    )),
+                  ]),
+                  DataRow(cells: [
+                    DataCell(Container(
+                      constraints: const BoxConstraints(minWidth: 200),
+                      child: Text('Equipment Cost'),
+                    )),
+                    DataCell(Container(
+                      constraints: const BoxConstraints(minWidth: 150),
+                      child: Text(_formatCurrency(data.equipmentCost)),
+                    )),
+                  ]),
+                  DataRow(cells: [
+                    DataCell(Container(
+                      constraints: const BoxConstraints(minWidth: 200),
+                      child: Text('Expected Revenue'),
+                    )),
+                    DataCell(Container(
+                      constraints: const BoxConstraints(minWidth: 150),
+                      child: Text(_formatCurrency(data.expectedRevenue)),
+                    )),
+                  ]),
+                  DataRow(cells: [
+                    DataCell(Container(
+                      constraints: const BoxConstraints(minWidth: 200),
+                      child: Text(
+                        'Expected Profit/Loss',
+                        style: TextStyle(
+                          color: profitColor,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                  ),
-                  DataCell(
-                    Text(
-                      _formatCurrency(data.expectedProfit),
-                      style: TextStyle(
-                        color: profitColor,
-                        fontWeight: FontWeight.bold,
+                    )),
+                    DataCell(Container(
+                      constraints: const BoxConstraints(minWidth: 150),
+                      child: Text(
+                        _formatCurrency(data.expectedProfit),
+                        style: TextStyle(
+                          color: profitColor,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                  ),
-                ]),
-                DataRow(cells: [
-                  DataCell(Text('Cost per Bird')),
-                  DataCell(Text(_formatCurrency(data.costPerBird))),
-                ]),
-                DataRow(cells: [
-                  DataCell(Text('Profit per Bird')),
-                  DataCell(Text(
-                    _formatCurrency(data.profitPerBird),
-                    style: TextStyle(color: profitColor),
-                  )),
-                ]),
-              ],
+                    )),
+                  ]),
+                  DataRow(cells: [
+                    DataCell(Container(
+                      constraints: const BoxConstraints(minWidth: 200),
+                      child: Text('Cost per Bird'),
+                    )),
+                    DataCell(Container(
+                      constraints: const BoxConstraints(minWidth: 150),
+                      child: Text(_formatCurrency(data.costPerBird)),
+                    )),
+                  ]),
+                  DataRow(cells: [
+                    DataCell(Container(
+                      constraints: const BoxConstraints(minWidth: 200),
+                      child: Text('Profit per Bird'),
+                    )),
+                    DataCell(Container(
+                      constraints: const BoxConstraints(minWidth: 150),
+                      child: Text(
+                        _formatCurrency(data.profitPerBird),
+                        style: TextStyle(color: profitColor),
+                      ),
+                    )),
+                  ]),
+                ],
+              ),
             ),
           ],
         ),
@@ -696,31 +741,44 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
               children: [
                 Icon(Icons.category, color: Colors.purple, size: 20),
                 const SizedBox(width: 8),
-                Text(
-                  'COST BREAKDOWN BY CATEGORY',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.purple,
+                SizedBox(
+                  width: MediaQuery.of(context).size.width*0.6,
+                  child: Text(
+                    'COST BREAKDOWN BY CATEGORY',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.purple,
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            DataTable(
-              columnSpacing: 16,
-              dataRowMinHeight: 40,
-              dataRowMaxHeight: 40,
-              columns: const [
-                DataColumn(label: Text('Category')),
-                DataColumn(label: Text('Amount (KSh)')),
-              ],
-              rows: categories.entries.map((entry) {
-                return DataRow(cells: [
-                  DataCell(Text(_capitalizeFirst(entry.key))),
-                  DataCell(Text(_formatCurrency(entry.value))),
-                ]);
-              }).toList(),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                columnSpacing: 16,
+                horizontalMargin: 16,
+                dataRowMinHeight: 40,
+                dataRowMaxHeight: 40,
+                columns: const [
+                  DataColumn(label: Text('Category')),
+                  DataColumn(label: Text('Amount (KSh)')),
+                ],
+                rows: categories.entries.map((entry) {
+                  return DataRow(cells: [
+                    DataCell(Container(
+                      constraints: const BoxConstraints(minWidth: 150),
+                      child: Text(_capitalizeFirst(entry.key)),
+                    )),
+                    DataCell(Container(
+                      constraints: const BoxConstraints(minWidth: 150),
+                      child: Text(_formatCurrency(entry.value)),
+                    )),
+                  ]);
+                }).toList(),
+              ),
             ),
           ],
         ),
@@ -772,24 +830,40 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
                       ),
                     ),
                   ),
-                  DataTable(
-                    columnSpacing: 16,
-                    dataRowMinHeight: 40,
-                    dataRowMaxHeight: 40,
-                    columns: const [
-                      DataColumn(label: Text('Item')),
-                      DataColumn(label: Text('Qty')),
-                      DataColumn(label: Text('Unit Price')),
-                      DataColumn(label: Text('Total')),
-                    ],
-                    rows: categoryEntry.value.map((item) {
-                      return DataRow(cells: [
-                        DataCell(Text(item.name)),
-                        DataCell(Text('${item.quantity} ${item.unit}')),
-                        DataCell(Text('KSh ${item.unitPrice}')),
-                        DataCell(Text(_formatCurrency(item.total))),
-                      ]);
-                    }).toList(),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: DataTable(
+                      columnSpacing: 16,
+                      horizontalMargin: 16,
+                      dataRowMinHeight: 40,
+                      dataRowMaxHeight: 40,
+                      columns: const [
+                        DataColumn(label: Text('Item')),
+                        DataColumn(label: Text('Qty')),
+                        DataColumn(label: Text('Unit Price')),
+                        DataColumn(label: Text('Total')),
+                      ],
+                      rows: categoryEntry.value.map((item) {
+                        return DataRow(cells: [
+                          DataCell(Container(
+                            constraints: const BoxConstraints(minWidth: 150),
+                            child: Text(item.name),
+                          )),
+                          DataCell(Container(
+                            constraints: const BoxConstraints(minWidth: 100),
+                            child: Text('${item.quantity} ${item.unit}'),
+                          )),
+                          DataCell(Container(
+                            constraints: const BoxConstraints(minWidth: 100),
+                            child: Text('KSh ${item.unitPrice}'),
+                          )),
+                          DataCell(Container(
+                            constraints: const BoxConstraints(minWidth: 100),
+                            child: Text(_formatCurrency(item.total)),
+                          )),
+                        ]);
+                      }).toList(),
+                    ),
                   ),
                   const SizedBox(height: 16),
                 ],
