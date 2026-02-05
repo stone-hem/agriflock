@@ -1,6 +1,9 @@
+import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock360/features/farmer/payg/repo/subscription_repo.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:agriflock360/core/utils/log_util.dart';
+import 'package:agriflock360/features/farmer/payg/models/subscription_plans_model.dart';
 
 class PlansPreviewScreen extends StatefulWidget {
   const PlansPreviewScreen({super.key});
@@ -10,527 +13,101 @@ class PlansPreviewScreen extends StatefulWidget {
 }
 
 class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
-  String _selectedRegion = 'kenya'; // Default to Kenya
-  int _selectedPlanIndex = 1; // Default to Silver plan
-  String _currency = '';
+  final SubscriptionRepository _repository = SubscriptionRepository();
+
+  // State for API data
+  List<SubscriptionPlanItem> _subscriptionHistory = [];
+  List<SubscriptionPlanItem> _availablePlans = [];
+  bool _isLoading = true;
+  String _errorMessage = '';
+  int _selectedPlanIndex = 0;
+
+  // Default pricing based on available plans from API
+  String _currency = 'KES'; // Default
+  String _selectedRegion = 'kenya';
 
   @override
   void initState() {
     super.initState();
-    _loadCurrency();
+    _loadSubscriptionData();
   }
 
-  // Region options
-  final List<Map<String, dynamic>> regions = [
-    {
-      'code': 'kenya',
-      'name': 'Kenya (KES)',
-      'currency': 'KES',
-      'symbol': 'KSh',
-    },
-    {
-      'code': 'us',
-      'name': 'United States (USD)',
-      'currency': 'USD',
-      'symbol': '\$',
-    },
-    {
-      'code': 'other',
-      'name': 'Other Regions (USD)',
-      'currency': 'USD',
-      'symbol': '\$',
-    },
-  ];
+  Future<void> _loadSubscriptionData() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
 
-  // Plan features by tier - Updated to match new pricing model
-  final Map<String, List<String>> _planFeatures = {
-    'silver': [
-      'Up to 400 birds per batch',
-      'Basic feeding schedule',
-      'Vaccination reminders',
-      'Community support',
-      'Basic analytics',
-      'Free Quotations Module (first 3 months)',
-      '30-day Full Farm Experience',
-    ],
-    'gold': [
-      '400-700 birds per batch',
-      'Advanced feeding algorithms',
-      'Automated vaccination schedules',
-      'Priority support',
-      'Advanced analytics & reports',
-      'Market price insights',
-      'Free Quotations Module (first 3 months)',
-      '30-day Full Farm Experience',
-      'Pay-per-use extension/vet access',
-    ],
-    'platinum': [
-      'Unlimited birds & batches',
-      'AI-powered feeding optimization',
-      'Custom vaccination programs',
-      '24/7 premium support',
-      'Predictive analytics',
-      'Real-time market alerts',
-      'Free Quotations Module (first 3 months)',
-      '30-day Full Farm Experience',
-      'Pay-per-use extension/vet access',
-      'Export documentation support',
-    ],
-  };
+    try {
+      final result = await _repository.getSubscriptionHistory();
 
-  // Updated pricing model based on currency
-  Map<String, dynamic> _getPlanPrice(String planType) {
-    // Check if currency is KES (Kenya)
-    if (_currency == 'KES') {
-      return {
-        'silver': {'price': 150, 'period': 'per month', 'chicks': 'Up to 400 chicks'},
-        'gold': {'price': 350, 'period': 'per month', 'chicks': '400-700 chicks'},
-        'platinum': {'price': 550, 'period': 'per month', 'chicks': '700+ chicks'},
-      }[planType]!;
-    } else {
-      // USD pricing for US and other regions
-      return {
-        'silver': {'price': 5, 'period': 'per month', 'chicks': 'Up to 400 chicks'},
-        'gold': {'price': 7.5, 'period': 'per month', 'chicks': '400-700 chicks'},
-        'platinum': {'price': 10, 'period': 'per month', 'chicks': '700+ chicks'},
-      }[planType]!;
+      switch(result) {
+        case Success<SubscriptionPlansResponse>(data: final response):
+          setState(() {
+            _subscriptionHistory = response.data;
+
+            // Extract available plans from history (you might want to filter unique plans)
+            _availablePlans = response.data;
+
+            // Set currency based on first available plan
+            if (_availablePlans.isNotEmpty) {
+              _currency = _availablePlans.first.plan.currency;
+              _selectedRegion = _currency == 'KES' ? 'kenya' : 'us';
+            }
+
+            // Find active subscription and select it by default
+            final activeIndex = _availablePlans.indexWhere(
+                    (plan) => plan.status == 'ACTIVE'
+            );
+
+            if (activeIndex != -1) {
+              _selectedPlanIndex = activeIndex;
+            }
+
+            _isLoading = false;
+          });
+
+        case Failure<SubscriptionPlansResponse>():
+          setState(() {
+            _errorMessage = result.message;
+            _isLoading = false;
+          });
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(_errorMessage),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+      }
+    } catch (e) {
+      LogUtil.error('Error loading subscription data: $e');
+      setState(() {
+        _errorMessage = 'Failed to load subscription data';
+        _isLoading = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to load subscription data'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
-  // Get currency symbol
+  // Get currency symbol based on API data
   String get _currencySymbol {
-    return regions.firstWhere((r) => r['code'] == _selectedRegion)['symbol'];
+    return _currency == 'KES' ? 'KSh' : '\$';
   }
 
-  // Get region name
-  String get _regionName {
-    return regions.firstWhere((r) => r['code'] == _selectedRegion)['name'];
-  }
-
-  Future<void> _loadCurrency() async {
-    // Simulating storage fetch - replace with your actual storage implementation
-    // var currency = await secureStorage.getCurrency();
-    // For now, we'll use a default
-    setState(() {
-      _currency = 'KES'; // Default to KES for Kenya
-      _selectedRegion = 'kenya'; // Set region based on currency
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isKenyaPricing = _currency == 'KES';
-    final plans = ['silver', 'gold', 'platinum'];
-
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            backgroundColor: Colors.white,
-            surfaceTintColor: Colors.white,
-            elevation: 0,
-            pinned: true,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.black),
-              onPressed: () => context.pop(),
-            ),
-            title: const Text(
-              'Choose Your Plan',
-              style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-            ),
-            centerTitle: false,
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.help_outline, color: Colors.grey),
-                onPressed: () {
-                  _showHelpDialog(context);
-                },
-              ),
-            ],
-          ),
-
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Pricing notice
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    margin: const EdgeInsets.only(bottom: 20),
-                    decoration: BoxDecoration(
-                      color: Colors.green[50],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.green[100]!),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.info_outline, color: Colors.green[800]),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Special Offer',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green[900],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '• 30-day Full Farm Experience for all plans\n• Quotation Module free for first 3 months\n• All plans include access to extension & veterinary marketplace (pay-per-use)',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.green[800],
-                            height: 1.4,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Currency/Region indicator
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.1),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Current Pricing:',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey[700],
-                          ),
-                        ),
-                        Chip(
-                          label: Text(
-                            isKenyaPricing ? 'Kenya (KES)' : 'International (USD)',
-                            style: TextStyle(
-                              color: isKenyaPricing ? Colors.green : Colors.blue,
-                            ),
-                          ),
-                          backgroundColor: isKenyaPricing ? Colors.green[50] : Colors.blue[50],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Plans List (Vertical)
-                  ListView.separated(
-                    physics: const NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    itemCount: plans.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 16),
-                    itemBuilder: (context, index) {
-                      final planType = plans[index];
-                      final priceInfo = _getPlanPrice(planType);
-                      final isSelected = _selectedPlanIndex == index;
-
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _selectedPlanIndex = index;
-                          });
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: isSelected ? Colors.green : Colors.grey[200]!,
-                              width: isSelected ? 2 : 1,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withOpacity(isSelected ? 0.15 : 0.05),
-                                blurRadius: isSelected ? 8 : 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Plan header
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: _getPlanColor(planType).withOpacity(0.1),
-                                  borderRadius: const BorderRadius.only(
-                                    topLeft: Radius.circular(16),
-                                    topRight: Radius.circular(16),
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Icon(
-                                          _getPlanIcon(planType),
-                                          color: _getPlanColor(planType),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Text(
-                                          _getPlanName(planType),
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                            color: _getPlanColor(planType),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    if (planType == 'silver')
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 4,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.green[100],
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: Text(
-                                          'MOST POPULAR',
-                                          style: TextStyle(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.green[800],
-                                            letterSpacing: 0.5,
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-
-                              // Price section
-                              Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // Price
-                                    Row(
-                                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                                      textBaseline: TextBaseline.alphabetic,
-                                      children: [
-                                        Text(
-                                          _currencySymbol,
-                                          style: TextStyle(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.grey[800],
-                                          ),
-                                        ),
-                                        const SizedBox(width: 2),
-                                        Text(
-                                          '${priceInfo['price']}${isKenyaPricing ? '' : ''}',
-                                          style: TextStyle(
-                                            fontSize: 36,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.grey[800],
-                                          ),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          priceInfo['period'],
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.grey[600],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-
-                                    const SizedBox(height: 8),
-
-                                    // Chicks range
-                                    Text(
-                                      priceInfo['chicks'],
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey[700],
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-
-                                    const SizedBox(height: 16),
-
-                                    // Features preview (3 items)
-                                    Column(
-                                      children: _planFeatures[planType]!
-                                          .take(3)
-                                          .map((feature) => Padding(
-                                        padding: const EdgeInsets.only(bottom: 8),
-                                        child: Row(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Icon(
-                                              Icons.check_circle,
-                                              color: _getPlanColor(planType),
-                                              size: 18,
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Expanded(
-                                              child: Text(
-                                                feature,
-                                                style: TextStyle(
-                                                  fontSize: 13,
-                                                  color: Colors.grey[700],
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ))
-                                          .toList(),
-                                    ),
-
-                                    // See all features button
-                                    Align(
-                                      alignment: Alignment.centerRight,
-                                      child: TextButton(
-                                        onPressed: () {
-                                          _showAllFeatures(planType);
-                                        },
-                                        child: Text(
-                                          'View all features',
-                                          style: TextStyle(
-                                            color: _getPlanColor(planType),
-                                            fontSize: 13,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Selected plan action button
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.1),
-                          blurRadius: 8,
-                          offset: const Offset(0, -2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        Text(
-                          'Selected Plan: ${_getPlanName(plans[_selectedPlanIndex])}',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              _handlePlanSelection(plans[_selectedPlanIndex]);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _getPlanColor(plans[_selectedPlanIndex]),
-                              foregroundColor: Colors.white,
-                              minimumSize: const Size(double.infinity, 56),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 4,
-                            ),
-                            child: Text(
-                              'Get ${_getPlanName(plans[_selectedPlanIndex])} Plan',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton(
-                            onPressed: () {
-                              _startFreeTrial(plans[_selectedPlanIndex]);
-                            },
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: _getPlanColor(plans[_selectedPlanIndex]),
-                              side: BorderSide(color: _getPlanColor(plans[_selectedPlanIndex])),
-                              minimumSize: const Size(double.infinity, 56),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: const Text(
-                              'Start 30-Day Free Trial',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-
-
-                  const SizedBox(height: 40),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Helper methods for plan styling
+  // Get plan color based on plan type from API
   Color _getPlanColor(String planType) {
-    switch (planType) {
+    switch (planType.toLowerCase()) {
       case 'silver':
         return Colors.blue;
       case 'gold':
@@ -542,8 +119,9 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
     }
   }
 
+  // Get plan icon based on plan type from API
   IconData _getPlanIcon(String planType) {
-    switch (planType) {
+    switch (planType.toLowerCase()) {
       case 'silver':
         return Icons.agriculture;
       case 'gold':
@@ -555,61 +133,347 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
     }
   }
 
-  String _getPlanName(String planType) {
-    switch (planType) {
-      case 'silver':
-        return 'Silver Plan';
-      case 'gold':
-        return 'Gold Plan';
-      case 'platinum':
-        return 'Platinum Plan';
-      default:
-        return 'Plan';
+  // Get features for a plan based on included modules from API
+  List<String> _getPlanFeatures(SubscriptionPlan plan) {
+    final features = <String>[];
+
+    // Add included modules as features
+    for (final module in plan.includedModules) {
+      switch (module) {
+        case 'VACCINATIONS':
+          features.add('Vaccination management');
+          break;
+        case 'FEEDING':
+          features.add('Feeding schedule & tracking');
+          break;
+        case 'MARKETPLACE':
+          features.add('Extension/veterinary marketplace access');
+          break;
+        case 'QUOTATIONS':
+          features.add('Quotation module');
+          break;
+      }
     }
+
+    // Add plan-specific features from features object
+    if (plan.features.maxChicks != null) {
+      features.add('Up to ${plan.features.maxChicks} birds');
+    } else if (plan.features.minChicks != null) {
+      features.add('From ${plan.features.minChicks} birds');
+    }
+
+    features.add('${plan.features.supportLevel} support');
+    features.add('${plan.features.trialPeriodDays}-day trial period');
+    features.add('Marketplace: ${plan.features.marketplaceAccess}');
+
+    return features;
   }
 
-  void _handlePlanSelection(String planType) async {
-    // For all plans, navigate to dashboard with appropriate route
-    final priceInfo = _getPlanPrice(planType);
-
-    context.go('/dashboard/plan', extra: {
-      'plan': planType,
-      'amount': priceInfo['price'],
-      'currency': _currency,
-      'region': _selectedRegion,
-    });
-  }
-
-  void _startFreeTrial(String planType) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Start 30-Day Free Trial'),
-        content: Text(
-          'You\'ll get full access to all ${_getPlanName(planType)} features for 30 days. This includes the Full Farm Experience and free Quotation Module for 3 months.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // Start trial logic
-              context.go('/dashboard/trial', extra: {
-                'plan': planType,
-                'days': 30,
-              });
-            },
-            child: const Text('Start Free Trial'),
+  Widget _buildLoadingState() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(),
+          SizedBox(height: 16),
+          Text(
+            'Loading subscription plans...',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey,
+            ),
           ),
         ],
       ),
     );
   }
 
-  void _showAllFeatures(String planType) {
+  Widget _buildErrorState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.error_outline,
+            size: 64,
+            color: Colors.red,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            _errorMessage,
+            style: const TextStyle(
+              fontSize: 16,
+              color: Colors.grey,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _loadSubscriptionData,
+            child: const Text('Try Again'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.subscriptions_outlined,
+            size: 64,
+            color: Colors.grey,
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'No Subscription Plans Available',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Subscription plans will appear here when available',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[600],
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _loadSubscriptionData,
+            child: const Text('Refresh'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlanCard(SubscriptionPlanItem subscription, int index) {
+    final isSelected = _selectedPlanIndex == index;
+    final plan = subscription.plan;
+    final isActive = subscription.status == 'ACTIVE';
+    final features = _getPlanFeatures(plan);
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedPlanIndex = index;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected
+                ? _getPlanColor(plan.planType)
+                : Colors.grey[200]!,
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(isSelected ? 0.15 : 0.05),
+              blurRadius: isSelected ? 8 : 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Plan header
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: _getPlanColor(plan.planType).withOpacity(0.1),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        _getPlanIcon(plan.planType),
+                        color: _getPlanColor(plan.planType),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            plan.name,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: _getPlanColor(plan.planType),
+                            ),
+                          ),
+                          Text(
+                            plan.planType.toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: _getPlanColor(plan.planType),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  if (isActive)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.green[100],
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'ACTIVE',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green[800],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+
+            // Price section
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Price
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        _currencySymbol,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey[800],
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      Text(
+                        plan.priceAmount.toStringAsFixed(0),
+                        style: TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey[800],
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'per month',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // Status and remaining days
+                  if (subscription.daysRemaining > 0)
+                    Text(
+                      '${subscription.daysRemaining} days remaining',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.green[700],
+                        fontWeight: FontWeight.w600,
+                      ),
+                    )
+                  else if (subscription.status == 'EXPIRED')
+                    Text(
+                      'Expired on ${subscription.endDate.split('T')[0]}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.red[700],
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+
+                  const SizedBox(height: 16),
+
+                  // Features preview (3 items)
+                  Column(
+                    children: features
+                        .take(3)
+                        .map((feature) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.check_circle,
+                            color: _getPlanColor(plan.planType),
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              feature,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ))
+                        .toList(),
+                  ),
+
+                  // See all features button if there are more than 3
+                  if (features.length > 3)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () {
+                          _showAllFeatures(plan, features);
+                        },
+                        child: Text(
+                          'View all features',
+                          style: TextStyle(
+                            color: _getPlanColor(plan.planType),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAllFeatures(SubscriptionPlan plan, List<String> features) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -627,7 +491,7 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    _getPlanName(planType) + ' Features',
+                    plan.name,
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -640,22 +504,65 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
                 ],
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
 
-              // Plan description
               Text(
-                'Perfect for farms with ${_getPlanPrice(planType)['chicks'].toLowerCase()}',
+                plan.planType.toUpperCase(),
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.grey[700],
+                  color: _getPlanColor(plan.planType),
+                  fontWeight: FontWeight.bold,
                 ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Price
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    _currencySymbol,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  Text(
+                    plan.priceAmount.toStringAsFixed(0),
+                    style: const TextStyle(
+                      fontSize: 40,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'per month',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
               ),
 
               const SizedBox(height: 24),
 
+              const Text(
+                'Plan Features:',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
               Expanded(
                 child: ListView(
-                  children: _planFeatures[planType]!
+                  children: features
                       .map((feature) => Padding(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     child: Row(
@@ -663,7 +570,7 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
                       children: [
                         Icon(
                           Icons.check_circle,
-                          color: _getPlanColor(planType),
+                          color: _getPlanColor(plan.planType),
                           size: 22,
                         ),
                         const SizedBox(width: 12),
@@ -690,10 +597,10 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.pop(context);
-                    _handlePlanSelection(planType);
+                    _handlePlanSelection(plan);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _getPlanColor(planType),
+                    backgroundColor: _getPlanColor(plan.planType),
                     foregroundColor: Colors.white,
                     minimumSize: const Size(double.infinity, 56),
                     shape: RoundedRectangleBorder(
@@ -701,7 +608,7 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
                     ),
                   ),
                   child: Text(
-                    'Get ${_getPlanName(planType)}',
+                    'Select ${plan.name}',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -716,38 +623,39 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
     );
   }
 
-  void _showHelpDialog(BuildContext context) {
-    final isKenyaPricing = _currency == 'KES';
+  void _handlePlanSelection(SubscriptionPlan plan) {
+    // Handle plan selection - navigate to payment or subscription upgrade
+    final selectedSubscription = _availablePlans[_selectedPlanIndex];
 
+    if (selectedSubscription.status == 'ACTIVE') {
+      // Show current active subscription details
+      _showActiveSubscriptionDialog(selectedSubscription);
+    } else {
+      // Show upgrade/switch dialog
+      _showPlanChangeDialog(plan);
+    }
+  }
+
+  void _showActiveSubscriptionDialog(SubscriptionPlanItem subscription) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Plan Selection Help'),
+        title: Text('Active Subscription: ${subscription.plan.name}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Choosing the right plan:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text('• Silver: For farms with up to 400 birds (${isKenyaPricing ? '150 KES' : '\$5'}/month)'),
-            const SizedBox(height: 4),
-            Text('• Gold: For farms with 400-700 birds (${isKenyaPricing ? '350 KES' : '\$7.5'}/month)'),
-            const SizedBox(height: 4),
-            Text('• Platinum: For commercial farms with 700+ birds (${isKenyaPricing ? '550 KES' : '\$10'}/month)'),
-            const SizedBox(height: 16),
-            const Text(
-              'All plans include:\n• 30-day Full Farm Experience\n• Free Quotation Module for 3 months\n• Access to extension & veterinary marketplace (pay-per-use)',
-              style: TextStyle(fontStyle: FontStyle.italic),
-            ),
+            Text('Status: ${subscription.status}'),
+            Text('Start Date: ${subscription.startDate.split('T')[0]}'),
+            Text('End Date: ${subscription.endDate.split('T')[0]}'),
+            if (subscription.daysRemaining > 0)
+              Text('Days Remaining: ${subscription.daysRemaining}'),
             const SizedBox(height: 16),
             Text(
-              'Pricing is automatically set based on your region (${isKenyaPricing ? 'Kenya' : 'International'}).',
+              'Auto-renew: ${subscription.autoRenew ? 'Enabled' : 'Disabled'}',
               style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
+                fontWeight: FontWeight.bold,
+                color: subscription.autoRenew ? Colors.green : Colors.grey,
               ),
             ),
           ],
@@ -755,11 +663,330 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Got it'),
+            child: const Text('Close'),
+          ),
+          if (!subscription.autoRenew)
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _showRenewDialog(subscription);
+              },
+              child: const Text('Renew Now'),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _showPlanChangeDialog(SubscriptionPlan plan) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Change to ${plan.name}'),
+        content: Text(
+          'Switch to ${plan.name} for ${_currencySymbol}${plan.priceAmount} per month?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // TODO: Implement plan change logic
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Processing plan change to ${plan.name}...'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            child: const Text('Confirm Change'),
           ),
         ],
       ),
     );
   }
 
+  void _showRenewDialog(SubscriptionPlanItem subscription) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Renew ${subscription.plan.name}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Renew for ${_currencySymbol}${subscription.plan.priceAmount}?',
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'The subscription will be renewed for another month.',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // TODO: Implement renewal logic
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Renewing ${subscription.plan.name}...'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            child: const Text('Renew Now'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            backgroundColor: Colors.white,
+            surfaceTintColor: Colors.white,
+            elevation: 0,
+            pinned: true,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.black),
+              onPressed: () => context.pop(),
+            ),
+            title: const Text(
+              'Subscription Plans',
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+            centerTitle: false,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.refresh, color: Colors.grey),
+                onPressed: _loadSubscriptionData,
+              ),
+            ],
+          ),
+
+          if (_isLoading)
+            const SliverFillRemaining(
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            )
+          else if (_errorMessage.isNotEmpty)
+            SliverFillRemaining(
+              child: _buildErrorState(),
+            )
+          else if (_availablePlans.isEmpty)
+              SliverFillRemaining(
+                child: _buildEmptyState(),
+              )
+            else
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Pricing notice
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        margin: const EdgeInsets.only(bottom: 20),
+                        decoration: BoxDecoration(
+                          color: Colors.green[50],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.green[100]!),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.info_outline, color: Colors.green[800]),
+                                const SizedBox(width: 8),
+                                 Text(
+                                  'Subscription Information',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green[900],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '• All plans include access to extension & veterinary marketplace\n• Quotation Module included in all plans\n• Auto-renewal can be managed in subscription settings',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.green[800],
+                                height: 1.4,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Currency/Region indicator
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                             Text(
+                              'Current Currency:',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                            Chip(
+                              label: Text(
+                                _currency,
+                                style: const TextStyle(
+                                  color: Colors.green,
+                                ),
+                              ),
+                              backgroundColor: Colors.green[50],
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Plans List
+                      ListView.separated(
+                        physics: const NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        itemCount: _availablePlans.length,
+                        separatorBuilder: (context, index) => const SizedBox(height: 16),
+                        itemBuilder: (context, index) {
+                          return _buildPlanCard(_availablePlans[index], index);
+                        },
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Selected plan action button
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, -2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            if (_selectedPlanIndex < _availablePlans.length)
+                              Column(
+                                children: [
+                                  Text(
+                                    'Selected Plan: ${_availablePlans[_selectedPlanIndex].plan.name}',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton(
+                                      onPressed: () {
+                                        _handlePlanSelection(_availablePlans[_selectedPlanIndex].plan);
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: _getPlanColor(_availablePlans[_selectedPlanIndex].plan.planType),
+                                        foregroundColor: Colors.white,
+                                        minimumSize: const Size(double.infinity, 56),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        elevation: 4,
+                                      ),
+                                      child: Text(
+                                        _availablePlans[_selectedPlanIndex].status == 'ACTIVE'
+                                            ? 'Manage Active Plan'
+                                            : 'Select ${_availablePlans[_selectedPlanIndex].plan.name}',
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            const SizedBox(height: 8),
+                            SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  // TODO: Navigate to subscription history screen
+                                  context.push('/subscription/history');
+                                },
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.green,
+                                  side: const BorderSide(color: Colors.green),
+                                  minimumSize: const Size(double.infinity, 56),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'View Subscription History',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 40),
+                    ],
+                  ),
+                ),
+              ),
+        ],
+      ),
+    );
+  }
 }

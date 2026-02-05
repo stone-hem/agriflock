@@ -1,5 +1,8 @@
+import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock360/features/farmer/vet/models/completed_orders_model.dart';
+import 'package:agriflock360/features/farmer/vet/repo/vet_farmer_repository.dart';
 import 'package:flutter/material.dart';
-import 'package:agriflock360/features/farmer/vet/models/vet_order.dart';
+import 'package:agriflock360/core/utils/log_util.dart';
 
 class CompletedOrdersScreen extends StatefulWidget {
   const CompletedOrdersScreen({super.key});
@@ -9,118 +12,106 @@ class CompletedOrdersScreen extends StatefulWidget {
 }
 
 class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
-  final now = DateTime.now();
+  final VetFarmerRepository _repository = VetFarmerRepository();
 
-  late final List<VetOrder> _vetOrders = [
-    VetOrder(
-      id: 'ORD004',
-      vetId: '1',
-      vetName: 'Dr. Sarah Johnson',
-      serviceType: 'Consultation',
-      priority: 'Normal',
-      scheduledDate: now.subtract(const Duration(days: 5)),
-      scheduledTime: const TimeOfDay(hour: 11, minute: 0),
-      status: OrderStatus.completed,
-      totalCost: 8500,
-      consultationFee: 5000,
-      serviceFee: 1500,
-      mileageFee: 1200,
-      prioritySurcharge: 0,
-      houseName: 'Quarantine House',
-      batchName: 'Batch 127 - Recovery',
-      reason: 'Follow-up on treatment progress',
-      notes: 'All birds recovered well',
-      vetLocation: VetLocation(
-        latitude: -1.286389,
-        longitude: 36.817223,
-        address: '123 Farm Road, Agricultural Zone',
-      ),
-      farmerLocation: FarmerLocation(
-        latitude: -1.2921,
-        longitude: 36.8219,
-        address: 'My Farm, Kiambu Road',
-      ),
-      estimatedArrivalTime: now.subtract(const Duration(days: 5, hours: 1)),
-      serviceCompletedDate: now.subtract(const Duration(days: 5)),
-      isPaid: false,
-      userRating: 0,
-      userComment: '',
-    ),
-    VetOrder(
-      id: 'ORD005',
-      vetId: '2',
-      vetName: 'Dr. Michael Chen',
-      serviceType: 'Disease Diagnosis',
-      priority: 'Urgent',
-      scheduledDate: now.subtract(const Duration(days: 2)),
-      scheduledTime: const TimeOfDay(hour: 15, minute: 30),
-      status: OrderStatus.completed,
-      totalCost: 11200,
-      consultationFee: 5000,
-      serviceFee: 3500,
-      mileageFee: 1500,
-      prioritySurcharge: 1200,
-      houseName: 'Main Poultry House',
-      batchName: 'Batch 128 - Layers',
-      reason: 'Suspected Newcastle disease',
-      notes: 'Samples collected for lab testing',
-      vetLocation: VetLocation(
-        latitude: -1.300000,
-        longitude: 36.783333,
-        address: '456 Poultry Lane, Farm District',
-      ),
-      farmerLocation: FarmerLocation(
-        latitude: -1.2921,
-        longitude: 36.8219,
-        address: 'My Farm, Kiambu Road',
-      ),
-      estimatedArrivalTime: now.subtract(const Duration(days: 2, hours: 2)),
-      serviceCompletedDate: now.subtract(const Duration(days: 2)),
-      isPaid: true,
-      userRating: 5,
-      userComment: 'Excellent service! Quick diagnosis and helpful advice.',
-    ),
-    VetOrder(
-      id: 'ORD006',
-      vetId: '3',
-      vetName: 'Dr. Maria Rodriguez',
-      serviceType: 'Preventive Medicine',
-      priority: 'Normal',
-      scheduledDate: now.subtract(const Duration(days: 7)),
-      scheduledTime: const TimeOfDay(hour: 13, minute: 0),
-      status: OrderStatus.completed,
-      totalCost: 9700,
-      consultationFee: 5000,
-      serviceFee: 2000,
-      mileageFee: 2000,
-      prioritySurcharge: 700,
-      houseName: 'Secondary Poultry House',
-      batchName: 'Batch 129 - Broilers',
-      reason: 'Seasonal preventive treatment',
-      notes: 'Applied deworming and vitamin supplements',
-      vetLocation: VetLocation(
-        latitude: -1.250000,
-        longitude: 36.850000,
-        address: '789 Ranch Street, Rural Area',
-      ),
-      farmerLocation: FarmerLocation(
-        latitude: -1.2921,
-        longitude: 36.8219,
-        address: 'My Farm, Kiambu Road',
-      ),
-      estimatedArrivalTime: now.subtract(const Duration(days: 7, hours: 1)),
-      serviceCompletedDate: now.subtract(const Duration(days: 7)),
-      isPaid: true,
-      userRating: 4,
-      userComment: 'Good service but a bit late for the appointment.',
-    ),
-  ];
+  late List<CompletedOrder> _completedOrders = [];
+  bool _isLoading = true;
+  bool _isRefreshing = false;
+  String _errorMessage = '';
 
-  List<VetOrder> get completedOrders => _vetOrders
-      .where((order) => order.status == OrderStatus.completed)
-      .toList();
+  // Pagination
+  int _currentPage = 1;
+  int _totalPages = 1;
+  bool _hasMoreData = true;
 
-  void _showPaymentDialog(VetOrder order) {
+  // Filter states
+  String _selectedFilter = 'all'; // 'all', 'needs_payment', 'needs_rating', 'paid_rated'
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCompletedOrders();
+  }
+
+  Future<void> _loadCompletedOrders({bool refresh = false}) async {
+    if (refresh) {
+      setState(() {
+        _isRefreshing = true;
+        _currentPage = 1;
+        _hasMoreData = true;
+      });
+    } else {
+      if (!_hasMoreData) return;
+      setState(() => _isLoading = true);
+    }
+
+    try {
+      final result = await _repository.getCompletedOrders(
+        page: _currentPage,
+        limit: 10,
+        search: _searchQuery.isNotEmpty ? _searchQuery : null,
+      );
+
+      switch(result) {
+        case Success<CompletedOrdersResponse>(data:final response):
+          setState(() {
+            if (refresh || _currentPage == 1) {
+              _completedOrders = response.orders;
+            } else {
+              _completedOrders.addAll(response.orders);
+            }
+
+            if (response.meta != null) {
+              _totalPages = response.meta!.totalPages;
+              _hasMoreData = _currentPage < _totalPages;
+            }
+
+            _isLoading = false;
+            _isRefreshing = false;
+            _errorMessage = '';
+          });
+        case Failure<CompletedOrdersResponse>():
+          setState(() {
+            _errorMessage = result.message;
+            _isLoading = false;
+            _isRefreshing = false;
+          });
+
+          if (!refresh) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(_errorMessage),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+      }
+
+
+    } finally {
+      if (!refresh) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to load completed orders'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _loadMoreOrders() async {
+    if (_isLoading || !_hasMoreData) return;
+
+    setState(() {
+      _currentPage++;
+    });
+
+    await _loadCompletedOrders();
+  }
+
+  void _showPaymentDialog(CompletedOrder order) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -130,14 +121,13 @@ class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Vet: ${order.vetName}'),
-            Text('Service: ${order.serviceType}'),
             const SizedBox(height: 16),
             Text(
               'Total Amount:',
               style: TextStyle(fontSize: 16, color: Colors.grey.shade700),
             ),
             Text(
-              '\$${(order.totalCost / 100).toStringAsFixed(2)}',
+              '${order.currency} ${order.totalEstimatedCost.toStringAsFixed(2)}',
               style: const TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
@@ -189,9 +179,9 @@ class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
     );
   }
 
-  void _showRatingDialog(VetOrder order) {
-    double rating = order.userRating.toDouble();
-    final commentController = TextEditingController(text: order.userComment);
+  void _showRatingDialog(CompletedOrder order) {
+    double rating = 0;
+    final commentController = TextEditingController();
 
     showDialog(
       context: context,
@@ -209,10 +199,6 @@ class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
-                  ),
-                  Text(
-                    order.serviceType,
-                    style: TextStyle(color: Colors.grey.shade600),
                   ),
                   const SizedBox(height: 24),
                   const Text(
@@ -315,21 +301,20 @@ class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
     );
   }
 
-  Widget _buildFeeBreakdown(VetOrder order) {
+  Widget _buildFeeBreakdown(CompletedOrder order) {
     return Column(
       children: [
-        _buildFeeItem('Consultation Fee', order.consultationFee),
         _buildFeeItem('Service Fee', order.serviceFee),
         _buildFeeItem('Mileage Fee', order.mileageFee),
         if (order.prioritySurcharge > 0)
           _buildFeeItem('Priority Surcharge', order.prioritySurcharge),
         const Divider(),
-        _buildFeeItem('Total', order.totalCost, isTotal: true),
+        _buildFeeItem('Total Estimated', order.totalEstimatedCost, isTotal: true),
       ],
     );
   }
 
-  Widget _buildFeeItem(String label, int amount, {bool isTotal = false}) {
+  Widget _buildFeeItem(String label, double amount, {bool isTotal = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -342,7 +327,7 @@ class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
             ),
           ),
           Text(
-            '\$${(amount / 100).toStringAsFixed(2)}',
+            '\$${amount.toStringAsFixed(2)}',
             style: TextStyle(
               fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
               color: isTotal ? Colors.green : null,
@@ -353,26 +338,28 @@ class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
     );
   }
 
-  void _processPayment(VetOrder order) {
-    // Simulate payment processing
-    final updatedOrder = order.copyWith(isPaid: true);
-
+  void _processPayment(CompletedOrder order) {
+    // TODO: Implement actual payment processing
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Payment of \$${(order.totalCost / 100).toStringAsFixed(2)} completed!',
+          'Payment of ${order.currency} ${order.totalEstimatedCost.toStringAsFixed(2)} completed!',
         ),
         backgroundColor: Colors.green,
       ),
     );
+
+    // Simulate updating the order
+    setState(() {
+      final index = _completedOrders.indexWhere((o) => o.id == order.id);
+      if (index != -1) {
+        _completedOrders[index] = order;
+      }
+    });
   }
 
-  void _submitRating(VetOrder order, double rating, String comment) {
-    final updatedOrder = order.copyWith(
-      userRating: rating.toInt(),
-      userComment: comment,
-    );
-
+  void _submitRating(CompletedOrder order, double rating, String comment) {
+    // TODO: Implement actual rating submission to API
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Thank you for your feedback!'),
@@ -381,7 +368,7 @@ class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
     );
   }
 
-  Widget _buildOrderCard(VetOrder order) {
+  Widget _buildOrderCard(CompletedOrder order) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -406,13 +393,16 @@ class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
                           fontSize: 16,
                         ),
                       ),
-                      Text(
-                        order.serviceType,
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 14,
+                      if (order.vetSpecialization.isNotEmpty)
+                        Text(
+                          order.vetSpecialization.join(', '),
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 12,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
                     ],
                   ),
                 ),
@@ -439,6 +429,13 @@ class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
             ),
             const SizedBox(height: 12),
 
+            // Order Number
+            Text(
+              'Order: ${order.orderNumber}',
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+
             // Completed Date
             Row(
               children: [
@@ -449,7 +446,7 @@ class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Completed on ${order.serviceCompletedDate?.toLocal().toString().split(' ')[0] ?? 'N/A'}',
+                  'Completed on ${order.completedAt.split('T')[0]}',
                   style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
                 ),
               ],
@@ -457,19 +454,40 @@ class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
             const SizedBox(height: 8),
 
             // House & Batch
-            Row(
-              children: [
-                Icon(Icons.home_work, size: 16, color: Colors.grey.shade600),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    '${order.houseName} • ${order.batchName}',
-                    style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
+            if (order.houses.isNotEmpty)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.home_work, size: 16, color: Colors.grey.shade600),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          order.houses.map((h) => h.name).join(', '),
+                          style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
+                  const SizedBox(height: 4),
+                ],
+              ),
+
+            // Services
+            if (order.services.isNotEmpty)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Services: ${order.services.map((s) => s.name).join(', ')}',
+                    style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
 
             // Cost
             Row(
@@ -481,7 +499,7 @@ class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Total Cost: \$${(order.totalCost / 100).toStringAsFixed(2)}',
+                  'Total: ${order.currency} ${order.totalEstimatedCost.toStringAsFixed(2)}',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.green,
@@ -492,47 +510,28 @@ class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
             ),
             const SizedBox(height: 12),
 
-            // Rating Display (if rated)
-            if (order.userRating > 0)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Divider(),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(Icons.star, color: Colors.amber.shade700, size: 20),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${order.userRating}.0',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          order.userComment.isNotEmpty
-                              ? order.userComment
-                              : 'No comment provided',
-                          style: TextStyle(
-                            color: Colors.grey.shade700,
-                            fontStyle: order.userComment.isEmpty
-                                ? FontStyle.italic
-                                : FontStyle.normal,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
+            // Payment Status
+            Row(
+              children: [
+                Icon(
+                  order.isPaid ? Icons.payment : Icons.payment_outlined,
+                  size: 16,
+                  color: order.isPaid ? Colors.green : Colors.orange,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  order.isPaid ? 'Payment Complete' : 'Payment Pending',
+                  style: TextStyle(
+                    color: order.isPaid ? Colors.green : Colors.orange,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
                   ),
-                ],
-              ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
 
             // Action Buttons
-            const SizedBox(height: 16),
             Row(
               children: [
                 if (!order.isPaid)
@@ -556,48 +555,28 @@ class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
                       ),
                     ),
                   ),
-                if (!order.isPaid && order.userRating == 0)
+                if (!order.isPaid)
                   const SizedBox(width: 12),
-                if (order.userRating == 0)
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => _showRatingDialog(order),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.amber.shade700,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.star, size: 18),
-                          SizedBox(width: 8),
-                          Text('Rate Service'),
-                        ],
-                      ),
-                    ),
-                  ),
-                if (order.isPaid && order.userRating > 0)
-                  Expanded(
-                    child: Container(
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => _showRatingDialog(order),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber.shade700,
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
+                      shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Center(
-                        child: Text(
-                          'Completed & Rated',
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.star, size: 18),
+                        SizedBox(width: 8),
+                        Text('Rate Service'),
+                      ],
                     ),
                   ),
+                ),
               ],
             ),
           ],
@@ -606,196 +585,92 @@ class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Image.asset(
-              'assets/logos/Logo_0725.png',
-              fit: BoxFit.cover,
-              width: 40,
-              height: 40,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: Colors.green,
-                  child: const Icon(
-                    Icons.image,
-                    size: 100,
-                    color: Colors.white54,
-                  ),
-                );
-              },
-            ),
-            const Text('Agriflock 360'),
-          ],
-        ),
-        centerTitle: false,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
+  List<CompletedOrder> get _filteredOrders {
+    switch (_selectedFilter) {
+      case 'needs_payment':
+        return _completedOrders.where((order) => !order.isPaid).toList();
+      case 'paid_rated':
+        return _completedOrders.where((order) => order.isPaid).toList();
+      default:
+        return _completedOrders;
+    }
+  }
 
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: Colors.amber.shade200),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Icon(Icons.history, color: Colors.amber.shade700),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Completed Services',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Review completed veterinary services, make payments, and rate your experience',
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+  Widget _buildLoadingIndicator() {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 20),
+      child: Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 32),
+      child: Column(
+        children: [
+          Icon(Icons.error_outline, size: 64, color: Colors.red.shade400),
+          const SizedBox(height: 16),
+          const Text(
+            'Unable to Load Orders',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
             ),
-            const SizedBox(height: 24),
-      
-            // Stats
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    value: completedOrders.length.toString(),
-                    label: 'Total Services',
-                    icon: Icons.medical_services,
-                    color: Colors.blue,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildStatCard(
-                    value: completedOrders
-                        .where((o) => o.isPaid)
-                        .length
-                        .toString(),
-                    label: 'Paid',
-                    icon: Icons.payment,
-                    color: Colors.green,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildStatCard(
-                    value: completedOrders
-                        .where((o) => o.userRating > 0)
-                        .length
-                        .toString(),
-                    label: 'Rated',
-                    icon: Icons.star,
-                    color: Colors.amber,
-                  ),
-                ),
-              ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _errorMessage,
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () => _loadCompletedOrders(refresh: true),
+            child: const Text('Try Again'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 32),
+      child: Column(
+        children: [
+          Icon(Icons.history, size: 64, color: Colors.grey.shade400),
+          const SizedBox(height: 16),
+          const Text(
+            'No Completed Orders',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
             ),
-            const SizedBox(height: 24),
-      
-            // Filter Chips
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  FilterChip(
-                    label: const Text('Needs Payment'),
-                    selected: false,
-                    onSelected: (selected) {},
-                    backgroundColor: Colors.red.shade50,
-                    selectedColor: Colors.red,
-                    labelStyle: const TextStyle(
-                      color: Colors.red,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  FilterChip(
-                    label: const Text('Needs Rating'),
-                    selected: false,
-                    onSelected: (selected) {},
-                    backgroundColor: Colors.amber.shade50,
-                    selectedColor: Colors.amber,
-                    labelStyle: const TextStyle(
-                      color: Colors.amber,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  FilterChip(
-                    label: const Text('Paid & Rated'),
-                    selected: false,
-                    onSelected: (selected) {},
-                    backgroundColor: Colors.green.shade50,
-                    selectedColor: Colors.green,
-                    labelStyle: const TextStyle(
-                      color: Colors.green,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  FilterChip(
-                    label: const Text('Recent'),
-                    selected: false,
-                    onSelected: (selected) {},
-                    backgroundColor: Colors.blue.shade50,
-                    selectedColor: Colors.blue,
-                    labelStyle: const TextStyle(
-                      color: Colors.blue,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _searchQuery.isNotEmpty
+                ? 'No orders found for "$_searchQuery"'
+                : 'Your completed veterinary services will appear here',
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+            textAlign: TextAlign.center,
+          ),
+          if (_searchQuery.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: TextButton(
+                onPressed: () {
+                  setState(() => _searchQuery = '');
+                  _loadCompletedOrders(refresh: true);
+                },
+                child: const Text('Clear Search'),
               ),
             ),
-            const SizedBox(height: 24),
-      
-            // Orders List
-            Text(
-              'Completed Orders',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '${completedOrders.length} service${completedOrders.length == 1 ? '' : 's'} completed',
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-            ),
-            const SizedBox(height: 16),
-      
-            if (completedOrders.isEmpty)
-              _buildEmptyState()
-            else
-              ...completedOrders.map(_buildOrderCard),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -842,28 +717,236 @@ class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 32),
-      child: Column(
-        children: [
-          Icon(Icons.history, size: 64, color: Colors.grey.shade400),
-          const SizedBox(height: 16),
-          const Text(
-            'No Completed Orders',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
+  @override
+  Widget build(BuildContext context) {
+    final filteredOrders = _filteredOrders;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Row(
+          children: [
+            Image.asset(
+              'assets/logos/Logo_0725.png',
+              fit: BoxFit.cover,
+              width: 40,
+              height: 40,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: Colors.green,
+                  child: const Icon(
+                    Icons.image,
+                    size: 100,
+                    color: Colors.white54,
+                  ),
+                );
+              },
             ),
+            const Text('Agriflock 360'),
+          ],
+        ),
+        centerTitle: false,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+
+      body: RefreshIndicator(
+        onRefresh: () => _loadCompletedOrders(refresh: true),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(color: Colors.amber.shade200),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Icon(Icons.history, color: Colors.amber.shade700),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Completed Services',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Review completed veterinary services, make payments, and rate your experience',
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Search Bar
+              TextField(
+                decoration: InputDecoration(
+                  hintText: 'Search orders...',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _searchQuery.isNotEmpty
+                      ? IconButton(
+                    icon: const Icon(Icons.clear),
+                    onPressed: () {
+                      setState(() => _searchQuery = '');
+                      _loadCompletedOrders(refresh: true);
+                    },
+                  )
+                      : null,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onChanged: (value) {
+                  setState(() => _searchQuery = value);
+                  if (value.isEmpty) {
+                    _loadCompletedOrders(refresh: true);
+                  }
+                },
+                onSubmitted: (value) {
+                  _loadCompletedOrders(refresh: true);
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Stats
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildStatCard(
+                      value: _completedOrders.length.toString(),
+                      label: 'Total Services',
+                      icon: Icons.medical_services,
+                      color: Colors.blue,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildStatCard(
+                      value: _completedOrders
+                          .where((o) => o.isPaid)
+                          .length
+                          .toString(),
+                      label: 'Paid',
+                      icon: Icons.payment,
+                      color: Colors.green,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Filter Chips
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildFilterChip(
+                      label: 'All Orders',
+                      selected: _selectedFilter == 'all',
+                      onTap: () {
+                        setState(() => _selectedFilter = 'all');
+                      },
+                      color: Colors.blue,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildFilterChip(
+                      label: 'Needs Payment',
+                      selected: _selectedFilter == 'needs_payment',
+                      onTap: () {
+                        setState(() => _selectedFilter = 'needs_payment');
+                      },
+                      color: Colors.orange,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildFilterChip(
+                      label: 'Paid',
+                      selected: _selectedFilter == 'paid_rated',
+                      onTap: () {
+                        setState(() => _selectedFilter = 'paid_rated');
+                      },
+                      color: Colors.green,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Orders List
+              Text(
+                'Completed Orders',
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '${filteredOrders.length} service${filteredOrders.length == 1 ? '' : 's'}',
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+
+              if (_isLoading && !_isRefreshing)
+                _buildLoadingIndicator()
+              else if (_errorMessage.isNotEmpty && _completedOrders.isEmpty)
+                _buildErrorState()
+              else if (filteredOrders.isEmpty)
+                  _buildEmptyState()
+                else
+                  Column(
+                    children: [
+                      ...filteredOrders.map(_buildOrderCard),
+                      if (_hasMoreData && !_isLoading)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          child: ElevatedButton(
+                            onPressed: _loadMoreOrders,
+                            child: const Text('Load More Orders'),
+                          ),
+                        ),
+                      if (_isLoading && _completedOrders.isNotEmpty)
+                        _buildLoadingIndicator(),
+                    ],
+                  ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Your completed veterinary services will appear here',
-            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-            textAlign: TextAlign.center,
-          ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChip({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+    required Color color,
+  }) {
+    return FilterChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: (_) => onTap(),
+      backgroundColor: color.withOpacity(0.1),
+      selectedColor: color,
+      labelStyle: TextStyle(
+        color: selected ? Colors.white : color,
+        fontWeight: FontWeight.bold,
       ),
     );
   }

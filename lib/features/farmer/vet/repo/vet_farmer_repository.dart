@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock360/features/farmer/vet/models/completed_orders_model.dart';
 import 'package:agriflock360/features/farmer/vet/models/my_order_list_item.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_farmer_model.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_order_model.dart';
@@ -486,6 +487,85 @@ class VetFarmerRepository {
       if (e is http.Response) {
         return Failure(
           message: 'Failed to cancel order',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+
+      return Failure(message: e.toString());
+    }
+  }
+
+
+  Future<Result<CompletedOrdersResponse>> getCompletedOrders({
+    int page = 1,
+    int limit = 10,
+    String? search,
+    String? sortBy,
+    String? sortOrder,
+    String? startDate,
+    String? endDate,
+  }) async {
+    try {
+      // Build query parameters
+      final queryParams = <String, String>{};
+
+      // Always filter by COMPLETED status
+      queryParams['status'] = 'COMPLETED';
+
+      if (search != null && search.isNotEmpty) {
+        queryParams['search'] = search;
+      }
+
+      if (sortBy != null && sortBy.isNotEmpty) {
+        queryParams['sort_by'] = sortBy;
+      }
+
+      if (sortOrder != null && sortOrder.isNotEmpty) {
+        queryParams['sort_order'] = sortOrder;
+      }
+
+      if (startDate != null && startDate.isNotEmpty) {
+        queryParams['start_date'] = startDate;
+      }
+
+      if (endDate != null && endDate.isNotEmpty) {
+        queryParams['end_date'] = endDate;
+      }
+
+      queryParams['page'] = page.toString();
+      queryParams['limit'] = limit.toString();
+
+      // Build query string
+      final queryString = Uri(queryParameters: queryParams).query;
+      final endpoint = '/order-vet/farmer/completed-orders${queryString.isNotEmpty ? '?$queryString' : ''}';
+
+      final response = await apiClient.get(endpoint);
+
+      final jsonResponse = jsonDecode(response.body);
+      LogUtil.info('Get Completed Orders API Response: $jsonResponse');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return Success(CompletedOrdersResponse.fromJson(jsonResponse));
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to fetch completed orders',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in getCompletedOrders: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
+    } catch (e) {
+      LogUtil.error('Error in getCompletedOrders: $e');
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to fetch completed orders',
           response: e,
           statusCode: e.statusCode,
         );

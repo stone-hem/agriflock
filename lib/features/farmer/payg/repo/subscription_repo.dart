@@ -1,0 +1,84 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:agriflock360/core/utils/log_util.dart';
+import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock360/features/farmer/payg/models/subscription_plans_model.dart';
+import 'package:http/http.dart' as http;
+
+import '../../../../main.dart';
+
+class SubscriptionRepository {
+  /// Get user's subscription history
+  Future<Result<SubscriptionPlansResponse>> getSubscriptionHistory({
+    int page = 1,
+    int limit = 10,
+    String? status,
+    String? planType,
+    String? sortBy,
+    String? sortOrder,
+  }) async {
+    try {
+      // Build query parameters
+      final queryParams = <String, String>{};
+
+      if (status != null && status.isNotEmpty) {
+        queryParams['status'] = status;
+      }
+
+      if (planType != null && planType.isNotEmpty) {
+        queryParams['plan_type'] = planType;
+      }
+
+      if (sortBy != null && sortBy.isNotEmpty) {
+        queryParams['sort_by'] = sortBy;
+      }
+
+      if (sortOrder != null && sortOrder.isNotEmpty) {
+        queryParams['sort_order'] = sortOrder;
+      }
+
+      queryParams['page'] = page.toString();
+      queryParams['limit'] = limit.toString();
+
+      // Build query string
+      final queryString = Uri(queryParameters: queryParams).query;
+
+      // Assuming the endpoint is /subscription/history or similar
+      // Adjust the endpoint according to your actual API
+      final endpoint = '/subscription/history${queryString.isNotEmpty ? '?$queryString' : ''}';
+
+      final response = await apiClient.get(endpoint);
+
+      final jsonResponse = jsonDecode(response.body);
+      LogUtil.info('Get Subscription History API Response: $jsonResponse');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return Success(SubscriptionPlansResponse.fromJson(jsonResponse));
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to fetch subscription history',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in getSubscriptionHistory: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
+    } catch (e) {
+      LogUtil.error('Error in getSubscriptionHistory: $e');
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to fetch subscription history',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+
+      return Failure(message: e.toString());
+    }
+  }
+}
