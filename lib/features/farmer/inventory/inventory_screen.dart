@@ -1,14 +1,13 @@
-import 'package:agriflock360/features/farmer/farm/models/inventory_models.dart';
-import 'package:agriflock360/features/farmer/farm/repositories/inventory_repository.dart';
-import 'package:agriflock360/features/farmer/farm/view/widgets/inventory_stats_card.dart';
+import 'package:agriflock360/features/farmer/inventory/models/inventory_models.dart';
+import 'package:agriflock360/features/farmer/inventory/repo/inventory_repository.dart';
+import 'package:agriflock360/features/farmer/inventory/widgets/inventory_stats_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:agriflock360/core/utils/result.dart';
 
 class InventoryScreen extends StatefulWidget {
-  final String farmId;
 
-  const InventoryScreen({super.key, required this.farmId});
+  const InventoryScreen({super.key});
 
   @override
   State<InventoryScreen> createState() => _InventoryScreenState();
@@ -87,7 +86,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
       final result = await _repository.getInventoryItems(
         page: loadMore ? _currentPage + 1 : 1,
         limit: 20,
-        farmId: widget.farmId,
       );
 
       switch (result) {
@@ -139,7 +137,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
     final result = await _repository.refreshInventory(
       limit: 20,
-      farmId: widget.farmId,
     );
 
     switch (result) {

@@ -17,9 +17,8 @@ import 'package:agriflock360/features/farmer/batch/record_product_screen.dart';
 import 'package:agriflock360/features/farmer/batch/update_vaccination_status_screen.dart';
 import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
 import 'package:agriflock360/features/farmer/farm/view/add_farm_screen.dart';
-import 'package:agriflock360/features/farmer/farm/view/add_inventory_item_screen.dart';
 import 'package:agriflock360/features/farmer/farm/view/farms_home_screen.dart';
-import 'package:agriflock360/features/farmer/farm/view/inventory_screen.dart';
+import 'package:agriflock360/features/farmer/inventory/inventory_screen.dart';
 import 'package:agriflock360/features/farmer/more/notifications_screen.dart';
 import 'package:agriflock360/features/farmer/more/recent_activity_screen.dart';
 import 'package:agriflock360/features/farmer/payg/flow/day_31_transition_screen.dart';
@@ -481,17 +480,9 @@ class AppRoutes {
           builder: (context, state) => const AddFarmScreen(),
         ),
         GoRoute(
-          path: '$farmsInventory/:id',
+          path: farmsInventory,
           builder: (context, state) {
-            final farmId = state.pathParameters['id']!;
-            return InventoryScreen(farmId: farmId);
-          },
-        ),
-        GoRoute(
-          path: '$farmsInventoryAdd/:id',
-          builder: (context, state) {
-            final farmId = state.pathParameters['id']!;
-            return AddInventoryItemScreen(farmId: farmId);
+            return InventoryScreen();
           },
         ),
         GoRoute(

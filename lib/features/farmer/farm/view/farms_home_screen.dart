@@ -185,6 +185,7 @@ class _FarmsHomeScreenState extends State<FarmsHomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
+                    _buildChipsSection(),
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -196,6 +197,60 @@ class _FarmsHomeScreenState extends State<FarmsHomeScreen> {
       ),
     );
   }
+
+
+  Widget _buildChipsSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.flash_on, size: 18, color: Colors.grey.shade700),
+              const SizedBox(width: 8),
+              Text(
+                'Quick Actions',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    context.push(AppRoutes.farmsInventory);
+                  },
+                  icon: const Icon(Icons.agriculture, size: 18),
+                  label: const Text('View My inventory'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.green.shade700,
+                    side: BorderSide(color: Colors.green.shade300),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
 
 
 
@@ -561,16 +616,6 @@ class _FarmCard extends StatelessWidget {
                     ),
                   ),
                   const PopupMenuItem<String>(
-                    value: 'inventory',
-                    child: Row(
-                      children: [
-                        Icon(Icons.inventory, size: 20),
-                        SizedBox(width: 8),
-                        Text('View Farm Inventory'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem<String>(
                     value: 'view_batches',
                     child: Row(
                       children: [
@@ -605,9 +650,6 @@ class _FarmCard extends StatelessWidget {
     switch (value) {
       case 'edit':
         _navigateToEdit(context);
-        break;
-      case 'inventory':
-        context.push('${AppRoutes.farmsInventory}/${farm.id}');
         break;
       case 'view_batches':
         context.push(AppRoutes.batches, extra: farm);

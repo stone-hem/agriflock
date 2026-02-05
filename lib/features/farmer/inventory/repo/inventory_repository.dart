@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
-import 'package:agriflock360/features/farmer/farm/models/inventory_models.dart';
+import 'package:agriflock360/features/farmer/inventory/models/inventory_models.dart';
 import 'package:agriflock360/main.dart';
 import 'package:http/http.dart' as http;
 
