@@ -6,6 +6,7 @@ class SearchInput extends StatelessWidget {
   final Widget? suffixIcon;
   final Widget? prefixIcon;
   final void Function(String)? onChanged;
+  final void Function(String)? onSubmitted;
   final VoidCallback? onClear;
   final FocusNode? focusNode;
   final TextInputAction? textInputAction;
@@ -25,7 +26,7 @@ class SearchInput extends StatelessWidget {
     this.textInputAction,
     this.padding,
     this.fillColor,
-    this.borderColor,
+    this.borderColor, this.onSubmitted,
   });
 
   @override
@@ -50,6 +51,7 @@ class SearchInput extends StatelessWidget {
         onChanged: onChanged,
         focusNode: focusNode,
         textInputAction: textInputAction,
+        onFieldSubmitted: onSubmitted,
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: TextStyle(

@@ -1,39 +1,6 @@
-
 import 'dart:convert';
 
-class CompletedOrdersResponse  {
-  final List<CompletedOrder> orders;
-  final PaginationMeta? meta;
-
-  const CompletedOrdersResponse({
-    required this.orders,
-    this.meta,
-  });
-
-  factory CompletedOrdersResponse.fromJson(Map<String, dynamic> json) {
-    return CompletedOrdersResponse(
-      orders: json['data'] != null
-          ? List<CompletedOrder>.from(
-        (json['data'] as List).map(
-              (x) => CompletedOrder.fromJson(x),
-        ),
-      )
-          : [],
-      meta: json['meta'] != null
-          ? PaginationMeta.fromJson(json['meta'])
-          : null,
-    );
-  }
-
-  Map<String, dynamic> toJson() => {
-    'data': orders.map((x) => x.toJson()).toList(),
-    'meta': meta?.toJson(),
-  };
-
-
-}
-
-class CompletedOrder  {
+class CompletedOrder {
   final String id;
   final String orderNumber;
   final String farmerId;
@@ -231,7 +198,6 @@ class CompletedOrder  {
     'terms_agreed': termsAgreed,
     'is_paid': isPaid,
   };
-
 }
 
 class FarmerLocation {
@@ -258,10 +224,9 @@ class FarmerLocation {
     'latitude': latitude,
     'longitude': longitude,
   };
-
 }
 
-class VetLocation  {
+class VetLocation {
   final Address address;
   final double latitude;
   final double longitude;
@@ -285,7 +250,6 @@ class VetLocation  {
     'latitude': latitude,
     'longitude': longitude,
   };
-
 }
 
 class Address {
@@ -316,7 +280,6 @@ class Address {
     'sub_county': subCounty,
     'formatted_address': formattedAddress,
   };
-
 }
 
 class House {
@@ -343,10 +306,9 @@ class House {
     'name': name,
     'birds_count': birdsCount,
   };
-
 }
 
-class Batch{
+class Batch {
   final String id;
   final String name;
   final String houseId;
@@ -386,10 +348,9 @@ class Batch{
     'bird_type_id': birdTypeId,
     'bird_type_name': birdTypeName,
   };
-
 }
 
-class Service{
+class Service {
   final String id;
   final String name;
   final String code;
@@ -417,7 +378,6 @@ class Service{
     'code': code,
     'cost': cost,
   };
-
 }
 
 class ServiceCost {
@@ -448,36 +408,4 @@ class ServiceCost {
     'service_code': serviceCode,
     'service_name': serviceName,
   };
-
-}
-
-class PaginationMeta {
-  final int page;
-  final int limit;
-  final int total;
-  final int totalPages;
-
-  const PaginationMeta({
-    required this.page,
-    required this.limit,
-    required this.total,
-    required this.totalPages,
-  });
-
-  factory PaginationMeta.fromJson(Map<String, dynamic> json) {
-    return PaginationMeta(
-      page: json['page'] ?? 0,
-      limit: json['limit'] ?? 0,
-      total: json['total'] ?? 0,
-      totalPages: json['totalPages'] ?? 0,
-    );
-  }
-
-  Map<String, dynamic> toJson() => {
-    'page': page,
-    'limit': limit,
-    'total': total,
-    'totalPages': totalPages,
-  };
-
 }

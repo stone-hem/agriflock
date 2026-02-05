@@ -45,7 +45,7 @@ class SubscriptionRepository {
 
       // Assuming the endpoint is /subscription/history or similar
       // Adjust the endpoint according to your actual API
-      final endpoint = '/subscription/history${queryString.isNotEmpty ? '?$queryString' : ''}';
+      final endpoint = '/app-subscriptions${queryString.isNotEmpty ? '?$queryString' : ''}';
 
       final response = await apiClient.get(endpoint);
 

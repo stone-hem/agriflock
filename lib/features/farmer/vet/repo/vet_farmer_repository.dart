@@ -497,7 +497,7 @@ class VetFarmerRepository {
   }
 
 
-  Future<Result<CompletedOrdersResponse>> getCompletedOrders({
+  Future<Result<List<CompletedOrder>>> getCompletedOrders({
     int page = 1,
     int limit = 10,
     String? search,
@@ -546,7 +546,26 @@ class VetFarmerRepository {
       LogUtil.info('Get Completed Orders API Response: $jsonResponse');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        return Success(CompletedOrdersResponse.fromJson(jsonResponse));
+        // Handle the response as a List directly
+        if (jsonResponse is List) {
+          final List<CompletedOrder> orders = jsonResponse
+              .map((item) => CompletedOrder.fromJson(item))
+              .toList();
+          return Success(orders);
+        } else if (jsonResponse is Map<String, dynamic> && jsonResponse['data'] is List) {
+          // Fallback: in case the API changes to return {data: [...]}
+          final List<dynamic> dataList = jsonResponse['data'];
+          final List<CompletedOrder> orders = dataList
+              .map((item) => CompletedOrder.fromJson(item))
+              .toList();
+          return Success(orders);
+        } else {
+          return Failure(
+            message: 'Invalid response format from server',
+            response: response,
+            statusCode: response.statusCode,
+          );
+        }
       } else {
         return Failure(
           message: jsonResponse['message'] ?? 'Failed to fetch completed orders',

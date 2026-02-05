@@ -1,8 +1,8 @@
 import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock360/core/widgets/search_input.dart';
 import 'package:agriflock360/features/farmer/vet/models/completed_orders_model.dart';
 import 'package:agriflock360/features/farmer/vet/repo/vet_farmer_repository.dart';
 import 'package:flutter/material.dart';
-import 'package:agriflock360/core/utils/log_util.dart';
 
 class CompletedOrdersScreen extends StatefulWidget {
   const CompletedOrdersScreen({super.key});
@@ -19,13 +19,8 @@ class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
   bool _isRefreshing = false;
   String _errorMessage = '';
 
-  // Pagination
-  int _currentPage = 1;
-  int _totalPages = 1;
-  bool _hasMoreData = true;
-
   // Filter states
-  String _selectedFilter = 'all'; // 'all', 'needs_payment', 'needs_rating', 'paid_rated'
+  String _selectedFilter = 'all'; // 'all', 'needs_payment', 'paid_rated'
   String _searchQuery = '';
 
   @override
@@ -38,40 +33,25 @@ class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
     if (refresh) {
       setState(() {
         _isRefreshing = true;
-        _currentPage = 1;
-        _hasMoreData = true;
       });
     } else {
-      if (!_hasMoreData) return;
       setState(() => _isLoading = true);
     }
 
     try {
       final result = await _repository.getCompletedOrders(
-        page: _currentPage,
-        limit: 10,
         search: _searchQuery.isNotEmpty ? _searchQuery : null,
       );
 
-      switch(result) {
-        case Success<CompletedOrdersResponse>(data:final response):
+      switch (result) {
+        case Success<List<CompletedOrder>>(data: final response):
           setState(() {
-            if (refresh || _currentPage == 1) {
-              _completedOrders = response.orders;
-            } else {
-              _completedOrders.addAll(response.orders);
-            }
-
-            if (response.meta != null) {
-              _totalPages = response.meta!.totalPages;
-              _hasMoreData = _currentPage < _totalPages;
-            }
-
+            _completedOrders = response;
             _isLoading = false;
             _isRefreshing = false;
             _errorMessage = '';
           });
-        case Failure<CompletedOrdersResponse>():
+        case Failure<List<CompletedOrder>>():
           setState(() {
             _errorMessage = result.message;
             _isLoading = false;
@@ -87,9 +67,13 @@ class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
             );
           }
       }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to load completed orders';
+        _isLoading = false;
+        _isRefreshing = false;
+      });
 
-
-    } finally {
       if (!refresh) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -99,16 +83,6 @@ class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
         );
       }
     }
-  }
-
-  Future<void> _loadMoreOrders() async {
-    if (_isLoading || !_hasMoreData) return;
-
-    setState(() {
-      _currentPage++;
-    });
-
-    await _loadCompletedOrders();
   }
 
   void _showPaymentDialog(CompletedOrder order) {
@@ -555,8 +529,7 @@ class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
                       ),
                     ),
                   ),
-                if (!order.isPaid)
-                  const SizedBox(width: 12),
+                if (!order.isPaid) const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () => _showRatingDialog(order),
@@ -748,7 +721,6 @@ class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-
       body: RefreshIndicator(
         onRefresh: () => _loadCompletedOrders(refresh: true),
         child: SingleChildScrollView(
@@ -799,23 +771,19 @@ class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
               const SizedBox(height: 24),
 
               // Search Bar
-              TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search orders...',
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: _searchQuery.isNotEmpty
-                      ? IconButton(
-                    icon: const Icon(Icons.clear),
-                    onPressed: () {
-                      setState(() => _searchQuery = '');
-                      _loadCompletedOrders(refresh: true);
-                    },
-                  )
-                      : null,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
+              SearchInput(
+                hintText: 'Search orders...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    setState(() => _searchQuery = '');
+                    _loadCompletedOrders(refresh: true);
+                  },
+                )
+                    : null,
+
                 onChanged: (value) {
                   setState(() => _searchQuery = value);
                   if (value.isEmpty) {
@@ -911,19 +879,7 @@ class _CompletedOrdersScreenState extends State<CompletedOrdersScreen> {
                   _buildEmptyState()
                 else
                   Column(
-                    children: [
-                      ...filteredOrders.map(_buildOrderCard),
-                      if (_hasMoreData && !_isLoading)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 20),
-                          child: ElevatedButton(
-                            onPressed: _loadMoreOrders,
-                            child: const Text('Load More Orders'),
-                          ),
-                        ),
-                      if (_isLoading && _completedOrders.isNotEmpty)
-                        _buildLoadingIndicator(),
-                    ],
+                    children: filteredOrders.map(_buildOrderCard).toList(),
                   ),
             ],
           ),
