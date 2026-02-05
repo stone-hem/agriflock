@@ -108,11 +108,11 @@ class HomeStatCard extends StatelessWidget {
           .take(5) // Limit to 5 stats for compact view
           .map((stat) => ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.42, // Set a maximum width for each stat line
+          maxWidth: MediaQuery.sizeOf(context).width * 0.42, // Set a maximum width for each stat line
         ),
         child:   ConstrainedBox(
           constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.42, // Set a maximum width for each stat line
+            maxWidth: MediaQuery.sizeOf(context).width * 0.42, // Set a maximum width for each stat line
           ),
           child: Text(
             '${stat.value} ${stat.label}',

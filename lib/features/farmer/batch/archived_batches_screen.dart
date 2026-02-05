@@ -1,9 +1,8 @@
-// archived_batches_screen.dart
 import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
-import 'package:agriflock360/features/farmer/batch/model/general_batch_model.dart';
-import 'package:agriflock360/features/farmer/batch/repo/general_batch_repo.dart';
+import 'package:agriflock360/features/farmer/batch/model/batch_list_model.dart';
+import 'package:agriflock360/features/farmer/batch/repo/batch_mgt_repo.dart';
 import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -17,9 +16,9 @@ class ArchivedBatchesScreen extends StatefulWidget {
 }
 
 class _ArchivedBatchesScreenState extends State<ArchivedBatchesScreen> {
-  final _repository = GeneralBatchRepository();
-  List<GeneralBatchModel> _archivedBatches = [];
-  GeneralBatchPagination? _pagination;
+  final _repository = BatchMgtRepository();
+  List<BatchListItem> _archivedBatches = [];
+  Pagination? _pagination;
   bool _isLoading = true;
   bool _isRestoring = false;
   bool _isDeleting = false;
@@ -40,22 +39,22 @@ class _ArchivedBatchesScreenState extends State<ArchivedBatchesScreen> {
 
     try {
       final response = await _repository.getBatches(
-        widget.farm.id,
+        farmId:widget.farm.id,
         page: page,
         limit: _limit,
-        status: 'archived',
+        currentStatus: 'archived',
       );
 
       switch(response) {
-        case Success<GeneralBatchesResponse>(data: final response):
+        case Success<BatchListResponse>(data: final response):
           setState(() {
             _archivedBatches = response.batches;
             _pagination = response.pagination;
             _currentPage = page;
             _isLoading = false;
           });
-        case Failure<GeneralBatchesResponse>():
-          ApiErrorHandler.handle('Failed to fetch archived batches');
+        case Failure<BatchListResponse>(message: final message):
+          ApiErrorHandler.handle(message);
           setState(() {
             _isLoading = false;
           });
@@ -248,7 +247,7 @@ class _ArchivedBatchesScreenState extends State<ArchivedBatchesScreen> {
     );
   }
 
-  Widget _buildBatchCard(GeneralBatchModel batch) {
+  Widget _buildBatchCard(BatchListItem batch) {
     final isRestoring = _isRestoring && _selectedBatchId == batch.id;
     final isDeleting = _isDeleting && _selectedBatchId == batch.id;
 
@@ -322,11 +321,10 @@ class _ArchivedBatchesScreenState extends State<ArchivedBatchesScreen> {
             _buildDetailRow('Mortality Rate', '${batch.mortalityRate.toStringAsFixed(2)}%'),
             _buildDetailRow('Age', '${batch.ageInDays} days'),
 
-            if (batch.updatedAt != null)
-              _buildDetailRow(
-                'Archived on',
-                '${batch.updatedAt!.day}/${batch.updatedAt!.month}/${batch.updatedAt!.year}',
-              ),
+            _buildDetailRow(
+              'Archived on',
+              '${batch.updatedAt.day}/${batch.updatedAt.month}/${batch.updatedAt.year}',
+            ),
 
             const SizedBox(height: 16),
 
@@ -495,7 +493,7 @@ class _ArchivedBatchesScreenState extends State<ArchivedBatchesScreen> {
     );
   }
 
-  void _confirmRestore(GeneralBatchModel batch) {
+  void _confirmRestore(BatchListItem batch) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -521,7 +519,7 @@ class _ArchivedBatchesScreenState extends State<ArchivedBatchesScreen> {
     );
   }
 
-  void _confirmDelete(GeneralBatchModel batch) {
+  void _confirmDelete(BatchListItem batch) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
