@@ -10,91 +10,181 @@ class ValueConfirmationBanner extends StatelessWidget {
     this.onViewActivity,
   });
 
+  void _showValueDetailsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.verified, color: Colors.green),
+              SizedBox(width: 8),
+              SizedBox(width:100,child: Text('Farming with Confidence')),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'AgriFlock 360 is actively supporting your farm',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Current support includes:',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              _buildFeatureItem('📋 Customized feeding plans'),
+              _buildFeatureItem('💉 Vaccination schedules & reminders'),
+              _buildFeatureItem('💰 Market-ready quotations'),
+              _buildFeatureItem('📈 Profit tracking & analytics'),
+              _buildFeatureItem('🔔 Real-time notifications'),
+              const SizedBox(height: 12),
+              const Text(
+                'View your farm activity to see detailed insights and performance metrics.',
+                style: TextStyle(fontSize: 14),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                if (onViewActivity != null) {
+                  onViewActivity!();
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('View Activity'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildFeatureItem(String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(width: 4),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 14),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Colors.green, Color(0xFF4CAF50)],
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.green.shade100),
         boxShadow: [
           BoxShadow(
-            color: Colors.green.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+            color: Colors.green.shade50,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Top row with icon and Learn More button
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.verified,
-                  color: Colors.white,
-                  size: 16,
-                ),
+              // Confidence message with icon
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.verified,
+                      color: Colors.green.shade700,
+                      size: 14,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Farming with confidence',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade800,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              const Expanded(
+
+              // Learn More button
+              TextButton(
+                onPressed: () => _showValueDetailsDialog(context),
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
                 child: Text(
-                  'You\'re farming with confidence',
+                  'View farm activity',
                   style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    fontSize: 12,
+                    color: Colors.blue.shade600,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          TextButton.icon(
-            onPressed: onViewActivity ?? () {},
-            style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.yellow,
-                textStyle: TextStyle(
-                  decoration: TextDecoration.underline,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 16,
-                )
-            ),
 
-            icon: Icon(Icons.crisis_alert_outlined, size: 16,fontWeight: FontWeight.bold,),
-            label: const Text(
-              'View farm activity',
-            ),
+          const SizedBox(height: 8),
+
+          // Divider
+          Container(
+            height: 1,
+            color: Colors.grey.shade200,
           ),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 2),
-            child: Text(
-              'AgriFlock 360 is actively supporting your farm with feeding plans, vaccination schedules, and market-ready quotations.',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.white,
-                height: 1.3,
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
+
+          const SizedBox(height: 8),
+
+          // Expense button
           ExpenseActionButton(
             onPressed: () {
               context.push('/record-expenditure');
             },
             buttonColor: Colors.red,
-              descriptionColor:Colors.white
-          )
+            descriptionColor: Colors.grey.shade700,
+            buttonHeight: 34,
+            buttonTextSize: 12,
+            descriptionTextSize: 11,
+            spacing: 3,
+          ),
         ],
       ),
     );

@@ -2,6 +2,7 @@ import 'package:agriflock360/app_routes.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/core/widgets/expense/expense_marquee_banner.dart';
+import 'package:agriflock360/features/farmer/batch/widgets/add_edit_house_dialog.dart';
 import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
 import 'package:agriflock360/features/farmer/farm/repositories/farm_repository.dart';
 import 'package:agriflock360/features/farmer/farm/view/edit_farm_screen.dart';
@@ -457,7 +458,7 @@ class _FarmCard extends StatelessWidget {
               // Farm Image
               Container(
                 width: 80,
-                height: 80,
+                height: 100,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   image: DecorationImage(
@@ -523,6 +524,20 @@ class _FarmCard extends StatelessWidget {
                             label: 'Batches',
                           ),
                       ],
+                    ),
+
+                    // Instead of the ElevatedButton.icon, use this:
+                    FilledButton.icon(
+                      onPressed: () {
+                        AddEditHouseDialog.show(
+                          context: context,
+                          farm: farm,
+                          onSuccess: onEdited,
+                        );
+                      },
+                      icon: Icon(Icons.add_home, size: 18),
+
+                      label: Text('Add House'),
                     ),
                   ],
                 ),

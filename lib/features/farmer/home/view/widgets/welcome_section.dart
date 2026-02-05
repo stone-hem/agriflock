@@ -48,24 +48,16 @@ class WelcomeSection extends StatelessWidget {
                 ),
               ),
             ),
+          const SizedBox(height: 2),
           Text(
-            greeting,
+            '$greeting, Welcome back',
             style: Theme.of(context).textTheme.titleMedium!.copyWith(
               color: Colors.grey.shade700,
               fontWeight: FontWeight.w400,
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            'Welcome back to your farm',
-            style: Theme.of(context).textTheme.titleLarge!.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Colors.green.shade800,
               fontSize: 18,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 3),
           Text(
             summaryMsg,
             style: TextStyle(
@@ -73,7 +65,7 @@ class WelcomeSection extends StatelessWidget {
               fontSize: 13,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           ExpenseActionButton(
             onPressed: () {
               context.push('/record-expenditure');

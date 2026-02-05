@@ -10,109 +10,190 @@ class FutureFramingBanner extends StatelessWidget {
     this.onSeePlans,
   });
 
+  void _showLearnMoreDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.timer, color: Colors.orange),
+              SizedBox(width: 8),
+              Text('Trial Ending Soon'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Your Full Farm Experience ends in 9 days (Day 21)',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Continue receiving:',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              _buildFeatureItem('📋 Feeding guidance'),
+              _buildFeatureItem('💉 Vaccination reminders'),
+              _buildFeatureItem('💰 Quotations and pricing'),
+              const SizedBox(height: 12),
+              const Text(
+                'Choose the right plan for your farm to continue all features.',
+                style: TextStyle(fontSize: 14),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                if (onSeePlans != null) {
+                  onSeePlans!();
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('See Plans'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildFeatureItem(String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(width: 4),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 14),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFF57C00), Color(0xFFFF9800)],
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.orange.shade100,
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+            color: Colors.grey.shade100,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Top row with trial info and Learn More button
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
+              // Trial info
+              Row(
                 children: [
-                  Icon(Icons.timer, color: Colors.white, size: 16),
-                  SizedBox(width: 6),
+                  Icon(
+                    Icons.timer,
+                    color: Colors.orange.shade700,
+                    size: 14,
+                  ),
+                  const SizedBox(width: 4),
                   Text(
                     '9 Days Remaining',
                     style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade800,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Day 21',
+                      style: TextStyle(
+                        color: Colors.orange.shade700,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 10,
+                      ),
                     ),
                   ),
                 ],
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
+
+              // Learn More button
+              TextButton(
+                onPressed: () => _showLearnMoreDialog(context),
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                child: const Text(
-                  'Day 21',
+                child: Text(
+                  'Learn More',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 11,
+                    fontSize: 12,
+                    color: Colors.blue.shade600,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          Wrap(
-            children:[
-              const Text(
-              'Your Full Farm Experience ends in 9 days',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                height: 1.2,
-              ),
-            ),
-              TextButton.icon(
-                onPressed: onSeePlans ?? () {},
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.yellow,
-                  textStyle: TextStyle(
-                    decoration: TextDecoration.underline,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
-                  )
-                ),
 
-                icon: Icon(Icons.crisis_alert_outlined, size: 16,fontWeight: FontWeight.bold,),
-                label: const Text(
-                  'See what happens after trial',
-                ),
-              ),]
-          ),
-          const Text(
-            'Continue receiving feeding guidance, vaccination reminders, and quotations by choosing the right plan for your farm.',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.white,
-              height: 1.3,
-            ),
-          ),
           const SizedBox(height: 8),
+
+          // Divider
+          Container(
+            height: 1,
+            color: Colors.grey.shade200,
+          ),
+
+          const SizedBox(height: 8),
+
+          // Expense button - taking full width
           ExpenseActionButton(
             onPressed: () {
               context.push('/record-expenditure');
             },
             buttonColor: Colors.red,
-              descriptionColor:Colors.white
-
-          )
-
+            descriptionColor: Colors.grey.shade700,
+            // Optional: You can make it more compact with these parameters
+            buttonHeight: 34,
+            buttonTextSize: 12,
+            descriptionTextSize: 11,
+            spacing: 3,
+          ),
         ],
       ),
     );
