@@ -1,15 +1,19 @@
 import 'package:agriflock360/core/model/user_model.dart';
+import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/core/widgets/location_picker_step.dart';
+import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/features/auth/shared/auth_text_field.dart';
+import 'package:agriflock360/features/farmer/batch/repo/batch_house_repo.dart';
 import 'package:agriflock360/features/farmer/profile/models/profile_model.dart';
 import 'package:agriflock360/features/farmer/profile/repo/profile_repository.dart';
 import 'package:agriflock360/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../batch/model/bird_type.dart';
 
 class UpdateProfileScreen extends StatefulWidget {
 
@@ -29,6 +33,10 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
   bool _isLoading = false;
   bool _isFetching = true;
 
+  final _birdRepository = BatchHouseRepository();
+  bool _isLoadingBirdTypes = false;
+  List<BirdType> _birdTypes = [];
+
   // Controllers
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _phoneNumberController = TextEditingController();
@@ -45,13 +53,45 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
 
   // Poultry type selection
   String? _selectedPoultryType;
-  final List<String> _poultryTypes = ['layers', 'broilers', 'both'];
 
   @override
   void initState() {
     super.initState();
+    _loadBirdTypes();
     _loadProfileData();
   }
+
+  Future<void> _loadBirdTypes() async {
+
+    try {
+      setState(() {
+        _isLoadingBirdTypes = true;
+      });
+
+      final result = await _birdRepository.getBirdTypes();
+
+      switch (result) {
+        case Success(data: final types):
+          setState(() {
+            _birdTypes = types;
+            _isLoadingBirdTypes = false;
+          });
+
+        case Failure(:final response, :final message):
+          if (response != null) {
+            ApiErrorHandler.handle(response);
+          } else {
+            ToastUtil.showError(message);
+          }
+      }
+    } catch (e) {
+      ApiErrorHandler.handle(e);
+      setState(() {
+        _isLoadingBirdTypes = false;
+      });
+    }
+  }
+
 
   Future<void> _loadProfileData() async {
     try {
@@ -87,6 +127,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
     _selectedAddress = profileData.location.address;
     _latitude = profileData.location.latitude;
     _longitude = profileData.location.longitude;
+    _selectedPoultryType=profileData.poultryTypeId;
   }
 
   Future<void> _updateProfile() async {
@@ -127,7 +168,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
           longitude: _longitude!,
         ),
         yearsOfExperience: int.tryParse(_yearsOfExperienceController.text) ?? 0,
-        poultryType: _selectedPoultryType!,
+        poultryTypeId: _selectedPoultryType!,
         chickenHouseCapacity: int.tryParse(_chickenHouseCapacityController.text) ?? 0,
         currentNumberOfChickens: int.tryParse(_currentChickensController.text) ?? 0,
         preferredAgrovetName: _preferredAgrovetController.text.trim(),
@@ -141,14 +182,14 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
       });
 
       switch(result) {
-        case Success<ProfileData>(data:final profileData):
+        case Success(data:final profileData):
         // Update user in secure storage with new profile data
           await _updateSecureStorageUser(currentUser, profileData);
 
           ToastUtil.showSuccess('Profile updated successfully');
           context.pop(); // Go back to previous screen
 
-        case Failure<ProfileData>(message:final msg):
+        case Failure(message:final msg):
           ToastUtil.showError('Failed to update profile: $msg');
       }
     } catch (e) {
@@ -324,27 +365,54 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
               ),
               const SizedBox(height: 8),
 
-              Wrap(
-                spacing: 8,
-                children: _poultryTypes.map((type) {
-                  return ChoiceChip(
-                    label: Text(
-                      type == 'both' ? 'Both Layers & Broilers' : type.toUpperCase(),
-                      style: TextStyle(
-                        color: _selectedPoultryType == type
-                            ? Colors.white
-                            : Colors.black87,
+              _isLoadingBirdTypes
+                  ? Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade400),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Colors.green,
+                        ),
                       ),
                     ),
-                    selected: _selectedPoultryType == type,
-                    selectedColor: Colors.green,
-                    onSelected: (selected) {
-                      setState(() {
-                        _selectedPoultryType = selected ? type : null;
-                      });
-                    },
+                    const SizedBox(width: 12),
+                    Text(
+                      'Loading bird types...',
+                      style: TextStyle(color: Colors.grey.shade600),
+                    ),
+                  ],
+                ),
+              )
+                  : ReusableDropdown<String>(
+                topLabel: 'Bird Type',
+                value: _selectedPoultryType,
+                hintText: 'Select bird type',
+                items: _birdTypes.map((BirdType type) {
+                  return DropdownMenuItem<String>(
+                    value: type.id,
+                    child: Text(type.name),
                   );
                 }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedPoultryType = newValue;
+                  });
+                },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please select a bird type';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
 

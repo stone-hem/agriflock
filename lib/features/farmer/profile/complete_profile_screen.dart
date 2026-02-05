@@ -48,6 +48,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   String? _selectedPoultryType;
   final TextEditingController _houseCapacityController = TextEditingController();
   final TextEditingController _otherPoultryTypeController = TextEditingController();
+  final TextEditingController _preferredAgrovetController = TextEditingController();
+  final TextEditingController _preferredFeedCompanyController = TextEditingController();
+
 
   // Loading state
   bool _isLoading = false;
@@ -57,6 +60,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   final FocusNode _idNumberFocus = FocusNode();
   final FocusNode _houseCapacityFocus = FocusNode();
   final FocusNode _otherPoultryTypeFocus = FocusNode();
+  final FocusNode _preferredAgrovetFocus = FocusNode();
+  final FocusNode _preferredFeedCompanyFocus = FocusNode();
+
+
 
 
   final List<ProfileStep> _profileSteps = [
@@ -91,6 +98,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       _idNumberController.text = widget.profileData!.nationalId ?? '';
       _dobController.text = widget.profileData!.dateOfBirth ?? '';
       _selectedGender = widget.profileData!.gender ?? '';
+      _selectedPoultryType = widget.profileData!.poultryTypeId ?? '';
+      _houseCapacityController.text = widget.profileData!.chickenHouseCapacity.toString();
+      _preferredAgrovetController.text = widget.profileData!.preferredAgrovetName ?? '';
+      _preferredFeedCompanyController.text = widget.profileData!.preferredFeedCompany ?? '';
     }
   }
 
@@ -140,6 +151,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     _idNumberFocus.dispose();
     _houseCapacityFocus.dispose();
     _otherPoultryTypeFocus.dispose();
+    _preferredAgrovetFocus.dispose();
+    _preferredFeedCompanyFocus.dispose();
+    _preferredAgrovetController.dispose();
+    _preferredFeedCompanyController.dispose();
     super.dispose();
   }
 
@@ -168,7 +183,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       case 0: // Personal Information
         return _idNumberController.text.trim().isNotEmpty &&
             _dobController.text.trim().isNotEmpty &&
-            _selectedGender != null;
+            _selectedGender != null && _preferredAgrovetController.text.trim().isNotEmpty &&
+            _preferredFeedCompanyController.text.trim().isNotEmpty;
 
       case 1: // Farm Operations
         final hasPoultryType = _selectedPoultryType != null;
@@ -240,6 +256,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         'gender': _selectedGender,
         'poultry_type_id': _selectedPoultryType,
         'chicken_house_capacity': int.tryParse(_houseCapacityController.text.trim()) ?? 0,
+        'preferred_agrovet_name': _preferredAgrovetController.text.trim(),
+        'preferred_feed_company': _preferredFeedCompanyController.text.trim(),
       };
 
       LogUtil.warning('Profile Data: $profileData');
@@ -288,10 +306,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           nationalId: _idNumberController.text.trim(),
           dateOfBirth: _dobController.text.trim(),
           gender: _selectedGender,
-          poultryType: _selectedPoultryType == 'Other'
-              ? _otherPoultryTypeController.text.trim()
-              : _selectedPoultryType,
+          poultryType:_selectedPoultryType,
           chickenHouseCapacity: int.tryParse(_houseCapacityController.text.trim()) ?? 0,
+          preferredAgrovetName: _preferredAgrovetController.text.trim(),
+          preferredFeedCompany: _preferredFeedCompanyController.text.trim(),
         );
 
         // Save updated user to secure storage
@@ -567,6 +585,27 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   _selectedGender = gender.toLowerCase();
                 });
               },
+            ),
+
+
+            const SizedBox(height: 20),
+            ReusableInput(
+              controller: _preferredAgrovetController,
+              focusNode: _preferredAgrovetFocus,
+              topLabel: 'Preferred Agrovet *',
+              labelText: 'Preferred Agrovet *',
+              hintText: 'Enter your preferred agrovet',
+              icon: Icons.input,
+            ),
+
+            const SizedBox(height: 20),
+            ReusableInput(
+              controller: _preferredFeedCompanyController,
+              focusNode: _preferredFeedCompanyFocus,
+              topLabel: 'Preferred Feed Company *',
+              labelText: 'Preferred Feed Company *',
+              hintText: 'Enter your preferred Feed Company',
+              icon: Icons.input,
             ),
           ],
         ),

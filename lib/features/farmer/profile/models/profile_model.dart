@@ -5,7 +5,7 @@ class UpdateProfileRequest {
   final String phoneNumber;
   final Location location;
   final int yearsOfExperience;
-  final String poultryType;
+  final String poultryTypeId;
   final int chickenHouseCapacity;
   final int currentNumberOfChickens;
   final String preferredAgrovetName;
@@ -16,7 +16,7 @@ class UpdateProfileRequest {
     required this.phoneNumber,
     required this.location,
     required this.yearsOfExperience,
-    required this.poultryType,
+    required this.poultryTypeId,
     required this.chickenHouseCapacity,
     required this.currentNumberOfChickens,
     required this.preferredAgrovetName,
@@ -29,7 +29,7 @@ class UpdateProfileRequest {
       'phone_number': phoneNumber,
       'location': location.toJson(),
       'years_of_experience': yearsOfExperience,
-      'poultry_type': poultryType,
+      'poultry_type_id': poultryTypeId,
       'chicken_house_capacity': chickenHouseCapacity,
       'current_number_of_chickens': currentNumberOfChickens,
       'preferred_agrovet_name': preferredAgrovetName,

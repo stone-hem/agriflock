@@ -14,7 +14,7 @@ import '../models/profile_model.dart';
 class ProfileRepository {
 
   /// Update user profile
-  Future<Result<ProfileData>> updateProfile(
+  Future<Result> updateProfile(
       UpdateProfileRequest request,
       ) async {
     try {
@@ -25,23 +25,14 @@ class ProfileRepository {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: jsonEncode(request.toJson()),
+        body: request.toJson(),
       );
 
       final jsonResponse = jsonDecode(response.body);
       LogUtil.info('Update Profile API Response: ${response.body}');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        if (jsonResponse['data'] != null) {
-          final profileData = ProfileData.fromJson(jsonResponse['data']);
-          return Success(profileData);
-        } else {
-          return Failure(
-            message: 'Invalid response format: data field is missing',
-            response: response,
-            statusCode: response.statusCode,
-          );
-        }
+        return Success(null);
       } else {
         return Failure(
           message: jsonResponse['message'] ?? 'Failed to update profile',

@@ -102,7 +102,7 @@ class _QuotationScreenState extends State<QuotationScreen>
     }
 
     // Check poultry type
-    if (profile.poultryTypeId==null) {
+    if (profile.poultryTypeId != null && profile.poultryTypeId!.isNotEmpty) {
       completedFields++;
     }
 
