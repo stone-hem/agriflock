@@ -5,6 +5,8 @@ class ItemSelectionView extends StatefulWidget {
   final InventoryCategory category;
   final CategoryItem? selectedItem;
   final Function(CategoryItem) onItemSelected;
+  final Function(String customName)? onCustomItemSelected;
+  final String? customOtherName;
   final VoidCallback onBack;
 
   const ItemSelectionView({
@@ -12,6 +14,8 @@ class ItemSelectionView extends StatefulWidget {
     required this.category,
     this.selectedItem,
     required this.onItemSelected,
+    this.onCustomItemSelected,
+    this.customOtherName,
     required this.onBack,
   });
 
@@ -22,6 +26,14 @@ class ItemSelectionView extends StatefulWidget {
 class _ItemSelectionViewState extends State<ItemSelectionView> {
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _customNameController = TextEditingController();
+  bool _showCustomInput = false;
+  bool _isCustomSelected = false;
+
+  bool get _isOthersCategory {
+    return widget.category.name.toLowerCase() == 'others' ||
+        widget.category.name.toLowerCase() == 'other';
+  }
 
   List<CategoryItem> get _filteredItems {
     if (_searchQuery.isEmpty) {
@@ -31,6 +43,16 @@ class _ItemSelectionViewState extends State<ItemSelectionView> {
       return item.categoryItemName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           item.description.toLowerCase().contains(_searchQuery.toLowerCase());
     }).toList();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.customOtherName != null && widget.customOtherName!.isNotEmpty) {
+      _customNameController.text = widget.customOtherName!;
+      _isCustomSelected = true;
+      _showCustomInput = true;
+    }
   }
 
   IconData _getItemIcon(String itemName) {
@@ -163,7 +185,170 @@ class _ItemSelectionViewState extends State<ItemSelectionView> {
                 ),
                 const SizedBox(height: 20),
 
-                if (items.isEmpty)
+                // Add Custom Item Option for Others category
+                if (_isOthersCategory && widget.onCustomItemSelected != null) ...[
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _showCustomInput = true;
+                        _isCustomSelected = true;
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: _isCustomSelected ? categoryColor.withOpacity(0.1) : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _isCustomSelected ? categoryColor : Colors.green.shade300,
+                          width: _isCustomSelected ? 2 : 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.green.shade100,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              Icons.add,
+                              size: 24,
+                              color: Colors.green.shade700,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Add Custom Item',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.green.shade700,
+                                  ),
+                                ),
+                                Text(
+                                  'Enter a custom expense name',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (_isCustomSelected)
+                            Icon(
+                              Icons.check_circle,
+                              color: categoryColor,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Custom name input field
+                  if (_showCustomInput)
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      margin: const EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.green.shade200),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Custom Item Name',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: _customNameController,
+                            decoration: InputDecoration(
+                              hintText: 'Enter item name',
+                              filled: true,
+                              fillColor: Colors.white,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(color: Colors.grey.shade300),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(color: Colors.grey.shade300),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(color: Colors.green.shade400),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                final customName = _customNameController.text.trim();
+                                if (customName.isNotEmpty) {
+                                  widget.onCustomItemSelected!(customName);
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: const Text('Continue with Custom Item'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  if (items.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Row(
+                        children: [
+                          Expanded(child: Divider(color: Colors.grey.shade300)),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              'Or select existing',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade500,
+                              ),
+                            ),
+                          ),
+                          Expanded(child: Divider(color: Colors.grey.shade300)),
+                        ],
+                      ),
+                    ),
+                ],
+
+                if (items.isEmpty && !_isOthersCategory)
                   Center(
                     child: Padding(
                       padding: const EdgeInsets.all(32),
@@ -186,7 +371,7 @@ class _ItemSelectionViewState extends State<ItemSelectionView> {
                       ),
                     ),
                   )
-                else
+                else if (items.isNotEmpty)
                   ListView.separated(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -194,10 +379,16 @@ class _ItemSelectionViewState extends State<ItemSelectionView> {
                     separatorBuilder: (context, index) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final item = items[index];
-                      final isSelected = widget.selectedItem?.id == item.id;
+                      final isSelected = widget.selectedItem?.id == item.id && !_isCustomSelected;
 
                       return GestureDetector(
-                        onTap: () => widget.onItemSelected(item),
+                        onTap: () {
+                          setState(() {
+                            _isCustomSelected = false;
+                            _showCustomInput = false;
+                          });
+                          widget.onItemSelected(item);
+                        },
                         child: Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
@@ -315,6 +506,7 @@ class _ItemSelectionViewState extends State<ItemSelectionView> {
   @override
   void dispose() {
     _searchController.dispose();
+    _customNameController.dispose();
     super.dispose();
   }
 }

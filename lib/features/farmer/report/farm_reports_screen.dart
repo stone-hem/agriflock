@@ -2,8 +2,8 @@ import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
+import 'package:agriflock360/core/widgets/expense/expense_marquee_banner.dart';
 import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
-import 'package:agriflock360/features/farmer/report/models/batch_report_model.dart';
 import 'package:agriflock360/features/farmer/report/models/farm_batch_report_model.dart';
 import 'package:agriflock360/features/farmer/report/repo/report_repo.dart';
 import 'package:flutter/material.dart';
@@ -122,6 +122,7 @@ class _FarmReportsScreenState extends State<FarmReportsScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
+      bottomNavigationBar: const ExpenseMarqueeBannerCompact(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -515,7 +516,7 @@ class _FarmReportsScreenState extends State<FarmReportsScreen> {
     );
   }
 
-  Widget _buildBatchReportCard(BatchReportData batch) {
+  Widget _buildBatchReportCard(BatchReport batch) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),

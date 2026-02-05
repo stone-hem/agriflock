@@ -45,6 +45,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
   // Selected values
   InventoryCategory? _selectedCategory;
   CategoryItem? _selectedItem;
+  String? _customOtherName; // For "Others" category custom items
   double? _quantity;
   double? _unitPrice;
   double? _totalPrice;
@@ -53,6 +54,15 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
 
   // Usage choice
   bool _useNow=true; // true = use now, false = store
+
+  bool get _isOthersCategory {
+    return _selectedCategory?.name.toLowerCase() == 'others' ||
+        _selectedCategory?.name.toLowerCase() == 'other';
+  }
+
+  bool get _hasCustomOtherName {
+    return _customOtherName != null && _customOtherName!.isNotEmpty;
+  }
 
   // Batch selection (if use now)
   BatchListItem? _selectedBatch;
@@ -161,22 +171,42 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
     setState(() => _isSubmitting = true);
 
     try {
-      final expenditureData = {
-        if (widget.farm != null) 'farm_id': widget.farm!.id,
-        'category_id': _selectedCategory!.id,
-        'category_item_id': _selectedItem!.id,
-        'description': _selectedItem!.categoryItemName,
-        'amount': _totalPrice,
-        'quantity': _quantity,
-        'unit': 'unit', // You can add unit selection if needed
-        'date': _selectedDate.toUtc().toIso8601String(),
-        'notes': null,
-        if (_methodOfAdministration != null) 'method_of_administration': _methodOfAdministration,
-        if (_selectedBatch != null) 'batch_id': _selectedBatch!.id,
-        if (_selectedBatch != null && _selectedBatch!.houseId != null) 'house_id': _selectedBatch!.houseId,
-        'used_immediately': _useNow,
-        if (_dosesUsed != null) 'doses_used': _dosesUsed,
-      };
+      Map<String, dynamic> expenditureData;
+
+      // Check if this is an "Others" category with custom name
+      if (_isOthersCategory && _hasCustomOtherName) {
+        // Payload format for custom "Others" items
+        expenditureData = {
+          'category_id': _selectedCategory!.id,
+          'other_name': _customOtherName,
+          'used_immediately': _useNow,
+          'amount': _totalPrice,
+          'quantity': _quantity?.toInt() ?? 1,
+          'unit': 'unit',
+          'date': _selectedDate.toUtc().toIso8601String(),
+          if (widget.farm != null) 'farm_id': widget.farm!.id,
+          if (_selectedBatch != null) 'batch_id': _selectedBatch!.id,
+          if (_selectedBatch != null && _selectedBatch!.houseId != null) 'house_id': _selectedBatch!.houseId,
+        };
+      } else {
+        // Standard payload with category_item_id
+        expenditureData = {
+          if (widget.farm != null) 'farm_id': widget.farm!.id,
+          'category_id': _selectedCategory!.id,
+          'category_item_id': _selectedItem!.id,
+          'description': _selectedItem!.categoryItemName,
+          'amount': _totalPrice,
+          'quantity': _quantity,
+          'unit': 'unit',
+          'date': _selectedDate.toUtc().toIso8601String(),
+          'notes': null,
+          if (_methodOfAdministration != null) 'method_of_administration': _methodOfAdministration,
+          if (_selectedBatch != null) 'batch_id': _selectedBatch!.id,
+          if (_selectedBatch != null && _selectedBatch!.houseId != null) 'house_id': _selectedBatch!.houseId,
+          'used_immediately': _useNow,
+          if (_dosesUsed != null) 'doses_used': _dosesUsed,
+        };
+      }
 
       LogUtil.warning(expenditureData);
 
@@ -254,17 +284,34 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
                 ItemSelectionView(
                   category: _selectedCategory!,
                   selectedItem: _selectedItem,
+                  customOtherName: _customOtherName,
                   onItemSelected: (item) {
-                    setState(() => _selectedItem = item);
+                    setState(() {
+                      _selectedItem = item;
+                      _customOtherName = null; // Clear custom name when selecting existing item
+                    });
                     _nextPage();
                   },
+                  onCustomItemSelected: _isOthersCategory ? (customName) {
+                    setState(() {
+                      _customOtherName = customName;
+                      _selectedItem = null; // Clear selected item when using custom
+                    });
+                    _nextPage();
+                  } : null,
                   onBack: _previousPage,
                 ),
 
                 // Step 3: Quantity & Price
-                if(_selectedItem != null)
+                if(_selectedItem != null || _hasCustomOtherName)
                 QuantityPriceView(
-                  item: _selectedItem!,
+                  item: _selectedItem ?? CategoryItem(
+                    id: 'custom',
+                    categoryItemName: _customOtherName ?? 'Custom Item',
+                    description: 'Custom expense item',
+                    components: null,
+                    useFromStore: false,
+                  ),
                   category: _selectedCategory!,
                   quantity: _quantity,
                   unitPrice: _unitPrice,
@@ -286,6 +333,12 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
                       _methodOfAdministration = methodOfAdministration;
                       _selectedDate = selectedDate;
                     });
+                    // For custom "Others" items, skip usage choice - always use immediately
+                    if (_hasCustomOtherName) {
+                      setState(() => _useNow = true);
+                      _goToPage(4); // Skip usage choice, go to batch selection
+                      return;
+                    }
                     // Check if category and item can use from store
                     // If not, skip usage choice and go directly to batch selection
                     if (_selectedCategory!.useFromStore && _selectedItem!.useFromStore) {
@@ -300,9 +353,15 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
                 ),
 
                 // Step 4: Usage Choice (only shown if useFromStore is true for both category and item)
-                if(_selectedItem != null  && _quantity != null && _totalPrice != null)
+                if((_selectedItem != null || _hasCustomOtherName) && _quantity != null && _totalPrice != null)
                 UsageChoiceView(
-                  item: _selectedItem!,
+                  item: _selectedItem ?? CategoryItem(
+                    id: 'custom',
+                    categoryItemName: _customOtherName ?? 'Custom Item',
+                    description: 'Custom expense item',
+                    components: null,
+                    useFromStore: false,
+                  ),
                   quantity: _quantity!,
                   totalPrice: _totalPrice!,
                   onChoice: (useNow) {
@@ -319,13 +378,19 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
                 ),
 
                 // Step 5: Batch Selection (if use now)
-                if (_useNow == true && _selectedItem != null && _selectedCategory != null && _quantity != null && _totalPrice != null)
+                if (_useNow == true && (_selectedItem != null || _hasCustomOtherName) && _selectedCategory != null && _quantity != null && _totalPrice != null)
                   BatchSelectionView(
                     farm: widget.farm,
                     batches: _batches,
                     selectedBatch: _selectedBatch,
                     isLoadingBatches: _isLoadingBatches,
-                    item: _selectedItem!,
+                    item: _selectedItem ?? CategoryItem(
+                      id: 'custom',
+                      categoryItemName: _customOtherName ?? 'Custom Item',
+                      description: 'Custom expense item',
+                      components: null,
+                      useFromStore: false,
+                    ),
                     category: _selectedCategory!,
                     quantity: _quantity!,
                     onBatchSelected: (batch) {
@@ -340,10 +405,16 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
                   ),
 
                 // Step 6: Success
-                if(_selectedItem != null && _selectedCategory != null && _quantity != null && _totalPrice != null)
+                if((_selectedItem != null || _hasCustomOtherName) && _selectedCategory != null && _quantity != null && _totalPrice != null)
                 SuccessView(
                   useNow: _useNow,
-                  item: _selectedItem!,
+                  item: _selectedItem ?? CategoryItem(
+                    id: 'custom',
+                    categoryItemName: _customOtherName ?? 'Custom Item',
+                    description: 'Custom expense item',
+                    components: null,
+                    useFromStore: false,
+                  ),
                   category: _selectedCategory!,
                   quantity: _quantity!,
                   totalPrice: _totalPrice!,
@@ -368,9 +439,9 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
       case 1:
         return _selectedCategory?.name ?? 'Select Item';
       case 2:
-        return _selectedItem?.categoryItemName ?? 'Quantity & Price';
+        return _customOtherName ?? _selectedItem?.categoryItemName ?? 'Quantity & Price';
       case 3:
-        return _selectedItem?.categoryItemName ?? 'Usage';
+        return _customOtherName ?? _selectedItem?.categoryItemName ?? 'Usage';
       case 4:
         return 'Select Batch';
       case 5:

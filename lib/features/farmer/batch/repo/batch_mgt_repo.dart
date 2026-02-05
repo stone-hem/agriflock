@@ -224,4 +224,60 @@ class BatchMgtRepository {
       return Failure(message: e.toString());
     }
   }
+
+  /// Record mortality or other count changes for a batch
+  /// Endpoint: POST /batchs/{batchId}/count
+  /// Payload: { change_type: "mortality", change_amount: int, reason: string }
+  Future<Result<void>> recordMortality({
+    required String batchId,
+    required int changeAmount,
+    required String reason,
+    String changeType = 'mortality',
+  }) async {
+    try {
+      final requestBody = {
+        'change_type': changeType,
+        'change_amount': changeAmount,
+        'reason': reason,
+      };
+
+      LogUtil.info('Recording mortality for batch $batchId: $requestBody');
+
+      final response = await apiClient.post(
+        '/batchs/$batchId/count',
+        body: requestBody,
+      );
+
+      final jsonResponse = jsonDecode(response.body);
+      LogUtil.info('Record Mortality API Response: $jsonResponse');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return const Success(null);
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to record mortality',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in recordMortality: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
+    } catch (e) {
+      LogUtil.error('Error in recordMortality: $e');
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to record mortality',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+
+      return Failure(message: e.toString());
+    }
+  }
 }

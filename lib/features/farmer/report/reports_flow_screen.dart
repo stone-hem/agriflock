@@ -1,6 +1,7 @@
 import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/widgets/disclaimer_widget.dart';
+import 'package:agriflock360/core/widgets/expense/expense_marquee_banner.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_list_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/batch_mgt_repo.dart';
 import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
@@ -156,6 +157,7 @@ class _ReportsFlowScreenState extends State<ReportsFlowScreen> {
           },
         ),
       ),
+      bottomNavigationBar: const ExpenseMarqueeBannerCompact(),
       body: Column(
         children: [
           // Progress indicator

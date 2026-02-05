@@ -38,6 +38,7 @@ import 'package:agriflock360/features/farmer/profile/settings_screen.dart';
 import 'package:agriflock360/features/farmer/profile/telemetry_data_screen.dart';
 import 'package:agriflock360/features/farmer/profile/update_profile_screen.dart';
 import 'package:agriflock360/features/farmer/record/quick_record.dart';
+import 'package:agriflock360/features/farmer/batch/record_mortality_screen.dart';
 import 'package:agriflock360/features/farmer/report/batch/batch_report_screen.dart';
 import 'package:agriflock360/features/farmer/report/batch/batch_selection_screen.dart';
 import 'package:agriflock360/features/farmer/report/farm_reports_screen.dart';
@@ -391,6 +392,16 @@ class AppRoutes {
           builder: (context, state) {
             final farm = state.extra as FarmModel?;
             return UseFromStorePageView(farm: farm,);
+          },
+        ),
+        GoRoute(
+          path: '/record-mortality',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            return RecordMortalityScreen(
+              farm: extra?['farm'] as FarmModel?,
+              batch: extra?['batch'] as BatchListItem?,
+            );
           },
         ),
         GoRoute(

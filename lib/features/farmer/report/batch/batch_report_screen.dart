@@ -1,5 +1,6 @@
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
+import 'package:agriflock360/core/widgets/expense/expense_marquee_banner.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_list_model.dart';
 import 'package:agriflock360/features/farmer/report/models/batch_report_model.dart';
 import 'package:agriflock360/features/farmer/report/repo/report_repo.dart';
@@ -184,6 +185,7 @@ class _BatchReportScreenState extends State<BatchReportScreen> {
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
       ),
+      bottomNavigationBar: const ExpenseMarqueeBannerCompact(),
       body: SingleChildScrollView(
         child: Column(
           children: [

@@ -19,6 +19,7 @@ import 'package:agriflock360/features/farmer/home/view/widgets/welcome_section.d
 import 'package:agriflock360/features/farmer/payg/flow/day_27_decision_modal.dart';
 import 'package:agriflock360/features/farmer/home/view/widgets/future_framing_banner.dart';
 import 'package:agriflock360/features/farmer/home/view/widgets/value_confirmation_banner.dart';
+import 'package:agriflock360/core/widgets/expense/expense_marquee_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -440,6 +441,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+      bottomNavigationBar: const ExpenseMarqueeBannerCompact(),
       body: Stack(
         children: [
           _isLoading
@@ -646,18 +648,18 @@ class _HomeScreenState extends State<HomeScreen> {
           onTap: () => context.push('/quick-recording'),
         ),
         _buildQuickActionCard(
+          icon: Icons.warning_amber_rounded,
+          title: 'Record Mortality',
+          subtitle: 'Log bird losses',
+          color: Colors.orange,
+          onTap: () => context.push('/record-mortality'),
+        ),
+        _buildQuickActionCard(
           icon: Icons.assessment,
           title: 'Reports',
           subtitle: 'View batch or farm reports',
           color: Colors.blue,
           onTap: () => context.push('/reports'),
-        ),
-        _buildQuickActionCard(
-          icon: Icons.card_membership,
-          title: 'Subscription',
-          subtitle: 'Manage plans',
-          color: Colors.purple,
-          onTap: () => context.push('/payg'),
         ),
       ],
     );
