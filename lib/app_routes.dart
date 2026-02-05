@@ -41,6 +41,7 @@ import 'package:agriflock360/features/farmer/record/quick_record.dart';
 import 'package:agriflock360/features/farmer/report/batch/batch_report_screen.dart';
 import 'package:agriflock360/features/farmer/report/batch/batch_selection_screen.dart';
 import 'package:agriflock360/features/farmer/report/farm_reports_screen.dart';
+import 'package:agriflock360/features/farmer/report/reports_flow_screen.dart';
 import 'package:agriflock360/features/farmer/vet/completed_orders_screen.dart';
 import 'package:agriflock360/features/farmer/vet/models/my_order_list_item.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_farmer_model.dart';
@@ -393,6 +394,10 @@ class AppRoutes {
           },
         ),
         GoRoute(
+          path: '/reports',
+          builder: (context, state) => const ReportsFlowScreen(),
+        ),
+        GoRoute(
           path: '/batch-report/batch-selection',
           builder: (context, state) {
             final farm = state.extra as FarmModel?;
@@ -408,7 +413,16 @@ class AppRoutes {
         ),
         GoRoute(
           path: '/farm-reports',
-          builder: (context, state) => const FarmReportsScreen(),
+          builder: (context, state) {
+            final farm = state.extra as FarmModel?;
+            if (farm == null) {
+              return const ErrorScreen(
+                title: 'Farm Required',
+                message: 'Please select a farm to view its report.',
+              );
+            }
+            return FarmReportsScreen(farm: farm);
+          },
         ),
 
         GoRoute(

@@ -9,10 +9,7 @@ import 'package:flutter/material.dart';
 class BatchReportScreen extends StatefulWidget {
   final BatchListItem batch;
 
-  const BatchReportScreen({
-    super.key,
-    required this.batch,
-  });
+  const BatchReportScreen({super.key, required this.batch});
 
   @override
   State<BatchReportScreen> createState() => _BatchReportScreenState();
@@ -24,7 +21,7 @@ class _BatchReportScreenState extends State<BatchReportScreen> {
   // Filter state
   late TextEditingController _startDateController;
   late TextEditingController _endDateController;
-  String _selectedQuickRange = 'week'; // Track selected quick range
+  String _selectedQuickRange = 'week';
 
   // Report state
   BatchReportResponse? _reportData;
@@ -142,7 +139,6 @@ class _BatchReportScreenState extends State<BatchReportScreen> {
   }
 
   void _showCustomDatePicker() {
-    // Reset quick range selection when custom is chosen
     setState(() {
       _selectedQuickRange = 'custom';
     });
@@ -176,122 +172,105 @@ class _BatchReportScreenState extends State<BatchReportScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
-      body: NestedScrollView(
-        headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
-          return [
-            // Header
-            SliverAppBar(
-              backgroundColor: Colors.white,
-              pinned: true,
-              elevation: 0,
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => Navigator.pop(context),
-              ),
-              title: Text(
-                widget.batch.batchName,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            // Filter section
-            SliverToBoxAdapter(
-              child: Container(
-                color: Colors.white,
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Title and custom date button
-                    Row(
-                      children: [
-                        const Text(
-                          'Date Range',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
-                          ),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          widget.batch.batchName,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Text(
+                        'Date Range',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
                         ),
-                        const Spacer(),
-                        TextButton.icon(
-                          onPressed: _showCustomDatePicker,
-                          icon: const Icon(Icons.edit_calendar, size: 16),
-                          label: const Text(
-                            'Custom',
-                            style: TextStyle(fontSize: 12),
-                          ),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      const Spacer(),
+                      TextButton.icon(
+                        onPressed: _showCustomDatePicker,
+                        icon: const Icon(Icons.edit_calendar, size: 16),
+                        label: const Text('Custom', style: TextStyle(fontSize: 12)),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 36,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const ClampingScrollPhysics(),
+                      children: [
+                        const SizedBox(width: 8),
+                        _buildQuickChip('Today', 'today'),
+                        const SizedBox(width: 8),
+                        _buildQuickChip('Last Week', 'week'),
+                        const SizedBox(width: 8),
+                        _buildQuickChip('Last Month', 'month'),
+                        const SizedBox(width: 8),
+                        _buildQuickChip('Last Year', 'year'),
+                        const SizedBox(width: 8),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.blue.shade200),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.date_range, size: 16, color: Colors.blue.shade700),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${_formatDate(_startDate)} - ${_formatDate(_endDate)}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.blue.shade700,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-
-                    // Quick select chips
-                    SizedBox(
-                      height: 36,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        children: [
-                          const SizedBox(width: 8),
-                          _buildQuickChip('Today', 'today'),
-                          const SizedBox(width: 8),
-                          _buildQuickChip('Last Week', 'week'),
-                          const SizedBox(width: 8),
-                          _buildQuickChip('Last Month', 'month'),
-                          const SizedBox(width: 8),
-                          _buildQuickChip('Last Year', 'year'),
-                          const SizedBox(width: 8),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // Active date range display
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.blue.shade200),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.date_range, size: 16, color: Colors.blue.shade700),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${_formatDate(_startDate)} - ${_formatDate(_endDate)}',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.blue.shade700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-          ];
-        },
-        body: _buildReportContent(),
+            _buildReportContent(),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildQuickChip(String label, String range) {
     final isSelected = _selectedQuickRange == range;
-
     return GestureDetector(
       onTap: () => _setQuickRange(range),
       child: Container(
@@ -308,11 +287,7 @@ class _BatchReportScreenState extends State<BatchReportScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (isSelected)
-              Icon(
-                Icons.check_circle,
-                size: 14,
-                color: Colors.blue.shade700,
-              ),
+              Icon(Icons.check_circle, size: 14, color: Colors.blue.shade700),
             if (isSelected) const SizedBox(width: 6),
             Text(
               label,
@@ -330,79 +305,66 @@ class _BatchReportScreenState extends State<BatchReportScreen> {
 
   Widget _buildReportContent() {
     if (_isLoadingReport) {
-      return const Center(child: CircularProgressIndicator());
+      return const Padding(
+        padding: EdgeInsets.all(40),
+        child: Center(child: CircularProgressIndicator()),
+      );
     }
 
     if (_reportError != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 48, color: Colors.red),
-              const SizedBox(height: 16),
-              Text(
-                'Error: $_reportError',
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _loadReport,
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
+      return Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            const SizedBox(height: 16),
+            Text('Error: $_reportError', textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: _loadReport, child: const Text('Retry')),
+          ],
         ),
       );
     }
 
     if (_reportData == null || _reportData!.data.isEmpty) {
-      return Center(
+      return Padding(
+        padding: const EdgeInsets.all(20),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.assignment_outlined, size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 16),
             Text(
               'No report data available',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.grey.shade700),
             ),
             const SizedBox(height: 8),
-            Text(
-              'Try adjusting the date range',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade500,
-              ),
-            ),
+            Text('Try adjusting the date range', style: TextStyle(fontSize: 14, color: Colors.grey.shade500)),
           ],
         ),
       );
     }
 
     final report = _reportData!.data.first;
-    return ListView(
+    return Padding(
       padding: const EdgeInsets.all(20),
-      children: [
-        _buildBatchHeader(report),
-        const SizedBox(height: 20),
-        _buildMortalityCard(report.mortality),
-        const SizedBox(height: 16),
-        _buildFeedCard(report.feed),
-        const SizedBox(height: 16),
-        _buildVaccinationCard(report.vaccination),
-        const SizedBox(height: 16),
-        _buildMedicationCard(report.medication),
-        if (report.eggProduction != null) ...[
+      child: Column(
+        children: [
+          _buildBatchHeader(report),
+          const SizedBox(height: 20),
+          _buildMortalityCard(report.mortality),
           const SizedBox(height: 16),
-          _buildEggProductionCard(report.eggProduction!),
+          _buildFeedCard(report.feed),
+          const SizedBox(height: 16),
+          _buildVaccinationCard(report.vaccination),
+          const SizedBox(height: 16),
+          _buildMedicationCard(report.medication),
+          if (report.eggProduction != null) ...[
+            const SizedBox(height: 16),
+            _buildEggProductionCard(report.eggProduction!),
+          ],
+          const SizedBox(height: 20),
         ],
-      ],
+      ),
     );
   }
 
@@ -421,10 +383,7 @@ class _BatchReportScreenState extends State<BatchReportScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade100,
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: Colors.blue.shade100, shape: BoxShape.circle),
                 child: Icon(Icons.assessment, color: Colors.blue.shade700),
               ),
               const SizedBox(width: 12),
@@ -432,21 +391,8 @@ class _BatchReportScreenState extends State<BatchReportScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      report.batchNumber,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue.shade800,
-                      ),
-                    ),
-                    Text(
-                      '${report.farmName} - ${report.houseName}',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.blue.shade600,
-                      ),
-                    ),
+                    Text(report.batchNumber, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue.shade800)),
+                    Text('${report.farmName} - ${report.houseName}', style: TextStyle(fontSize: 13, color: Colors.blue.shade600)),
                   ],
                 ),
               ),
@@ -469,109 +415,64 @@ class _BatchReportScreenState extends State<BatchReportScreen> {
     return Expanded(
       child: Column(
         children: [
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.blue.shade800,
-            ),
-          ),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.blue.shade600,
-            ),
-          ),
+          Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue.shade800)),
+          Text(label, style: TextStyle(fontSize: 11, color: Colors.blue.shade600)),
         ],
       ),
     );
   }
 
   Widget _buildMortalityCard(BatchMortality mortality) {
-    return _buildReportCard(
+    return _buildSimpleCard(
       title: 'Mortality',
       icon: Icons.warning_amber,
       color: Colors.red,
-      child: Column(
-        children: [
-          Row(
-            children: [
-              _buildStatItem('Day', '${mortality.day}', Colors.orange),
-              _buildStatItem('Night', '${mortality.night}', Colors.indigo),
-              _buildStatItem('24hrs', '${mortality.total24hrs}', Colors.red),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _buildStatItem('Cumulative', '${mortality.cumulativeTotal}', Colors.purple),
-              _buildStatItem('Remaining', '${mortality.birdsRemaining}', Colors.green),
-            ],
-          ),
-          if (mortality.reason.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: Text(
-                'Reason: ${mortality.reason}',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ),
-        ],
-      ),
+      stats: [
+        _StatData('Day', '${mortality.day}', Colors.orange),
+        _StatData('Night', '${mortality.night}', Colors.indigo),
+        _StatData('24hrs', '${mortality.total24hrs}', Colors.red),
+        _StatData('Cumulative', '${mortality.cumulativeTotal}', Colors.purple),
+        _StatData('Remaining', '${mortality.birdsRemaining}', Colors.green),
+      ],
+      footer: mortality.reason.isNotEmpty
+          ? Text('Reason: ${mortality.reason}', style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontStyle: FontStyle.italic))
+          : null,
     );
   }
 
   Widget _buildFeedCard(BatchFeed feed) {
-    return _buildReportCard(
+    return _buildSimpleCard(
       title: 'Feed',
       icon: Icons.fastfood,
       color: Colors.orange,
-      child: Column(
-        children: [
-          Row(
-            children: [
-              _buildStatItem('Consumed', '${feed.bagsConsumed} bags', Colors.orange),
-              _buildStatItem('Total', '${feed.totalBagsConsumed} bags', Colors.amber),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _buildStatItem('In Store', '${feed.balanceInStore} bags', Colors.green),
-              _buildStatItem('Type', feed.feedType, Colors.blue),
-            ],
-          ),
-        ],
-      ),
+      stats: [
+        _StatData('Consumed', '${feed.bagsConsumed} bags', Colors.orange),
+        _StatData('Total', '${feed.totalBagsConsumed} bags', Colors.amber),
+        _StatData('In Store', '${feed.balanceInStore} bags', Colors.green),
+        _StatData('Type', feed.feedType, Colors.blue),
+      ],
     );
   }
 
   Widget _buildVaccinationCard(BatchVaccination vaccination) {
-    return _buildReportCard(
+    return _buildSimpleCard(
       title: 'Vaccination',
       icon: Icons.vaccines,
       color: Colors.blue,
-      child: Column(
+      stats: [
+        _StatData('Done', '${vaccination.vaccinesDone.length}', Colors.green),
+        _StatData('Upcoming', '${vaccination.vaccinesUpcoming.length}', Colors.orange),
+      ],
+      footer: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              _buildStatItem('Done', '${vaccination.vaccinesDone.length}', Colors.green),
-              _buildStatItem('Upcoming', '${vaccination.vaccinesUpcoming.length}', Colors.orange),
-            ],
-          ),
           if (vaccination.vaccinesDone.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            _buildVaccineList('Completed', vaccination.vaccinesDone, Colors.green),
+            const SizedBox(height: 8),
+            _buildVaccineChips('Completed', vaccination.vaccinesDone, Colors.green),
           ],
           if (vaccination.vaccinesUpcoming.isNotEmpty) ...[
             const SizedBox(height: 8),
-            _buildVaccineList('Upcoming', vaccination.vaccinesUpcoming, Colors.orange),
+            _buildVaccineChips('Upcoming', vaccination.vaccinesUpcoming, Colors.orange),
           ],
         ],
       ),
@@ -579,195 +480,131 @@ class _BatchReportScreenState extends State<BatchReportScreen> {
   }
 
   Widget _buildMedicationCard(BatchMedication medication) {
-    return _buildReportCard(
+    return _buildSimpleCard(
       title: 'Medication',
       icon: Icons.medical_services,
       color: Colors.purple,
-      child: Column(
-        children: [
-          _buildStatItem(
-            'Available',
-            '${medication.medicationsAvailable.length}',
-            Colors.purple,
-          ),
-          if (medication.medicationsAvailable.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: medication.medicationsAvailable.map((med) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.purple.shade50,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Text(
-                      med.toString(),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.purple.shade700,
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-        ],
-      ),
+      stats: [
+        _StatData('Available', '${medication.medicationsAvailable.length}', Colors.purple),
+      ],
+      footer: medication.medicationsAvailable.isNotEmpty
+          ? Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: medication.medicationsAvailable.take(5).map((med) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(color: Colors.purple.shade50, borderRadius: BorderRadius.circular(12)),
+                  child: Text(med.toString(), style: TextStyle(fontSize: 11, color: Colors.purple.shade700)),
+                );
+              }).toList(),
+            )
+          : null,
     );
   }
 
   Widget _buildEggProductionCard(EggProduction production) {
-    return _buildReportCard(
+    return _buildSimpleCard(
       title: 'Egg Production',
       icon: Icons.egg,
       color: Colors.amber,
-      child: Column(
-        children: [
-          Row(
-            children: [
-              _buildStatItem('Trays', '${production.traysCollected}', Colors.amber),
-              _buildStatItem('Total Eggs', '${production.totalEggsCollected}', Colors.orange),
-              _buildStatItem('Pieces', '${production.piecesCollected}', Colors.brown),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _buildStatItem('In Store', '${production.traysInStore} trays', Colors.green),
-              _buildStatItem('Production', '${production.productionPercentage.toStringAsFixed(1)}%', Colors.blue),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _buildStatItem('Broken', '${production.partialBroken + production.completeBroken}', Colors.red),
-              _buildStatItem('Good Eggs', '${production.goodEggs}', Colors.green),
-              _buildStatItem('Value', '$_currency ${production.totalValue.toStringAsFixed(2)}', Colors.purple),
-            ],
-          ),
-        ],
-      ),
+      stats: [
+        _StatData('Trays', '${production.traysCollected}', Colors.amber),
+        _StatData('Eggs', '${production.totalEggsCollected}', Colors.orange),
+        _StatData('In Store', '${production.traysInStore}', Colors.green),
+        _StatData('Production', '${production.productionPercentage.toStringAsFixed(0)}%', Colors.blue),
+        _StatData('Good', '${production.goodEggs}', Colors.green),
+        _StatData('Value', '$_currency ${production.totalValue.toStringAsFixed(0)}', Colors.purple),
+      ],
     );
   }
 
-  Widget _buildReportCard({
+  Widget _buildSimpleCard({
     required String title,
     required IconData icon,
     required Color color,
-    required Widget child,
+    required List<_StatData> stats,
+    Widget? footer,
   }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: color, size: 20),
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+                child: Icon(icon, color: color, size: 18),
               ),
-              const SizedBox(width: 10),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
+              const SizedBox(width: 8),
+              Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey.shade800)),
             ],
           ),
-          const SizedBox(height: 16),
-          child,
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: stats.map((stat) => _buildStatChip(stat.label, stat.value, stat.color)).toList(),
+          ),
+          if (footer != null) ...[
+            const SizedBox(height: 10),
+            footer,
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildStatItem(String label, String value, Color color) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        margin: const EdgeInsets.symmetric(horizontal: 4),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          children: [
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                color: color.withOpacity(0.8),
-              ),
-            ),
-          ],
-        ),
+  Widget _buildStatChip(String label, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value,
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: color),
+            overflow: TextOverflow.ellipsis,
+          ),
+          Text(
+            label,
+            style: TextStyle(fontSize: 10, color: color.withOpacity(0.8)),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildVaccineList(String label, List<dynamic> vaccines, Color color) {
+  Widget _buildVaccineChips(String label, List<dynamic> vaccines, Color color) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: color,
-          ),
-        ),
+        Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color)),
         const SizedBox(height: 4),
         Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: vaccines.take(5).map((vaccine) {
+          spacing: 4,
+          runSpacing: 4,
+          children: vaccines.take(3).map((vaccine) {
             return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                vaccine.toString(),
-                style: TextStyle(
-                  fontSize: 11,
-                  color: color,
-                ),
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+              child: Text(vaccine.toString(), style: TextStyle(fontSize: 10, color: color), overflow: TextOverflow.ellipsis),
             );
           }).toList(),
         ),
@@ -783,7 +620,14 @@ class _BatchReportScreenState extends State<BatchReportScreen> {
   }
 }
 
-// Bottom Sheet for Custom Date Selection
+class _StatData {
+  final String label;
+  final String value;
+  final Color color;
+
+  _StatData(this.label, this.value, this.color);
+}
+
 class _CustomDatePickerSheet extends StatefulWidget {
   final TextEditingController startDateController;
   final TextEditingController endDateController;
@@ -810,19 +654,13 @@ class _CustomDatePickerSheetState extends State<_CustomDatePickerSheet> {
   @override
   void initState() {
     super.initState();
-    _localStartController = TextEditingController(
-      text: widget.startDateController.text,
-    );
-    _localEndController = TextEditingController(
-      text: widget.endDateController.text,
-    );
+    _localStartController = TextEditingController(text: widget.startDateController.text);
+    _localEndController = TextEditingController(text: widget.endDateController.text);
   }
 
   void _applyFilters() {
     if (_localStartController.text.isEmpty || _localEndController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select both start and end dates')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select both start and end dates')));
       return;
     }
 
@@ -831,64 +669,40 @@ class _CustomDatePickerSheetState extends State<_CustomDatePickerSheet> {
       final endDate = DateTime.parse(_localEndController.text);
 
       if (startDate.isAfter(endDate)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Start date cannot be after end date')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Start date cannot be after end date')));
         return;
       }
 
       widget.startDateController.text = _localStartController.text;
       widget.endDateController.text = _localEndController.text;
-
       widget.onApply(startDate, endDate);
       Navigator.pop(context);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid date format')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid date format')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
+      decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Handle bar
             Center(
               child: Container(
                 width: 40,
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 20),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+                decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
               ),
             ),
-
-            // Title
-            const Text(
-              'Custom Date Range',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            const Text('Custom Date Range', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
-
-            // Date fields
             CustomDateTextField(
               label: 'Start Date',
               icon: Icons.calendar_today,
@@ -911,8 +725,6 @@ class _CustomDatePickerSheetState extends State<_CustomDatePickerSheet> {
               controller: _localEndController,
             ),
             const SizedBox(height: 20),
-
-            // Apply button
             SizedBox(
               width: double.infinity,
               height: 48,
@@ -921,9 +733,7 @@ class _CustomDatePickerSheetState extends State<_CustomDatePickerSheet> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   elevation: 0,
                 ),
                 child: const Row(
@@ -931,13 +741,7 @@ class _CustomDatePickerSheetState extends State<_CustomDatePickerSheet> {
                   children: [
                     Icon(Icons.check, size: 20),
                     SizedBox(width: 8),
-                    Text(
-                      'Apply',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    Text('Apply', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                   ],
                 ),
               ),

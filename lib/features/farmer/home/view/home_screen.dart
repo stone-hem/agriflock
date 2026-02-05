@@ -648,9 +648,9 @@ class _HomeScreenState extends State<HomeScreen> {
         _buildQuickActionCard(
           icon: Icons.assessment,
           title: 'Reports',
-          subtitle: 'View batch reports',
+          subtitle: 'View batch or farm reports',
           color: Colors.blue,
-          onTap: () => context.push('/batch-report/batch-selection'),
+          onTap: () => context.push('/reports'),
         ),
         _buildQuickActionCard(
           icon: Icons.card_membership,

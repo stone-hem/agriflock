@@ -157,56 +157,61 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
       Result result;
 
       if (recordType == 'feed') {
-        // Feed record payload
+        // Feed record payload - specific fields for feed
         final recordData = {
           'batch_id': _selectedBatch!.id,
           if (_selectedBatch!.houseId != null) 'house_id': _selectedBatch!.houseId,
           'category_id': _selectedCategory!.id,
           'category_item_id': _selectedItem!.id,
           'description': _selectedItem!.categoryItemName,
-          'quantity': _quantity,
+          'quantity': _quantity ?? 0,
           'unit': 'kg',
           'date': _selectedDate.toUtc().toIso8601String(),
           if (_notes != null && _notes!.isNotEmpty) 'notes': _notes,
+          'mortality_today': 0, // Default to 0, can be updated if UI captures this
         };
 
         LogUtil.warning('Feed Record Payload: $recordData');
         result = await _recordingRepo.createFeedingRecord(recordData);
       } else if (recordType == 'vaccination') {
-        // Vaccination record payload
+        // Vaccination record payload - specific fields for vaccination
         final recordData = {
           'batch_id': _selectedBatch!.id,
           if (_selectedBatch!.houseId != null) 'house_id': _selectedBatch!.houseId,
           'category_id': _selectedCategory!.id,
           'category_item_id': _selectedItem!.id,
           'description': _selectedItem!.categoryItemName,
-          'quantity': _quantity,
+          'quantity': _quantity?.toInt() ?? 1,
           'unit': 'doses',
           'date': _selectedDate.toUtc().toIso8601String(),
           if (_notes != null && _notes!.isNotEmpty) 'notes': _notes,
-          if (_methodOfAdministration != null) 'administration_method': _methodOfAdministration,
-          if (_dosesUsed != null) 'doses_used': _dosesUsed,
+          if (_methodOfAdministration != null) 'method_of_administration': _methodOfAdministration,
+          'doses_used': _dosesUsed?.toInt() ?? _quantity?.toInt() ?? 1,
+          'birds_vaccinated': _dosesUsed?.toInt() ?? _quantity?.toInt() ?? 1,
+          'cost': 0,
+          'supplier': '',
         };
 
         LogUtil.warning('Vaccination Record Payload: $recordData');
         result = await _recordingRepo.recordVaccination(recordData);
       } else {
-        // Medication record payload
+        // Medication record payload - specific fields for medication
         final recordData = {
           'batch_id': _selectedBatch!.id,
           if (_selectedBatch!.houseId != null) 'house_id': _selectedBatch!.houseId,
           'category_id': _selectedCategory!.id,
           'category_item_id': _selectedItem!.id,
-          'quantity': _quantity,
+          'quantity': _quantity?.toInt() ?? 1,
           'unit': 'doses',
           'date': _selectedDate.toUtc().toIso8601String(),
           'dosage': '${_quantity ?? 1} dose(s)',
           if (_methodOfAdministration != null) 'administration_method': _methodOfAdministration,
           if (_notes != null && _notes!.isNotEmpty) 'reason': _notes,
-          if (_dosesUsed != null) 'birds_treated': _dosesUsed?.toInt() ?? 0,
+          'birds_treated': _dosesUsed?.toInt() ?? 0,
           'treatment_duration_days': 1,
           'withdrawal_period_days': 0,
           'cost': 0,
+          'supplier': '',
           if (_notes != null && _notes!.isNotEmpty) 'notes': _notes,
         };
 

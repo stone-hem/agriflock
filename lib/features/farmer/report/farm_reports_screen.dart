@@ -3,27 +3,26 @@ import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
-import 'package:agriflock360/features/farmer/farm/repositories/farm_repository.dart';
 import 'package:agriflock360/features/farmer/report/models/batch_report_model.dart';
 import 'package:agriflock360/features/farmer/report/models/farm_batch_report_model.dart';
 import 'package:agriflock360/features/farmer/report/repo/report_repo.dart';
 import 'package:flutter/material.dart';
 
 class FarmReportsScreen extends StatefulWidget {
-  const FarmReportsScreen({super.key});
+  final FarmModel farm;
+
+  const FarmReportsScreen({super.key, required this.farm});
 
   @override
   State<FarmReportsScreen> createState() => _FarmReportsScreenState();
 }
 
 class _FarmReportsScreenState extends State<FarmReportsScreen> {
-  final _farmRepository = FarmRepository();
   final _reportRepository = ReportRepository();
   final _secureStorage = SecureStorage();
 
   // Data
-  FarmsResponse? _farmsResponse;
-  FarmModel? _selectedFarm;
+  late FarmModel _selectedFarm;
   FarmBatchReportResponse? _reportData;
 
   // Date filters
@@ -32,7 +31,6 @@ class _FarmReportsScreenState extends State<FarmReportsScreen> {
   String _selectedPeriod = 'monthly';
 
   // Loading states
-  bool _isLoadingFarms = true;
   bool _isLoadingReport = false;
   String? _error;
   String _currency = 'KES';
@@ -47,8 +45,8 @@ class _FarmReportsScreenState extends State<FarmReportsScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedFarm = widget.farm;
     _initializeDates();
-    _loadFarms();
     _loadCurrency();
   }
 
@@ -68,45 +66,7 @@ class _FarmReportsScreenState extends State<FarmReportsScreen> {
     }
   }
 
-  Future<void> _loadFarms() async {
-    setState(() {
-      _isLoadingFarms = true;
-      _error = null;
-    });
-
-    try {
-      final result = await _farmRepository.getAllFarmsWithStats();
-
-      switch (result) {
-        case Success<FarmsResponse>(data: final response):
-          setState(() {
-            _farmsResponse = response;
-            _isLoadingFarms = false;
-          });
-          break;
-        case Failure(message: final error):
-          setState(() {
-            _error = error;
-            _isLoadingFarms = false;
-          });
-          break;
-      }
-    } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoadingFarms = false;
-      });
-    }
-  }
-
   Future<void> _loadReport() async {
-    if (_selectedFarm == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a farm')),
-      );
-      return;
-    }
-
     if (_startDateController.text.isEmpty || _endDateController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select date range')),
@@ -124,7 +84,7 @@ class _FarmReportsScreenState extends State<FarmReportsScreen> {
       final endDate = DateTime.parse(_endDateController.text);
 
       final result = await _reportRepository.getFarmBatchReports(
-        farmId: _selectedFarm!.id,
+        farmId: _selectedFarm.id,
         startDate: startDate,
         endDate: endDate,
         period: _selectedPeriod,
@@ -158,155 +118,81 @@ class _FarmReportsScreenState extends State<FarmReportsScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Farm Reports'),
+        title: Text(_selectedFarm.farmName),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: _isLoadingFarms
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null && _farmsResponse == null
-              ? _buildErrorView()
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildFarmSelector(),
-                      const SizedBox(height: 20),
-                      _buildDateFilters(),
-                      const SizedBox(height: 20),
-                      _buildPeriodSelector(),
-                      const SizedBox(height: 20),
-                      _buildGenerateButton(),
-                      if (_reportData != null) ...[
-                        const SizedBox(height: 24),
-                        _buildReportContent(),
-                      ],
-                    ],
-                  ),
-                ),
-    );
-  }
-
-  Widget _buildErrorView() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline, size: 48, color: Colors.red),
-          const SizedBox(height: 16),
-          Text('Error: $_error'),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _loadFarms,
-            child: const Text('Retry'),
-          ),
-        ],
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildFarmHeader(),
+            const SizedBox(height: 20),
+            _buildDateFilters(),
+            const SizedBox(height: 20),
+            _buildPeriodSelector(),
+            const SizedBox(height: 20),
+            _buildGenerateButton(),
+            if (_reportData != null) ...[
+              const SizedBox(height: 24),
+              _buildReportContent(),
+            ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildFarmSelector() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Select Farm',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey.shade700,
-          ),
-        ),
-        const SizedBox(height: 8),
-        if (_farmsResponse == null || _farmsResponse!.farms.isEmpty)
+  Widget _buildFarmHeader() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.green.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.green.shade200),
+      ),
+      child: Row(
+        children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.orange.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.orange.shade200),
+              color: Colors.green.shade100,
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: Row(
+            child: Icon(
+              Icons.agriculture,
+              color: Colors.green.shade700,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.warning_amber, color: Colors.orange.shade600),
-                const SizedBox(width: 12),
-                const Text('No farms available'),
+                Text(
+                  _selectedFarm.farmName,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green.shade800,
+                  ),
+                ),
+                if (_selectedFarm.location != null)
+                  Text(
+                    _selectedFarm.location!,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.green.shade600,
+                    ),
+                  ),
               ],
             ),
-          )
-        else
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade300),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: _selectedFarm?.id,
-                hint: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('Choose a farm'),
-                ),
-                isExpanded: true,
-                items: _farmsResponse!.farms.map((farm) {
-                  return DropdownMenuItem<String>(
-                    value: farm.id,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.green.shade50,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              Icons.agriculture,
-                              color: Colors.green.shade600,
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  farm.farmName,
-                                  style: const TextStyle(fontWeight: FontWeight.w600),
-                                ),
-                                if (farm.location != null)
-                                  Text(
-                                    farm.location!,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedFarm = _farmsResponse!.farms.firstWhere(
-                      (f) => f.id == value,
-                    );
-                    _reportData = null;
-                  });
-                },
-              ),
-            ),
           ),
-      ],
+          Icon(Icons.check_circle, color: Colors.green.shade600),
+        ],
+      ),
     );
   }
 
