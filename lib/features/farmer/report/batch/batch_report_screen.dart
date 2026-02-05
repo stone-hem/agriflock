@@ -1,9 +1,9 @@
 import 'package:agriflock360/core/utils/result.dart';
-import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_list_model.dart';
 import 'package:agriflock360/features/farmer/report/models/batch_report_model.dart';
 import 'package:agriflock360/features/farmer/report/repo/report_repo.dart';
+import 'package:agriflock360/main.dart';
 import 'package:flutter/material.dart';
 
 class BatchReportScreen extends StatefulWidget {
@@ -20,12 +20,11 @@ class BatchReportScreen extends StatefulWidget {
 
 class _BatchReportScreenState extends State<BatchReportScreen> {
   final _reportRepository = ReportRepository();
-  final _secureStorage = SecureStorage();
 
   // Filter state
   late TextEditingController _startDateController;
   late TextEditingController _endDateController;
-  bool _isFilterExpanded = false;
+  String _selectedQuickRange = 'week'; // Track selected quick range
 
   // Report state
   BatchReportResponse? _reportData;
@@ -58,17 +57,15 @@ class _BatchReportScreenState extends State<BatchReportScreen> {
   }
 
   Future<void> _loadCurrency() async {
-    final userDataMap = await _secureStorage.getUserDataAsMap();
-    if (userDataMap != null && userDataMap['currency'] != null) {
-      if (mounted) {
-        setState(() {
-          _currency = userDataMap['currency'];
-        });
-      }
-    }
+    var currency = await secureStorage.getCurrency();
+    setState(() {
+      _currency = currency;
+    });
   }
 
   Future<void> _loadReport() async {
+    if (!mounted) return;
+
     setState(() {
       _isLoadingReport = true;
       _reportError = null;
@@ -82,7 +79,7 @@ class _BatchReportScreenState extends State<BatchReportScreen> {
         batchId: widget.batch.id,
         startDate: startDate,
         endDate: endDate,
-        period: 'weekly', // Default period
+        period: 'weekly',
       );
 
       if (!mounted) return;
@@ -111,39 +108,6 @@ class _BatchReportScreenState extends State<BatchReportScreen> {
     }
   }
 
-  void _applyFilters() {
-    if (_startDateController.text.isEmpty || _endDateController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select both start and end dates')),
-      );
-      return;
-    }
-
-    try {
-      final startDate = DateTime.parse(_startDateController.text);
-      final endDate = DateTime.parse(_endDateController.text);
-
-      if (startDate.isAfter(endDate)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Start date cannot be after end date')),
-        );
-        return;
-      }
-
-      setState(() {
-        _startDate = startDate;
-        _endDate = endDate;
-        _isFilterExpanded = false;
-      });
-
-      _loadReport();
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid date format')),
-      );
-    }
-  }
-
   void _setQuickRange(String range) {
     final now = DateTime.now();
     DateTime start;
@@ -152,7 +116,6 @@ class _BatchReportScreenState extends State<BatchReportScreen> {
     switch (range) {
       case 'today':
         start = DateTime(now.year, now.month, now.day);
-        end = now;
         break;
       case 'week':
         start = now.subtract(const Duration(days: 7));
@@ -168,9 +131,41 @@ class _BatchReportScreenState extends State<BatchReportScreen> {
     }
 
     setState(() {
+      _selectedQuickRange = range;
+      _startDate = start;
+      _endDate = end;
       _startDateController.text = start.toIso8601String().split('T').first;
       _endDateController.text = end.toIso8601String().split('T').first;
     });
+
+    _loadReport();
+  }
+
+  void _showCustomDatePicker() {
+    // Reset quick range selection when custom is chosen
+    setState(() {
+      _selectedQuickRange = 'custom';
+    });
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _CustomDatePickerSheet(
+        startDateController: _startDateController,
+        endDateController: _endDateController,
+        startDate: _startDate,
+        endDate: _endDate,
+        onApply: (startDate, endDate) {
+          setState(() {
+            _startDate = startDate;
+            _endDate = endDate;
+            _selectedQuickRange = 'custom';
+          });
+          _loadReport();
+        },
+      ),
+    );
   }
 
   String _formatDate(DateTime date) {
@@ -181,29 +176,154 @@ class _BatchReportScreenState extends State<BatchReportScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
-      appBar: AppBar(
-        title: Text(widget.batch.batchName),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+      body: NestedScrollView(
+        headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+          return [
+            // Header
+            SliverAppBar(
+              backgroundColor: Colors.white,
+              pinned: true,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => Navigator.pop(context),
+              ),
+              title: Text(
+                widget.batch.batchName,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            // Filter section
+            SliverToBoxAdapter(
+              child: Container(
+                color: Colors.white,
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title and custom date button
+                    Row(
+                      children: [
+                        const Text(
+                          'Date Range',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const Spacer(),
+                        TextButton.icon(
+                          onPressed: _showCustomDatePicker,
+                          icon: const Icon(Icons.edit_calendar, size: 16),
+                          label: const Text(
+                            'Custom',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Quick select chips
+                    SizedBox(
+                      height: 36,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          const SizedBox(width: 8),
+                          _buildQuickChip('Today', 'today'),
+                          const SizedBox(width: 8),
+                          _buildQuickChip('Last Week', 'week'),
+                          const SizedBox(width: 8),
+                          _buildQuickChip('Last Month', 'month'),
+                          const SizedBox(width: 8),
+                          _buildQuickChip('Last Year', 'year'),
+                          const SizedBox(width: 8),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Active date range display
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.blue.shade200),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.date_range, size: 16, color: Colors.blue.shade700),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${_formatDate(_startDate)} - ${_formatDate(_endDate)}',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.blue.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ];
+        },
+        body: _buildReportContent(),
       ),
-      body: Column(
-        children: [
-          // Active filters chips
-          _buildActiveFiltersChips(),
+    );
+  }
 
-          // Collapsible filter section
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            height: _isFilterExpanded ? null : 0,
-            child: _isFilterExpanded ? _buildFilterSection() : const SizedBox.shrink(),
-          ),
+  Widget _buildQuickChip(String label, String range) {
+    final isSelected = _selectedQuickRange == range;
 
-          // Report content
-          Expanded(
-            child: _buildReportContent(),
+    return GestureDetector(
+      onTap: () => _setQuickRange(range),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.blue.shade100 : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? Colors.blue : Colors.grey.shade300,
+            width: isSelected ? 1.5 : 1,
           ),
-        ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isSelected)
+              Icon(
+                Icons.check_circle,
+                size: 14,
+                color: Colors.blue.shade700,
+              ),
+            if (isSelected) const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                color: isSelected ? Colors.blue.shade700 : Colors.grey.shade700,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -215,18 +335,24 @@ class _BatchReportScreenState extends State<BatchReportScreen> {
 
     if (_reportError != null) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
-            const SizedBox(height: 16),
-            Text('Error: $_reportError'),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadReport,
-              child: const Text('Retry'),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: Colors.red),
+              const SizedBox(height: 16),
+              Text(
+                'Error: $_reportError',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadReport,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -277,205 +403,6 @@ class _BatchReportScreenState extends State<BatchReportScreen> {
           _buildEggProductionCard(report.eggProduction!),
         ],
       ],
-    );
-  }
-
-  Widget _buildActiveFiltersChips() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Text(
-                'Active Filters',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
-              const Spacer(),
-              TextButton.icon(
-                onPressed: () {
-                  setState(() {
-                    _isFilterExpanded = !_isFilterExpanded;
-                  });
-                },
-                icon: Icon(
-                  _isFilterExpanded ? Icons.expand_less : Icons.tune,
-                  size: 18,
-                ),
-                label: Text(
-                  _isFilterExpanded ? 'Hide Filters' : 'Edit Filters',
-                  style: const TextStyle(fontSize: 12),
-                ),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _buildFilterChip(
-                icon: Icons.calendar_today,
-                label: '${_formatDate(_startDate)} - ${_formatDate(_endDate)}',
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilterChip({required IconData icon, required String label}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.blue.shade200),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: Colors.blue.shade700),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.blue.shade700,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilterSection() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Quick select buttons
-            const Text(
-              'Quick Select',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                _buildQuickButton('Today', 'today'),
-                const SizedBox(width: 8),
-                _buildQuickButton('Week', 'week'),
-                const SizedBox(width: 8),
-                _buildQuickButton('Month', 'month'),
-                const SizedBox(width: 8),
-                _buildQuickButton('Year', 'year'),
-              ],
-            ),
-            const SizedBox(height: 20),
-
-            // Custom date range
-            const Text(
-              'Custom Range',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
-            CustomDateTextField(
-              label: 'Start Date',
-              icon: Icons.calendar_today,
-              required: true,
-              initialDate: _startDate,
-              minYear: DateTime.now().year - 2,
-              maxYear: DateTime.now().year,
-              returnFormat: DateReturnFormat.isoString,
-              controller: _startDateController,
-            ),
-            const SizedBox(height: 12),
-            CustomDateTextField(
-              label: 'End Date',
-              icon: Icons.calendar_today,
-              required: true,
-              initialDate: _endDate,
-              minYear: DateTime.now().year - 2,
-              maxYear: DateTime.now().year,
-              returnFormat: DateReturnFormat.isoString,
-              controller: _endDateController,
-            ),
-            const SizedBox(height: 20),
-
-            // Apply button
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: _applyFilters,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.filter_alt, size: 20),
-                    SizedBox(width: 8),
-                    Text(
-                      'Apply Filters',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -848,26 +775,174 @@ class _BatchReportScreenState extends State<BatchReportScreen> {
     );
   }
 
-  Widget _buildQuickButton(String label, String range) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => _setQuickRange(range),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey.shade300),
-          ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.grey.shade700,
-              fontWeight: FontWeight.w500,
+  @override
+  void dispose() {
+    _startDateController.dispose();
+    _endDateController.dispose();
+    super.dispose();
+  }
+}
+
+// Bottom Sheet for Custom Date Selection
+class _CustomDatePickerSheet extends StatefulWidget {
+  final TextEditingController startDateController;
+  final TextEditingController endDateController;
+  final DateTime startDate;
+  final DateTime endDate;
+  final Function(DateTime startDate, DateTime endDate) onApply;
+
+  const _CustomDatePickerSheet({
+    required this.startDateController,
+    required this.endDateController,
+    required this.startDate,
+    required this.endDate,
+    required this.onApply,
+  });
+
+  @override
+  State<_CustomDatePickerSheet> createState() => _CustomDatePickerSheetState();
+}
+
+class _CustomDatePickerSheetState extends State<_CustomDatePickerSheet> {
+  late TextEditingController _localStartController;
+  late TextEditingController _localEndController;
+
+  @override
+  void initState() {
+    super.initState();
+    _localStartController = TextEditingController(
+      text: widget.startDateController.text,
+    );
+    _localEndController = TextEditingController(
+      text: widget.endDateController.text,
+    );
+  }
+
+  void _applyFilters() {
+    if (_localStartController.text.isEmpty || _localEndController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select both start and end dates')),
+      );
+      return;
+    }
+
+    try {
+      final startDate = DateTime.parse(_localStartController.text);
+      final endDate = DateTime.parse(_localEndController.text);
+
+      if (startDate.isAfter(endDate)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Start date cannot be after end date')),
+        );
+        return;
+      }
+
+      widget.startDateController.text = _localStartController.text;
+      widget.endDateController.text = _localEndController.text;
+
+      widget.onApply(startDate, endDate);
+      Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invalid date format')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle bar
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
             ),
-          ),
+
+            // Title
+            const Text(
+              'Custom Date Range',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Date fields
+            CustomDateTextField(
+              label: 'Start Date',
+              icon: Icons.calendar_today,
+              required: true,
+              initialDate: widget.startDate,
+              minYear: DateTime.now().year - 2,
+              maxYear: DateTime.now().year,
+              returnFormat: DateReturnFormat.isoString,
+              controller: _localStartController,
+            ),
+            const SizedBox(height: 16),
+            CustomDateTextField(
+              label: 'End Date',
+              icon: Icons.calendar_today,
+              required: true,
+              initialDate: widget.endDate,
+              minYear: DateTime.now().year - 2,
+              maxYear: DateTime.now().year,
+              returnFormat: DateReturnFormat.isoString,
+              controller: _localEndController,
+            ),
+            const SizedBox(height: 20),
+
+            // Apply button
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: _applyFilters,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.check, size: 20),
+                    SizedBox(width: 8),
+                    Text(
+                      'Apply',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -875,8 +950,8 @@ class _BatchReportScreenState extends State<BatchReportScreen> {
 
   @override
   void dispose() {
-    _startDateController.dispose();
-    _endDateController.dispose();
+    _localStartController.dispose();
+    _localEndController.dispose();
     super.dispose();
   }
 }

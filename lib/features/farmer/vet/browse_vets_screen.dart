@@ -31,7 +31,6 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
   String? _selectedOfficerType;
   String? _selectedRegion;
   String? _selectedStatus;
-  bool? _isVerified;
   int _currentPage = 1;
   final int _limit = 10;
   int _totalVets = 0;
@@ -98,7 +97,7 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
         officerType: _selectedOfficerType,
         region: _selectedRegion,
         status: _selectedStatus,
-        isVerified: _isVerified,
+        isVerified: true,
         page: _currentPage,
         limit: _limit,
         search: _searchController.text.isNotEmpty ? _searchController.text : null,
@@ -156,7 +155,7 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
         officerType: _selectedOfficerType,
         region: _selectedRegion,
         status: _selectedStatus,
-        isVerified: _isVerified,
+        isVerified: true,
         page: _currentPage,
         limit: _limit,
         search: _searchController.text.isNotEmpty ? _searchController.text : null,
@@ -903,25 +902,6 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      FilterChip(
-                        label: const Text('Verified Only'),
-                        selected: _isVerified == true,
-                        onSelected: (selected) {
-                          setState(() {
-                            _isVerified = selected ? true : null;
-                          });
-                          _loadAllVets();
-                        },
-                        backgroundColor: Colors.green.shade50,
-                        selectedColor: Colors.green,
-                        labelStyle: TextStyle(
-                          color: _isVerified == true ? Colors.white : Colors.green,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                      const SizedBox(width: 8),
                       FilterChip(
                         label: const Text('Active'),
                         selected: _selectedStatus == 'active',

@@ -36,32 +36,35 @@ class CustomDateTextField extends StatefulWidget {
 }
 
 class _CustomDateTextFieldState extends State<CustomDateTextField> {
-  final TextEditingController _dayController = TextEditingController();
-  final TextEditingController _monthController = TextEditingController();
-  final TextEditingController _yearController = TextEditingController();
+  late TextEditingController _dayController;
+  late TextEditingController _monthController;
+  late TextEditingController _yearController;
 
-  final FocusNode _dayFocus = FocusNode();
-  final FocusNode _monthFocus = FocusNode();
-  final FocusNode _yearFocus = FocusNode();
+  late FocusNode _dayFocus;
+  late FocusNode _monthFocus;
+  late FocusNode _yearFocus;
 
   String? _errorText;
+  bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
 
-    // Initialize from initialDate or existing controller value
-    // Use post-frame callback to avoid setState during build
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.initialDate != null) {
-        _setDateSilently(widget.initialDate!);
-      } else if (widget.controller.text.isNotEmpty &&
-          widget.controller.text != 'DD/MM/YYYY') {
-        _parseExistingValue(widget.controller.text);
-      }
-    });
+    // Initialize controllers
+    _dayController = TextEditingController();
+    _monthController = TextEditingController();
+    _yearController = TextEditingController();
 
-    // Add listeners
+    // Initialize focus nodes
+    _dayFocus = FocusNode();
+    _monthFocus = FocusNode();
+    _yearFocus = FocusNode();
+
+    // Initialize from initialDate or existing controller value
+    _initializeDate();
+
+    // Add listeners after initialization
     _dayController.addListener(_updateMainController);
     _monthController.addListener(_updateMainController);
     _yearController.addListener(_updateMainController);
@@ -71,24 +74,23 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
     _yearFocus.addListener(_handleFocusChange);
   }
 
-  void _setDateSilently(DateTime date) {
-    // Remove listeners temporarily
-    _dayController.removeListener(_updateMainController);
-    _monthController.removeListener(_updateMainController);
-    _yearController.removeListener(_updateMainController);
+  void _initializeDate() {
+    if (widget.initialDate != null) {
+      _setDateSilently(widget.initialDate!);
+    } else if (widget.controller.text.isNotEmpty &&
+        widget.controller.text != 'DD/MM/YYYY') {
+      _parseExistingValue(widget.controller.text);
+    }
+    _isInitialized = true;
+  }
 
-    // Set values
+  void _setDateSilently(DateTime date) {
     _dayController.text = date.day.toString().padLeft(2, '0');
     _monthController.text = date.month.toString().padLeft(2, '0');
     _yearController.text = date.year.toString();
 
     // Update main controller based on return format
     widget.controller.text = _formatDateForController(date);
-
-    // Re-add listeners
-    _dayController.addListener(_updateMainController);
-    _monthController.addListener(_updateMainController);
-    _yearController.addListener(_updateMainController);
   }
 
   String _formatDateForController(DateTime date) {
@@ -105,6 +107,18 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
   }
 
   void _parseExistingValue(String value) {
+    // Try to parse ISO format first (YYYY-MM-DD)
+    if (value.contains('-')) {
+      final parts = value.split('T')[0].split('-'); // Handle ISO with time
+      if (parts.length == 3) {
+        _yearController.text = parts[0];
+        _monthController.text = parts[1];
+        _dayController.text = parts[2];
+        return;
+      }
+    }
+
+    // Try DD/MM/YYYY format
     final parts = value.split('/');
     if (parts.length == 3) {
       _dayController.text = parts[0];
@@ -126,21 +140,32 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
 
   void _handleFocusChange() {
     if (!_dayFocus.hasFocus && !_monthFocus.hasFocus && !_yearFocus.hasFocus) {
-      setState(() {
-        _errorText = _validateDate();
+      // Use post-frame callback to avoid setState during build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _errorText = _validateDate();
+          });
+        }
       });
     }
   }
 
   void _updateMainController() {
+    if (!_isInitialized) return;
+
     final day = _dayController.text;
     final month = _monthController.text;
     final year = _yearController.text;
 
-    // Clear error when user types
+    // Clear error when user types (using post-frame callback)
     if (_errorText != null) {
-      setState(() {
-        _errorText = null;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _errorText = null;
+          });
+        }
       });
     }
 
@@ -233,6 +258,7 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           widget.label,
@@ -253,14 +279,14 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
-                decoration:BoxDecoration(
+                decoration: BoxDecoration(
                   color: Colors.green.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
-                )
-                    ,
+                ),
                 child: Icon(
                   widget.icon,
                   color: _errorText != null ? Colors.red : Colors.green,
@@ -270,37 +296,11 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
               const SizedBox(width: 12),
               Expanded(
                 flex: 2,
-                child: TextField(
+                child: _buildDateField(
                   controller: _dayController,
                   focusNode: _dayFocus,
-                  keyboardType: TextInputType.number,
-                  textAlign: TextAlign.center,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(2),
-                    _DayInputFormatter(),
-                  ],
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  decoration:  InputDecoration(
-                    hintText: 'DD',
-                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.green.shade600, width: 2),
-                    ),
-                    isDense: true,
-                  ),
+                  hintText: 'DD',
+                  formatter: _DayInputFormatter(),
                   onChanged: (value) {
                     if (value.length == 2) {
                       _monthFocus.requestFocus();
@@ -308,47 +308,24 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
                   },
                 ),
               ),
-              const Text(
-                '/',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w300,
-                  color: Colors.grey,
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  '/',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w300,
+                    color: Colors.grey,
+                  ),
                 ),
               ),
               Expanded(
                 flex: 2,
-                child: TextField(
+                child: _buildDateField(
                   controller: _monthController,
                   focusNode: _monthFocus,
-                  keyboardType: TextInputType.number,
-                  textAlign: TextAlign.center,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(2),
-                    _MonthInputFormatter(),
-                  ],
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  decoration:  InputDecoration(
-                    hintText: 'MM',
-                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.green.shade600, width: 2),
-                    ),
-                    isDense: true,
-                  ),
+                  hintText: 'MM',
+                  formatter: _MonthInputFormatter(),
                   onChanged: (value) {
                     if (value.length == 2) {
                       _yearFocus.requestFocus();
@@ -356,46 +333,25 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
                   },
                 ),
               ),
-              const Text(
-                '/',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w300,
-                  color: Colors.grey,
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  '/',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w300,
+                    color: Colors.grey,
+                  ),
                 ),
               ),
               Expanded(
                 flex: 3,
-                child: TextField(
+                child: _buildDateField(
                   controller: _yearController,
                   focusNode: _yearFocus,
-                  keyboardType: TextInputType.number,
-                  textAlign: TextAlign.center,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(4),
-                  ],
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  decoration:  InputDecoration(
-                    contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                    hintText: 'YYYY',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.green.shade600, width: 2),
-                    ),
-                    isDense: true,
-                  ),
+                  hintText: 'YYYY',
+                  maxLength: 4,
+                  formatter: null,
                 ),
               ),
             ],
@@ -413,6 +369,49 @@ class _CustomDateTextFieldState extends State<CustomDateTextField> {
             ),
           ),
       ],
+    );
+  }
+
+  Widget _buildDateField({
+    required TextEditingController controller,
+    required FocusNode focusNode,
+    required String hintText,
+    int maxLength = 2,
+    TextInputFormatter? formatter,
+    void Function(String)? onChanged,
+  }) {
+    return TextField(
+      controller: controller,
+      focusNode: focusNode,
+      keyboardType: TextInputType.number,
+      textAlign: TextAlign.center,
+      inputFormatters: [
+        FilteringTextInputFormatter.digitsOnly,
+        LengthLimitingTextInputFormatter(maxLength),
+        if (formatter != null) formatter,
+      ],
+      style: const TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+      ),
+      decoration: InputDecoration(
+        hintText: hintText,
+        contentPadding: const EdgeInsets.symmetric(vertical: 8),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.green.shade600, width: 2),
+        ),
+        isDense: true,
+      ),
+      onChanged: onChanged,
     );
   }
 }
