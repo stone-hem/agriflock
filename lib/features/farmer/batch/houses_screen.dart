@@ -2,9 +2,10 @@ import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/date_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
-import 'package:agriflock360/core/widgets/reusable_input.dart';
+import 'package:agriflock360/core/widgets/expense/expense_marquee_banner.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/batch_house_repo.dart';
+import 'package:agriflock360/features/farmer/batch/widgets/add_edit_house_dialog.dart';
 import 'package:agriflock360/features/farmer/batch/widgets/batches_bottom_sheet.dart';
 import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
 import 'package:flutter/material.dart';
@@ -75,23 +76,19 @@ class _HousesScreenState extends State<HousesScreen> {
   }
 
   void _showAddHouseDialog(BuildContext context) {
-    showDialog(
+    AddEditHouseDialog.show(
       context: context,
-      builder: (context) => _AddEditHouseDialog(
-        farmId: widget.farm.id,
-        onSuccess: _loadData,
-      ),
+      farm: widget.farm,
+      onSuccess: _loadData,
     );
   }
 
   void _showEditHouseDialog(BuildContext context, House house) {
-    showDialog(
+    AddEditHouseDialog.show(
       context: context,
-      builder: (context) => _AddEditHouseDialog(
-        farmId: widget.farm.id,
-        house: house,
-        onSuccess: _loadData,
-      ),
+      farm: widget.farm,
+      house: house,
+      onSuccess: _loadData,
     );
   }
 
@@ -178,6 +175,7 @@ class _HousesScreenState extends State<HousesScreen> {
           ),
         ],
       ),
+      bottomNavigationBar: const ExpenseMarqueeBannerCompact(),
       floatingActionButton: _showFab
           ? FloatingActionButton.extended(
         onPressed: () => _showAddHouseDialog(context),
@@ -691,164 +689,6 @@ class _InfoChip extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-// Keep the _AddEditHouseDialog class as it was
-class _AddEditHouseDialog extends StatefulWidget {
-  final String farmId;
-  final House? house;
-  final VoidCallback onSuccess;
-
-  const _AddEditHouseDialog({
-    required this.farmId,
-    this.house,
-    required this.onSuccess,
-  });
-
-  @override
-  State<_AddEditHouseDialog> createState() => _AddEditHouseDialogState();
-}
-
-class _AddEditHouseDialogState extends State<_AddEditHouseDialog> {
-  final _formKey = GlobalKey<FormState>();
-  late TextEditingController _nameController;
-  late TextEditingController _capacityController;
-  late TextEditingController _descriptionController;
-  final _repository = BatchHouseRepository();
-  bool _isLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController(text: widget.house?.houseName ?? '');
-    _capacityController = TextEditingController(text: widget.house?.capacity.toString() ?? '');
-    _descriptionController = TextEditingController(text: widget.house?.description ?? '');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: Colors.grey.shade50,
-      title: Text(widget.house == null ? 'Add New House' : 'Edit House'),
-      content: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ReusableInput(
-                controller: _nameController,
-                labelText: 'House Name',
-                topLabel: 'House Name',
-                hintText: 'Enter house name',
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter house name';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              ReusableInput(
-                controller: _capacityController,
-                labelText: 'Capacity',
-                topLabel: 'House Capacity',
-                hintText: 'Enter capacity',
-                suffixText: 'birds',
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter capacity';
-                  }
-                  if (int.tryParse(value) == null) {
-                    return 'Please enter a valid number';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              ReusableInput(
-                topLabel: 'House Description',
-                controller: _descriptionController,
-                labelText: 'Description (Optional)',
-                hintText: 'Enter house description',
-                maxLines: 3,
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: _isLoading ? null : () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: _isLoading ? null : _saveHouse,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green,
-          ),
-          child: _isLoading
-              ? const SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-            ),
-          )
-              : Text(widget.house == null ? 'Add House' : 'Update'),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _saveHouse() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      final houseData = {
-        'name': _nameController.text.trim(),
-        'capacity': int.parse(_capacityController.text.trim()),
-        'description': _descriptionController.text.trim().isNotEmpty
-            ? _descriptionController.text.trim()
-            : null,
-      };
-
-      if (widget.house == null) {
-        await _repository.createHouse(widget.farmId, houseData);
-        ToastUtil.showSuccess('House created successfully');
-      } else {
-        await _repository.updateHouse(widget.farmId, widget.house!.id!, houseData);
-        ToastUtil.showSuccess('House updated successfully');
-      }
-
-      if (context.mounted) {
-        Navigator.pop(context);
-        widget.onSuccess();
-      }
-    } catch (e) {
-      ApiErrorHandler.handle(e);
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _capacityController.dispose();
-    _descriptionController.dispose();
-    super.dispose();
   }
 }
 

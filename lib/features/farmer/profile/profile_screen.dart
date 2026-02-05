@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:agriflock360/core/model/user_model.dart';
 import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
+import 'package:agriflock360/core/widgets/expense/expense_marquee_banner.dart';
 import 'package:agriflock360/features/shared/widgets/profile_menu_item.dart';
 import 'package:agriflock360/main.dart';
 import 'package:flutter/material.dart';
@@ -396,6 +397,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
+      bottomNavigationBar: const ExpenseMarqueeBannerCompact(),
       body: SingleChildScrollView(
         child: Column(
           children: [

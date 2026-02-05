@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/widgets/expense/expense_marquee_banner.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_farmer_model.dart';
 import 'package:agriflock360/features/farmer/vet/repo/vet_farmer_repository.dart';
 import 'package:flutter/material.dart';
@@ -750,6 +751,7 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
+      bottomNavigationBar: const ExpenseMarqueeBannerCompact(),
       body: RefreshIndicator(
         onRefresh: _refreshData,
         child: SingleChildScrollView(

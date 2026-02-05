@@ -1,5 +1,6 @@
 import 'package:agriflock360/app_routes.dart';
 import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock360/core/widgets/expense/expense_marquee_banner.dart';
 import 'package:agriflock360/features/farmer/profile/models/profile_model.dart';
 import 'package:agriflock360/features/farmer/profile/repo/profile_repository.dart';
 import 'package:agriflock360/features/farmer/quotation/poultry_house_quotation.dart';
@@ -463,6 +464,7 @@ class _QuotationScreenState extends State<QuotationScreen>
         )
             : null,
       ),
+      bottomNavigationBar: const ExpenseMarqueeBannerCompact(),
       body: _isCheckingProfile
           ? Center(
         child: Column(

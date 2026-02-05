@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/widgets/expense/expense_marquee_banner.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/tabs/batch_expenditures_tab.dart';
 import 'package:agriflock360/features/farmer/batch/tabs/batch_feed_tab.dart';
@@ -108,6 +109,7 @@ class _BatchDetailsScreenState extends State<BatchDetailsScreen>
           ),
         ),
       ),
+      bottomNavigationBar: const ExpenseMarqueeBannerCompact(),
       body: TabBarView(
         controller: _tabController,
         children: [

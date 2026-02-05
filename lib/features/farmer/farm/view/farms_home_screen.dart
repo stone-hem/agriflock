@@ -1,6 +1,7 @@
 import 'package:agriflock360/app_routes.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
+import 'package:agriflock360/core/widgets/expense/expense_marquee_banner.dart';
 import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
 import 'package:agriflock360/features/farmer/farm/repositories/farm_repository.dart';
 import 'package:agriflock360/features/farmer/farm/view/edit_farm_screen.dart';
@@ -128,6 +129,7 @@ class _FarmsHomeScreenState extends State<FarmsHomeScreen> {
           ),
         ],
       ),
+      bottomNavigationBar: const ExpenseMarqueeBannerCompact(),
       floatingActionButton: _showFab
           ? FloatingActionButton.extended(
         onPressed: () async {
