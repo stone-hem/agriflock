@@ -150,7 +150,7 @@ class Medication {
 
   factory Medication.fromJson(Map<String, dynamic> json) {
     return Medication(
-      items: List<dynamic>.from(json['items']),
+      items: json['items'] != null ? List<dynamic>.from(json['items']) : [],
     );
   }
 }
@@ -166,8 +166,12 @@ class Vaccination {
 
   factory Vaccination.fromJson(Map<String, dynamic> json) {
     return Vaccination(
-      vaccinesDone: List<dynamic>.from(json['vaccines_done']),
-      vaccinesUpcoming: List<dynamic>.from(json['vaccines_upcoming']),
+      vaccinesDone: json['vaccines_done'] != null
+          ? List<dynamic>.from(json['vaccines_done'])
+          : [],
+      vaccinesUpcoming: json['vaccines_upcoming'] != null
+          ? List<dynamic>.from(json['vaccines_upcoming'])
+          : [],
     );
   }
 }
@@ -185,7 +189,7 @@ class BatchReport {
   final int ageWeeks;
   final BatchMortality mortality;
   final Feed feed;
-  final Medication medication;
+  final BatchMedication medication;
   final BatchVaccination vaccination;
   final EggProduction? eggProduction;
 
@@ -221,7 +225,7 @@ class BatchReport {
       ageWeeks: json['age_weeks'],
       mortality: BatchMortality.fromJson(json['mortality']),
       feed: Feed.fromJson(json['feed']),
-      medication: Medication.fromJson(json['medication']),
+      medication: BatchMedication.fromJson(json['medication']),
       vaccination: BatchVaccination.fromJson(json['vaccination']),
       eggProduction: json['egg_production'] != null
           ? EggProduction.fromJson(json['egg_production'])
@@ -282,6 +286,22 @@ class Feed {
   }
 }
 
+class BatchMedication {
+  final List<dynamic> medicationsAvailable;
+
+  BatchMedication({
+    required this.medicationsAvailable,
+  });
+
+  factory BatchMedication.fromJson(Map<String, dynamic> json) {
+    return BatchMedication(
+      medicationsAvailable: json['medications_available'] != null
+          ? List<dynamic>.from(json['medications_available'])
+          : [],
+    );
+  }
+}
+
 class BatchVaccination {
   final List<dynamic> vaccinesDone;
   final List<dynamic> vaccinesUpcoming;
@@ -293,8 +313,12 @@ class BatchVaccination {
 
   factory BatchVaccination.fromJson(Map<String, dynamic> json) {
     return BatchVaccination(
-      vaccinesDone: List<dynamic>.from(json['vaccines_done']),
-      vaccinesUpcoming: List<dynamic>.from(json['vaccines_upcoming']),
+      vaccinesDone: json['vaccines_done'] != null
+          ? List<dynamic>.from(json['vaccines_done'])
+          : [],
+      vaccinesUpcoming: json['vaccines_upcoming'] != null
+          ? List<dynamic>.from(json['vaccines_upcoming'])
+          : [],
     );
   }
 }

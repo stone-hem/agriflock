@@ -47,7 +47,7 @@ class User {
   final String? phoneNumber;
   final bool is2faEnabled;
   final String? emailVerificationExpiresAt;
-  final String? lastVerificationSentAt; // This was missing
+  final String? lastVerificationSentAt;
   final String? refreshTokenExpiresAt;
   final String? passwordResetExpiresAt;
   final String status;
@@ -75,7 +75,6 @@ class User {
   final num? currentNumberOfChickens;
   final String? preferredAgrovetName;
   final String? preferredFeedCompany;
-
 
   User({
     required this.id,
@@ -107,7 +106,11 @@ class User {
     this.dateOfBirth,
     this.gender,
     this.poultryType,
-    this.chickenHouseCapacity, this.yearsOfExperience, this.currentNumberOfChickens, this.preferredAgrovetName, this.preferredFeedCompany,
+    this.chickenHouseCapacity,
+    this.yearsOfExperience,
+    this.currentNumberOfChickens,
+    this.preferredAgrovetName,
+    this.preferredFeedCompany,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -144,9 +147,8 @@ class User {
       chickenHouseCapacity: json['chicken_house_capacity'],
       yearsOfExperience: json['years_of_experience'],
       currentNumberOfChickens: json['current_number_of_chickens'],
-        preferredAgrovetName: json['preferred_agrovet_name'],
-        preferredFeedCompany: json['preferred_feed_company'],
-
+      preferredAgrovetName: json['preferred_agrovet_name'],
+      preferredFeedCompany: json['preferred_feed_company'],
     );
   }
 
@@ -188,8 +190,85 @@ class User {
       'preferred_feed_company': preferredFeedCompany,
     };
   }
-}
 
+  // Add copyWith method
+  User copyWith({
+    String? id,
+    String? email,
+    String? name,
+    String? phoneNumber,
+    bool? is2faEnabled,
+    String? emailVerificationExpiresAt,
+    String? lastVerificationSentAt,
+    String? refreshTokenExpiresAt,
+    String? passwordResetExpiresAt,
+    String? status,
+    String? avatar,
+    String? googleId,
+    String? appleId,
+    String? oauthProvider,
+    String? roleId,
+    Role? role,
+    bool? isActive,
+    String? lockedUntil,
+    String? firstLogin,
+    String? lastLogin,
+    String? createdAt,
+    String? updatedAt,
+    String? deletedAt,
+    bool? agreedToTerms,
+    String? agreedToTermsAt,
+    String? nationalId,
+    String? dateOfBirth,
+    String? gender,
+    String? poultryType,
+    num? chickenHouseCapacity,
+    num? yearsOfExperience,
+    num? currentNumberOfChickens,
+    String? preferredAgrovetName,
+    String? preferredFeedCompany,
+  }) {
+    return User(
+      id: id ?? this.id,
+      email: email ?? this.email,
+      name: name ?? this.name,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      is2faEnabled: is2faEnabled ?? this.is2faEnabled,
+      emailVerificationExpiresAt:
+      emailVerificationExpiresAt ?? this.emailVerificationExpiresAt,
+      lastVerificationSentAt: lastVerificationSentAt ?? this.lastVerificationSentAt,
+      refreshTokenExpiresAt: refreshTokenExpiresAt ?? this.refreshTokenExpiresAt,
+      passwordResetExpiresAt:
+      passwordResetExpiresAt ?? this.passwordResetExpiresAt,
+      status: status ?? this.status,
+      avatar: avatar ?? this.avatar,
+      googleId: googleId ?? this.googleId,
+      appleId: appleId ?? this.appleId,
+      oauthProvider: oauthProvider ?? this.oauthProvider,
+      roleId: roleId ?? this.roleId,
+      role: role ?? this.role,
+      isActive: isActive ?? this.isActive,
+      lockedUntil: lockedUntil ?? this.lockedUntil,
+      firstLogin: firstLogin ?? this.firstLogin,
+      lastLogin: lastLogin ?? this.lastLogin,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      agreedToTerms: agreedToTerms ?? this.agreedToTerms,
+      agreedToTermsAt: agreedToTermsAt ?? this.agreedToTermsAt,
+      nationalId: nationalId ?? this.nationalId,
+      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
+      gender: gender ?? this.gender,
+      poultryType: poultryType ?? this.poultryType,
+      chickenHouseCapacity: chickenHouseCapacity ?? this.chickenHouseCapacity,
+      yearsOfExperience: yearsOfExperience ?? this.yearsOfExperience,
+      currentNumberOfChickens:
+      currentNumberOfChickens ?? this.currentNumberOfChickens,
+      preferredAgrovetName: preferredAgrovetName ?? this.preferredAgrovetName,
+      preferredFeedCompany: preferredFeedCompany ?? this.preferredFeedCompany,
+    );
+  }
+}
 
 class Role {
   final String id;

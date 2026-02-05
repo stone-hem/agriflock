@@ -48,6 +48,7 @@ class _FarmReportsScreenState extends State<FarmReportsScreen> {
     _selectedFarm = widget.farm;
     _initializeDates();
     _loadCurrency();
+    _loadReport(); // Auto-load with default filters
   }
 
   void _initializeDates() {
@@ -113,6 +114,200 @@ class _FarmReportsScreenState extends State<FarmReportsScreen> {
     }
   }
 
+  void _showFiltersBottomSheet() {
+    // Create temporary controllers with current values
+    final tempStartController = TextEditingController(text: _startDateController.text);
+    final tempEndController = TextEditingController(text: _endDateController.text);
+    String tempPeriod = _selectedPeriod;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Handle bar
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Title
+                    Row(
+                      children: [
+                        Icon(Icons.filter_list, color: Colors.grey.shade700),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Filter Report',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Date Range
+                    Text(
+                      'Date Range',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    CustomDateTextField(
+                      label: 'Start Date',
+                      icon: Icons.calendar_today,
+                      required: true,
+                      initialDate: DateTime.now().subtract(const Duration(days: 30)),
+                      minYear: DateTime.now().year - 2,
+                      maxYear: DateTime.now().year,
+                      returnFormat: DateReturnFormat.isoString,
+                      controller: tempStartController,
+                    ),
+                    CustomDateTextField(
+                      label: 'End Date',
+                      icon: Icons.calendar_today,
+                      required: true,
+                      initialDate: DateTime.now(),
+                      minYear: DateTime.now().year - 2,
+                      maxYear: DateTime.now().year,
+                      returnFormat: DateReturnFormat.isoString,
+                      controller: tempEndController,
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Period Selector
+                    Text(
+                      'Report Period',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _periods.map((period) {
+                        final isSelected = tempPeriod == period['value'];
+                        return GestureDetector(
+                          onTap: () {
+                            setModalState(() {
+                              tempPeriod = period['value']!;
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: isSelected ? Colors.blue : Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: isSelected ? Colors.blue : Colors.grey.shade300,
+                              ),
+                            ),
+                            child: Text(
+                              period['label']!,
+                              style: TextStyle(
+                                color: isSelected ? Colors.white : Colors.grey.shade700,
+                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Action buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              tempStartController.dispose();
+                              tempEndController.dispose();
+                              Navigator.pop(context);
+                            },
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              side: BorderSide(color: Colors.grey.shade300),
+                            ),
+                            child: const Text('Cancel'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              // Apply filters
+                              setState(() {
+                                _startDateController.text = tempStartController.text;
+                                _endDateController.text = tempEndController.text;
+                                _selectedPeriod = tempPeriod;
+                              });
+                              tempStartController.dispose();
+                              tempEndController.dispose();
+                              Navigator.pop(context);
+                              _loadReport();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: const Text(
+                              'Apply Filters',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -121,26 +316,150 @@ class _FarmReportsScreenState extends State<FarmReportsScreen> {
         title: Text(_selectedFarm.farmName),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        actions: [
+          // Filter button in app bar
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            onPressed: _showFiltersBottomSheet,
+            tooltip: 'Filter Report',
+          ),
+        ],
       ),
       bottomNavigationBar: const ExpenseMarqueeBannerCompact(),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildFarmHeader(),
-            const SizedBox(height: 20),
-            _buildDateFilters(),
-            const SizedBox(height: 20),
-            _buildPeriodSelector(),
-            const SizedBox(height: 20),
-            _buildGenerateButton(),
-            if (_reportData != null) ...[
-              const SizedBox(height: 24),
-              _buildReportContent(),
+      body: RefreshIndicator(
+        onRefresh: _loadReport,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildFarmHeader(),
+              const SizedBox(height: 16),
+
+              // Current filter summary
+              _buildCurrentFilterSummary(),
+
+              if (_isLoadingReport) ...[
+                const SizedBox(height: 40),
+                const Center(
+                  child: CircularProgressIndicator(),
+                ),
+              ] else if (_reportData != null) ...[
+                const SizedBox(height: 24),
+                _buildReportContent(),
+              ] else if (_error != null) ...[
+                const SizedBox(height: 40),
+                _buildErrorState(),
+              ],
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCurrentFilterSummary() {
+    final startDate = _startDateController.text.isNotEmpty
+        ? DateTime.parse(_startDateController.text)
+        : null;
+    final endDate = _endDateController.text.isNotEmpty
+        ? DateTime.parse(_endDateController.text)
+        : null;
+
+    final periodLabel = _periods.firstWhere(
+          (p) => p['value'] == _selectedPeriod,
+      orElse: () => {'label': 'Monthly'},
+    )['label'];
+
+    return GestureDetector(
+      onTap: _showFiltersBottomSheet,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.blue.shade50,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.blue.shade200),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.calendar_month, size: 20, color: Colors.blue.shade700),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$periodLabel Report',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.blue.shade900,
+                    ),
+                  ),
+                  if (startDate != null && endDate != null)
+                    Text(
+                      '${_formatDate(startDate)} - ${_formatDate(endDate)}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.blue.shade700,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Icon(Icons.tune, size: 18, color: Colors.blue.shade700),
           ],
         ),
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
+  }
+
+  Widget _buildErrorState() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.error_outline, size: 48, color: Colors.red.shade400),
+          const SizedBox(height: 12),
+          Text(
+            'Failed to load report',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.red.shade700,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _error ?? 'An error occurred',
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.red.shade600,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: _loadReport,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Retry'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade600,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -193,139 +512,6 @@ class _FarmReportsScreenState extends State<FarmReportsScreen> {
           ),
           Icon(Icons.check_circle, color: Colors.green.shade600),
         ],
-      ),
-    );
-  }
-
-  Widget _buildDateFilters() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Date Range',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey.shade700,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: CustomDateTextField(
-                label: 'Start Date',
-                icon: Icons.calendar_today,
-                required: true,
-                initialDate: DateTime.now().subtract(const Duration(days: 30)),
-                minYear: DateTime.now().year - 2,
-                maxYear: DateTime.now().year,
-                returnFormat: DateReturnFormat.isoString,
-                controller: _startDateController,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: CustomDateTextField(
-                label: 'End Date',
-                icon: Icons.calendar_today,
-                required: true,
-                initialDate: DateTime.now(),
-                minYear: DateTime.now().year - 2,
-                maxYear: DateTime.now().year,
-                returnFormat: DateReturnFormat.isoString,
-                controller: _endDateController,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPeriodSelector() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Report Period',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey.shade700,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: _periods.map((period) {
-            final isSelected = _selectedPeriod == period['value'];
-            return GestureDetector(
-              onTap: () {
-                setState(() => _selectedPeriod = period['value']!);
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(
-                  color: isSelected ? Colors.blue : Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: isSelected ? Colors.blue : Colors.grey.shade300,
-                  ),
-                ),
-                child: Text(
-                  period['label']!,
-                  style: TextStyle(
-                    color: isSelected ? Colors.white : Colors.grey.shade700,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildGenerateButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 50,
-      child: ElevatedButton(
-        onPressed: _isLoadingReport ? null : _loadReport,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          elevation: 0,
-        ),
-        child: _isLoadingReport
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
-              )
-            : const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.assessment),
-                  SizedBox(width: 8),
-                  Text(
-                    'Generate Report',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
       ),
     );
   }
@@ -397,6 +583,12 @@ class _FarmReportsScreenState extends State<FarmReportsScreen> {
               fontSize: 13,
               color: Colors.grey.shade500,
             ),
+          ),
+          const SizedBox(height: 16),
+          TextButton.icon(
+            onPressed: _showFiltersBottomSheet,
+            icon: const Icon(Icons.filter_list),
+            label: const Text('Change Filters'),
           ),
         ],
       ),

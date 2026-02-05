@@ -198,7 +198,7 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> {
 
       LogUtil.info('Schedule Vaccination Payload: $recordData');
 
-      final result = await _recordRepo.createFeedingRecord(recordData);
+      final result = await _recordRepo.recordVaccination(recordData);
 
       switch (result) {
         case Success():
@@ -267,7 +267,7 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> {
 
       LogUtil.info('Record Vaccination Payload: $recordData');
 
-      final result = await _recordRepo.createFeedingRecord(recordData);
+      final result = await _recordRepo.recordVaccination(recordData);
 
       switch (result) {
         case Success():

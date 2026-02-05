@@ -1,50 +1,50 @@
 class Expenditure {
   final String id;
   final String userId;
-  final String? farmId;  // Changed to nullable
+  final String? farmId;
   final String? houseId;
   final String? batchId;
   final String categoryId;
   final ExpenditureCategory category;
-  final String? categoryItemId;  // Add this field (nullable)
-  final CategoryItem? categoryItem;  // Add this field (nullable)
+  final String? categoryItemId;
+  final CategoryItem? categoryItem;
   final String description;
   final double amount;
   final double quantity;
   final String unit;
   final DateTime date;
   final String? supplier;
-  final bool usedImmediately;  // Add this field
+  final bool usedImmediately;
   final String? inventoryItemId;
   final InventoryItem? inventoryItem;
   final String? inventoryTransactionId;
   final DateTime? expiryDate;
-  final Map<String, dynamic>? metadata;  // Add this field
+  final Map<String, dynamic>? metadata;
   final DateTime createdAt;
   final DateTime updatedAt;
 
   const Expenditure({
     required this.id,
     required this.userId,
-    this.farmId,  // Now nullable
+    this.farmId,
     this.houseId,
     this.batchId,
     required this.categoryId,
     required this.category,
-    this.categoryItemId,  // Add this
-    this.categoryItem,  // Add this
+    this.categoryItemId,
+    this.categoryItem,
     required this.description,
     required this.amount,
     required this.quantity,
     required this.unit,
     required this.date,
     this.supplier,
-    required this.usedImmediately,  // Add this
+    required this.usedImmediately,
     this.inventoryItemId,
     this.inventoryItem,
     this.inventoryTransactionId,
     this.expiryDate,
-    this.metadata,  // Add this
+    this.metadata,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -53,13 +53,13 @@ class Expenditure {
     return Expenditure(
       id: json['id'] as String,
       userId: json['user_id'] as String,
-      farmId: json['farm_id'] as String?,  // Handle null
+      farmId: json['farm_id'] as String?,
       houseId: json['house_id'] as String?,
       batchId: json['batch_id'] as String?,
       categoryId: json['category_id'] as String,
       category: ExpenditureCategory.fromJson(json['category']),
-      categoryItemId: json['category_item_id'] as String?,  // Add this
-      categoryItem: json['category_item'] != null  // Add this
+      categoryItemId: json['category_item_id'] as String?,
+      categoryItem: json['category_item'] != null
           ? CategoryItem.fromJson(json['category_item'])
           : null,
       description: json['description'] as String,
@@ -68,7 +68,7 @@ class Expenditure {
       unit: json['unit'] as String,
       date: DateTime.parse(json['date'] as String),
       supplier: json['supplier'] as String?,
-      usedImmediately: json['used_immediately'] as bool? ?? false,  // Add this
+      usedImmediately: json['used_immediately'] as bool? ?? false,
       inventoryItemId: json['inventory_item_id'] as String?,
       inventoryItem: json['inventory_item'] != null
           ? InventoryItem.fromJson(json['inventory_item'])
@@ -77,7 +77,7 @@ class Expenditure {
       expiryDate: json['expiry_date'] != null
           ? DateTime.parse(json['expiry_date'] as String)
           : null,
-      metadata: json['metadata'] as Map<String, dynamic>?,  // Add this
+      metadata: json['metadata'] as Map<String, dynamic>?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
@@ -92,20 +92,20 @@ class Expenditure {
       'batch_id': batchId,
       'category_id': categoryId,
       'category': category.toJson(),
-      'category_item_id': categoryItemId,  // Add this
-      'category_item': categoryItem?.toJson(),  // Add this
+      'category_item_id': categoryItemId,
+      'category_item': categoryItem?.toJson(),
       'description': description,
       'amount': amount.toString(),
       'quantity': quantity.toString(),
       'unit': unit,
       'date': date.toIso8601String(),
       'supplier': supplier,
-      'used_immediately': usedImmediately,  // Add this
+      'used_immediately': usedImmediately,
       'inventory_item_id': inventoryItemId,
       'inventory_item': inventoryItem?.toJson(),
       'inventory_transaction_id': inventoryTransactionId,
       'expiry_date': expiryDate?.toIso8601String(),
-      'metadata': metadata,  // Add this
+      'metadata': metadata,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -134,14 +134,13 @@ class ExpenditureResponse {
   }
 }
 
-
 class ExpenditureCategory {
   final String id;
   final String name;
   final String description;
   final bool isActive;
-  final Map<String, dynamic>? metadata;  // Add this
-  final bool useFromStore;  // Add this
+  final Map<String, dynamic>? metadata;
+  final bool useFromStore;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -150,8 +149,8 @@ class ExpenditureCategory {
     required this.name,
     required this.description,
     required this.isActive,
-    this.metadata,  // Add this
-    required this.useFromStore,  // Add this
+    this.metadata,
+    required this.useFromStore,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -162,8 +161,8 @@ class ExpenditureCategory {
       name: json['name'] as String,
       description: json['description'] as String,
       isActive: json['is_active'] as bool,
-      metadata: json['metadata'] as Map<String, dynamic>?,  // Add this
-      useFromStore: json['use_from_store'] as bool,  // Add this
+      metadata: json['metadata'] as Map<String, dynamic>?,
+      useFromStore: json['use_from_store'] as bool,
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
     );
@@ -175,8 +174,8 @@ class ExpenditureCategory {
       'name': name,
       'description': description,
       'is_active': isActive,
-      'metadata': metadata,  // Add this
-      'use_from_store': useFromStore,  // Add this
+      'metadata': metadata,
+      'use_from_store': useFromStore,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -190,7 +189,7 @@ class CategoryItem {
   final String categoryItemUnit;
   final bool useFromStore;
   final String description;
-  final Map<String, dynamic>? components;
+  final dynamic components; // Changed from Map<String, dynamic>? to dynamic
   final Map<String, dynamic>? metadata;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -216,7 +215,7 @@ class CategoryItem {
       categoryItemUnit: json['category_item_unit'] as String,
       useFromStore: json['use_from_store'] as bool,
       description: json['description'] as String,
-      components: json['components'] as Map<String, dynamic>?,
+      components: json['components'], // Keep as dynamic, don't cast
       metadata: json['metadata'] as Map<String, dynamic>?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
@@ -236,6 +235,24 @@ class CategoryItem {
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
+  }
+
+  // Helper methods to safely access components
+  bool get isComponentsList => components is List;
+  bool get isComponentsMap => components is Map;
+
+  List<dynamic>? get componentsAsList {
+    if (components is List) {
+      return components as List<dynamic>;
+    }
+    return null;
+  }
+
+  Map<String, dynamic>? get componentsAsMap {
+    if (components is Map) {
+      return components as Map<String, dynamic>;
+    }
+    return null;
   }
 }
 
@@ -268,7 +285,9 @@ class CategoriesResponse {
 class InventoryItem {
   final String id;
   final String userId;
-  final String? farmId;  // ⚠️ CHANGE THIS TO NULLABLE
+  final String? farmId;
+  final String? batchId; // Add this
+  final String? houseId; // Add this
   final String categoryId;
   final String itemName;
   final String itemCode;
@@ -287,8 +306,8 @@ class InventoryItem {
   final DateTime? expiryDate;
   final String? notes;
   final String status;
-  final double? quantityUsed;  // ⚠️ ADD THIS FIELD (it's in your JSON)
-  final DateTime? lastUpdated;  // ⚠️ ADD THIS FIELD (it's in your JSON)
+  final double? quantityUsed;
+  final DateTime? lastUpdated;
   final Map<String, dynamic>? metadata;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -296,7 +315,9 @@ class InventoryItem {
   const InventoryItem({
     required this.id,
     required this.userId,
-    this.farmId,  // ⚠️ NOW NULLABLE
+    this.farmId,
+    this.batchId, // Add this
+    this.houseId, // Add this
     required this.categoryId,
     required this.itemName,
     required this.itemCode,
@@ -315,8 +336,8 @@ class InventoryItem {
     this.expiryDate,
     this.notes,
     required this.status,
-    this.quantityUsed,  // ⚠️ ADD THIS
-    this.lastUpdated,  // ⚠️ ADD THIS
+    this.quantityUsed,
+    this.lastUpdated,
     this.metadata,
     required this.createdAt,
     required this.updatedAt,
@@ -326,7 +347,9 @@ class InventoryItem {
     return InventoryItem(
       id: json['id'] as String,
       userId: json['user_id'] as String,
-      farmId: json['farm_id'] as String?,  // ⚠️ HANDLE NULL
+      farmId: json['farm_id'] as String?,
+      batchId: json['batch_id'] as String?, // Add this
+      houseId: json['house_id'] as String?, // Add this
       categoryId: json['category_id'] as String,
       itemName: json['item_name'] as String,
       itemCode: json['item_code'] as String,
@@ -349,10 +372,10 @@ class InventoryItem {
           : null,
       notes: json['notes'] as String?,
       status: json['status'] as String,
-      quantityUsed: json['quantity_used'] != null  // ⚠️ ADD THIS
+      quantityUsed: json['quantity_used'] != null
           ? double.parse(json['quantity_used'].toString())
           : null,
-      lastUpdated: json['last_updated'] != null  // ⚠️ ADD THIS
+      lastUpdated: json['last_updated'] != null
           ? DateTime.parse(json['last_updated'] as String)
           : null,
       metadata: json['metadata'] as Map<String, dynamic>?,
@@ -366,6 +389,8 @@ class InventoryItem {
       'id': id,
       'user_id': userId,
       'farm_id': farmId,
+      'batch_id': batchId, // Add this
+      'house_id': houseId, // Add this
       'category_id': categoryId,
       'item_name': itemName,
       'item_code': itemCode,
@@ -384,8 +409,8 @@ class InventoryItem {
       'expiry_date': expiryDate?.toIso8601String(),
       'notes': notes,
       'status': status,
-      'quantity_used': quantityUsed?.toString(),  // ⚠️ ADD THIS
-      'last_updated': lastUpdated?.toIso8601String(),  // ⚠️ ADD THIS
+      'quantity_used': quantityUsed?.toString(),
+      'last_updated': lastUpdated?.toIso8601String(),
       'metadata': metadata,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),

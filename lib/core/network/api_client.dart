@@ -326,6 +326,59 @@ class ApiClient {
     }
   }
 
+  /// PUT multipart request for single file upload (specifically for avatar)
+  Future<http.StreamedResponse> putMultipartSingleFile(
+      String endpoint, {
+        Map<String, String>? fields,
+        Map<String, String>? headers,
+        required http.MultipartFile file,
+        String method = 'POST', // Add method parameter with default value
+      }) async {
+    try {
+      Future<http.StreamedResponse> makeRequest() async {
+        final uri = Uri.parse('${AppConstants.baseUrl}$endpoint');
+        final request = http.MultipartRequest(method, uri);
+
+        final token = await storage.getToken();
+        final authHeaders = {
+          'Accept': 'application/json',
+          ...?headers,
+        };
+
+        if (token != null) {
+          authHeaders['Authorization'] = 'Bearer $token';
+        }
+
+        request.headers.addAll(authHeaders);
+
+        if (fields != null) {
+          request.fields.addAll(fields);
+        }
+
+        request.files.add(file); // Add single file
+
+        return await request.send();
+      }
+
+      final streamedResponse = await makeRequest();
+
+      if (streamedResponse.statusCode == 401) {
+        final refreshed = await _refreshToken();
+
+        if (refreshed) {
+          return await makeRequest();
+        } else {
+          await _handleUnauthorized();
+        }
+      }
+
+      return streamedResponse;
+    } catch (e) {
+      LogUtil.error('PUT Multipart request error: $e');
+      rethrow;
+    }
+  }
+
   Future<void> logout() async {
     try {
       await post('/auth/logout', body: {});

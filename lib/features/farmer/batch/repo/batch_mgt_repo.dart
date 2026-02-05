@@ -244,7 +244,7 @@ class BatchMgtRepository {
       LogUtil.info('Recording mortality for batch $batchId: $requestBody');
 
       final response = await apiClient.post(
-        '/batchs/$batchId/count',
+        '/batches/$batchId/count',
         body: requestBody,
       );
 

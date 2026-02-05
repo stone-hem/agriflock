@@ -1,9 +1,13 @@
-import 'dart:io';
 import 'dart:convert';
+import 'dart:io';
 import 'package:agriflock360/core/model/user_model.dart';
+import 'package:agriflock360/core/utils/log_util.dart';
+import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/core/widgets/expense/expense_marquee_banner.dart';
+import 'package:agriflock360/features/farmer/profile/models/profile_model.dart';
+import 'package:agriflock360/features/farmer/profile/repo/profile_repository.dart';
 import 'package:agriflock360/features/shared/widgets/profile_menu_item.dart';
 import 'package:agriflock360/main.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +25,8 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final SecureStorage _secureStorage = SecureStorage();
   final ImagePicker _imagePicker = ImagePicker();
+  final ProfileRepository _repository = ProfileRepository();
+
 
   // User data variables - Now using User object
   late User _user;
@@ -67,66 +73,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _isLoading = false;
         });
       } else {
-        // If no user data found, use default values
-        if (mounted) {
-          setState(() {
-            _user = User(
-              id: 'guest',
-              email: 'guest@example.com',
-              name: 'Guest Farmer',
-              phoneNumber: null,
-              is2faEnabled: false,
-              status: 'active',
-              oauthProvider: 'local',
-              roleId: '1',
-              role: Role(
-                id: '1',
-                name: 'Farmer',
-                description: 'Guest farmer role',
-                isSystemRole: false,
-                isActive: true,
-                createdAt: DateTime.now().toIso8601String(),
-                updatedAt: DateTime.now().toIso8601String(),
-              ),
-              isActive: true,
-              createdAt: DateTime.now().toIso8601String(),
-              updatedAt: DateTime.now().toIso8601String(),
-              agreedToTerms: false,
-            );
-            _isLoading = false;
-          });
-        }
+        apiClient.logout();
       }
     } catch (e) {
-      print('Error loading user data: $e');
-      if (mounted) {
-        setState(() {
-          _user = User(
-            id: 'error',
-            email: 'Error Loading',
-            name: 'Error Loading',
-            phoneNumber: null,
-            is2faEnabled: false,
-            status: 'error',
-            oauthProvider: '',
-            roleId: '',
-            role: Role(
-              id: '',
-              name: 'Farmer',
-              description: '',
-              isSystemRole: false,
-              isActive: true,
-              createdAt: '',
-              updatedAt: '',
-            ),
-            isActive: false,
-            createdAt: '',
-            updatedAt: '',
-            agreedToTerms: false,
-          );
-          _isLoading = false;
-        });
-      }
+      apiClient.logout();
     }
   }
 
@@ -190,56 +140,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
 
     try {
-      // Create multipart file
-      final file = await http.MultipartFile.fromPath(
-        'file', // Field name as per your API
+      final multipartFile = await http.MultipartFile.fromPath(
+        'file', // Changed from 'file' to 'avatar' to match API expectation
         imageFile.path,
+        contentType: http.MediaType('image', 'jpeg'), // Adjust based on file type
       );
 
-      // Use the ApiClient's postMultipart method
-      final response = await apiClient.postMultipart(
+      // Will Replace with your actual repository/service call
+      // Example: final result = await userRepository.uploadAvatar(imageFile);
+
+      // For now, using the ApiClient directly
+      final streamedResponse = await apiClient.putMultipartSingleFile(
         '/users/profile/avatar',
-        files: [file],
+        file: multipartFile,
       );
 
-      // Get the response
-      final responseBody = await response.stream.bytesToString();
-      final responseData = jsonDecode(responseBody);
+      // Convert StreamedResponse to Response
+      final response = await http.Response.fromStream(streamedResponse);
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        // Update avatar in local storage
-        final newAvatarUrl = responseData['avatar'] ?? responseData['data']?['avatar'];
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        // Parse the response
+        final responseData = jsonDecode(response.body);
+
+        LogUtil.error(responseData);
+
+        // Update local user data with new avatar URL
+        final newAvatarUrl = responseData['avatar_url'] ??
+            responseData['data']?['avatar_url'] ;
 
         if (newAvatarUrl != null) {
-          // Update user object with new avatar
-          final updatedUser = User(
-            id: _user.id,
-            email: _user.email,
-            name: _user.name,
-            phoneNumber: _user.phoneNumber,
-            is2faEnabled: _user.is2faEnabled,
-            emailVerificationExpiresAt: _user.emailVerificationExpiresAt,
-            refreshTokenExpiresAt: _user.refreshTokenExpiresAt,
-            passwordResetExpiresAt: _user.passwordResetExpiresAt,
-            status: _user.status,
-            avatar: newAvatarUrl,
-            googleId: _user.googleId,
-            appleId: _user.appleId,
-            oauthProvider: _user.oauthProvider,
-            roleId: _user.roleId,
-            role: _user.role,
-            isActive: _user.isActive,
-            lockedUntil: _user.lockedUntil,
-            createdAt: _user.createdAt,
-            updatedAt: _user.updatedAt,
-            deletedAt: _user.deletedAt,
-            agreedToTerms: _user.agreedToTerms,
-            agreedToTermsAt: _user.agreedToTermsAt,
-            firstLogin: _user.firstLogin,
-            lastLogin: _user.lastLogin,
-          );
+          // Create updated user object
+          final updatedUser = _user.copyWith(avatar: newAvatarUrl);
 
-          // Update secure storage
+          // Save to secure storage
           await _secureStorage.saveUser(updatedUser);
 
           // Update UI
@@ -251,13 +184,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           ToastUtil.showSuccess('Avatar updated successfully!');
         } else {
-          ToastUtil.showError('Failed to get avatar URL from response');
+          // Try to fetch updated user profile
+          await _refreshUserProfile();
+          ToastUtil.showSuccess('Avatar updated successfully!');
         }
       } else {
-        // Handle API error
+        // Handle error
+        final responseData = jsonDecode(response.body);
         final errorMessage = responseData['message'] ??
             responseData['error'] ??
-            'Failed to upload avatar';
+            'Failed to upload avatar (Status: ${response.statusCode})';
         ToastUtil.showError(errorMessage);
       }
     } catch (e) {
@@ -269,6 +205,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _isUploading = false;
         });
       }
+    }
+  }
+
+  Future<void> _refreshUserProfile() async {
+    try {
+      // Fetch updated user profile
+      final result = await _repository.getProfile();
+      switch(result) {
+        case Success<ProfileData>(data:final profileData):
+        // Create updated user object
+          final updatedUser = _user.copyWith(avatar: profileData.avatar);
+
+          // Save to secure storage
+          await _secureStorage.saveUser(updatedUser);
+
+          // Update UI
+          if (mounted) {
+            setState(() {
+              _user = updatedUser;
+            });
+          }
+        case Failure<ProfileData>(message:final error):
+          ToastUtil.showError('Profile refresh failed');
+      }
+
+    } catch (e) {
+      print('Error refreshing user profile: $e');
     }
   }
 
@@ -301,36 +264,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
 
     try {
+      // Use the repository/API service method
+      // Example: final result = await userRepository.deleteAvatar();
+
+      // For now, using the ApiClient directly
       final response = await apiClient.delete('/users/profile/avatar');
 
-      if (response.statusCode == 200 || response.statusCode == 204) {
-        // Update user object without avatar
-        final updatedUser = User(
-          id: _user.id,
-          email: _user.email,
-          name: _user.name,
-          phoneNumber: _user.phoneNumber,
-          is2faEnabled: _user.is2faEnabled,
-          emailVerificationExpiresAt: _user.emailVerificationExpiresAt,
-          refreshTokenExpiresAt: _user.refreshTokenExpiresAt,
-          passwordResetExpiresAt: _user.passwordResetExpiresAt,
-          status: _user.status,
-          avatar: null,
-          googleId: _user.googleId,
-          appleId: _user.appleId,
-          oauthProvider: _user.oauthProvider,
-          roleId: _user.roleId,
-          role: _user.role,
-          isActive: _user.isActive,
-          lockedUntil: _user.lockedUntil,
-          createdAt: _user.createdAt,
-          updatedAt: _user.updatedAt,
-          deletedAt: _user.deletedAt,
-          agreedToTerms: _user.agreedToTerms,
-          agreedToTermsAt: _user.agreedToTermsAt,
-          firstLogin: _user.firstLogin,
-          lastLogin: _user.lastLogin,
-        );
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        // Create updated user object without avatar
+        final updatedUser = _user.copyWith(avatar: null);
 
         // Update secure storage
         await _secureStorage.saveUser(updatedUser);
@@ -347,7 +289,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final responseData = jsonDecode(response.body);
         final errorMessage = responseData['message'] ??
             responseData['error'] ??
-            'Failed to remove avatar';
+            'Failed to remove avatar (Status: ${response.statusCode})';
         ToastUtil.showError(errorMessage);
       }
     } catch (e) {
@@ -417,47 +359,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Stack(
                     alignment: Alignment.center,
                     children: [
-                      _isLoading || _isUploading
-                          ? Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.grey.shade200,
-                        ),
-                        child: const Center(
-                          child: CircularProgressIndicator(),
-                        ),
-                      )
-                          : GestureDetector(
-                        onTap: _isUploading ? null : _uploadAvatar,
-                        child: Container(
+                      if (_isLoading || _isUploading)
+                        Container(
                           width: 100,
                           height: 100,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.green,
-                              width: 2,
+                            color: Colors.grey.shade200,
+                          ),
+                          child: const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        )
+                      else
+                        GestureDetector(
+                          onTap: _uploadAvatar,
+                          child: Container(
+                            width: 100,
+                            height: 100,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.green,
+                                width: 2,
+                              ),
+                            ),
+                            child: CircleAvatar(
+                              radius: 46,
+                              backgroundColor: Colors.white,
+                              backgroundImage: _user.avatar != null
+                                  ? NetworkImage(_user.avatar!)
+                                  : const AssetImage('assets/images/default_avatar.png')
+                              as ImageProvider,
+                              child: _user.avatar == null
+                                  ? const Icon(
+                                Icons.person,
+                                size: 40,
+                                color: Colors.grey,
+                              )
+                                  : null,
                             ),
                           ),
-                          child: CircleAvatar(
-                            radius: 46,
-                            backgroundColor: Colors.white,
-                            backgroundImage: _user.avatar != null
-                                ? NetworkImage(_user.avatar!)
-                                : const NetworkImage('https://i.pravatar.cc/300')
-                            as ImageProvider,
-                            child: _user.avatar == null
-                                ? const Icon(
-                              Icons.person,
-                              size: 40,
-                              color: Colors.grey,
-                            )
-                                : null,
-                          ),
                         ),
-                      ),
                       // Edit icon overlay
                       if (!_isLoading && !_isUploading)
                         Positioned(
@@ -609,8 +552,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                               TextButton(
                                 onPressed: () async {
-                                  // Clear secure storage before logging out
-                                  await _secureStorage.clearAll();
                                   Navigator.pop(context, true);
                                 },
                                 child: const Text('Log out'),
@@ -647,5 +588,4 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-
 }
