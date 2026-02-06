@@ -1,3 +1,5 @@
+import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock360/core/widgets/vet_unverified_banner.dart';
 import 'package:agriflock360/features/vet/schedules/models/visit_stats.dart';
 import 'package:agriflock360/features/vet/schedules/repo/visit_repo.dart';
 import 'package:agriflock360/features/vet/schedules/widgets/status_chip.dart';
@@ -17,6 +19,7 @@ class _VetSchedulesScreenState extends State<VetSchedulesScreen> {
 
   VisitStats? _visitStats;
   bool _isLoadingStats = false;
+  String? _statsCond;
   String _selectedStatus = VisitStatus.pending.value;
 
   @override
@@ -30,22 +33,31 @@ class _VetSchedulesScreenState extends State<VetSchedulesScreen> {
 
     final result = await _repository.getVisitStats();
 
-    if (mounted) {
-      result.when(
-        success: (stats) {
-          setState(() {
-            _visitStats = stats;
-            _isLoadingStats = false;
-          });
-        },
-        failure: (message, _, __) {
-          setState(() => _isLoadingStats = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message), backgroundColor: Colors.red),
-          );
-        },
-      );
+    if (!mounted) return;
+
+    if (result case Failure(:final cond, :final message)) {
+      setState(() {
+        _statsCond = cond;
+        _isLoadingStats = false;
+      });
+      if (cond != 'unverified_vet') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message), backgroundColor: Colors.red),
+        );
+      }
+      return;
     }
+
+    result.when(
+      success: (stats) {
+        setState(() {
+          _visitStats = stats;
+          _statsCond = null;
+          _isLoadingStats = false;
+        });
+      },
+      failure: (_, __, ___) {},
+    );
   }
 
   void _onStatusChanged(String status) {
@@ -93,7 +105,9 @@ class _VetSchedulesScreenState extends State<VetSchedulesScreen> {
           ),
         ],
       ),
-      body: Column(
+      body: _statsCond == 'unverified_vet'
+          ? VetUnverifiedBanner(onRefresh: _loadVisitStats)
+          : Column(
         children: [
           // Total visits counter
           if (_visitStats != null)

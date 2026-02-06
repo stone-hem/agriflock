@@ -1,4 +1,5 @@
 import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock360/core/widgets/vet_unverified_banner.dart';
 import 'package:agriflock360/features/vet/home/models/dashboard_stats_model.dart';
 import 'package:agriflock360/features/vet/home/repo/dashboard_stats_repo.dart';
 import 'package:agriflock360/features/vet/home/widgets/vet_dashboard_skeleton.dart';
@@ -21,6 +22,7 @@ class _VetHomeScreenState extends State<VetHomeScreen> {
   bool _isLoading = true;
   bool _isRefreshing = false;
   String _errorMessage = '';
+  String? _errorCond;
 
   @override
   void initState() {
@@ -37,6 +39,16 @@ class _VetHomeScreenState extends State<VetHomeScreen> {
 
     final result = await _dashboardRepository.getDashboardStats();
 
+    if (result case Failure(:final cond, :final message)) {
+      setState(() {
+        _errorCond = cond;
+        _errorMessage = message;
+        _isLoading = false;
+        _isRefreshing = false;
+      });
+      return;
+    }
+
     result.when(
       success: (stats) {
         setState(() {
@@ -44,15 +56,10 @@ class _VetHomeScreenState extends State<VetHomeScreen> {
           _isLoading = false;
           _isRefreshing = false;
           _errorMessage = '';
+          _errorCond = null;
         });
       },
-      failure: (message, response, statusCode) {
-        setState(() {
-          _errorMessage = message;
-          _isLoading = false;
-          _isRefreshing = false;
-        });
-      },
+      failure: (_, __, ___) {},
     );
   }
 
@@ -216,26 +223,31 @@ class _VetHomeScreenState extends State<VetHomeScreen> {
     if (_errorMessage.isNotEmpty && _dashboardStats == null) {
       return Scaffold(
         backgroundColor: Colors.grey.shade50,
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
-              const SizedBox(height: 16),
-              Text(
-                _errorMessage,
-                style: TextStyle(color: Colors.grey.shade600),
-                textAlign: TextAlign.center,
+        body: _errorCond == 'unverified_vet'
+            ? VetUnverifiedBanner(onRefresh: _loadDashboardData)
+            : Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Text(
+                        _errorMessage,
+                        style: TextStyle(color: Colors.grey.shade600),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: _loadDashboardData,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Retry'),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: _loadDashboardData,
-                icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
       );
     }
 

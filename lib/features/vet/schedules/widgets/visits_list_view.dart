@@ -1,4 +1,6 @@
 import 'package:agriflock360/core/utils/log_util.dart';
+import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock360/core/widgets/vet_unverified_banner.dart';
 import 'package:agriflock360/features/vet/schedules/models/visit_model.dart';
 import 'package:agriflock360/features/vet/schedules/repo/visit_repo.dart';
 import 'package:agriflock360/features/vet/schedules/widgets/visit_card.dart';
@@ -26,6 +28,7 @@ class _VisitsListViewState extends State<VisitsListView>
   bool _isLoading = false;
   bool _hasError = false;
   String _errorMessage = '';
+  String? _errorCond;
 
   @override
   bool get wantKeepAlive => true;
@@ -51,21 +54,28 @@ class _VisitsListViewState extends State<VisitsListView>
     LogUtil.warning(widget.status);
 
     if (mounted) {
+      if (result case Failure(:final cond, :final message)) {
+        setState(() {
+          _hasError = true;
+          _errorCond = cond;
+          _errorMessage = message;
+          _isLoading = false;
+        });
+        return;
+      }
+
       result.when(
         success: (visits) {
           setState(() {
             _visits.clear();
             _visits.addAll(visits);
+            _hasError = false;
+            _errorCond = null;
+            _errorMessage = '';
             _isLoading = false;
           });
         },
-        failure: (message, _, __) {
-          setState(() {
-            _hasError = true;
-            _errorMessage = message;
-            _isLoading = false;
-          });
-        },
+        failure: (_, __, ___) {},
       );
     }
   }
@@ -80,16 +90,22 @@ class _VisitsListViewState extends State<VisitsListView>
     super.build(context);
 
     if (_hasError && _visits.isEmpty) {
+      if (_errorCond == 'unverified_vet') {
+        return VetUnverifiedBanner(onRefresh: _loadVisits);
+      }
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
             const SizedBox(height: 16),
-            Text(
-              _errorMessage,
-              style: TextStyle(color: Colors.grey.shade600),
-              textAlign: TextAlign.center,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text(
+                _errorMessage,
+                style: TextStyle(color: Colors.grey.shade600),
+                textAlign: TextAlign.center,
+              ),
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(

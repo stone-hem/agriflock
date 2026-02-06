@@ -27,10 +27,12 @@ class Failure<T> extends Result<T> {
   final String message;
   final http.Response? response;
   final int? statusCode;
+  final String? cond;
 
   const Failure({
     required this.message,
     this.response,
     this.statusCode,
+    this.cond,
   });
 }

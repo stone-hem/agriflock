@@ -40,6 +40,7 @@ class VisitsRepository {
           message: jsonResponse['message'] ?? 'Failed to fetch vet visits',
           response: response,
           statusCode: response.statusCode,
+          cond: jsonResponse is Map ? jsonResponse['cond'] as String? : null,
         );
       }
     } on SocketException catch (e) {
@@ -309,6 +310,7 @@ class VisitsRepository {
           message: jsonResponse['message'] ?? 'Failed to fetch visit statistics',
           response: response,
           statusCode: response.statusCode,
+          cond: jsonResponse is Map ? jsonResponse['cond'] as String? : null,
         );
       }
     } on SocketException catch (e) {

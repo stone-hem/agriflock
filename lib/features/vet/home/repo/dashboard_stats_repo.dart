@@ -33,6 +33,7 @@ class VetDashboardRepository {
           message: jsonResponse['message'] ?? 'Failed to fetch dashboard statistics',
           response: response,
           statusCode: response.statusCode,
+          cond: jsonResponse is Map ? jsonResponse['cond'] as String? : null,
         );
       }
     } on SocketException catch (e) {
