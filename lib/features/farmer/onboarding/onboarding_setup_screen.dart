@@ -227,7 +227,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
 
     try {
       final houseData = <String, dynamic>{
-        'house_name': _houseNameController.text.trim(),
+        'name': _houseNameController.text.trim(),
         'capacity': int.tryParse(_houseCapacityController.text.trim()) ?? 500,
       };
 
