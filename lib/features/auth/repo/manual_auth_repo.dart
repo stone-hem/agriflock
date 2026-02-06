@@ -47,10 +47,12 @@ class ManualAuthRepository {
       } else {
         // Check for specific error cases
         final errorData = jsonDecode(response.body);
+        LogUtil.info(response.body);
+
 
         // Check for the new format first
         final cond = errorData['cond'] as String?;
-        final userId = errorData['userId'] as String?;
+        final userId = errorData['user_id'] as String?;
         final message = errorData['message'] as String?;
         final tempToken = errorData['tempToken'] as String?;
 

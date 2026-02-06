@@ -46,7 +46,7 @@ class SubscriptionRepository {
     try {
       final response = await apiClient.post(
         '/app-subscriptions',
-        body: jsonEncode({'planId': planId}),
+        body: {'planId': planId},
         headers: {'Content-Type': 'application/json'},
       );
       final jsonResponse = jsonDecode(response.body);

@@ -540,7 +540,7 @@ class _SignupScreenState extends State<SignupScreen> {
         );
 
         context.go(
-          '/verify-email-or-phone?email=${Uri.encodeComponent(email)}?userId=${Uri.encodeComponent(result['userId'])}',
+          '/verify-email-or-phone?email=${Uri.encodeComponent(email)}&userId=${Uri.encodeComponent(result['userId'])}',
         );
       }
     } catch (e) {

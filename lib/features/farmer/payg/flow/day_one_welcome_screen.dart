@@ -31,13 +31,6 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
         setState(() {
           _plans = plans;
           _isLoadingPlans = false;
-          // Auto-expand the free trial plan
-          for (int i = 0; i < plans.length; i++) {
-            if (plans[i].isFreeTrial) {
-              _expandedIndex = i;
-              break;
-            }
-          }
         });
       },
       failure: (_, __, ___) {

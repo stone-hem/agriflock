@@ -369,9 +369,10 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       } else if (result['needsVerification'] == true) {
         // Redirect to email verification
-        final email = result['email'] ?? '';
+        final verifyEmail = result['email'] ?? '';
+        final userId = result['userId'] ?? '';
         context.push(
-          '${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(email)}',
+          '${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(verifyEmail)}&userId=${Uri.encodeComponent(userId)}',
         );
       } else {
         // Handle other errors (including generic errors)
@@ -434,9 +435,10 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       } else if (response['needsVerification'] == true) {
         // Redirect to email verification
-        final email = response['email'] ?? '';
+        final verifyEmail = response['email'] ?? '';
+        final userId = response['userId'] ?? '';
         context.push(
-          '${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(email)}?userId=${Uri.encodeComponent(response['userId'])}',
+          '${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(verifyEmail)}&userId=${Uri.encodeComponent(userId)}',
         );
       }
     } catch (e) {
@@ -482,9 +484,10 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       } else if (response['needsVerification'] == true) {
         // Redirect to email verification
-        final email = response['email'] ?? '';
+        final verifyEmail = response['email'] ?? '';
+        final userId = response['userId'] ?? '';
         context.push(
-          '${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(email)}',
+          '${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(verifyEmail)}&userId=${Uri.encodeComponent(userId)}',
         );
       }
     } catch (e) {
