@@ -36,6 +36,7 @@ import 'package:agriflock360/features/farmer/profile/models/profile_model.dart';
 import 'package:agriflock360/features/farmer/profile/settings_screen.dart';
 import 'package:agriflock360/features/farmer/profile/telemetry_data_screen.dart';
 import 'package:agriflock360/features/farmer/profile/update_profile_screen.dart';
+import 'package:agriflock360/features/farmer/onboarding/onboarding_setup_screen.dart';
 import 'package:agriflock360/features/farmer/record/quick_record.dart';
 import 'package:agriflock360/features/farmer/batch/record_mortality_screen.dart';
 import 'package:agriflock360/features/farmer/report/batch/batch_report_screen.dart';
@@ -234,15 +235,20 @@ class AppRoutes {
           path: otpVerifyEmailOrPhone,
           builder: (context, state) {
             final email = state.uri.queryParameters['email'];
+            final userId = state.uri.queryParameters['userId'];
+
 
             if (email == null || email.isEmpty) {
-              return const Scaffold(
-                body: Center(child: Text('Email parameter is missing')),
-              );
+              return ErrorScreen(message: 'Email parameter is missing');
+            }
+
+            if (userId == null || userId.isEmpty) {
+              return ErrorScreen(message: 'User ID parameter is missing');
             }
             final decodedEmail = Uri.decodeComponent(email);
+            final decodedUserId = Uri.decodeComponent(userId);
 
-            return OTPVerifyScreen(email: decodedEmail);
+            return OTPVerifyScreen(email: decodedEmail, userId: decodedUserId);
           },
         ),
         GoRoute(
@@ -453,6 +459,10 @@ class AppRoutes {
         GoRoute(
           path: '/day1/welcome-msg-page',
           builder: (context, state) => const Day1WelcomeScreen(),
+        ),
+        GoRoute(
+          path: '/onboarding/setup',
+          builder: (context, state) => const OnboardingSetupScreen(),
         ),
         GoRoute(
           path: invoice,

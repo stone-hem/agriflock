@@ -42,6 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
   DateTime? _userFirstLoginDate;
   bool _isLoadingUser = true;
   int _daysSinceFirstLogin = 0;
+  String? _userName;
   bool _showDay27Modal = false;
   final GlobalKey _buttonKey = GlobalKey();
 
@@ -77,6 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
         if (mounted) {
           setState(() {
+            _userName = userData.name;
             _userFirstLoginDate = _parseDateTime(userData.firstLogin);
             _calculateDaysSinceFirstLogin();
             _checkDay27Modal();
@@ -487,6 +489,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             !_shouldShowFutureFramingBanner)
                           WelcomeSection(
                             greeting: _getGreeting(),
+                            userName: _userName,
                             summaryMsg: _getSummaryMessage(),
                             daysSinceLogin: _userFirstLoginDate != null
                                 ? _daysSinceFirstLogin

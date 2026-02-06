@@ -436,7 +436,7 @@ class _LoginScreenState extends State<LoginScreen> {
         // Redirect to email verification
         final email = response['email'] ?? '';
         context.push(
-          '${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(email)}',
+          '${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(email)}?userId=${Uri.encodeComponent(response['userId'])}',
         );
       }
     } catch (e) {

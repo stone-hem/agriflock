@@ -6,12 +6,14 @@ class WelcomeSection extends StatelessWidget {
   final String greeting;
   final String summaryMsg;
   final int? daysSinceLogin;
+  final String? userName;
 
   const WelcomeSection({
     super.key,
     required this.greeting,
     required this.summaryMsg,
     this.daysSinceLogin,
+    this.userName,
   });
 
   @override
@@ -50,7 +52,11 @@ class WelcomeSection extends StatelessWidget {
             ),
           const SizedBox(height: 2),
           Text(
-            '$greeting, Welcome back',
+            userName != null && userName!.isNotEmpty
+                ? '$greeting, $userName'
+                : greeting,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.titleMedium!.copyWith(
               color: Colors.grey.shade700,
               fontWeight: FontWeight.w400,

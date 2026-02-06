@@ -41,6 +41,40 @@ class SubscriptionRepository {
     }
   }
 
+  /// Subscribe to a plan (e.g. start free trial)
+  Future<Result<void>> subscribeToPlan(String planId) async {
+    try {
+      final response = await apiClient.post(
+        '/app-subscriptions',
+        body: jsonEncode({'planId': planId}),
+        headers: {'Content-Type': 'application/json'},
+      );
+      final jsonResponse = jsonDecode(response.body);
+      LogUtil.info('Subscribe to Plan API Response: $jsonResponse');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return const Success(null);
+      } else {
+        return Failure(
+          message: jsonResponse is Map
+              ? (jsonResponse['message'] ?? 'Failed to subscribe to plan')
+              : 'Failed to subscribe to plan',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in subscribeToPlan: $e');
+      return const Failure(
+        message: 'No internet connection. Please try again.',
+        statusCode: 0,
+      );
+    } catch (e) {
+      LogUtil.error('Error in subscribeToPlan: $e');
+      return Failure(message: e.toString());
+    }
+  }
+
   /// Get user's subscription history
   Future<Result<SubscriptionPlansResponse>> getSubscriptionHistory({
     int page = 1,

@@ -29,7 +29,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  // ── Farm form ──────────────────────────────────────────
+  // ── Step 1: Farm form ──────────────────────────────────
   final _farmFormKey = GlobalKey<FormState>();
   final _farmNameController = TextEditingController();
   final _farmDescriptionController = TextEditingController();
@@ -38,7 +38,13 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
   double? _longitude;
   File? _farmPhotoFile;
 
-  // ── Batch form ─────────────────────────────────────────
+  // ── Step 2: House form ─────────────────────────────────
+  final _houseFormKey = GlobalKey<FormState>();
+  final _houseNameController = TextEditingController();
+  final _houseCapacityController = TextEditingController();
+  final _houseDescriptionController = TextEditingController();
+
+  // ── Step 3: Batch form ─────────────────────────────────
   final _batchFormKey = GlobalKey<FormState>();
   final _batchNameController = TextEditingController();
   final _hatchController = TextEditingController();
@@ -79,12 +85,18 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
 
   // ── State ──────────────────────────────────────────────
   bool _isCreatingFarm = false;
+  bool _isCreatingHouse = false;
   bool _isCreatingBatch = false;
   String? _createdFarmId;
+  String? _createdFarmName;
+  String? _createdHouseId;
+  String? _createdHouseName;
+  String? _createdBatchName;
 
   @override
   void initState() {
     super.initState();
+    _houseNameController.text = 'House 1';
     _hatchController.text = DateUtil.toReadableDate(DateTime.now());
     _loadBirdTypes();
   }
@@ -104,7 +116,15 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
     }
   }
 
-  // ── Farm creation ──────────────────────────────────────
+  void _goToPage(int page) {
+    _pageController.animateToPage(
+      page,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  // ── Step 1: Farm creation ──────────────────────────────
   Future<void> _createFarm() async {
     if (!_farmFormKey.currentState!.validate()) return;
 
@@ -161,7 +181,6 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
       LogUtil.info('Farm create response: $jsonResponse');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        // Extract the farm ID from response
         final farmId = jsonResponse['id']
             ?? jsonResponse['data']?['id']
             ?? jsonResponse['farm']?['id'];
@@ -174,16 +193,12 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
 
         setState(() {
           _createdFarmId = farmId.toString();
+          _createdFarmName = _farmNameController.text.trim();
           _isCreatingFarm = false;
         });
 
-        ToastUtil.showSuccess('Farm "${_farmNameController.text}" created!');
-
-        // Move to batch step
-        _pageController.nextPage(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
+        ToastUtil.showSuccess('Farm "$_createdFarmName" created!');
+        _goToPage(1);
       } else {
         ApiErrorHandler.handle(response);
         setState(() => _isCreatingFarm = false);
@@ -199,8 +214,71 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
     }
   }
 
-  // ── House + Batch creation ─────────────────────────────
-  Future<void> _createHouseAndBatch() async {
+  // ── Step 2: House creation ─────────────────────────────
+  Future<void> _createHouse() async {
+    if (!_houseFormKey.currentState!.validate()) return;
+
+    if (_createdFarmId == null) {
+      ToastUtil.showError('Farm not found. Please go back and create a farm.');
+      return;
+    }
+
+    setState(() => _isCreatingHouse = true);
+
+    try {
+      final houseData = <String, dynamic>{
+        'house_name': _houseNameController.text.trim(),
+        'capacity': int.tryParse(_houseCapacityController.text.trim()) ?? 500,
+      };
+
+      if (_houseDescriptionController.text.trim().isNotEmpty) {
+        houseData['description'] = _houseDescriptionController.text.trim();
+      }
+
+      final response = await apiClient.post(
+        '/farms/$_createdFarmId/houses',
+        body: houseData,
+      );
+
+      final jsonResponse = jsonDecode(response.body);
+      LogUtil.info('House create response: $jsonResponse');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final houseId = jsonResponse['id']
+            ?? jsonResponse['data']?['id']
+            ?? jsonResponse['house']?['id'];
+
+        if (houseId == null) {
+          ToastUtil.showError('House created but could not retrieve ID');
+          setState(() => _isCreatingHouse = false);
+          return;
+        }
+
+        setState(() {
+          _createdHouseId = houseId.toString();
+          _createdHouseName = _houseNameController.text.trim();
+          _isCreatingHouse = false;
+        });
+
+        ToastUtil.showSuccess('House "$_createdHouseName" created!');
+        _goToPage(2);
+      } else {
+        ApiErrorHandler.handle(response);
+        setState(() => _isCreatingHouse = false);
+      }
+    } catch (e) {
+      LogUtil.error('Error creating house: $e');
+      if (e is http.Response) {
+        ApiErrorHandler.handle(e);
+      } else {
+        ToastUtil.showError('Failed to create house: $e');
+      }
+      setState(() => _isCreatingHouse = false);
+    }
+  }
+
+  // ── Step 3: Batch creation ─────────────────────────────
+  Future<void> _createBatch() async {
     if (!_batchFormKey.currentState!.validate()) return;
 
     if (_selectedFeedingTimeCategory == null ||
@@ -209,68 +287,38 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
       return;
     }
 
-    if (_createdFarmId == null) {
-      ToastUtil.showError('Farm not found. Please go back and create a farm.');
+    if (_createdHouseId == null) {
+      ToastUtil.showError('House not found. Please go back and create a house.');
       return;
     }
 
     setState(() => _isCreatingBatch = true);
 
     try {
-      // Step A: Create a default house for this farm
-      final initialCount = int.tryParse(_initialQuantityController.text.trim()) ?? 100;
-      final houseCapacity = (initialCount * 1.5).ceil(); // 50% buffer
-
-      final houseData = {
-        'house_name': 'House 1',
-        'capacity': houseCapacity,
-        'description': 'Default house created during onboarding',
-      };
-
-      final houseResponse = await apiClient.post(
-        '/farms/$_createdFarmId/houses',
-        body: houseData,
-      );
-
-      final houseJson = jsonDecode(houseResponse.body);
-      LogUtil.info('House create response: $houseJson');
-
-      if (houseResponse.statusCode < 200 || houseResponse.statusCode >= 300) {
-        ApiErrorHandler.handle(houseResponse);
-        setState(() => _isCreatingBatch = false);
-        return;
-      }
-
-      final houseId = houseJson['id']
-          ?? houseJson['data']?['id']
-          ?? houseJson['house']?['id'];
-
-      if (houseId == null) {
-        ToastUtil.showError('House created but could not retrieve ID');
-        setState(() => _isCreatingBatch = false);
-        return;
-      }
-
-      // Step B: Create the batch
+      final initialCount =
+          int.tryParse(_initialQuantityController.text.trim()) ?? 100;
       final selectedFeedingTimes =
           _selectedFeedingTimes[_selectedFeedingTimeCategory]!;
 
       final batchData = <String, dynamic>{
-        'house_id': houseId.toString(),
+        'house_id': _createdHouseId,
         'batch_name': _batchNameController.text.trim(),
         'bird_type_id': _selectedBirdTypeId,
         'batch_type': _selectedBatchType,
         'initial_count': initialCount,
-        'current_count': int.tryParse(_birdsAliveController.text.trim()) ?? initialCount,
-        'hatch_date': DateTime.parse(_hatchController.text).toUtc().toIso8601String(),
-        'birds_alive': int.tryParse(_birdsAliveController.text.trim()) ?? initialCount,
+        'current_count':
+            int.tryParse(_birdsAliveController.text.trim()) ?? initialCount,
+        'hatch_date':
+            DateTime.parse(_hatchController.text).toUtc().toIso8601String(),
+        'birds_alive':
+            int.tryParse(_birdsAliveController.text.trim()) ?? initialCount,
         'feeding_time': _selectedFeedingTimeCategory,
         'feeding_schedule': selectedFeedingTimes.join(','),
       };
 
       batchData.removeWhere((key, value) => value == null);
 
-      http.Response batchResponse;
+      http.Response response;
 
       if (_batchPhotoFile != null) {
         final fields = <String, String>{};
@@ -292,113 +340,126 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
           fields: fields,
           files: [multipartFile],
         );
-        batchResponse = await http.Response.fromStream(streamedResponse);
+        response = await http.Response.fromStream(streamedResponse);
       } else {
-        batchResponse = await apiClient.post('/batches', body: batchData);
+        response = await apiClient.post('/batches', body: batchData);
       }
 
-      final batchJson = jsonDecode(batchResponse.body);
-      LogUtil.info('Batch create response: $batchJson');
+      final jsonResponse = jsonDecode(response.body);
+      LogUtil.info('Batch create response: $jsonResponse');
 
-      if (batchResponse.statusCode >= 200 && batchResponse.statusCode < 300) {
-        ToastUtil.showSuccess('Batch created! You\'re all set.');
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        setState(() {
+          _createdBatchName = _batchNameController.text.trim();
+          _isCreatingBatch = false;
+        });
 
-        if (mounted) {
-          // Navigate to dashboard with farms tab selected
-          context.go('/dashboard', extra: 'farmer_farms');
-        }
+        ToastUtil.showSuccess('Batch created successfully!');
+        _goToPage(3); // Go to success page
       } else {
-        ApiErrorHandler.handle(batchResponse);
+        ApiErrorHandler.handle(response);
+        setState(() => _isCreatingBatch = false);
       }
     } catch (e) {
-      LogUtil.error('Error creating house/batch: $e');
+      LogUtil.error('Error creating batch: $e');
       if (e is http.Response) {
         ApiErrorHandler.handle(e);
       } else {
         ToastUtil.showError('Failed to create batch: $e');
       }
-    } finally {
-      if (mounted) {
-        setState(() => _isCreatingBatch = false);
-      }
+      setState(() => _isCreatingBatch = false);
+    }
+  }
+
+  bool get _isSubmitting => _isCreatingFarm || _isCreatingHouse || _isCreatingBatch;
+
+  String get _appBarTitle {
+    switch (_currentPage) {
+      case 0:
+        return 'Create Your Farm';
+      case 1:
+        return 'Add a House';
+      case 2:
+        return 'Add Your First Batch';
+      case 3:
+        return 'All Set!';
+      default:
+        return 'Setup';
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isSubmitting = _isCreatingFarm || _isCreatingBatch;
-
     return PopScope(
-      canPop: !isSubmitting,
+      canPop: !_isSubmitting,
       child: Scaffold(
         backgroundColor: Colors.grey.shade50,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          title: Text(
-            _currentPage == 0 ? 'Create Your Farm' : 'Add Your First Batch',
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: isSubmitting
-                ? null
-                : () {
-                    if (_currentPage > 0) {
-                      _pageController.previousPage(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                      );
-                    } else {
-                      context.go('/day1/welcome-msg-page');
-                    }
-                  },
-          ),
-          actions: [
-            if (isSubmitting)
-              const Padding(
-                padding: EdgeInsets.only(right: 16),
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+        appBar: _currentPage == 3
+            ? null
+            : AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                title: Text(
+                  _appBarTitle,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
-              ),
-          ],
-        ),
-        body: Column(
-          children: [
-            // Progress bar
-            LinearProgressIndicator(
-              value: (_currentPage + 1) / 2,
-              backgroundColor: Colors.grey.shade200,
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
-            ),
-
-            // Step indicator
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-              child: Row(
-                children: [
-                  _buildStepChip(0, 'Farm'),
-                  const SizedBox(width: 8),
-                  Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey.shade400),
-                  const SizedBox(width: 8),
-                  _buildStepChip(1, 'Batch'),
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: _isSubmitting
+                      ? null
+                      : () {
+                          if (_currentPage > 0) {
+                            _goToPage(_currentPage - 1);
+                          } else {
+                            context.go('/day1/welcome-msg-page');
+                          }
+                        },
+                ),
+                actions: [
+                  if (_isSubmitting)
+                    const Padding(
+                      padding: EdgeInsets.only(right: 16),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
                 ],
               ),
-            ),
+        body: Column(
+          children: [
+            // Progress bar + step chips (hide on success page)
+            if (_currentPage < 3) ...[
+              LinearProgressIndicator(
+                value: (_currentPage + 1) / 3,
+                backgroundColor: Colors.grey.shade200,
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+                child: Row(
+                  children: [
+                    _buildStepChip(0, 'Farm'),
+                    _buildArrow(),
+                    _buildStepChip(1, 'House'),
+                    _buildArrow(),
+                    _buildStepChip(2, 'Batch'),
+                  ],
+                ),
+              ),
+            ],
 
             Expanded(
               child: PageView(
                 controller: _pageController,
                 physics: const NeverScrollableScrollPhysics(),
-                onPageChanged: (page) {
-                  setState(() => _currentPage = page);
-                },
+                onPageChanged: (page) => setState(() => _currentPage = page),
                 children: [
                   _buildFarmStep(),
+                  _buildHouseStep(),
                   _buildBatchStep(),
+                  _buildSuccessStep(),
                 ],
               ),
             ),
@@ -408,11 +469,18 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
     );
   }
 
+  Widget _buildArrow() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Icon(Icons.arrow_forward_ios, size: 12, color: Colors.grey.shade400),
+    );
+  }
+
   Widget _buildStepChip(int step, String label) {
     final isActive = _currentPage >= step;
     final isCurrent = _currentPage == step;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: isCurrent
             ? Colors.green
@@ -428,12 +496,12 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (isActive && !isCurrent)
-            const Icon(Icons.check_circle, size: 16, color: Colors.green)
+            const Icon(Icons.check_circle, size: 14, color: Colors.green)
           else
             Text(
               '${step + 1}',
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: FontWeight.bold,
                 color: isCurrent ? Colors.white : Colors.grey.shade600,
               ),
@@ -442,9 +510,13 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
           Text(
             label,
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: isCurrent ? Colors.white : isActive ? Colors.green : Colors.grey.shade600,
+              color: isCurrent
+                  ? Colors.white
+                  : isActive
+                      ? Colors.green
+                      : Colors.grey.shade600,
             ),
           ),
         ],
@@ -452,7 +524,9 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
     );
   }
 
-  // ── Step 1: Farm ───────────────────────────────────────
+  // ══════════════════════════════════════════════════════════
+  //  STEP 1: FARM
+  // ══════════════════════════════════════════════════════════
   Widget _buildFarmStep() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -461,51 +535,20 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header card
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.green.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.green.shade100),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.agriculture_rounded, color: Colors.green.shade700, size: 28),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Step 1: Create your farm',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.green.shade800,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Give your farm a name and optionally set its location.',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.green.shade600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+            _buildInfoCard(
+              icon: Icons.agriculture_rounded,
+              color: Colors.green,
+              title: 'What is a Farm?',
+              description:
+                  'A farm is your main operation — the physical location where you '
+                  'raise your poultry. You can have multiple farms, each with its '
+                  'own houses and batches.',
             ),
             const SizedBox(height: 24),
 
             PhotoUpload(
               file: _farmPhotoFile,
-              onFileSelected: (File? file) {
-                setState(() => _farmPhotoFile = file);
-              },
+              onFileSelected: (File? file) => setState(() => _farmPhotoFile = file),
               title: 'Farm Photo (Optional)',
               description: 'Upload a photo of your farm',
               primaryColor: Colors.green,
@@ -516,9 +559,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
               topLabel: 'Farm Name',
               controller: _farmNameController,
               validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter farm name';
-                }
+                if (value == null || value.isEmpty) return 'Please enter farm name';
                 return null;
               },
               labelText: 'Name',
@@ -550,51 +591,122 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
             ),
             const SizedBox(height: 32),
 
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isCreatingFarm ? null : _createFarm,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 52),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 2,
-                ),
-                child: _isCreatingFarm
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text(
-                        'Create Farm & Continue',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                      ),
-              ),
+            _buildActionButton(
+              label: 'Create Farm & Continue',
+              isLoading: _isCreatingFarm,
+              onPressed: _createFarm,
             ),
-            const SizedBox(height: 12),
-            Center(
-              child: TextButton(
-                onPressed: _isCreatingFarm ? null : () => context.go('/dashboard'),
-                child: Text(
-                  'Skip setup for now',
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-                ),
-              ),
-            ),
+            const SizedBox(height: 8),
+            _buildSkipButton(),
           ],
         ),
       ),
     );
   }
 
-  // ── Step 2: Batch ──────────────────────────────────────
+  // ══════════════════════════════════════════════════════════
+  //  STEP 2: HOUSE
+  // ══════════════════════════════════════════════════════════
+  Widget _buildHouseStep() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Form(
+        key: _houseFormKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildInfoCard(
+              icon: Icons.house_rounded,
+              color: Colors.orange,
+              title: 'What is a House?',
+              description:
+                  'A house (or poultry house / shed) is a structure within your farm '
+                  'where birds are kept. Each house has a capacity limit and can hold '
+                  'one or more batches of birds.',
+            ),
+            const SizedBox(height: 16),
+
+            // Show which farm this house belongs to
+            if (_createdFarmName != null)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.green.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.check_circle, size: 18, color: Colors.green.shade700),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Adding house to: $_createdFarmName',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.green.shade800,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 20),
+
+            ReusableInput(
+              topLabel: 'House Name',
+              controller: _houseNameController,
+              validator: (value) {
+                if (value == null || value.isEmpty) return 'Please enter house name';
+                return null;
+              },
+              labelText: 'Name',
+              hintText: 'e.g., House 1, Main Shed',
+            ),
+            const SizedBox(height: 20),
+
+            ReusableInput(
+              topLabel: 'Capacity (number of birds)',
+              controller: _houseCapacityController,
+              keyboardType: TextInputType.number,
+              validator: (value) {
+                if (value == null || value.isEmpty) return 'Please enter capacity';
+                if (int.tryParse(value) == null) return 'Enter a valid number';
+                final cap = int.parse(value);
+                if (cap <= 0) return 'Capacity must be greater than 0';
+                return null;
+              },
+              labelText: 'Maximum bird capacity',
+              hintText: 'e.g., 500, 1000, 5000',
+            ),
+            const SizedBox(height: 20),
+
+            ReusableInput(
+              topLabel: 'Description (Optional)',
+              controller: _houseDescriptionController,
+              maxLines: 2,
+              labelText: 'Description',
+              hintText: 'e.g., Broiler house with automated feeders',
+            ),
+            const SizedBox(height: 32),
+
+            _buildActionButton(
+              label: 'Create House & Continue',
+              isLoading: _isCreatingHouse,
+              onPressed: _createHouse,
+            ),
+            const SizedBox(height: 8),
+            _buildSkipButton(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  STEP 3: BATCH
+  // ══════════════════════════════════════════════════════════
   Widget _buildBatchStep() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -603,51 +715,48 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header card
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue.shade100),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.egg_rounded, color: Colors.blue.shade700, size: 28),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Step 2: Add your first batch',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.blue.shade800,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'A default house will be created automatically. Fill in your batch details.',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.blue.shade600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+            _buildInfoCard(
+              icon: Icons.egg_rounded,
+              color: Colors.blue,
+              title: 'What is a Batch?',
+              description:
+                  'A batch is a group of birds placed in a house at the same time. '
+                  'You\'ll track feeding, vaccinations, medication, expenses, and '
+                  'growth for each batch separately.',
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
+
+            // Context: farm + house
+            if (_createdFarmName != null && _createdHouseName != null)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.green.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.check_circle, size: 18, color: Colors.green.shade700),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '$_createdFarmName  >  $_createdHouseName',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.green.shade800,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 20),
 
             PhotoUpload(
               file: _batchPhotoFile,
-              onFileSelected: (File? file) {
-                setState(() => _batchPhotoFile = file);
-              },
+              onFileSelected: (File? file) => setState(() => _batchPhotoFile = file),
               title: 'Batch Photo (Optional)',
               description: 'Upload a photo of your batch',
               primaryColor: Colors.green,
@@ -658,13 +767,11 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
               topLabel: 'Batch Name',
               controller: _batchNameController,
               validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter batch name';
-                }
+                if (value == null || value.isEmpty) return 'Please enter batch name';
                 return null;
               },
               labelText: 'Name',
-              hintText: 'e.g., Spring Broiler Batch 2026',
+              hintText: 'e.g., Broiler Batch 1',
             ),
             const SizedBox(height: 20),
 
@@ -687,10 +794,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Text(
-                          'Loading bird types...',
-                          style: TextStyle(color: Colors.grey.shade600),
-                        ),
+                        Text('Loading bird types...', style: TextStyle(color: Colors.grey.shade600)),
                       ],
                     ),
                   )
@@ -698,48 +802,28 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                     topLabel: 'Bird Type',
                     value: _selectedBirdTypeId,
                     hintText: 'Select bird type',
-                    items: _birdTypes.map((BirdType type) {
-                      return DropdownMenuItem<String>(
-                        value: type.id,
-                        child: Text(type.name),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      setState(() => _selectedBirdTypeId = newValue);
-                    },
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please select a bird type';
-                      }
-                      return null;
-                    },
+                    items: _birdTypes
+                        .map((t) => DropdownMenuItem(value: t.id, child: Text(t.name)))
+                        .toList(),
+                    onChanged: (v) => setState(() => _selectedBirdTypeId = v),
+                    validator: (v) =>
+                        (v == null || v.isEmpty) ? 'Please select a bird type' : null,
                   ),
             const SizedBox(height: 20),
 
-            // Batch Type
             ReusableDropdown<String>(
               topLabel: 'Batch Type',
               value: _selectedBatchType,
               hintText: 'Select batch type',
-              items: _batchTypes.map((String type) {
-                return DropdownMenuItem<String>(
-                  value: type,
-                  child: Text(type),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                setState(() => _selectedBatchType = newValue);
-              },
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please select a batch type';
-                }
-                return null;
-              },
+              items: _batchTypes
+                  .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                  .toList(),
+              onChanged: (v) => setState(() => _selectedBatchType = v),
+              validator: (v) =>
+                  (v == null || v.isEmpty) ? 'Please select a batch type' : null,
             ),
             const SizedBox(height: 20),
 
-            // Hatch Date
             CustomDateTextField(
               label: 'Date of Hatching',
               icon: Icons.calendar_today,
@@ -752,154 +836,119 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
             ),
             const SizedBox(height: 20),
 
-            // Initial Count
             ReusableInput(
               topLabel: 'Initial Bird Count',
               controller: _initialQuantityController,
               keyboardType: TextInputType.number,
               onChanged: (value) {
-                // Auto-fill birds alive if empty
                 if (_birdsAliveController.text.isEmpty) {
                   _birdsAliveController.text = value;
                 }
                 setState(() {});
               },
               validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter initial count';
-                }
-                if (int.tryParse(value) == null) {
-                  return 'Please enter a valid number';
-                }
-                final count = int.parse(value);
-                if (count <= 0) {
-                  return 'Initial count must be greater than 0';
-                }
+                if (value == null || value.isEmpty) return 'Please enter initial count';
+                if (int.tryParse(value) == null) return 'Enter a valid number';
+                if (int.parse(value) <= 0) return 'Must be greater than 0';
                 return null;
               },
-              labelText: 'Initial count from hatchery or other sources',
+              labelText: 'How many birds did you start with?',
               hintText: 'e.g., 100, 500, 1000',
             ),
             const SizedBox(height: 20),
 
-            // Current Birds Alive
             ReusableInput(
               topLabel: 'Current Bird Count',
               controller: _birdsAliveController,
               keyboardType: TextInputType.number,
               validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter current count';
-                }
-                if (int.tryParse(value) == null) {
-                  return 'Please enter a valid number';
-                }
+                if (value == null || value.isEmpty) return 'Please enter current count';
+                if (int.tryParse(value) == null) return 'Enter a valid number';
                 final alive = int.parse(value);
                 final initial = int.tryParse(_initialQuantityController.text) ?? 0;
-                if (alive > initial) {
-                  return 'Current count cannot exceed initial count';
-                }
+                if (alive > initial) return 'Cannot exceed initial count';
                 return null;
               },
-              labelText: 'Current count at the moment',
+              labelText: 'How many birds are alive right now?',
               hintText: 'e.g., 100',
             ),
             const SizedBox(height: 20),
 
-            // Feeding Time Category
             ReusableDropdown<String>(
               topLabel: 'Feeding Time',
               value: _selectedFeedingTimeCategory,
               hintText: 'Select feeding time category',
-              items: _feedingTimeOptions.keys.map((String category) {
-                return DropdownMenuItem<String>(
-                  value: category,
-                  child: Text(category),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                setState(() => _selectedFeedingTimeCategory = newValue);
-              },
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please select feeding time category';
-                }
-                return null;
-              },
+              items: _feedingTimeOptions.keys
+                  .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                  .toList(),
+              onChanged: (v) => setState(() => _selectedFeedingTimeCategory = v),
+              validator: (v) =>
+                  (v == null || v.isEmpty) ? 'Please select feeding time' : null,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
-            // Specific feeding times
             if (_selectedFeedingTimeCategory != null) ...[
               Text(
                 'Select Specific Feeding Times:',
                 style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade800,
+                    ),
               ),
               const SizedBox(height: 8),
-              Column(
-                children: _feedingTimeOptions[_selectedFeedingTimeCategory]!
-                    .map((time) {
-                  final isSelected =
-                      _selectedFeedingTimes[_selectedFeedingTimeCategory]!
-                          .contains(time);
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          if (isSelected) {
-                            _selectedFeedingTimes[_selectedFeedingTimeCategory]!
-                                .remove(time);
-                          } else {
-                            _selectedFeedingTimes[_selectedFeedingTimeCategory]!
-                                .add(time);
-                          }
-                        });
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? Colors.green.shade50
-                              : Colors.grey.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isSelected ? Colors.green : Colors.grey.shade300,
-                            width: isSelected ? 2 : 1,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              isSelected
-                                  ? Icons.check_circle
-                                  : Icons.radio_button_unchecked,
-                              color: isSelected ? Colors.green : Colors.grey,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                time,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  color: isSelected
-                                      ? Colors.green.shade800
-                                      : Colors.grey.shade800,
-                                ),
-                              ),
-                            ),
-                          ],
+              ..._feedingTimeOptions[_selectedFeedingTimeCategory]!.map((time) {
+                final sel = _selectedFeedingTimes[_selectedFeedingTimeCategory]!
+                    .contains(time);
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        if (sel) {
+                          _selectedFeedingTimes[_selectedFeedingTimeCategory]!
+                              .remove(time);
+                        } else {
+                          _selectedFeedingTimes[_selectedFeedingTimeCategory]!
+                              .add(time);
+                        }
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: sel ? Colors.green.shade50 : Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: sel ? Colors.green : Colors.grey.shade300,
+                          width: sel ? 2 : 1,
                         ),
                       ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            sel ? Icons.check_circle : Icons.radio_button_unchecked,
+                            color: sel ? Colors.green : Colors.grey,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              time,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                color: sel
+                                    ? Colors.green.shade800
+                                    : Colors.grey.shade800,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  );
-                }).toList(),
-              ),
+                  ),
+                );
+              }),
               if (_selectedFeedingTimes[_selectedFeedingTimeCategory]!.isNotEmpty) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -910,23 +959,18 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Selected Feeding Times:',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green,
-                        ),
+                        'Selected:',
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       Wrap(
-                        spacing: 8,
+                        spacing: 6,
                         runSpacing: 4,
                         children: _selectedFeedingTimes[_selectedFeedingTimeCategory]!
-                            .map((time) => Chip(
-                                  label: Text(
-                                    time,
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
+                            .map((t) => Chip(
+                                  label: Text(t, style: const TextStyle(color: Colors.white, fontSize: 12)),
                                   backgroundColor: Colors.green,
+                                  visualDensity: VisualDensity.compact,
                                 ))
                             .toList(),
                       ),
@@ -934,15 +978,129 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                   ),
                 ),
               ],
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
             ],
 
             const SizedBox(height: 16),
 
+            _buildActionButton(
+              label: 'Create Batch & Finish',
+              isLoading: _isCreatingBatch,
+              onPressed: _createBatch,
+            ),
+            const SizedBox(height: 8),
+            _buildSkipButton(),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  SUCCESS PAGE
+  // ══════════════════════════════════════════════════════════
+  Widget _buildSuccessStep() {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+
+            // Big checkmark
+            Container(
+              width: 90,
+              height: 90,
+              decoration: BoxDecoration(
+                color: Colors.green.shade50,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.green, width: 3),
+              ),
+              child: const Icon(Icons.check_rounded, size: 50, color: Colors.green),
+            ),
+            const SizedBox(height: 24),
+
+            const Text(
+              'You\'re All Set!',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Your farm is ready to go. Here\'s what was created:',
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 28),
+
+            // Summary cards
+            _buildSummaryRow(
+              Icons.agriculture_rounded,
+              Colors.green,
+              'Farm',
+              _createdFarmName ?? 'Your Farm',
+            ),
+            const SizedBox(height: 12),
+            _buildSummaryRow(
+              Icons.house_rounded,
+              Colors.orange,
+              'House',
+              _createdHouseName ?? 'House 1',
+            ),
+            const SizedBox(height: 12),
+            _buildSummaryRow(
+              Icons.egg_rounded,
+              Colors.blue,
+              'Batch',
+              _createdBatchName ?? 'Your Batch',
+            ),
+            const SizedBox(height: 32),
+
+            // What you can do now
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.blue.shade100),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'What you can now track on your batch:',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.blue.shade800,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildFeatureRow(Icons.restaurant_rounded, 'Feeding schedules & consumption'),
+                  const SizedBox(height: 8),
+                  _buildFeatureRow(Icons.vaccines_rounded, 'Vaccination records & reminders'),
+                  const SizedBox(height: 8),
+                  _buildFeatureRow(Icons.medication_rounded, 'Medication & treatment logs'),
+                  const SizedBox(height: 8),
+                  _buildFeatureRow(Icons.receipt_long_rounded, 'Expenses & input purchases'),
+                  const SizedBox(height: 8),
+                  _buildFeatureRow(Icons.trending_up_rounded, 'Growth & performance reports'),
+                  const SizedBox(height: 8),
+                  _buildFeatureRow(Icons.inventory_2_rounded, 'Inventory & store management'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _isCreatingBatch ? null : _createHouseAndBatch,
+                onPressed: () => context.go('/dashboard', extra: 'farmer_farms'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
                   foregroundColor: Colors.white,
@@ -952,30 +1110,9 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                   ),
                   elevation: 2,
                 ),
-                child: _isCreatingBatch
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text(
-                        'Create Batch & Go to Dashboard',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                      ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Center(
-              child: TextButton(
-                onPressed: _isCreatingBatch
-                    ? null
-                    : () => context.go('/dashboard', extra: 'farmer_farms'),
-                child: Text(
-                  'Skip for now',
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                child: const Text(
+                  'Go to Dashboard',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -986,11 +1123,160 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
     );
   }
 
+  // ── Shared helpers ─────────────────────────────────────
+
+  Widget _buildInfoCard({
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String description,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color, size: 26),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.grey.shade800,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600, height: 1.4),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required String label,
+    required bool isLoading,
+    required VoidCallback onPressed,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: isLoading ? null : onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.green,
+          foregroundColor: Colors.white,
+          minimumSize: const Size(double.infinity, 52),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          elevation: 2,
+        ),
+        child: isLoading
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+              )
+            : Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+      ),
+    );
+  }
+
+  Widget _buildSkipButton() {
+    return Center(
+      child: TextButton(
+        onPressed: _isSubmitting ? null : () => context.go('/dashboard'),
+        child: Text(
+          'Skip setup for now',
+          style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryRow(IconData icon, Color color, String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(fontSize: 11, color: Colors.grey.shade500, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+              ),
+            ],
+          ),
+          const Spacer(),
+          Icon(Icons.check_circle, color: color, size: 22),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeatureRow(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: Colors.blue.shade700),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade700, height: 1.3),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   void dispose() {
     _pageController.dispose();
     _farmNameController.dispose();
     _farmDescriptionController.dispose();
+    _houseNameController.dispose();
+    _houseCapacityController.dispose();
+    _houseDescriptionController.dispose();
     _batchNameController.dispose();
     _hatchController.dispose();
     _initialQuantityController.dispose();

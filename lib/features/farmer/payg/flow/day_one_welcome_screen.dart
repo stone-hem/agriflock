@@ -15,6 +15,7 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
 
   List<ActivePlan> _plans = [];
   bool _isLoadingPlans = true;
+  bool _isSubscribing = false;
   int? _expandedIndex;
 
   @override
@@ -58,6 +59,33 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
       default:
         return Colors.grey;
     }
+  }
+
+  Future<void> _subscribeToPlan() async {
+    // Find the free trial plan
+    final trialPlan = _plans.where((p) => p.isFreeTrial).firstOrNull;
+    if (trialPlan == null) {
+      // No trial plan found, just navigate
+      if (mounted) context.go('/onboarding/setup');
+      return;
+    }
+
+    setState(() => _isSubscribing = true);
+
+    final result = await _repo.subscribeToPlan(trialPlan.id);
+    if (!mounted) return;
+
+    result.when(
+      success: (_) {
+        context.go('/onboarding/setup');
+      },
+      failure: (message, _, __) {
+        setState(() => _isSubscribing = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message), backgroundColor: Colors.red),
+        );
+      },
+    );
   }
 
   IconData _planIcon(String planType) {
@@ -200,7 +228,7 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
               _buildContinueButton(),
               const SizedBox(height: 8),
               TextButton(
-                onPressed: () => context.go('/dashboard'),
+                onPressed: _isSubscribing ? null : () => context.go('/dashboard'),
                 child: Text(
                   'Skip for now',
                   style: TextStyle(color: Colors.grey[600], fontSize: 14),
@@ -217,7 +245,7 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: () => context.go('/onboarding/setup'),
+        onPressed: _isSubscribing ? null : _subscribeToPlan,
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.green,
           foregroundColor: Colors.white,
@@ -227,10 +255,19 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
           ),
           elevation: 2,
         ),
-        child: const Text(
-          'Set up your first farm & batch',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-        ),
+        child: _isSubscribing
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2.5,
+                ),
+              )
+            : const Text(
+                'Set up your first farm & batch',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
       ),
     );
   }

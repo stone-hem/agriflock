@@ -50,6 +50,7 @@ class ManualAuthRepository {
 
         // Check for the new format first
         final cond = errorData['cond'] as String?;
+        final userId = errorData['userId'] as String?;
         final message = errorData['message'] as String?;
         final tempToken = errorData['tempToken'] as String?;
 
@@ -66,6 +67,7 @@ class ManualAuthRepository {
             'needsVerification': true,
             'email': email,
             'message': message,
+            'userId': userId,
           };
         }
 
@@ -117,9 +119,13 @@ class ManualAuthRepository {
         };
       }
 
+      LogUtil.info(response.body);
+
+
       return {
         'success': true,
         'email': email,
+        'userId': jsonDecode(response.body)['user_id'],
       };
     } catch (e) {
       LogUtil.error(e.toString());
@@ -297,12 +303,14 @@ class ManualAuthRepository {
   /// - 'message': String
   Future<Map<String, dynamic>> verifyEmail({
     required String otpCode,
+    required String userId,
   }) async {
     try {
       final response = await apiClient.post(
         '/auth/verify-email',
         body: {
           'code': otpCode.trim(),
+          'userId':userId,
         },
       );
 
