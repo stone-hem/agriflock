@@ -71,7 +71,7 @@ class _FinancialPerformanceGraphState extends State<FinancialPerformanceGraph> {
     for (var point in _dataPoints) {
       if (point.income > _maxValue) _maxValue = point.income.toDouble();
       if (point.expenditure > _maxValue) _maxValue = point.expenditure.toDouble();
-      if (point.profit.abs() > _maxValue) _maxValue = point.profit.abs(); // ADD THIS
+      if (point.profit.abs() > _maxValue) _maxValue = point.profit.abs();
     }
 
     // Get profit values directly from data points
@@ -79,6 +79,9 @@ class _FinancialPerformanceGraphState extends State<FinancialPerformanceGraph> {
 
     // Add some padding to max value for better visualization
     _maxValue *= 1.1;
+
+    // Guard against all-zero data (new user) — prevents division by zero / NaN
+    if (_maxValue == 0) _maxValue = 1;
   }
 
   int _calculateTotalIncome() {
@@ -280,6 +283,8 @@ class FinancialGraphPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (dataPoints.isEmpty) return;
+
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
@@ -301,6 +306,9 @@ class FinancialGraphPainter extends CustomPainter {
       textDirection: TextDirection.ltr,
     );
 
+    // Effective maxValue — never zero to avoid NaN from division
+    final effectiveMax = maxValue > 0 ? maxValue : 1.0;
+
     // Draw grid lines
     for (int i = 0; i <= 4; i++) {
       final y = size.height - (i * size.height / 4);
@@ -311,7 +319,7 @@ class FinancialGraphPainter extends CustomPainter {
       );
 
       // Draw grid labels
-      final value = (maxValue * i / 4).toInt();
+      final value = (effectiveMax * i / 4).toInt();
       textPainter.text = TextSpan(
         text: '${(value / 1000).toStringAsFixed(0)}k',
         style: textStyle,
@@ -320,8 +328,10 @@ class FinancialGraphPainter extends CustomPainter {
       textPainter.paint(canvas, Offset(-textPainter.width - 4, y - 8));
     }
 
-    // Calculate point positions
-    final pointSpacing = size.width / (dataPoints.length - 1);
+    // Calculate point positions — guard single-point edge case
+    final pointSpacing = dataPoints.length > 1
+        ? size.width / (dataPoints.length - 1)
+        : size.width;
     final List<Offset> incomePoints = [];
     final List<Offset> expenditurePoints = [];
     final List<Offset> profitPoints = [];
@@ -330,24 +340,20 @@ class FinancialGraphPainter extends CustomPainter {
       final x = i * pointSpacing;
 
       // Income points (green)
-      final incomeY = size.height - (dataPoints[i].income / maxValue) * size.height;
+      final incomeY = size.height - (dataPoints[i].income / effectiveMax) * size.height;
       incomePoints.add(Offset(x, incomeY));
 
       // Expenditure points (red)
-      final expenditureY = size.height - (dataPoints[i].expenditure / maxValue) * size.height;
+      final expenditureY = size.height - (dataPoints[i].expenditure / effectiveMax) * size.height;
       expenditurePoints.add(Offset(x, expenditureY));
 
       // Profit points (blue)
-      // Adjust profit to be centered around the middle
       final profitValue = profitValues[i];
       double profitY;
 
       if (profitValue >= 0) {
-        // Positive profit - draw from bottom up
-        profitY = size.height - (profitValue / maxValue) * size.height;
+        profitY = size.height - (profitValue / effectiveMax) * size.height;
       } else {
-        // Negative profit - draw below baseline (optional, or keep at baseline)
-        // For now, we'll just keep it at the bottom
         profitY = size.height;
       }
       profitPoints.add(Offset(x, profitY));

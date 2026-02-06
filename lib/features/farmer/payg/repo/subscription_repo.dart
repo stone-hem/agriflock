@@ -8,6 +8,39 @@ import 'package:http/http.dart' as http;
 import '../../../../main.dart';
 
 class SubscriptionRepository {
+  /// Fetch active subscription plans from the API
+  Future<Result<List<ActivePlan>>> getActivePlans() async {
+    try {
+      final response = await apiClient.get('/app-subscription-plans/active');
+      final jsonResponse = jsonDecode(response.body);
+      LogUtil.info('Get Active Plans API Response: $jsonResponse');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final List<ActivePlan> plans = (jsonResponse as List)
+            .map((item) => ActivePlan.fromJson(item as Map<String, dynamic>))
+            .toList();
+        return Success(plans);
+      } else {
+        return Failure(
+          message: jsonResponse is Map
+              ? (jsonResponse['message'] ?? 'Failed to fetch plans')
+              : 'Failed to fetch plans',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in getActivePlans: $e');
+      return const Failure(
+        message: 'No internet connection. Pull down to retry.',
+        statusCode: 0,
+      );
+    } catch (e) {
+      LogUtil.error('Error in getActivePlans: $e');
+      return Failure(message: e.toString());
+    }
+  }
+
   /// Get user's subscription history
   Future<Result<SubscriptionPlansResponse>> getSubscriptionHistory({
     int page = 1,

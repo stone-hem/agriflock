@@ -189,6 +189,143 @@ class PlanFeatures {
   
 }
 
+/// Model for plans returned by /app-subscription-plans/active
+class ActivePlan {
+  final String id;
+  final String planType;
+  final String name;
+  final String description;
+  final String region;
+  final double priceAmount;
+  final String currency;
+  final List<String> includedModules;
+  final PlanFeatures features;
+  final bool isActive;
+  final int billingCycleDays;
+  final String createdAt;
+  final String updatedAt;
+
+  const ActivePlan({
+    required this.id,
+    required this.planType,
+    required this.name,
+    required this.description,
+    required this.region,
+    required this.priceAmount,
+    required this.currency,
+    required this.includedModules,
+    required this.features,
+    required this.isActive,
+    required this.billingCycleDays,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory ActivePlan.fromJson(Map<String, dynamic> json) {
+    return ActivePlan(
+      id: json['id'] ?? '',
+      planType: json['planType'] ?? '',
+      name: json['name'] ?? '',
+      description: json['description'] ?? '',
+      region: json['region'] ?? '',
+      priceAmount: (json['priceAmount'] ?? 0).toDouble(),
+      currency: json['currency'] ?? '',
+      includedModules: json['includedModules'] != null
+          ? List<String>.from(json['includedModules'])
+          : [],
+      features: PlanFeatures.fromJson(json['features'] ?? {}),
+      isActive: json['isActive'] ?? false,
+      billingCycleDays: json['billingCycleDays'] ?? 30,
+      createdAt: json['createdAt'] ?? '',
+      updatedAt: json['updatedAt'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'planType': planType,
+    'name': name,
+    'description': description,
+    'region': region,
+    'priceAmount': priceAmount,
+    'currency': currency,
+    'includedModules': includedModules,
+    'features': features.toJson(),
+    'isActive': isActive,
+    'billingCycleDays': billingCycleDays,
+    'createdAt': createdAt,
+    'updatedAt': updatedAt,
+  };
+
+  /// Human-readable feature descriptions for display
+  List<String> get readableFeatures {
+    final list = <String>[];
+
+    // Chick capacity
+    if (features.maxChicks != null && features.minChicks != null) {
+      list.add('Manage ${features.minChicks} to ${features.maxChicks} chicks per batch');
+    } else if (features.maxChicks != null) {
+      list.add('Manage up to ${features.maxChicks} chicks per batch');
+    } else if (features.minChicks != null) {
+      list.add('Manage ${features.minChicks}+ chicks — no upper limit');
+    }
+
+    // Included modules
+    for (final module in includedModules) {
+      switch (module) {
+        case 'VACCINATIONS':
+          list.add('Full vaccination tracking & reminders');
+        case 'FEEDING':
+          list.add('Smart feeding schedules & monitoring');
+        case 'MARKETPLACE':
+          list.add('Access to extension & vet marketplace');
+        case 'QUOTATIONS':
+          list.add('Quotation module — free for ${features.quotationFreePeriodDays} days');
+        default:
+          list.add(module[0] + module.substring(1).toLowerCase());
+      }
+    }
+
+    // Support level
+    switch (features.supportLevel) {
+      case 'standard':
+        list.add('Standard community support');
+      case 'priority':
+        list.add('Priority support — faster response times');
+      case 'premium':
+        list.add('Premium 24/7 dedicated support');
+      default:
+        if (features.supportLevel.isNotEmpty) {
+          list.add('${features.supportLevel[0].toUpperCase()}${features.supportLevel.substring(1)} support');
+        }
+    }
+
+    // Trial
+    if (features.trialPeriodDays > 0) {
+      list.add('${features.trialPeriodDays}-day free trial included');
+    }
+
+    // Marketplace access
+    if (features.marketplaceAccess == 'pay_per_use') {
+      list.add('Pay-per-use marketplace extensions');
+    }
+
+    return list;
+  }
+
+  /// Short chick-range label
+  String get chicksLabel {
+    if (features.maxChicks != null && features.minChicks != null) {
+      return '${features.minChicks}–${features.maxChicks} chicks';
+    } else if (features.maxChicks != null) {
+      return 'Up to ${features.maxChicks} chicks';
+    } else if (features.minChicks != null) {
+      return '${features.minChicks}+ chicks';
+    }
+    return '';
+  }
+}
+
 // Enum for subscription status (optional but recommended)
 enum SubscriptionPlanStatus {
   active,

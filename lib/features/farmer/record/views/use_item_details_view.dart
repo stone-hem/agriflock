@@ -1,4 +1,5 @@
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
+import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_list_model.dart';
 import 'package:agriflock360/features/farmer/expense/model/expense_category.dart';
@@ -481,17 +482,11 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: Colors.grey.shade200),
                         ),
-                        child: DropdownButtonFormField<String>(
+                        child: ReusableDropdown<String>(
                           value: _selectedMethodOfAdministration,
-                          decoration: const InputDecoration(
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 14,
-                            ),
-                            prefixIcon: Icon(Icons.medication_liquid),
-                          ),
-                          hint: const Text('Select method'),
+                          icon: Icons.medication_liquid,
+                          topLabel: 'Select method of administration',
+                          hintText: 'Select method',
                           items: [
                             'Drinking water',
                             'Injection',

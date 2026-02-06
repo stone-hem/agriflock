@@ -49,7 +49,6 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
   double? _quantity;
   double? _unitPrice;
   double? _totalPrice;
-  String? _methodOfAdministration;
   DateTime _selectedDate = DateTime.now();
 
   // Usage choice
@@ -200,7 +199,6 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
           'unit': 'unit',
           'date': _selectedDate.toUtc().toIso8601String(),
           'notes': null,
-          if (_methodOfAdministration != null) 'method_of_administration': _methodOfAdministration,
           if (_selectedBatch != null) 'batch_id': _selectedBatch!.id,
           if (_selectedBatch != null && _selectedBatch!.houseId != null) 'house_id': _selectedBatch!.houseId,
           'used_immediately': _useNow,
@@ -231,7 +229,9 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: !_isSubmitting,
+      child: Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: Text(_getPageTitle()),
@@ -239,14 +239,27 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            if (_currentPage > 0) {
-              _previousPage();
-            } else {
-              context.pop();
-            }
-          },
+          onPressed: _isSubmitting
+              ? null
+              : () {
+                  if (_currentPage > 0) {
+                    _previousPage();
+                  } else {
+                    context.pop();
+                  }
+                },
         ),
+        actions: [
+          if (_isSubmitting)
+            const Padding(
+              padding: EdgeInsets.only(right: 16),
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+        ],
       ),
       body: Column(
         children: [
@@ -316,7 +329,6 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
                   quantity: _quantity,
                   unitPrice: _unitPrice,
                   totalPrice: _totalPrice,
-                  methodOfAdministration: _methodOfAdministration,
                   selectedDate: _selectedDate,
                   onContinue: ({
                     required double quantity,
@@ -330,7 +342,6 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
                       _quantity = quantity;
                       _unitPrice = unitPrice;
                       _totalPrice = totalPrice;
-                      _methodOfAdministration = methodOfAdministration;
                       _selectedDate = selectedDate;
                     });
                     // For custom "Others" items, skip usage choice - always use immediately
@@ -364,6 +375,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
                   ),
                   quantity: _quantity!,
                   totalPrice: _totalPrice!,
+                  isSubmitting: _isSubmitting,
                   onChoice: (useNow) {
                     setState(() => _useNow = useNow);
                     if (useNow) {
@@ -428,6 +440,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

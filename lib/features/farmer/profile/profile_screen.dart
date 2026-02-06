@@ -341,6 +341,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       bottomNavigationBar: const ExpenseMarqueeBannerCompact(),
       body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+
         child: Column(
           children: [
             // Profile Header
@@ -475,113 +477,107 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                   ),
-
-                  // Profile Completion Card
-                  const SizedBox(height: 10),
                 ],
               ),
             ),
 
             // Menu Items
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                children: [
-                  ProfileMenuItem(
-                    icon: Icons.payment_outlined,
-                    title: 'Subscription',
-                    subtitle: 'Check my subscription',
-                    color: Colors.blue,
-                    onTap: () {
-                      context.push('/payg');
-                    },
-                  ),
-                  ProfileMenuItem(
-                    icon: Icons.location_on_outlined,
-                    title: 'Brooder live data',
-                    subtitle: 'See live brooder data',
-                    color: Colors.brown,
-                    onTap: () {
-                      context.push('/telemetry');
-                    },
-                  ),
-                  ProfileMenuItem(
-                    icon: Icons.settings_outlined,
-                    title: 'Settings',
-                    subtitle: 'App preferences and notifications',
-                    color: Colors.purple,
-                    onTap: () {
-                      context.push('/settings');
-                    },
-                  ),
-                  ProfileMenuItem(
-                    icon: Icons.help_outline,
-                    title: 'Help & Support',
-                    subtitle: 'Get help and contact support',
-                    color: Colors.orange,
-                    onTap: () {
-                      context.push('/help');
-                    },
-                  ),
-                  ProfileMenuItem(
-                    icon: Icons.info_outline,
-                    title: 'About Agriflock 360',
-                    subtitle: 'App version and information',
-                    color: Colors.teal,
-                    onTap: () {
-                      context.push('/about');
-                    },
-                  ),
-                  const SizedBox(height: 24),
+            Column(
+              children: [
+                ProfileMenuItem(
+                  icon: Icons.payment_outlined,
+                  title: 'Subscription',
+                  subtitle: 'Check my subscription',
+                  color: Colors.blue,
+                  onTap: () {
+                    context.push('/payg');
+                  },
+                ),
+                ProfileMenuItem(
+                  icon: Icons.location_on_outlined,
+                  title: 'Brooder live data',
+                  subtitle: 'See live brooder data',
+                  color: Colors.brown,
+                  onTap: () {
+                    context.push('/telemetry');
+                  },
+                ),
+                ProfileMenuItem(
+                  icon: Icons.settings_outlined,
+                  title: 'Settings',
+                  subtitle: 'App preferences and notifications',
+                  color: Colors.purple,
+                  onTap: () {
+                    context.push('/settings');
+                  },
+                ),
+                ProfileMenuItem(
+                  icon: Icons.help_outline,
+                  title: 'Help & Support',
+                  subtitle: 'Get help and contact support',
+                  color: Colors.orange,
+                  onTap: () {
+                    context.push('/help');
+                  },
+                ),
+                ProfileMenuItem(
+                  icon: Icons.info_outline,
+                  title: 'About Agriflock 360',
+                  subtitle: 'App version and information',
+                  color: Colors.teal,
+                  onTap: () {
+                    context.push('/about');
+                  },
+                ),
+                const SizedBox(height: 24),
 
-                  // Logout Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: OutlinedButton.icon(
-                      onPressed: () async {
-                        final confirm = await showDialog<bool>(
-                          context: context,
-                          builder: (_) => AlertDialog(
-                            title: const Text('Log out'),
-                            content: const Text('Are you sure you want to log out?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text('Cancel'),
-                              ),
-                              TextButton(
-                                onPressed: () async {
-                                  Navigator.pop(context, true);
-                                },
-                                child: const Text('Log out'),
-                              ),
-                            ],
-                          ),
-                        );
-
-                        if (confirm == true) {
-                          await apiClient.logout();
-                          context.go('/login');
-                        }
-                      },
-                      icon: const Icon(Icons.logout),
-                      label: const Text(
-                        'Log Out',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.red.shade700,
-                        side: BorderSide(color: Colors.red.shade300),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                // Logout Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (_) => AlertDialog(
+                          title: const Text('Log out'),
+                          content: const Text('Are you sure you want to log out?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                Navigator.pop(context, true);
+                              },
+                              child: const Text('Log out'),
+                            ),
+                          ],
                         ),
+                      );
+
+                      if (confirm == true) {
+                        await apiClient.logout();
+                        context.go('/login');
+                      }
+                    },
+                    icon: const Icon(Icons.logout),
+                    label: const Text(
+                      'Log Out',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red.shade700,
+                      side: BorderSide(color: Colors.red.shade300),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 30),
-                ],
-              ),
+                ),
+                const SizedBox(height: 30),
+              ],
             ),
           ],
         ),

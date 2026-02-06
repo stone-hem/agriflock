@@ -98,7 +98,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       _idNumberController.text = widget.profileData!.nationalId ?? '';
       _dobController.text = widget.profileData!.dateOfBirth ?? '';
       _selectedGender = widget.profileData!.gender ?? '';
-      _selectedPoultryType = widget.profileData!.poultryTypeId ?? '';
       _houseCapacityController.text = widget.profileData!.chickenHouseCapacity.toString();
       _preferredAgrovetController.text = widget.profileData!.preferredAgrovetName ?? '';
       _preferredFeedCompanyController.text = widget.profileData!.preferredFeedCompany ?? '';
@@ -274,7 +273,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       );
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
 
         // Create updated user with profile data
         final updatedUser = User(

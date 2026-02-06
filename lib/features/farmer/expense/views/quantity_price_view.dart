@@ -1,5 +1,4 @@
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
-import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/expense/model/expense_category.dart';
 import 'package:agriflock360/main.dart';
@@ -11,13 +10,11 @@ class QuantityPriceView extends StatefulWidget {
   final double? quantity;
   final double? unitPrice;
   final double? totalPrice;
-  final String? methodOfAdministration;
   final DateTime selectedDate;
   final Function({
   required double quantity,
   required double unitPrice,
   required double totalPrice,
-  String? methodOfAdministration,
   required DateTime selectedDate,
   }) onContinue;
   final VoidCallback onBack;
@@ -29,7 +26,6 @@ class QuantityPriceView extends StatefulWidget {
     this.quantity,
     this.unitPrice,
     this.totalPrice,
-    this.methodOfAdministration,
     required this.selectedDate,
     required this.onContinue,
     required this.onBack,
@@ -50,14 +46,6 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
   String _currency='';
 
 
-  final List<String> _administrationMethods = [
-    'Water',
-    'Feed',
-    'Injection',
-    'Spray',
-    'Other',
-  ];
-
 
   @override
   void initState() {
@@ -72,7 +60,6 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
     _dateController = TextEditingController(
       text: widget.selectedDate.toIso8601String(),
     );
-    _methodOfAdministration = widget.methodOfAdministration;
     _totalPrice = widget.totalPrice ?? 0.0;
 
     _quantityController.addListener(_calculateTotal);
@@ -112,13 +99,6 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
     }
   }
 
-  bool _isVaccineOrMedicine() {
-    final categoryLower = widget.category.name.toLowerCase();
-    return categoryLower.contains('vaccine') ||
-        categoryLower.contains('medicine') ||
-        categoryLower.contains('medication');
-  }
-
   void _handleContinue() {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -138,7 +118,6 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
       quantity: quantity,
       unitPrice: unitPrice,
       totalPrice: _totalPrice,
-      methodOfAdministration: _methodOfAdministration,
       selectedDate: DateTime.parse(_dateController.text),
     );
   }
@@ -146,7 +125,6 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
   @override
   Widget build(BuildContext context) {
     final categoryColor = _getCategoryColor();
-    final showAdministrationMethod = _isVaccineOrMedicine();
 
     return Column(
       children: [
@@ -298,34 +276,6 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Method of administration (for vaccines/medicines)
-                  if (showAdministrationMethod)
-                    ReusableDropdown<String>(
-                      value: _methodOfAdministration,
-                      topLabel: 'Method of Administration',
-                      icon: Icons.local_hospital,
-                      hintText: 'Select method',
-                      items: _administrationMethods.map((method) {
-                        return DropdownMenuItem<String>(
-                          value: method,
-                          child: Row(
-                            children: [
-                              Icon(
-                                _getAdministrationIcon(method),
-                                size: 18,
-                                color: Colors.grey.shade600,
-                              ),
-                              const SizedBox(width: 12),
-                              Text(method),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() => _methodOfAdministration = value);
-                      },
-                    ),
-
                   // Date
                   CustomDateTextField(
                     label: 'Date *',
@@ -391,20 +341,6 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
     }
   }
 
-  IconData _getAdministrationIcon(String method) {
-    switch (method.toLowerCase()) {
-      case 'water':
-        return Icons.water_drop;
-      case 'feed':
-        return Icons.fastfood;
-      case 'injection':
-        return Icons.medication_liquid;
-      case 'spray':
-        return Icons.water;
-      default:
-        return Icons.medical_services;
-    }
-  }
 
 
   @override

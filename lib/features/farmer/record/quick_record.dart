@@ -35,7 +35,6 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
   // Repositories
   final _categoriesRepository = CategoriesRepository();
   final _batchMgtRepository = BatchMgtRepository();
-  final _expenditureRepository = ExpenditureRepository();
   final _recordingRepo = RecordingRepo();
 
   // Data
@@ -245,7 +244,9 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: !_isSubmitting,
+      child: Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: Text(_getPageTitle()),
@@ -253,14 +254,27 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            if (_currentPage > 0) {
-              _previousPage();
-            } else {
-              context.pop();
-            }
-          },
+          onPressed: _isSubmitting
+              ? null
+              : () {
+                  if (_currentPage > 0) {
+                    _previousPage();
+                  } else {
+                    context.pop();
+                  }
+                },
         ),
+        actions: [
+          if (_isSubmitting)
+            const Padding(
+              padding: EdgeInsets.only(right: 16),
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+        ],
       ),
       body: Column(
         children: [
@@ -363,6 +377,7 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
             ),
           ),
         ],
+      ),
       ),
     );
   }
