@@ -53,7 +53,8 @@ class FirstLoginUtil {
 
   static bool isVetLogin(User? user) {
     if (user == null) return false;
-    return true;
+    final roleName = user.role.name.toLowerCase();
+    return roleName == 'extension_officer' || roleName == 'vet';
   }
 
 

@@ -202,6 +202,8 @@ class ActivePlan {
   final PlanFeatures features;
   final bool isActive;
   final int billingCycleDays;
+  final int? durationInMonths;
+  final int? trialPeriodDays;
   final String createdAt;
   final String updatedAt;
 
@@ -217,9 +219,13 @@ class ActivePlan {
     required this.features,
     required this.isActive,
     required this.billingCycleDays,
+    this.durationInMonths,
+    this.trialPeriodDays,
     required this.createdAt,
     required this.updatedAt,
   });
+
+  bool get isFreeTrial => planType.toUpperCase() == 'FREE_TRIAL';
 
   factory ActivePlan.fromJson(Map<String, dynamic> json) {
     return ActivePlan(
@@ -236,6 +242,8 @@ class ActivePlan {
       features: PlanFeatures.fromJson(json['features'] ?? {}),
       isActive: json['isActive'] ?? false,
       billingCycleDays: json['billingCycleDays'] ?? 30,
+      durationInMonths: json['durationInMonths'],
+      trialPeriodDays: json['trialPeriodDays'],
       createdAt: json['createdAt'] ?? '',
       updatedAt: json['updatedAt'] ?? '',
     );
@@ -253,6 +261,8 @@ class ActivePlan {
     'features': features.toJson(),
     'isActive': isActive,
     'billingCycleDays': billingCycleDays,
+    if (durationInMonths != null) 'durationInMonths': durationInMonths,
+    if (trialPeriodDays != null) 'trialPeriodDays': trialPeriodDays,
     'createdAt': createdAt,
     'updatedAt': updatedAt,
   };
