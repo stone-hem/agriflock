@@ -220,17 +220,6 @@ class _VetProfileScreenState extends State<VetProfileScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 children: [
-                  // Personal Information Section
-                  ProfileMenuItem(
-                    icon: Icons.person_outline,
-                    title: 'Personal Information',
-                    subtitle: 'View and edit your profile details',
-                    color: Colors.blue,
-                    onTap: () {
-                      // You can add navigation to edit profile screen here
-                      _showUserDetails(context);
-                    },
-                  ),
 
                   ProfileMenuItem(
                     icon: Icons.settings_outlined,
@@ -295,60 +284,6 @@ class _VetProfileScreenState extends State<VetProfileScreen> {
     );
   }
 
-  void _showUserDetails(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('User Details'),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildDetailRow('Name', _userName),
-              _buildDetailRow('Email', _userEmail),
-              if (_userPhone != null) _buildDetailRow('Phone', _userPhone!),
-              _buildDetailRow('Role', _userRole),
-              _buildDetailRow('Status', _isPremium ? 'Premium Member' : 'Standard Member'),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Colors.black87,
-            ),
-          ),
-          const Divider(height: 20),
-        ],
-      ),
-    );
-  }
 }
 
