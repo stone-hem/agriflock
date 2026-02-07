@@ -690,7 +690,7 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
     if (_isLoadingExpenditures && _expenditures.isEmpty) return const SizedBox();
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -709,7 +709,7 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
               textColor: Colors.blue.shade800,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
           Expanded(
             child: _buildStatCard(
               value: '$_totalItems',
@@ -717,18 +717,6 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
               icon: Icons.receipt,
               color: Colors.green.shade100,
               textColor: Colors.green.shade800,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _buildStatCard(
-              value: _expenditures.isEmpty
-                  ? '0'
-                  : (_totalAmount / _expenditures.length).toStringAsFixed(2),
-              label: 'Average Cost',
-              icon: Icons.trending_up,
-              color: Colors.purple.shade100,
-              textColor: Colors.purple.shade800,
             ),
           ),
         ],
@@ -761,26 +749,26 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
                   color: color,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, size: 16, color: textColor),
+                child: Icon(icon, size: 14, color: textColor),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               Expanded(
                 child: Text(
                   label,
                   style: TextStyle(
                     color: Colors.grey.shade600,
-                    fontSize: 12,
+                    fontSize: 10,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             value,
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: FontWeight.bold,
               color: textColor,
             ),
@@ -855,12 +843,6 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
             style: TextStyle(color: Colors.grey.shade600),
             textAlign: TextAlign.center,
           ),
-            ExpenseActionButton(
-              buttonColor: Colors.red,
-              onPressed: () {
-              context.push('/record-expenditure');
-            },
-            ),
         ],
       ),
     );
@@ -916,9 +898,11 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const DisclaimerWidget(
-                  title: 'Disclaimer',
-                  message: 'Record all expenditures for accurate reports.'
+               AnnouncementCard(
+                  title: 'Action',
+                  message: 'Record all expenditures for accurate reports.',
+                  actionLabel:'Add quick expense',
+                 onActionPressed: ()=>context.push('/record-expenditure'),
               ),
               SizedBox(height: 16,),
               // Search Bar
@@ -968,7 +952,7 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
         },
         icon: const Icon(Icons.add),
         label: const Text('New Expense'),
-        backgroundColor: Colors.green,
+        backgroundColor: Colors.red,
         foregroundColor: Colors.white,
       )
           : null,

@@ -12,6 +12,7 @@ import 'package:agriflock360/features/vet/schedules/vet_schedules_screen.dart';
 import 'package:agriflock360/features/farmer/home/view/home_screen.dart';
 import 'package:agriflock360/features/farmer/quotation/quotation_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class MainDashboard extends StatefulWidget {
   final String? initialTab;
@@ -224,48 +225,110 @@ class _MainDashboardState extends State<MainDashboard> {
       );
     }
 
-    return Scaffold(
-      body: _navConfigs[_selectedIndex].screen,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 20,
-              offset: const Offset(0, -2),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) {
+          return;
+        }
+
+        final shouldExit = await showDialog<bool>(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text('Exit Agriflock 360?'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min, // Add this line
+              children: [
+                Center(
+                  child: Image.asset(
+                    'assets/logos/Logo_0725.png',
+                    fit: BoxFit.cover,
+                    width: 120,
+                    height: 120,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.green,
+                        child: const Icon(
+                          Icons.image,
+                          size: 120,
+                          color: Colors.white54,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Agriflock 360',
+                  style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green.shade800,
+                  ),
+                ),
+                const SizedBox(height: 8), // Add spacing before the question
+                const Text('Are you sure you want to exit Agriflock 360?'),
+              ],
             ),
-          ],
-          border: Border(
-            top: BorderSide(
-              color: Colors.grey.shade200,
-              width: 1,
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('No, stay around'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Yes, exit and continue later'),
+              ),
+            ],
+          ),
+        );
+
+        if (shouldExit == true) {
+          // Use SystemNavigator to exit the app instead of Navigator.pop()
+          SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        body: _navConfigs[_selectedIndex].screen,
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, -2),
+              ),
+            ],
+            border: Border(
+              top: BorderSide(
+                color: Colors.grey.shade200,
+                width: 1,
+              ),
             ),
           ),
-        ),
-        child: NavigationBar(
-          selectedIndex: _selectedIndex,
-          onDestinationSelected: _onItemTapped,
-          indicatorColor: Colors.green.withValues(alpha: 0.15),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          height: 72,
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-          animationDuration: const Duration(milliseconds: 300),
-          destinations: _navConfigs
-              .asMap()
-              .entries
-              .map((entry) {
-            final index = entry.key;
-            final config = entry.value;
-            return NavDestinationItem(
-              icon: config.icon,
-              selectedIcon: config.selectedIcon,
-              label: config.label,
-              isSelected: _selectedIndex == index,
-            );
-          })
-              .toList(),
+          child: NavigationBar(
+            selectedIndex: _selectedIndex,
+            onDestinationSelected: _onItemTapped,
+            indicatorColor: Colors.green.withValues(alpha: 0.15),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            height: 72,
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+            animationDuration: const Duration(milliseconds: 300),
+            destinations: _navConfigs
+                .asMap()
+                .entries
+                .map((entry) {
+              final index = entry.key;
+              final config = entry.value;
+              return NavDestinationItem(
+                icon: config.icon,
+                selectedIcon: config.selectedIcon,
+                label: config.label,
+                isSelected: _selectedIndex == index,
+              );
+            }).toList(),
+          ),
         ),
       ),
     );

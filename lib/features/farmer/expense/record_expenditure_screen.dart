@@ -13,6 +13,7 @@ import 'package:agriflock360/features/farmer/farm/repositories/farm_repository.d
 import 'package:agriflock360/features/farmer/expense/model/expense_category.dart';
 import 'package:agriflock360/features/farmer/expense/repo/categories_repository.dart';
 import 'package:agriflock360/features/farmer/expense/repo/expenditure_repository.dart';
+import 'package:agriflock360/core/widgets/reusable_time_input.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -64,6 +65,7 @@ class _RecordExpenditureScreenState extends State<RecordExpenditureScreen> {
   String? _selectedUnit;
   final TextEditingController _supplierController = TextEditingController();
 
+  TimeOfDay _selectedTime = TimeOfDay.now();
   bool _isSubmitting = false;
 
   final List<String> _units = [
@@ -252,8 +254,8 @@ class _RecordExpenditureScreenState extends State<RecordExpenditureScreen> {
         selectedFeedingDate.year,
         selectedFeedingDate.month,
         selectedFeedingDate.day,
-        TimeOfDay.now().hour,
-        TimeOfDay.now().minute,
+        _selectedTime.hour,
+        _selectedTime.minute,
       );
 
       // Prepare expenditure data
@@ -1078,6 +1080,18 @@ class _RecordExpenditureScreenState extends State<RecordExpenditureScreen> {
                 returnFormat: DateReturnFormat.isoString,
                 maxYear: DateTime.now().year,
                 controller: _selectedDateController,
+              ),
+
+              // Time
+              ReusableTimeInput(
+                topLabel: 'Time *',
+                icon: Icons.access_time,
+                initialTime: _selectedTime,
+                onTimeChanged: (time) {
+                  setState(() {
+                    _selectedTime = time;
+                  });
+                },
               ),
 
               // Supplier

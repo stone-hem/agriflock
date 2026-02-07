@@ -209,7 +209,7 @@ class _ReportsFlowScreenState extends State<ReportsFlowScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const DisclaimerWidget(
+          const AnnouncementCard(
             title: 'Quick Reports',
             message: 'View detailed reports for your batches or entire farms.',
           ),

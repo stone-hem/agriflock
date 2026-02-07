@@ -134,7 +134,7 @@ class _BatchSelectionScreenState extends State<BatchSelectionScreen> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const DisclaimerWidget(
+              const AnnouncementCard(
                   title: 'Disclaimer',
                   message: 'Record all activities for accurate reports.'
               ),

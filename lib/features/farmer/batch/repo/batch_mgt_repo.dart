@@ -52,6 +52,44 @@ class BatchMgtRepository {
     return getBatchDetails(batchId);
   }
 
+  /// Get farm-level financial stats
+  Future<Result<BatchMgtResponse>> getFarmFinancialStats(String farmId) async {
+    try {
+      final response = await apiClient.get('/farms/$farmId/batchScreen');
+
+      final jsonResponse = jsonDecode(response.body);
+      LogUtil.info('Farm Financial Stats API Response: $jsonResponse');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return Success(BatchMgtResponse.fromJson(jsonResponse));
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to fetch farm financial stats',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in getFarmFinancialStats: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
+    } catch (e) {
+      LogUtil.error('Error in getFarmFinancialStats: $e');
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to fetch farm financial stats',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+
+      return Failure(message: e.toString());
+    }
+  }
+
 
   /// NEW: Get batches with pagination
   Future<Result<BatchListResponse>> getBatches({

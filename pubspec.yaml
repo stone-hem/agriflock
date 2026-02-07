@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+13
 
 environment:
-  sdk: ^3.10.7
+  sdk: ^3.10.8
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -80,6 +80,7 @@ flutter:
     - assets/logos/
     - assets/onboarding/
     - assets/quotation/
+    - assets/alert/
     - assets/data/countries.json
 
   # An image asset can refer to one or more resolution-specific "variants", see

@@ -450,37 +450,37 @@ class _ItemSelectionViewState extends State<ItemSelectionView> {
                                           ),
                                         ),
                                       ),
-                                    if (item.components != null && item.components is List && (item.components as List).isNotEmpty)
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 6),
-                                        child: Wrap(
-                                          spacing: 6,
-                                          runSpacing: 6,
-                                          children: (item.components as List).take(3).map<Widget>((component) {
-                                            return Container(
-                                              padding: const EdgeInsets.symmetric(
-                                                horizontal: 8,
-                                                vertical: 3,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: categoryColor.withOpacity(0.1),
-                                                borderRadius: BorderRadius.circular(6),
-                                                border: Border.all(
-                                                  color: categoryColor.withOpacity(0.3),
-                                                ),
-                                              ),
-                                              child: Text(
-                                                component.toString(),
-                                                style: TextStyle(
-                                                  fontSize: 10,
-                                                  color: categoryColor,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                            );
-                                          }).toList(),
-                                        ),
-                                      ),
+                                    // if (item.components != null && item.components is List && (item.components as List).isNotEmpty)
+                                    //   Padding(
+                                    //     padding: const EdgeInsets.only(top: 6),
+                                    //     child: Wrap(
+                                    //       spacing: 6,
+                                    //       runSpacing: 6,
+                                    //       children: (item.components as List).take(3).map<Widget>((component) {
+                                    //         return Container(
+                                    //           padding: const EdgeInsets.symmetric(
+                                    //             horizontal: 8,
+                                    //             vertical: 3,
+                                    //           ),
+                                    //           decoration: BoxDecoration(
+                                    //             color: categoryColor.withOpacity(0.1),
+                                    //             borderRadius: BorderRadius.circular(6),
+                                    //             border: Border.all(
+                                    //               color: categoryColor.withOpacity(0.3),
+                                    //             ),
+                                    //           ),
+                                    //           child: Text(
+                                    //             component.toString(),
+                                    //             style: TextStyle(
+                                    //               fontSize: 10,
+                                    //               color: categoryColor,
+                                    //               fontWeight: FontWeight.w500,
+                                    //             ),
+                                    //           ),
+                                    //         );
+                                    //       }).toList(),
+                                    //     ),
+                                    //   ),
                                   ],
                                 ),
                               ),

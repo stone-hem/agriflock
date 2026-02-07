@@ -635,13 +635,13 @@ class _HomeScreenState extends State<HomeScreen> {
         _buildQuickActionCard(
           icon: Icons.receipt_long,
           title: 'Expenditures',
-          subtitle: 'Record or View expenses',
+          subtitle: 'Review Your expenses and costs in details',
           color: Colors.red,
           onTap: () => context.push('/my-expenditures'),
         ),
         _buildQuickActionCard(
           icon: Icons.edit_note,
-          title: 'Quick Record',
+          title: 'Quick Daily Record',
           subtitle: 'Feed, vaccine or medication',
           color: Colors.green,
           onTap: () => context.push('/quick-recording'),
@@ -674,7 +674,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -697,13 +697,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(icon, color: color, size: 22),
+              child: Icon(icon, color: color, size: 20),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             Text(
               title,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: Colors.grey.shade800,
               ),

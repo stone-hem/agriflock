@@ -1,5 +1,6 @@
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
+import 'package:agriflock360/core/widgets/reusable_time_input.dart';
 import 'package:agriflock360/features/farmer/expense/model/expense_category.dart';
 import 'package:agriflock360/main.dart';
 import 'package:flutter/material.dart';
@@ -44,6 +45,7 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
   String? _methodOfAdministration;
   double _totalPrice = 0.0;
   String _currency='';
+  TimeOfDay _selectedTime = TimeOfDay.now();
 
 
 
@@ -114,11 +116,20 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
     final quantity = double.parse(_quantityController.text);
     final unitPrice = double.parse(_unitPriceController.text);
 
+    final parsedDate = DateTime.parse(_dateController.text);
+    final combinedDateTime = DateTime(
+      parsedDate.year,
+      parsedDate.month,
+      parsedDate.day,
+      _selectedTime.hour,
+      _selectedTime.minute,
+    );
+
     widget.onContinue(
       quantity: quantity,
       unitPrice: unitPrice,
       totalPrice: _totalPrice,
-      selectedDate: DateTime.parse(_dateController.text),
+      selectedDate: combinedDateTime,
     );
   }
 
@@ -191,7 +202,7 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'How much did you buy?',
+                    'How much did spent?',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -286,6 +297,18 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
                     maxYear: DateTime.now().year,
                     returnFormat: DateReturnFormat.isoString,
                     controller: _dateController,
+                  ),
+
+                  // Time
+                  ReusableTimeInput(
+                    topLabel: 'Time *',
+                    icon: Icons.access_time,
+                    initialTime: _selectedTime,
+                    onTimeChanged: (time) {
+                      setState(() {
+                        _selectedTime = time;
+                      });
+                    },
                   ),
                   const SizedBox(height: 32),
 

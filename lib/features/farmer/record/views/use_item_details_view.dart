@@ -1,6 +1,7 @@
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
+import 'package:agriflock360/core/widgets/reusable_time_input.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_list_model.dart';
 import 'package:agriflock360/features/farmer/expense/model/expense_category.dart';
 import 'package:flutter/material.dart';
@@ -57,6 +58,7 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
 
   String _searchQuery = '';
   String? _selectedMethodOfAdministration;
+  TimeOfDay _selectedTime = TimeOfDay.now();
 
   @override
   void initState() {
@@ -154,11 +156,20 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
       }
     }
 
+    // Combine date + time into a single DateTime
+    final combinedDateTime = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+      _selectedTime.hour,
+      _selectedTime.minute,
+    );
+
     widget.onSave(
       quantity: quantity,
       methodOfAdministration: _selectedMethodOfAdministration,
       notes: _notesController.text.isNotEmpty ? _notesController.text : null,
-      selectedDate: selectedDate,
+      selectedDate: combinedDateTime,
       dosesUsed: dosesUsed,
     );
   }
@@ -564,6 +575,17 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                       maxYear: DateTime.now().year,
                       returnFormat: DateReturnFormat.isoString,
                       controller: _dateController,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Time selection
+                    ReusableTimeInput(
+                      topLabel: 'Time Used',
+                      icon: Icons.access_time,
+                      initialTime: _selectedTime,
+                      onTimeChanged: (time) {
+                        setState(() => _selectedTime = time);
+                      },
                     ),
                     const SizedBox(height: 16),
 

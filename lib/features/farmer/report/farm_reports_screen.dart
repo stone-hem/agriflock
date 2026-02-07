@@ -3,6 +3,8 @@ import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/core/widgets/expense/expense_marquee_banner.dart';
+import 'package:agriflock360/features/farmer/batch/model/batch_mgt_model.dart';
+import 'package:agriflock360/features/farmer/batch/repo/batch_mgt_repo.dart';
 import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
 import 'package:agriflock360/features/farmer/report/models/farm_batch_report_model.dart';
 import 'package:agriflock360/features/farmer/report/repo/report_repo.dart';
@@ -17,9 +19,11 @@ class FarmReportsScreen extends StatefulWidget {
   State<FarmReportsScreen> createState() => _FarmReportsScreenState();
 }
 
-class _FarmReportsScreenState extends State<FarmReportsScreen> {
+class _FarmReportsScreenState extends State<FarmReportsScreen>
+    with SingleTickerProviderStateMixin {
   final _reportRepository = ReportRepository();
   final _secureStorage = SecureStorage();
+  late TabController _tabController;
 
   // Data
   late FarmModel _selectedFarm;
@@ -35,6 +39,13 @@ class _FarmReportsScreenState extends State<FarmReportsScreen> {
   String? _error;
   String _currency = 'KES';
 
+  // Financial report state
+  final BatchMgtRepository _batchMgtRepository = BatchMgtRepository();
+  BatchMgtResponse? _financialData;
+  bool _isLoadingFinancial = false;
+  String? _financialError;
+  String _selectedFinancialPeriod = 'today';
+
   final List<Map<String, String>> _periods = [
     {'value': 'daily', 'label': 'Daily'},
     {'value': 'weekly', 'label': 'Weekly'},
@@ -45,16 +56,18 @@ class _FarmReportsScreenState extends State<FarmReportsScreen> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _selectedFarm = widget.farm;
     _initializeDates();
     _loadCurrency();
-    _loadReport(); // Auto-load with default filters
+    _loadReport();
+    _loadFinancialData();
   }
 
   void _initializeDates() {
     final now = DateTime.now();
-    final startOfMonth = DateTime(now.year, now.month, 1);
-    _startDateController.text = startOfMonth.toIso8601String().split('T').first;
+    final today = DateTime(now.year, now.month, now.day);
+    _startDateController.text = today.toIso8601String().split('T').first;
     _endDateController.text = now.toIso8601String().split('T').first;
   }
 
@@ -111,6 +124,43 @@ class _FarmReportsScreenState extends State<FarmReportsScreen> {
         _error = e.toString();
         _isLoadingReport = false;
       });
+    }
+  }
+
+  Future<void> _loadFinancialData() async {
+    if (!mounted) return;
+
+    setState(() {
+      _isLoadingFinancial = true;
+      _financialError = null;
+    });
+
+    try {
+      final result = await _batchMgtRepository.getFarmFinancialStats(_selectedFarm.id);
+
+      if (!mounted) return;
+
+      switch (result) {
+        case Success<BatchMgtResponse>(data: final data):
+          setState(() {
+            _financialData = data;
+            _isLoadingFinancial = false;
+          });
+          break;
+        case Failure<BatchMgtResponse>(message: final message):
+          setState(() {
+            _financialError = message;
+            _isLoadingFinancial = false;
+          });
+          break;
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _financialError = e.toString();
+          _isLoadingFinancial = false;
+        });
+      }
     }
   }
 
@@ -308,6 +358,50 @@ class _FarmReportsScreenState extends State<FarmReportsScreen> {
     );
   }
 
+  FinancialPeriodStats _getSelectedFinancialStats() {
+    if (_financialData == null) {
+      return const FinancialPeriodStats(
+        feedingCost: 0,
+        vaccinationCost: 0,
+        inventoryCost: 0,
+        totalExpenditure: 0,
+        productIncome: 0,
+        netProfit: 0,
+      );
+    }
+    switch (_selectedFinancialPeriod) {
+      case 'today':
+        return _financialData!.financialStats.today;
+      case 'weekly':
+        return _financialData!.financialStats.weekly;
+      case 'monthly':
+        return _financialData!.financialStats.monthly;
+      case 'yearly':
+        return _financialData!.financialStats.yearly;
+      case 'all_time':
+        return _financialData!.financialStats.allTime;
+      default:
+        return _financialData!.financialStats.today;
+    }
+  }
+
+  String _getFinancialPeriodLabel(String period) {
+    switch (period) {
+      case 'today':
+        return 'Today';
+      case 'weekly':
+        return 'This Week';
+      case 'monthly':
+        return 'This Month';
+      case 'yearly':
+        return 'This Year';
+      case 'all_time':
+        return 'All Time';
+      default:
+        return 'Today';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -317,43 +411,66 @@ class _FarmReportsScreenState extends State<FarmReportsScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
-          // Filter button in app bar
           IconButton(
             icon: const Icon(Icons.filter_list),
             onPressed: _showFiltersBottomSheet,
             tooltip: 'Filter Report',
           ),
         ],
+        bottom: TabBar(
+          controller: _tabController,
+          labelColor: Colors.blue.shade700,
+          unselectedLabelColor: Colors.grey.shade600,
+          indicatorColor: Colors.blue.shade700,
+          tabs: const [
+            Tab(text: 'Production Report'),
+            Tab(text: 'Financial Report'),
+          ],
+        ),
       ),
       bottomNavigationBar: const ExpenseMarqueeBannerCompact(),
-      body: RefreshIndicator(
-        onRefresh: _loadReport,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildFarmHeader(),
-              const SizedBox(height: 16),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildProductionTab(),
+          _buildFinancialTab(),
+        ],
+      ),
+    );
+  }
 
-              // Current filter summary
-              _buildCurrentFilterSummary(),
+  // ──────────────────────────────────────────────
+  // Production Report Tab
+  // ──────────────────────────────────────────────
 
-              if (_isLoadingReport) ...[
-                const SizedBox(height: 40),
-                const Center(
-                  child: CircularProgressIndicator(),
-                ),
-              ] else if (_reportData != null) ...[
-                const SizedBox(height: 24),
-                _buildReportContent(),
-              ] else if (_error != null) ...[
-                const SizedBox(height: 40),
-                _buildErrorState(),
-              ],
+  Widget _buildProductionTab() {
+    return RefreshIndicator(
+      onRefresh: _loadReport,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildFarmHeader(),
+            const SizedBox(height: 16),
+
+            // Current filter summary
+            _buildCurrentFilterSummary(),
+
+            if (_isLoadingReport) ...[
+              const SizedBox(height: 40),
+              const Center(
+                child: CircularProgressIndicator(),
+              ),
+            ] else if (_reportData != null) ...[
+              const SizedBox(height: 24),
+              _buildReportContent(),
+            ] else if (_error != null) ...[
+              const SizedBox(height: 40),
+              _buildErrorState(),
             ],
-          ),
+          ],
         ),
       ),
     );
@@ -788,7 +905,7 @@ class _FarmReportsScreenState extends State<FarmReportsScreen> {
           Row(
             children: [
               _buildBatchStat('Mortality', '${batch.mortality.cumulativeTotal}', Colors.red),
-              _buildBatchStat('Feed', '${batch.feed.bagsConsumed} bags', Colors.orange),
+              _buildBatchStat('Feed', '${batch.feed.bagsConsumed} kgs', Colors.orange),
               _buildBatchStat('Vaccinations', '${batch.vaccination.vaccinesDone.length}', Colors.blue),
             ],
           ),
@@ -847,8 +964,409 @@ class _FarmReportsScreenState extends State<FarmReportsScreen> {
     }
   }
 
+  // ──────────────────────────────────────────────
+  // Financial Report Tab
+  // ──────────────────────────────────────────────
+
+  Widget _buildFinancialTab() {
+    if (_isLoadingFinancial) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_financialError != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: Colors.red),
+              const SizedBox(height: 16),
+              Text('Error: $_financialError', textAlign: TextAlign.center),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadFinancialData,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_financialData == null) {
+      return const Center(child: Text('No financial data available'));
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Financial Overview',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+
+          // Period Selection Buttons
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildFinancialPeriodButton('today', 'Today'),
+                const SizedBox(width: 8),
+                _buildFinancialPeriodButton('weekly', 'Week'),
+                const SizedBox(width: 8),
+                _buildFinancialPeriodButton('monthly', 'Month'),
+                const SizedBox(width: 8),
+                _buildFinancialPeriodButton('yearly', 'Year'),
+                const SizedBox(width: 8),
+                _buildFinancialPeriodButton('all_time', 'All Time'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Selected Period Stats Card
+          Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: Colors.grey.shade200),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  // Period Header with net profit/loss
+                  Row(
+                    children: [
+                      Icon(
+                        _getFinancialPeriodIcon(_selectedFinancialPeriod),
+                        size: 24,
+                        color: _getFinancialPeriodColor(_selectedFinancialPeriod),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        _getFinancialPeriodLabel(_selectedFinancialPeriod),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: _getSelectedFinancialStats().netProfit >= 0
+                              ? Colors.green.withOpacity(0.1)
+                              : Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          _getSelectedFinancialStats().netProfit >= 0
+                              ? 'Profit: $_currency ${_getSelectedFinancialStats().netProfit.toStringAsFixed(2)}'
+                              : 'Loss: $_currency ${_getSelectedFinancialStats().netProfit.abs().toStringAsFixed(2)}',
+                          style: TextStyle(
+                            color: _getSelectedFinancialStats().netProfit >= 0
+                                ? Colors.green
+                                : Colors.red,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Cost Breakdown
+                  _buildFinancialCostBreakdown(),
+                  const SizedBox(height: 16),
+
+                  // Income vs Expenditure Summary
+                  _buildFinancialIncomeExpenditureSummary(),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFinancialPeriodButton(String period, String label) {
+    final isSelected = _selectedFinancialPeriod == period;
+    return OutlinedButton(
+      onPressed: () {
+        setState(() {
+          _selectedFinancialPeriod = period;
+        });
+      },
+      style: OutlinedButton.styleFrom(
+        backgroundColor: isSelected
+            ? _getFinancialPeriodColor(period).withOpacity(0.1)
+            : Colors.transparent,
+        foregroundColor: isSelected
+            ? _getFinancialPeriodColor(period)
+            : Colors.grey.shade600,
+        side: BorderSide(
+          color: isSelected
+              ? _getFinancialPeriodColor(period)
+              : Colors.grey.shade300,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+      child: Text(label),
+    );
+  }
+
+  Widget _buildFinancialCostBreakdown() {
+    final stats = _getSelectedFinancialStats();
+    final totalExpenditure = stats.totalExpenditure;
+
+    if (totalExpenditure == 0) {
+      return const Text(
+        'No expenses recorded for this period',
+        style: TextStyle(color: Colors.grey),
+      );
+    }
+
+    return ExpansionTile(
+      title: const Text(
+        'Cost Breakdown',
+        style: TextStyle(fontWeight: FontWeight.w600),
+      ),
+      initiallyExpanded: true,
+      children: [
+        const SizedBox(height: 8),
+        _buildFinancialCostItemRow(
+          label: 'Feeding Cost',
+          amount: stats.feedingCost,
+          percentage: totalExpenditure > 0
+              ? (stats.feedingCost / totalExpenditure * 100)
+              : 0,
+          color: Colors.orange,
+        ),
+        _buildFinancialCostItemRow(
+          label: 'Vaccination Cost',
+          amount: stats.vaccinationCost,
+          percentage: totalExpenditure > 0
+              ? (stats.vaccinationCost / totalExpenditure * 100)
+              : 0,
+          color: Colors.purple,
+        ),
+        _buildFinancialCostItemRow(
+          label: 'Inventory Cost',
+          amount: stats.inventoryCost,
+          percentage: totalExpenditure > 0
+              ? (stats.inventoryCost / totalExpenditure * 100)
+              : 0,
+          color: Colors.blue,
+        ),
+        const Divider(height: 24),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Total Expenditure',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            Text(
+              '$_currency ${totalExpenditure.toStringAsFixed(2)}',
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFinancialCostItemRow({
+    required String label,
+    required double amount,
+    required double percentage,
+    required Color color,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 24,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+                    Text(
+                      '$_currency ${amount.toStringAsFixed(2)}',
+                      style: TextStyle(fontWeight: FontWeight.w600, color: color),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                LinearProgressIndicator(
+                  value: percentage / 100,
+                  backgroundColor: Colors.grey.shade200,
+                  color: color,
+                  minHeight: 4,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${percentage.toStringAsFixed(1)}% of total expenditure',
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFinancialIncomeExpenditureSummary() {
+    final stats = _getSelectedFinancialStats();
+
+    return Card(
+      elevation: 0,
+      color: Colors.grey.shade50,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey.shade200),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildFinancialSummaryItem(
+                  label: 'Income',
+                  value: '$_currency ${stats.productIncome.toStringAsFixed(2)}',
+                  icon: Icons.arrow_upward,
+                  color: Colors.green,
+                ),
+                Container(
+                  width: 1,
+                  height: 40,
+                  color: Colors.grey.shade300,
+                ),
+                _buildFinancialSummaryItem(
+                  label: 'Expenditure',
+                  value: '$_currency ${stats.totalExpenditure.toStringAsFixed(2)}',
+                  icon: Icons.arrow_downward,
+                  color: Colors.red,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  stats.netProfit >= 0 ? Icons.trending_up : Icons.trending_down,
+                  size: 20,
+                  color: stats.netProfit >= 0 ? Colors.green : Colors.red,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  stats.netProfit >= 0 ? 'Net Profit' : 'Net Loss',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: stats.netProfit >= 0 ? Colors.green : Colors.red,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFinancialSummaryItem({
+    required String label,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Expanded(
+      child: Column(
+        children: [
+          Icon(icon, size: 20, color: color),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  IconData _getFinancialPeriodIcon(String period) {
+    switch (period) {
+      case 'today':
+        return Icons.today;
+      case 'weekly':
+        return Icons.date_range;
+      case 'monthly':
+        return Icons.calendar_month;
+      case 'yearly':
+        return Icons.calendar_today;
+      case 'all_time':
+        return Icons.history;
+      default:
+        return Icons.today;
+    }
+  }
+
+  Color _getFinancialPeriodColor(String period) {
+    switch (period) {
+      case 'today':
+        return Colors.blue;
+      case 'weekly':
+        return Colors.purple;
+      case 'monthly':
+        return Colors.green;
+      case 'yearly':
+        return Colors.orange;
+      case 'all_time':
+        return Colors.indigo;
+      default:
+        return Colors.blue;
+    }
+  }
+
   @override
   void dispose() {
+    _tabController.dispose();
     _startDateController.dispose();
     _endDateController.dispose();
     super.dispose();
