@@ -1,6 +1,6 @@
-import 'package:agriflock360/core/model/user_model.dart';
+import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/first_login_util.dart';
-import 'package:agriflock360/core/utils/secure_storage.dart';
+import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/features/auth/repo/manual_auth_repo.dart';
 import 'package:agriflock360/features/auth/shared/auth_text_field.dart';
@@ -331,6 +331,30 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  /// Handle conditional auth failures (shared between login and social auth)
+  void _handleAuthFailure<T>(Failure<T> failure) {
+    if (!mounted) return;
+
+    switch (failure.cond) {
+      case 'user_onboarding':
+        final tempToken = failure.data?['tempToken'] as String? ?? '';
+        context.push(
+          '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(tempToken)}',
+        );
+      case 'account_inactive':
+        final email = failure.data?['email'] as String? ??
+            _identifierController.text.trim();
+        final userId = failure.data?['userId'] as String? ?? '';
+        context.push(
+          '${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(email)}&userId=${Uri.encodeComponent(userId)}',
+        );
+      case 'unverified_vet':
+        context.go(AppRoutes.vetVerificationPending);
+      default:
+        ApiErrorHandler.handleFailure(failure);
+    }
+  }
+
   void _login() async {
     final email = _identifierController.text.trim();
     final password = _passwordController.text;
@@ -354,157 +378,73 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!mounted) return;
 
-      if (result['success'] == true) {
-        ToastUtil.showSuccess("Login successful!");
+      switch (result) {
+        case Success():
+          ToastUtil.showSuccess("Login successful!");
+          final redirectPath = await FirstLoginUtil.getRedirectPath();
+          if (mounted) context.go(redirectPath);
 
-        // Use the utility to get the redirect path
-        final redirectPath = await FirstLoginUtil.getRedirectPath();
-        context.go(redirectPath);
-
-      } else if (result['needsOnboarding'] == true) {
-        // Redirect to onboarding quiz
-        final tempToken = result['tempToken'] ?? '';
-        context.push(
-          '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(tempToken)}',
-        );
-      } else if (result['needsVerification'] == true) {
-        // Redirect to email verification
-        final verifyEmail = result['email'] ?? '';
-        final userId = result['userId'] ?? '';
-        context.push(
-          '${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(verifyEmail)}&userId=${Uri.encodeComponent(userId)}',
-        );
-      } else {
-        // Handle other errors (including generic errors)
-        final errorMessage = result['message']?.toString() ?? 'An unexpected error occurred';
-
-        // Show snackbar with error message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 4),
-          ),
-        );
-
-        // Also keep the original ToastUtil if you want both
-        ToastUtil.showError(errorMessage);
+        case final Failure failure:
+          _handleAuthFailure(failure);
       }
     } catch (e) {
-      // Handle exceptions thrown by the repository
-      final errorMessage = e.toString();
-
-      // Show snackbar for exceptions too
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(errorMessage),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 4),
-        ),
-      );
-
-      // Also keep the original ToastUtil if you want both
-      ToastUtil.showError('Login failed: $errorMessage');
+      if (mounted) {
+        ToastUtil.showError('Login failed: ${e.toString()}');
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
   void _signInWithGoogle() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      final response = await authService.signInWithGoogle();
+      final result = await authService.signInWithGoogle();
 
       if (!mounted) return;
 
-      if (response['success'] == true) {
-        ToastUtil.showSuccess("Login successful!");
+      switch (result) {
+        case Success():
+          ToastUtil.showSuccess("Login successful!");
+          final redirectPath = await FirstLoginUtil.getRedirectPath();
+          if (mounted) context.go(redirectPath);
 
-        // Use the utility to get the redirect path
-        final redirectPath = await FirstLoginUtil.getRedirectPath();
-        context.go(redirectPath);
-
-      } else if (response['needsOnboarding'] == true) {
-        // Redirect to onboarding quiz
-        final tempToken = response['tempToken'] ?? '';
-        context.go(
-          '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(tempToken)}',
-        );
-      } else if (response['needsVerification'] == true) {
-        // Redirect to email verification
-        final verifyEmail = response['email'] ?? '';
-        final userId = response['userId'] ?? '';
-        context.push(
-          '${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(verifyEmail)}&userId=${Uri.encodeComponent(userId)}',
-        );
+        case final Failure failure:
+          _handleAuthFailure(failure);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Google sign in failed: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastUtil.showError('Google sign in failed: ${e.toString()}');
       }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   void _signInWithApple() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      final response = await authService.signInWithApple();
+      final result = await authService.signInWithApple();
 
       if (!mounted) return;
 
-      if (response['success'] == true) {
-        ToastUtil.showSuccess("Login successful!");
+      switch (result) {
+        case Success():
+          ToastUtil.showSuccess("Login successful!");
+          final redirectPath = await FirstLoginUtil.getRedirectPath();
+          if (mounted) context.go(redirectPath);
 
-        // Use the utility to get the redirect path
-        final redirectPath = await FirstLoginUtil.getRedirectPath();
-        context.go(redirectPath);
-
-      } else if (response['needsOnboarding'] == true) {
-        // Redirect to onboarding quiz
-        final tempToken = response['tempToken'] ?? '';
-        context.push(
-          '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(tempToken)}',
-        );
-      } else if (response['needsVerification'] == true) {
-        // Redirect to email verification
-        final verifyEmail = response['email'] ?? '';
-        final userId = response['userId'] ?? '';
-        context.push(
-          '${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(verifyEmail)}&userId=${Uri.encodeComponent(userId)}',
-        );
+        case final Failure failure:
+          _handleAuthFailure(failure);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Apple sign in failed: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastUtil.showError('Apple sign in failed: ${e.toString()}');
       }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 

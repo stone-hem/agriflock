@@ -67,6 +67,7 @@ import 'package:agriflock360/features/auth/quiz/onboarding_quiz_screen.dart';
 import 'package:agriflock360/features/auth/reset_password_screen.dart';
 import 'package:agriflock360/features/auth/sign_in_screen.dart';
 import 'package:agriflock360/features/auth/sign_up_screen.dart';
+import 'package:agriflock360/features/auth/vet_verification_pending_screen.dart';
 import 'package:agriflock360/features/auth/welcome_screen.dart';
 
 class AppRoutes {
@@ -109,6 +110,7 @@ class AppRoutes {
   static const String completeProfile = '/complete-profile';
   static const String congratulations = '/complete-profile/congratulations';
   static const String vetOrderDetails = '/vet-order-details';
+  static const String vetVerificationPending = '/vet-verification-pending';
 
   // Define protected routes that require authentication
   static const List<String> _protectedRoutes = [
@@ -148,6 +150,7 @@ class AppRoutes {
     otpVerifyEmailOrPhone,
     forgotPassword,
     resetPassword,
+    vetVerificationPending,
   ];
 
   // Define onboarding routes
@@ -266,6 +269,10 @@ class AppRoutes {
               token: token != null ? Uri.decodeComponent(token) : null,
             );
           },
+        ),
+        GoRoute(
+          path: vetVerificationPending,
+          builder: (context, state) => const VetVerificationPendingScreen(),
         ),
         GoRoute(
           path: deviceSetup,

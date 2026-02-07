@@ -1,6 +1,8 @@
 import 'package:agriflock360/app_routes.dart';
 import 'package:agriflock360/core/services/social_auth_service.dart';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
+import 'package:agriflock360/core/utils/first_login_util.dart';
+import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/features/auth/repo/manual_auth_repo.dart';
 import 'package:agriflock360/features/auth/shared/auth_text_field.dart';
@@ -199,9 +201,6 @@ class _SignupScreenState extends State<SignupScreen> {
                             if (value.length < 8) {
                               return 'Password must be at least 8 characters';
                             }
-                            // if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)').hasMatch(value)) {
-                            //   return 'Password must include uppercase, lowercase, and numbers';
-                            // }
                             return null;
                           },
                         ),
@@ -489,6 +488,30 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
+  /// Handle conditional auth failures (shared between social auth methods)
+  void _handleAuthFailure<T>(Failure<T> failure) {
+    if (!mounted) return;
+
+    switch (failure.cond) {
+      case 'user_onboarding':
+        final tempToken = failure.data?['tempToken'] as String? ?? '';
+        context.push(
+          '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(tempToken)}',
+        );
+      case 'account_inactive':
+        final email = failure.data?['email'] as String? ??
+            _emailController.text.trim();
+        final userId = failure.data?['userId'] as String? ?? '';
+        context.push(
+          '${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(email)}&userId=${Uri.encodeComponent(userId)}',
+        );
+      case 'unverified_vet':
+        context.go(AppRoutes.vetVerificationPending);
+      default:
+        ApiErrorHandler.handleFailure(failure);
+    }
+  }
+
   void _signUp() async {
     final fullName = _fullNameController.text.trim();
     final email = _emailController.text.trim();
@@ -534,17 +557,23 @@ class _SignupScreenState extends State<SignupScreen> {
 
       if (!mounted) return;
 
-      if (result['success'] == true) {
-        ToastUtil.showSuccess(
-          "Account created successfully! Please verify your account.",
-        );
+      switch (result) {
+        case Success(:final data):
+          ToastUtil.showSuccess(
+            "Account created successfully! Please verify your account.",
+          );
+          final userId = data['userId'] as String? ?? '';
+          context.go(
+            '${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(email)}&userId=${Uri.encodeComponent(userId)}',
+          );
 
-        context.go(
-          '/verify-email-or-phone?email=${Uri.encodeComponent(email)}&userId=${Uri.encodeComponent(result['userId'])}',
-        );
+        case final Failure failure:
+          ApiErrorHandler.handleFailure(failure);
       }
     } catch (e) {
-      // Error already handled by repository
+      if (mounted) {
+        ToastUtil.showError('Sign up failed: ${e.toString()}');
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -555,32 +584,30 @@ class _SignupScreenState extends State<SignupScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final response = await SocialAuthService().signInWithGoogle();
+      final result = await SocialAuthService().signInWithGoogle();
 
-      if (response['success'] == true) {
-        final userData = response['data'];
+      if (!mounted) return;
 
-        // For social signup, check if user needs to complete profile
-        // or if they're already registered
-        if (userData['is_new_user'] == true) {
-          if (!mounted) return;
-
-          if (response['success'] == true) {
+      switch (result) {
+        case Success(:final data):
+          if (data['is_new_user'] == true) {
+            final tempToken = data['tempToken'] as String? ?? '';
             context.push(
-              '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(response['tempToken'])}',
+              '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(tempToken)}',
             );
-          }
-        } else {
-          // Existing user - log them in
-          if (mounted) {
+          } else {
             ToastUtil.showSuccess("Welcome back!");
-            context.go('/dashboard');
+            final redirectPath = await FirstLoginUtil.getRedirectPath();
+            if (mounted) context.go(redirectPath);
           }
-        }
-      }
 
+        case final Failure failure:
+          _handleAuthFailure(failure);
+      }
     } catch (e) {
-      ApiErrorHandler.handle(e);
+      if (mounted) {
+        ToastUtil.showError('Google sign up failed: ${e.toString()}');
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -590,18 +617,30 @@ class _SignupScreenState extends State<SignupScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final response = await SocialAuthService().signInWithApple();
+      final result = await SocialAuthService().signInWithApple();
 
       if (!mounted) return;
 
-      if (response['success'] == true) {
-        context.push(
-          '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(response['tempToken'])}',
-        );
-      }
+      switch (result) {
+        case Success(:final data):
+          if (data['is_new_user'] == true) {
+            final tempToken = data['tempToken'] as String? ?? '';
+            context.push(
+              '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(tempToken)}',
+            );
+          } else {
+            ToastUtil.showSuccess("Welcome back!");
+            final redirectPath = await FirstLoginUtil.getRedirectPath();
+            if (mounted) context.go(redirectPath);
+          }
 
+        case final Failure failure:
+          _handleAuthFailure(failure);
+      }
     } catch (e) {
-      ApiErrorHandler.handle(e);
+      if (mounted) {
+        ToastUtil.showError('Apple sign up failed: ${e.toString()}');
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

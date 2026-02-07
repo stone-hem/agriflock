@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/features/auth/repo/manual_auth_repo.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
@@ -48,7 +49,6 @@ class SocialAuthService {
 
       _isInitialized = true;
 
-      // REMOVED: attemptLightweightAuthentication() - this was causing the unwanted popup
       print('Google Sign-In ready for use');
     } catch (e) {
       print('Error initializing Google Sign-In: $e');
@@ -81,7 +81,7 @@ class SocialAuthService {
   }
 
   /// Sign in with Google using the new API
-  Future<Map<String, dynamic>> signInWithGoogle() async {
+  Future<Result<Map<String, dynamic>>> signInWithGoogle() async {
     try {
       print('=== Starting Google Sign-In ===');
 
@@ -101,7 +101,10 @@ class SocialAuthService {
       final GoogleSignInAccount? googleUser = _currentGoogleUser;
 
       if (googleUser == null) {
-        throw Exception("User cancelled Google sign-in or authentication failed");
+        return const Failure(
+          message: 'User cancelled Google sign-in or authentication failed',
+          statusCode: 0,
+        );
       }
 
       print('Step 2: Got Google user: ${googleUser.email}');
@@ -133,7 +136,10 @@ class SocialAuthService {
       final User? firebaseUser = userCredential.user;
 
       if (firebaseUser == null) {
-        throw Exception("Firebase authentication failed");
+        return const Failure(
+          message: 'Firebase authentication failed',
+          statusCode: 0,
+        );
       }
 
       print('Step 7: Firebase authentication successful');
@@ -173,12 +179,12 @@ class SocialAuthService {
       return result;
     } catch (e) {
       print("Google Sign-In Error: $e");
-      rethrow;
+      return Failure(message: e.toString(), statusCode: 0);
     }
   }
 
   /// Sign in with Apple
-  Future<Map<String, dynamic>> signInWithApple() async {
+  Future<Result<Map<String, dynamic>>> signInWithApple() async {
     try {
       print('=== Starting Apple Sign-In ===');
 
@@ -213,7 +219,7 @@ class SocialAuthService {
       return result;
     } catch (e) {
       print('Error signing in with Apple: $e');
-      throw Exception('Apple sign in failed: $e');
+      return Failure(message: 'Apple sign in failed: $e', statusCode: 0);
     }
   }
 

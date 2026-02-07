@@ -2,19 +2,33 @@ import 'dart:convert';
 import 'package:agriflock360/core/model/user_model.dart';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/log_util.dart';
+import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/main.dart';
 
 class ManualAuthRepository {
+  /// Extract a readable error message from API error response data.
+  String _extractMessage(Map<String, dynamic> errorData) {
+    final rawMessage = errorData['message'];
+    if (rawMessage is String) return rawMessage;
+    if (rawMessage is Map) {
+      final inner = rawMessage['message'];
+      if (inner is List) return inner.join('\n');
+      if (inner is String) return inner;
+      return rawMessage.toString();
+    }
+    if (rawMessage is List) return rawMessage.join('\n');
+    return 'An error occurred';
+  }
+
   /// Login with email/phone and password
   ///
-  /// Returns a Map with login response data including:
-  /// - 'success': bool
-  /// - 'data': LoginResponse object
-  /// - 'needsOnboarding': bool (if user needs to complete onboarding)
-  /// - 'needsVerification': bool (if account is inactive)
-  /// - 'tempToken': String? (temporary token for onboarding)
-  /// - 'email': String? (email for verification)
-  Future<Map<String, dynamic>> login({
+  /// Returns [Result<LoginResponse>]:
+  /// - [Success] with LoginResponse when login succeeds
+  /// - [Failure] with cond for conditional routing:
+  ///   - 'user_onboarding': user needs to complete onboarding (data contains tempToken)
+  ///   - 'account_inactive': user needs to verify email (data contains email, userId)
+  ///   - 'unverified_vet': vet account pending verification
+  Future<Result<LoginResponse>> login({
     required String email,
     required String password,
   }) async {
@@ -28,73 +42,48 @@ class ManualAuthRepository {
         final data = jsonDecode(response.body);
         final loginResponse = LoginResponse.fromJson(data);
 
-        // Save login data securely
         await secureStorage.saveLoginData(
           token: loginResponse.accessToken,
           refreshToken: loginResponse.refreshToken,
           sessionId: loginResponse.sessionId,
           userData: loginResponse.user.toJson(),
           expiresInSeconds: loginResponse.expiresIn,
-          currency: loginResponse.currency??'USD',
+          currency: loginResponse.currency ?? 'USD',
         );
 
-        return {
-          'success': true,
-          'data': loginResponse,
-          'needsOnboarding': false,
-          'needsVerification': false,
-        };
+        return Success(loginResponse);
       } else {
-        // Check for specific error cases
-        final errorData = jsonDecode(response.body);
+        final errorData = jsonDecode(response.body) as Map<String, dynamic>;
         LogUtil.info(response.body);
 
-
-        // Check for the new format first
         final cond = errorData['cond'] as String?;
-        final userId = errorData['user_id'] as String?;
-        final message = errorData['message'] as String?;
         final tempToken = errorData['tempToken'] as String?;
+        final userId = errorData['user_id'] as String?;
+        final message = _extractMessage(errorData);
 
-        if (cond == 'user_onboarding') {
-          return {
-            'success': false,
-            'needsOnboarding': true,
-            'tempToken': tempToken,
-            'message': message, // Optional: include the message if needed
-          };
-        } else if (cond == 'account_inactive') {
-          return {
-            'success': false,
-            'needsVerification': true,
+        return Failure(
+          message: message,
+          response: response,
+          statusCode: response.statusCode,
+          cond: cond,
+          data: {
+            if (tempToken != null) 'tempToken': tempToken,
+            if (userId != null) 'userId': userId,
             'email': email,
-            'message': message,
-            'userId': userId,
-          };
-        }
-
-
-        // Handle other errors with the generic error handler
-        ApiErrorHandler.handle(response);
-        return {
-          'success': false,
-          'needsOnboarding': false,
-          'needsVerification': false,
-          'message': message,
-        };
+          },
+        );
       }
     } catch (e) {
-      ApiErrorHandler.handle(e);
-      rethrow;
+      return Failure(message: e.toString(), statusCode: 0);
     }
   }
 
   /// Register a new user account
   ///
-  /// Returns a Map with signup response data:
-  /// - 'success': bool
-  /// - 'email': String (for email verification redirect)
-  Future<Map<String, dynamic>> signUp({
+  /// Returns [Result<Map<String, dynamic>>]:
+  /// - [Success] with {email, userId}
+  /// - [Failure] with error message
+  Future<Result<Map<String, dynamic>>> signUp({
     required String fullName,
     required String email,
     required String phoneNumber,
@@ -113,38 +102,33 @@ class ManualAuthRepository {
         },
       );
 
-      if (response.statusCode != 200 && response.statusCode != 201) {
-        ApiErrorHandler.handle(response);
-        return {
-          'success': false,
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        LogUtil.info(response.body);
+        final data = jsonDecode(response.body);
+        return Success({
           'email': email,
-        };
+          'userId': data['user_id'],
+        });
+      } else {
+        final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+        return Failure(
+          message: _extractMessage(errorData),
+          response: response,
+          statusCode: response.statusCode,
+        );
       }
-
-      LogUtil.info(response.body);
-
-
-      return {
-        'success': true,
-        'email': email,
-        'userId': jsonDecode(response.body)['user_id'],
-      };
     } catch (e) {
       LogUtil.error(e.toString());
-      ApiErrorHandler.handle(e);
-      rethrow;
+      return Failure(message: e.toString(), statusCode: 0);
     }
   }
 
   /// Social login (Google/Apple) with backend authentication
   ///
-  /// Returns a Map with social login response data:
-  /// - 'success': bool
-  /// - 'data': Map containing user data and tokens
-  /// - 'needsOnboarding': bool (if user needs to complete onboarding)
-  /// - 'needsVerification': bool (if account is inactive)
-  /// - 'tempToken': String? (temporary token for onboarding)
-  Future<Map<String, dynamic>> socialLogin({
+  /// Returns [Result<Map<String, dynamic>>]:
+  /// - [Success] with the data map from response (contains user, tokens, etc.)
+  /// - [Failure] with cond for conditional routing (same as login)
+  Future<Result<Map<String, dynamic>>> socialLogin({
     required Map<String, dynamic> authData,
   }) async {
     try {
@@ -156,76 +140,64 @@ class ManualAuthRepository {
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
 
-        // Extract tokens and user data
         final accessToken = data['data']?['access_token'] as String?;
         final refreshToken = data['data']?['refresh_token'] as String?;
-        final currency=data['data']?['currency'] as String?;
+        final currency = data['data']?['currency'] as String?;
         final user = data['data']?['user'] as Map<String, dynamic>?;
         final expiresIn = data['data']?['expires_in'] as int?;
 
         if (accessToken != null && refreshToken != null && user != null) {
-          // Save login data securely
           await secureStorage.saveLoginData(
             token: accessToken,
             refreshToken: refreshToken,
             sessionId: user['session_id'] as String,
             userData: user,
-            expiresInSeconds: expiresIn ?? 3600, currency: currency??'USD',
+            expiresInSeconds: expiresIn ?? 3600,
+            currency: currency ?? 'USD',
           );
 
-          return {
-            'success': true,
-            'data': data['data'],
-            'needsOnboarding': false,
-            'needsVerification': false,
-          };
+          return Success(data['data'] as Map<String, dynamic>);
         } else {
-          throw Exception('Invalid response format from backend');
+          return const Failure(
+            message: 'Invalid response format from backend',
+            statusCode: 200,
+          );
         }
       } else {
-        // Check for specific error cases
-        final errorData = jsonDecode(response.body);
-        final message = errorData['message'];
+        final errorData = jsonDecode(response.body) as Map<String, dynamic>;
 
-        if (message is Map<String, dynamic>) {
-          final status = message['status'] as String?;
-          final tempToken = message['tempToken'] as String?;
+        // Support both new format (cond at root) and old format (status inside message)
+        String? cond = errorData['cond'] as String?;
+        String? tempToken = errorData['tempToken'] as String?;
 
-          if (status == 'user_onboarding') {
-            return {
-              'success': false,
-              'needsOnboarding': true,
-              'tempToken': tempToken,
-            };
-          } else if (status == 'account_inactive') {
-            return {
-              'success': false,
-              'needsVerification': true,
-              'email': authData['email'],
-            };
-          }
+        final rawMessage = errorData['message'];
+        String message;
+
+        if (rawMessage is Map<String, dynamic>) {
+          cond ??= rawMessage['status'] as String?;
+          tempToken ??= rawMessage['tempToken'] as String?;
+          message = rawMessage['message']?.toString() ?? 'Social login failed';
+        } else {
+          message = _extractMessage(errorData);
         }
 
-        // Handle other errors
-        ApiErrorHandler.handle(response);
-        return {
-          'success': false,
-          'needsOnboarding': false,
-          'needsVerification': false,
-        };
+        return Failure(
+          message: message,
+          response: response,
+          statusCode: response.statusCode,
+          cond: cond,
+          data: {
+            if (tempToken != null) 'tempToken': tempToken,
+            'email': authData['email'],
+          },
+        );
       }
     } catch (e) {
-      ApiErrorHandler.handle(e);
-      rethrow;
+      return Failure(message: e.toString(), statusCode: 0);
     }
   }
 
   /// Forgot Password - Request OTP
-  ///
-  /// Returns a Map with response data:
-  /// - 'success': bool
-  /// - 'resetToken': String? (token for password reset)
-  /// - 'email': String (email address)
   Future<Map<String, dynamic>> forgotPassword({
     required String email,
   }) async {
@@ -257,10 +229,6 @@ class ManualAuthRepository {
   }
 
   /// Reset Password with OTP
-  ///
-  /// Returns a Map with response data:
-  /// - 'success': bool
-  /// - 'message': String (success message)
   Future<Map<String, dynamic>> resetPassword({
     required String email,
     required String otp,
@@ -298,11 +266,6 @@ class ManualAuthRepository {
   }
 
   /// Verify Email with OTP (using /auth/verify-email endpoint)
-  ///
-  /// Returns a Map with response data:
-  /// - 'success': bool
-  /// - 'tempToken': String? (token for onboarding)
-  /// - 'message': String
   Future<Map<String, dynamic>> verifyEmail({
     required String otpCode,
     required String userId,
@@ -340,10 +303,6 @@ class ManualAuthRepository {
   }
 
   /// Resend Verification OTP (using /auth/resend-code endpoint)
-  ///
-  /// Returns a Map with response data:
-  /// - 'success': bool
-  /// - 'message': String
   Future<Map<String, dynamic>> resendVerificationCode({
     required String identifier,
   }) async {

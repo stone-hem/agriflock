@@ -28,11 +28,13 @@ class Failure<T> extends Result<T> {
   final http.Response? response;
   final int? statusCode;
   final String? cond;
+  final Map<String, dynamic>? data;
 
   const Failure({
     required this.message,
     this.response,
     this.statusCode,
     this.cond,
+    this.data,
   });
 }
