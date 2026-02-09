@@ -237,7 +237,7 @@ class _MainDashboardState extends State<MainDashboard> {
           builder: (_) => AlertDialog(
             title: const Text('Exit Agriflock 360?'),
             content: Column(
-              mainAxisSize: MainAxisSize.min, // Add this line
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Center(
                   child: Image.asset(
@@ -265,7 +265,7 @@ class _MainDashboardState extends State<MainDashboard> {
                     color: Colors.green.shade800,
                   ),
                 ),
-                const SizedBox(height: 8), // Add spacing before the question
+                const SizedBox(height: 8),
                 const Text('Are you sure you want to exit Agriflock 360?'),
               ],
             ),
@@ -283,53 +283,153 @@ class _MainDashboardState extends State<MainDashboard> {
         );
 
         if (shouldExit == true) {
-          // Use SystemNavigator to exit the app instead of Navigator.pop()
           SystemNavigator.pop();
         }
       },
-      child: Scaffold(
-        body: _navConfigs[_selectedIndex].screen,
-        bottomNavigationBar: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 20,
-                offset: const Offset(0, -2),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Breakpoints
+          final isTablet = constraints.maxWidth >= 600;
+          final isLargeTablet = constraints.maxWidth >= 840;
+
+          return Scaffold(
+            body: Row(
+              children: [
+                // NavigationRail for tablets only
+                if (isTablet)
+                  Material(
+                    elevation: 0,
+                    color: Colors.white,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border(
+                          right: BorderSide(
+                            color: Colors.grey.shade200,
+                            width: 1,
+                          ),
+                        ),
+                      ),
+                      child: NavigationRail(
+                        selectedIndex: _selectedIndex,
+                        onDestinationSelected: _onItemTapped,
+                        extended: isLargeTablet,
+                        labelType: isLargeTablet
+                            ? NavigationRailLabelType.none
+                            : NavigationRailLabelType.all,
+                        backgroundColor: Colors.transparent,
+                        indicatorColor: Colors.green.withValues(alpha: 0.15),
+                        useIndicator: true,
+                        minWidth: isLargeTablet ? 200 : 72,
+                        minExtendedWidth: 200,
+                        leading: SizedBox(
+                          height: 80,
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              vertical: 16.0,
+                              horizontal: isLargeTablet ? 16.0 : 0,
+                            ),
+                            child: isLargeTablet
+                                ? Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Image.asset(
+                                  'assets/logos/Logo_0725.png',
+                                  width: 40,
+                                  height: 40,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Icon(
+                                      Icons.agriculture,
+                                      size: 40,
+                                      color: Colors.green,
+                                    );
+                                  },
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Agriflock 360',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green.shade800,
+                                  ),
+                                ),
+                              ],
+                            )
+                                : Center(
+                              child: Image.asset(
+                                'assets/logos/Logo_0725.png',
+                                width: 48,
+                                height: 48,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const Icon(
+                                    Icons.agriculture,
+                                    size: 48,
+                                    color: Colors.green,
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                        destinations: _navConfigs.map((config) {
+                          return NavigationRailDestination(
+                            icon: Icon(config.icon),
+                            selectedIcon: Icon(config.selectedIcon),
+                            label: Text(config.label),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+
+                // Main content area
+                Expanded(
+                  child: _navConfigs[_selectedIndex].screen,
+                ),
+              ],
+            ),
+
+            // BottomNavigationBar for mobile only
+            bottomNavigationBar: isTablet ? null : Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+                border: Border(
+                  top: BorderSide(
+                    color: Colors.grey.shade200,
+                    width: 1,
+                  ),
+                ),
               ),
-            ],
-            border: Border(
-              top: BorderSide(
-                color: Colors.grey.shade200,
-                width: 1,
+              child: NavigationBar(
+                selectedIndex: _selectedIndex,
+                onDestinationSelected: _onItemTapped,
+                indicatorColor: Colors.green.withValues(alpha: 0.15),
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                height: 72,
+                labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+                animationDuration: const Duration(milliseconds: 300),
+                destinations: _navConfigs.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final config = entry.value;
+                  return NavDestinationItem(
+                    icon: config.icon,
+                    selectedIcon: config.selectedIcon,
+                    label: config.label,
+                    isSelected: _selectedIndex == index,
+                  );
+                }).toList(),
               ),
             ),
-          ),
-          child: NavigationBar(
-            selectedIndex: _selectedIndex,
-            onDestinationSelected: _onItemTapped,
-            indicatorColor: Colors.green.withValues(alpha: 0.15),
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            height: 72,
-            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-            animationDuration: const Duration(milliseconds: 300),
-            destinations: _navConfigs
-                .asMap()
-                .entries
-                .map((entry) {
-              final index = entry.key;
-              final config = entry.value;
-              return NavDestinationItem(
-                icon: config.icon,
-                selectedIcon: config.selectedIcon,
-                label: config.label,
-                isSelected: _selectedIndex == index,
-              );
-            }).toList(),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
