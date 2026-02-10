@@ -17,6 +17,8 @@ class ProductRepo {
         body: request.toJson(),
       );
 
+      LogUtil.warning(request.toJson());
+
       final jsonResponse = jsonDecode(response.body);
       LogUtil.info('Create Product API Response: $jsonResponse');
 

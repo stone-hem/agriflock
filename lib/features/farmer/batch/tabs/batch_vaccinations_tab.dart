@@ -1,6 +1,7 @@
 import 'package:agriflock360/core/utils/date_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
+import 'package:agriflock360/features/farmer/batch/model/vaccination_list_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/recommended_vaccination_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/vaccination_repo.dart';
@@ -28,7 +29,7 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
 
   // State
   VaccinationDashboard? _dashboard;
-  VaccinationsResponse? _vaccinations;
+  VaccinationListResponse? _vaccinations;
   RecommendedVaccinationsResponse? _recommendations;
 
   bool _isDashboardLoading = true;
@@ -100,10 +101,10 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
     });
 
     try {
-      final result = await _repository.getVaccinations(widget.batch.id);
+      final result = await _repository.getVaccinationList(batchId: widget.batch.id);
 
       switch(result) {
-        case Success<VaccinationsResponse>(data: final data):
+        case Success<VaccinationListResponse>(data: final data):
           setState(() {
             _vaccinations = data;
             _isVaccinationsLoading = false;
@@ -414,17 +415,15 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
   }
 
   Widget _buildTodayContent() {
-    final dueToday = _vaccinations!.vaccinations
-        .where((v) => !v.isStatusScheduled)
-        .where((v) => v.isDueToday)
+    final dueToday = _vaccinations!.list
+        .where((v) => v.isToday)
         .toList();
-    final overdue = _vaccinations!.vaccinations
-        .where((v) => !v.isStatusScheduled)
+    final overdue = _vaccinations!.list
         .where((v) => v.isOverdue)
         .toList();
-    final upcoming = _vaccinations!.vaccinations
-        .where((v) => !v.isStatusScheduled)
-        .where((v) => !v.isDueToday && !v.isOverdue)
+    final upcoming = _vaccinations!.list
+        .where((v) => v.status=='scheduled')
+        .where((v) => !v.isToday && !v.isOverdue)
         .toList();
 
     return ListView(
@@ -500,8 +499,8 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
   }
 
   Widget _buildHistoryContent() {
-    final completed = _vaccinations!.vaccinations
-        .where((v) => !v.isStatusCompleted)
+    final completed = _vaccinations!.list
+        .where((v) => v.status=='completed')
         .toList();
 
     if (completed.isEmpty) {
@@ -697,7 +696,7 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
     );
   }
 
-  void _navigateToUpdateStatus(Vaccination vaccination) async {
+  void _navigateToUpdateStatus(VaccinationListItem vaccination) async {
     final result = await context.push(
       '/batches/update-status',
       extra: {
@@ -714,7 +713,7 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
 }
 
 class _VaccinationItem extends StatelessWidget {
-  final Vaccination vaccination;
+  final VaccinationListItem vaccination;
   final VoidCallback onUpdateStatus;
 
   const _VaccinationItem({
@@ -768,7 +767,7 @@ class _VaccinationItem extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      vaccination.administrationMethod,
+                      vaccination.method,
                       style: TextStyle(
                         color: Colors.grey.shade600,
                         fontSize: 12,
@@ -828,7 +827,7 @@ class _VaccinationItem extends StatelessWidget {
 }
 
 class _CompletedVaccinationItem extends StatelessWidget {
-  final Vaccination vaccination;
+  final VaccinationListItem vaccination;
 
   const _CompletedVaccinationItem({
     required this.vaccination,
@@ -873,16 +872,16 @@ class _CompletedVaccinationItem extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      vaccination.dosage,
+                      vaccination.dosagePerBird,
                       style: TextStyle(
                         color: Colors.grey.shade600,
                         fontSize: 12,
                       ),
                     ),
                     const SizedBox(height: 4),
-                    if(vaccination.completedDate != null)
+                    if(vaccination.scheduledDate != null)
                     Text(
-                      'Completed: ${DateUtil.toDateWithDay(vaccination.completedDate!)}',
+                      'Completed: ${DateUtil.toDateWithDay(vaccination.scheduledDate!)}',
                       style: TextStyle(
                         color: Colors.grey.shade500,
                         fontSize: 11,
@@ -896,7 +895,7 @@ class _CompletedVaccinationItem extends StatelessWidget {
                         fontSize: 11,
                       ),
                     ),
-                    if(vaccination.scheduledDate == null && vaccination.completedDate == null)
+                    if(vaccination.scheduledDate == null && vaccination.scheduledDate == null)
                       Text(
                         'Not completed',
                         style: TextStyle(
@@ -924,32 +923,32 @@ class _CompletedVaccinationItem extends StatelessWidget {
               ),
             ],
           ),
-          if (vaccination.notes != null) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.note, size: 14, color: Colors.grey.shade600),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      vaccination.notes!,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          // if (vaccination.notes != null) ...[
+          //   const SizedBox(height: 12),
+          //   Container(
+          //     padding: const EdgeInsets.all(8),
+          //     decoration: BoxDecoration(
+          //       color: Colors.grey.shade50,
+          //       borderRadius: BorderRadius.circular(8),
+          //     ),
+          //     child: Row(
+          //       crossAxisAlignment: CrossAxisAlignment.start,
+          //       children: [
+          //         Icon(Icons.note, size: 14, color: Colors.grey.shade600),
+          //         const SizedBox(width: 6),
+          //         Expanded(
+          //           child: Text(
+          //             vaccination.notes!,
+          //             style: TextStyle(
+          //               fontSize: 12,
+          //               color: Colors.grey.shade700,
+          //             ),
+          //           ),
+          //         ),
+          //       ],
+          //     ),
+          //   ),
+          // ],
         ],
       ),
     );

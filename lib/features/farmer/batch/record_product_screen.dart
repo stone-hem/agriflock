@@ -39,6 +39,9 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
   final _priceController = TextEditingController();
   final _notesController = TextEditingController();
   final _selectedDateController = TextEditingController();
+  final _smallDeformedEggsController = TextEditingController();
+
+
 
 
   TimeOfDay _selectedTime = TimeOfDay.now();
@@ -81,6 +84,8 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
           batchId: widget.batchId,
           eggsCollected: int.parse(_quantityController.text),
           crackedEggs: int.tryParse(_crackedEggsController.text) ?? 0,
+          partialBrokenEggs: int.tryParse(_crackedEggsController.text) ?? 0,
+          smallDeformedEggs: int.tryParse(_smallDeformedEggsController.text) ?? 0,
           price: num.parse(_priceController.text),
           collectionDate: selectedCompletedTime.toUtc().toIso8601String(),
           notes: _notesController.text.isNotEmpty ? _notesController.text : null,
@@ -373,6 +378,16 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
                   icon: Icons.broken_image,
                   validator: (value) => _validateNonNegativeNumber(value, 'Cracked eggs'),
                 ),
+                const SizedBox(height: 20),
+                ReusableInput(
+                  topLabel: 'Small or deformed Eggs',
+                  controller: _smallDeformedEggsController,
+                  labelText: 'Small or deformed Eggs',
+                  hintText: 'e.g., 5',
+                  keyboardType: TextInputType.number,
+                  icon: Icons.shape_line,
+                  validator: (value) => _validateNonNegativeNumber(value, 'Cracked eggs'),
+                ),
               ],
 
               if (_selectedProductType == 'meat') ...[
@@ -438,8 +453,9 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
                     label: 'Date',
                     icon: Icons.calendar_today,
                     required: true,
+                    initialDate: DateTime.now(),
                     minYear: DateTime.now().year - 1,
-                    returnFormat: DateReturnFormat.dateTime,
+                    returnFormat: DateReturnFormat.isoString,
                     maxYear: DateTime.now().year,
                     controller: _selectedDateController,
                   ),

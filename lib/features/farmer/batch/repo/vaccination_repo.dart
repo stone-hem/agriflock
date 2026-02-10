@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock360/features/farmer/batch/model/vaccination_list_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/recommended_vaccination_model.dart';
 import 'package:agriflock360/main.dart';
@@ -9,31 +10,36 @@ import 'package:http/http.dart' as http;
 
 class VaccinationRepository {
   /// Get vaccinations history for a batch
-  Future<Result<VaccinationsResponse>> getVaccinations(String batchId) async {
+  Future<Result<VaccinationListResponse>> getVaccinationList({
+    required String batchId,
+    VaccinationListFilter filter = VaccinationListFilter.upcoming,
+  }) async {
     try {
-      final response = await apiClient.get('/batches/$batchId/vaccinations');
+      final response = await apiClient.get(
+        '/batches/$batchId/vaccinations/lists?filter=${filter.value}',
+      );
 
       final jsonResponse = jsonDecode(response.body);
-      LogUtil.info('Vaccinations API Response: $jsonResponse');
+      LogUtil.info('Vaccination List API Response: $jsonResponse');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        return Success(VaccinationsResponse.fromJson(jsonResponse));
+        return Success(VaccinationListResponse.fromJson(jsonResponse));
       } else {
         return Failure(
-          message: jsonResponse['message'] ?? 'Failed to fetch vaccinations',
+          message: jsonResponse['message'] ?? 'Failed to fetch vaccination list',
           response: response,
           statusCode: response.statusCode,
         );
       }
     } on SocketException catch (e) {
-      LogUtil.error('Network error in getVaccinations: $e');
+      LogUtil.error('Network error in getVaccinationList: $e');
       return const Failure(message: 'No internet connection', statusCode: 0);
     } catch (e) {
-      LogUtil.error('Error in getVaccinations: $e');
+      LogUtil.error('Error in getVaccinationList: $e');
 
       if (e is http.Response) {
         return Failure(
-          message: 'Failed to fetch vaccinations',
+          message: 'Failed to fetch vaccination list',
           response: e,
           statusCode: e.statusCode,
         );
@@ -258,10 +264,10 @@ class VaccinationRepository {
   }
 
   /// Refresh methods
-  Future<Result<VaccinationsResponse>> refreshVaccinations(
+  Future<Future<Result<VaccinationListResponse>>> refreshVaccinations(
     String batchId,
   ) async {
-    return getVaccinations(batchId);
+    return getVaccinationList(batchId: batchId);
   }
 
   Future<Result<VaccinationDashboard>> refreshVaccinationDashboard(

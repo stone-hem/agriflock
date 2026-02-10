@@ -204,6 +204,10 @@ class CreateProductRequest {
   final num price;
   final String collectionDate;
   final String? notes;
+  final int? smallDeformedEggs;
+  final int? partialBrokenEggs;
+
+
 
   const CreateProductRequest({
     required this.productType,
@@ -215,7 +219,7 @@ class CreateProductRequest {
     this.quantity,
     required this.price,
     required this.collectionDate,
-    this.notes,
+    this.notes, this.smallDeformedEggs, this.partialBrokenEggs,
   });
 
   Map<String, dynamic> toJson() {
@@ -235,6 +239,8 @@ class CreateProductRequest {
       case 'eggs':
         data['eggs_collected'] = eggsCollected;
         data['cracked_eggs'] = crackedEggs ?? 0;
+        data['small_deformed_eggs'] = smallDeformedEggs ?? 0;
+        data['partial_broken_eggs'] = partialBrokenEggs??0;
         break;
       case 'meat':
         data['birds_sold'] = birdsSold;

@@ -281,9 +281,9 @@ class _BatchReportScreenState extends State<BatchReportScreen>
         ),
         bottom: TabBar(
           controller: _tabController,
-          labelColor: Colors.blue.shade700,
+          labelColor: Colors.black87,
           unselectedLabelColor: Colors.grey.shade600,
-          indicatorColor: Colors.blue.shade700,
+          indicatorColor: Colors.black87,
           tabs: const [
             Tab(text: 'Production Report'),
             Tab(text: 'Financial Report'),
@@ -309,7 +309,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
     return SingleChildScrollView(
       child: Column(
         children: [
-          SizedBox(height: 12,),
+          const SizedBox(height: 12),
           Container(
             color: Colors.white,
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -330,7 +330,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                     TextButton.icon(
                       onPressed: _showCustomDatePicker,
                       icon: const Icon(Icons.edit_calendar, size: 16),
-                      label: const Text('Select date  range', style: TextStyle(fontSize: 14)),
+                      label: const Text('Select date range', style: TextStyle(fontSize: 14)),
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         minimumSize: Size.zero,
@@ -346,7 +346,6 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                     scrollDirection: Axis.horizontal,
                     physics: const ClampingScrollPhysics(),
                     children: [
-                      const SizedBox(width: 8),
                       _buildQuickChip('Today', 'today'),
                       const SizedBox(width: 8),
                       _buildQuickChip('Last Week', 'week'),
@@ -354,7 +353,6 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                       _buildQuickChip('Last Month', 'month'),
                       const SizedBox(width: 8),
                       _buildQuickChip('Last Year', 'year'),
-                      const SizedBox(width: 8),
                     ],
                   ),
                 ),
@@ -362,21 +360,20 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
+                    color: Colors.grey.shade100,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.blue.shade200),
+                    border: Border.all(color: Colors.grey.shade300),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.date_range, size: 16, color: Colors.blue.shade700),
+                      Icon(Icons.date_range, size: 16, color: Colors.grey.shade700),
                       const SizedBox(width: 8),
                       Text(
                         '${_formatDate(_startDate)} - ${_formatDate(_endDate)}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: Colors.blue.shade700,
                         ),
                       ),
                     ],
@@ -398,28 +395,16 @@ class _BatchReportScreenState extends State<BatchReportScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.blue.shade100 : Colors.grey.shade100,
+          color: isSelected ? Colors.black87 : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? Colors.blue : Colors.grey.shade300,
-            width: isSelected ? 1.5 : 1,
-          ),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (isSelected)
-              Icon(Icons.check_circle, size: 14, color: Colors.blue.shade700),
-            if (isSelected) const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                color: isSelected ? Colors.blue.shade700 : Colors.grey.shade700,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-              ),
-            ),
-          ],
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            color: isSelected ? Colors.white : Colors.grey.shade700,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+          ),
         ),
       ),
     );
@@ -494,9 +479,9 @@ class _BatchReportScreenState extends State<BatchReportScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.blue.shade50,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue.shade200),
+        border: Border.all(color: Colors.grey.shade300),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -505,16 +490,16 @@ class _BatchReportScreenState extends State<BatchReportScreen>
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: Colors.blue.shade100, shape: BoxShape.circle),
-                child: Icon(Icons.assessment, color: Colors.blue.shade700),
+                decoration: BoxDecoration(color: Colors.grey.shade100, shape: BoxShape.circle),
+                child: Icon(Icons.assessment, color: Colors.grey.shade700),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(report.batchNumber, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue.shade800)),
-                    Text('${report.farmName} - ${report.houseName}', style: TextStyle(fontSize: 13, color: Colors.blue.shade600)),
+                    Text(report.batchNumber, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    Text('${report.farmName} - ${report.houseName}', style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
                   ],
                 ),
               ),
@@ -537,8 +522,8 @@ class _BatchReportScreenState extends State<BatchReportScreen>
     return Expanded(
       child: Column(
         children: [
-          Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue.shade800)),
-          Text(label, style: TextStyle(fontSize: 11, color: Colors.blue.shade600)),
+          Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          Text(label, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
         ],
       ),
     );
@@ -548,13 +533,12 @@ class _BatchReportScreenState extends State<BatchReportScreen>
     return _buildSimpleCard(
       title: 'Mortality',
       icon: Icons.warning_amber,
-      color: Colors.red,
       stats: [
-        _StatData('Day', '${mortality.day}', Colors.orange),
-        _StatData('Night', '${mortality.night}', Colors.indigo),
-        _StatData('24hrs', '${mortality.total24hrs}', Colors.red),
-        _StatData('Cumulative', '${mortality.cumulativeTotal}', Colors.purple),
-        _StatData('Remaining', '${mortality.birdsRemaining}', Colors.green),
+        _StatData('Day', '${mortality.day}'),
+        _StatData('Night', '${mortality.night}'),
+        _StatData('24hrs', '${mortality.total24hrs}'),
+        _StatData('Cumulative', '${mortality.cumulativeTotal}'),
+        _StatData('Remaining', '${mortality.birdsRemaining}'),
       ],
       footer: mortality.reason.isNotEmpty
           ? Text('Reason: ${mortality.reason}', style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontStyle: FontStyle.italic))
@@ -566,12 +550,11 @@ class _BatchReportScreenState extends State<BatchReportScreen>
     return _buildSimpleCard(
       title: 'Feed',
       icon: Icons.fastfood,
-      color: Colors.orange,
       stats: [
-        _StatData('Consumed', '${feed.bagsConsumed} kgs', Colors.orange),
-        _StatData('Total', '${feed.totalBagsConsumed} kgs', Colors.amber),
-        _StatData('In Store', '${feed.balanceInStore} kgs', Colors.green),
-        _StatData('Type', feed.feedType, Colors.blue),
+        _StatData('Consumed', '${feed.bagsConsumed} kgs'),
+        _StatData('Total', '${feed.totalBagsConsumed} kgs'),
+        _StatData('In Store', '${feed.balanceInStore} kgs'),
+        _StatData('Type', feed.feedType),
       ],
     );
   }
@@ -580,21 +563,20 @@ class _BatchReportScreenState extends State<BatchReportScreen>
     return _buildSimpleCard(
       title: 'Vaccination',
       icon: Icons.vaccines,
-      color: Colors.blue,
       stats: [
-        _StatData('Done', '${vaccination.vaccinesDone.length}', Colors.green),
-        _StatData('Upcoming', '${vaccination.vaccinesUpcoming.length}', Colors.orange),
+        _StatData('Done', '${vaccination.vaccinesDone.length}'),
+        _StatData('Upcoming', '${vaccination.vaccinesUpcoming.length}'),
       ],
       footer: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (vaccination.vaccinesDone.isNotEmpty) ...[
             const SizedBox(height: 8),
-            _buildVaccineChips('Completed', vaccination.vaccinesDone, Colors.green),
+            _buildVaccineChips('Completed', vaccination.vaccinesDone),
           ],
           if (vaccination.vaccinesUpcoming.isNotEmpty) ...[
             const SizedBox(height: 8),
-            _buildVaccineChips('Upcoming', vaccination.vaccinesUpcoming, Colors.orange),
+            _buildVaccineChips('Upcoming', vaccination.vaccinesUpcoming),
           ],
         ],
       ),
@@ -605,22 +587,21 @@ class _BatchReportScreenState extends State<BatchReportScreen>
     return _buildSimpleCard(
       title: 'Medication',
       icon: Icons.medical_services,
-      color: Colors.purple,
       stats: [
-        _StatData('Available', '${medication.medicationsAvailable.length}', Colors.purple),
+        _StatData('Available', '${medication.medicationsAvailable.length}'),
       ],
       footer: medication.medicationsAvailable.isNotEmpty
           ? Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: medication.medicationsAvailable.take(5).map((med) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: Colors.purple.shade50, borderRadius: BorderRadius.circular(12)),
-                  child: Text(med.toString(), style: TextStyle(fontSize: 11, color: Colors.purple.shade700)),
-                );
-              }).toList(),
-            )
+        spacing: 6,
+        runSpacing: 6,
+        children: medication.medicationsAvailable.take(5).map((med) {
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(12)),
+            child: Text(med.toString(), style: const TextStyle(fontSize: 11)),
+          );
+        }).toList(),
+      )
           : null,
     );
   }
@@ -629,14 +610,13 @@ class _BatchReportScreenState extends State<BatchReportScreen>
     return _buildSimpleCard(
       title: 'Egg Production',
       icon: Icons.egg,
-      color: Colors.amber,
       stats: [
-        _StatData('Trays', '${production.traysCollected}', Colors.amber),
-        _StatData('Eggs', '${production.totalEggsCollected}', Colors.orange),
-        _StatData('In Store', '${production.traysInStore}', Colors.green),
-        _StatData('Production', '${production.productionPercentage.toStringAsFixed(0)}%', Colors.blue),
-        _StatData('Good', '${production.goodEggs}', Colors.green),
-        _StatData('Value', '$_currency ${production.totalValue.toStringAsFixed(0)}', Colors.purple),
+        _StatData('Trays', '${production.traysCollected}'),
+        _StatData('Eggs', '${production.totalEggsCollected}'),
+        _StatData('In Store', '${production.traysInStore}'),
+        _StatData('Production', '${production.productionPercentage.toStringAsFixed(0)}%'),
+        _StatData('Good', '${production.goodEggs}'),
+        _StatData('Value', '$_currency ${production.totalValue.toStringAsFixed(0)}'),
       ],
     );
   }
@@ -644,7 +624,6 @@ class _BatchReportScreenState extends State<BatchReportScreen>
   Widget _buildSimpleCard({
     required String title,
     required IconData icon,
-    required Color color,
     required List<_StatData> stats,
     Widget? footer,
   }) {
@@ -654,8 +633,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2))],
+        border: Border.all(color: Colors.grey.shade300),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -663,20 +641,16 @@ class _BatchReportScreenState extends State<BatchReportScreen>
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
-                child: Icon(icon, color: color, size: 18),
-              ),
+              Icon(icon, color: Colors.grey.shade700, size: 20),
               const SizedBox(width: 8),
-              Text(title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey.shade800)),
+              Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: stats.map((stat) => _buildStatChip(stat.label, stat.value, stat.color)).toList(),
+            children: stats.map((stat) => _buildStatChip(stat.label, stat.value)).toList(),
           ),
           if (footer != null) ...[
             const SizedBox(height: 10),
@@ -687,11 +661,11 @@ class _BatchReportScreenState extends State<BatchReportScreen>
     );
   }
 
-  Widget _buildStatChip(String label, String value, Color color) {
+  Widget _buildStatChip(String label, String value) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -699,12 +673,12 @@ class _BatchReportScreenState extends State<BatchReportScreen>
         children: [
           Text(
             value,
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: color),
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
             overflow: TextOverflow.ellipsis,
           ),
           Text(
             label,
-            style: TextStyle(fontSize: 10, color: color.withOpacity(0.8)),
+            style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
             overflow: TextOverflow.ellipsis,
           ),
         ],
@@ -712,12 +686,12 @@ class _BatchReportScreenState extends State<BatchReportScreen>
     );
   }
 
-  Widget _buildVaccineChips(String label, List<dynamic> vaccines, Color color) {
+  Widget _buildVaccineChips(String label, List<dynamic> vaccines) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color)),
+        Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
         const SizedBox(height: 4),
         Wrap(
           spacing: 4,
@@ -725,8 +699,8 @@ class _BatchReportScreenState extends State<BatchReportScreen>
           children: vaccines.take(3).map((vaccine) {
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-              child: Text(vaccine.toString(), style: TextStyle(fontSize: 10, color: color), overflow: TextOverflow.ellipsis),
+              decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(8)),
+              child: Text(vaccine.toString(), style: const TextStyle(fontSize: 10), overflow: TextOverflow.ellipsis),
             );
           }).toList(),
         ),
@@ -803,7 +777,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: Colors.grey.shade200),
+              side: BorderSide(color: Colors.grey.shade300),
             ),
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -812,11 +786,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                   // Period Header with net profit/loss
                   Row(
                     children: [
-                      Icon(
-                        _getFinancialPeriodIcon(_selectedFinancialPeriod),
-                        size: 24,
-                        color: _getFinancialPeriodColor(_selectedFinancialPeriod),
-                      ),
+                      Icon(Icons.calendar_today, size: 20, color: Colors.grey.shade700),
                       const SizedBox(width: 12),
                       Text(
                         _getFinancialPeriodLabel(_selectedFinancialPeriod),
@@ -874,20 +844,10 @@ class _BatchReportScreenState extends State<BatchReportScreen>
         });
       },
       style: OutlinedButton.styleFrom(
-        backgroundColor: isSelected
-            ? _getFinancialPeriodColor(period).withOpacity(0.1)
-            : Colors.transparent,
-        foregroundColor: isSelected
-            ? _getFinancialPeriodColor(period)
-            : Colors.grey.shade600,
-        side: BorderSide(
-          color: isSelected
-              ? _getFinancialPeriodColor(period)
-              : Colors.grey.shade300,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        backgroundColor: isSelected ? Colors.black87 : Colors.transparent,
+        foregroundColor: isSelected ? Colors.white : Colors.grey.shade600,
+        side: BorderSide(color: isSelected ? Colors.black87 : Colors.grey.shade300),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       child: Text(label),
     );
@@ -915,26 +875,17 @@ class _BatchReportScreenState extends State<BatchReportScreen>
         _buildFinancialCostItemRow(
           label: 'Feeding Cost',
           amount: stats.feedingCost,
-          percentage: totalExpenditure > 0
-              ? (stats.feedingCost / totalExpenditure * 100)
-              : 0,
-          color: Colors.orange,
+          percentage: totalExpenditure > 0 ? (stats.feedingCost / totalExpenditure * 100) : 0,
         ),
         _buildFinancialCostItemRow(
           label: 'Vaccination Cost',
           amount: stats.vaccinationCost,
-          percentage: totalExpenditure > 0
-              ? (stats.vaccinationCost / totalExpenditure * 100)
-              : 0,
-          color: Colors.purple,
+          percentage: totalExpenditure > 0 ? (stats.vaccinationCost / totalExpenditure * 100) : 0,
         ),
         _buildFinancialCostItemRow(
           label: 'Inventory Cost',
           amount: stats.inventoryCost,
-          percentage: totalExpenditure > 0
-              ? (stats.inventoryCost / totalExpenditure * 100)
-              : 0,
-          color: Colors.blue,
+          percentage: totalExpenditure > 0 ? (stats.inventoryCost / totalExpenditure * 100) : 0,
         ),
         const Divider(height: 24),
         Row(
@@ -961,49 +912,33 @@ class _BatchReportScreenState extends State<BatchReportScreen>
     required String label,
     required double amount,
     required double percentage,
-    required Color color,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 4,
-            height: 24,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(2),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+              Text(
+                '$_currency ${amount.toStringAsFixed(2)}',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
-                    Text(
-                      '$_currency ${amount.toStringAsFixed(2)}',
-                      style: TextStyle(fontWeight: FontWeight.w600, color: color),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                LinearProgressIndicator(
-                  value: percentage / 100,
-                  backgroundColor: Colors.grey.shade200,
-                  color: color,
-                  minHeight: 4,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${percentage.toStringAsFixed(1)}% of total expenditure',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                ),
-              ],
-            ),
+          const SizedBox(height: 4),
+          LinearProgressIndicator(
+            value: percentage / 100,
+            backgroundColor: Colors.grey.shade200,
+            color: Colors.grey.shade700,
+            minHeight: 4,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${percentage.toStringAsFixed(1)}% of total expenditure',
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
           ),
         ],
       ),
@@ -1018,7 +953,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
       color: Colors.grey.shade50,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade200),
+        side: BorderSide(color: Colors.grey.shade300),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -1100,40 +1035,6 @@ class _BatchReportScreenState extends State<BatchReportScreen>
     );
   }
 
-  IconData _getFinancialPeriodIcon(String period) {
-    switch (period) {
-      case 'today':
-        return Icons.today;
-      case 'weekly':
-        return Icons.date_range;
-      case 'monthly':
-        return Icons.calendar_month;
-      case 'yearly':
-        return Icons.calendar_today;
-      case 'all_time':
-        return Icons.history;
-      default:
-        return Icons.today;
-    }
-  }
-
-  Color _getFinancialPeriodColor(String period) {
-    switch (period) {
-      case 'today':
-        return Colors.blue;
-      case 'weekly':
-        return Colors.purple;
-      case 'monthly':
-        return Colors.green;
-      case 'yearly':
-        return Colors.orange;
-      case 'all_time':
-        return Colors.indigo;
-      default:
-        return Colors.blue;
-    }
-  }
-
   @override
   void dispose() {
     _tabController.dispose();
@@ -1146,9 +1047,8 @@ class _BatchReportScreenState extends State<BatchReportScreen>
 class _StatData {
   final String label;
   final String value;
-  final Color color;
 
-  _StatData(this.label, this.value, this.color);
+  _StatData(this.label, this.value);
 }
 
 class _CustomDatePickerSheet extends StatefulWidget {
@@ -1254,7 +1154,7 @@ class _CustomDatePickerSheetState extends State<_CustomDatePickerSheet> {
               child: ElevatedButton(
                 onPressed: _applyFilters,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
+                  backgroundColor: Colors.black87,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   elevation: 0,
