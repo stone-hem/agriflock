@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock360/features/farmer/home/model/batch_home_model.dart';
 import 'package:agriflock360/features/farmer/home/model/dashboard_model.dart';
 import 'package:agriflock360/features/farmer/home/model/financial_overview_model.dart';
 import 'package:agriflock360/main.dart';
@@ -203,6 +204,51 @@ class DashboardRepository {
       if (e is http.Response) {
         return Failure(
           message: 'Failed to refresh dashboard',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+
+      return Failure(message: e.toString());
+    }
+  }
+
+  /// Get user batches
+  Future<Result<List<BatchHomeData>>> getUserBatches() async {
+    try {
+      final response = await apiClient.get('/farm-reports/my-batches');
+
+      final jsonResponse = jsonDecode(response.body);
+      LogUtil.info('User Batches API Response: $jsonResponse');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final batchResponse = BatchHomeResponse.fromJson(jsonResponse);
+        return Success(batchResponse.data);
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to fetch user batches',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in getUserBatches: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
+    } on FormatException catch (e) {
+      LogUtil.error('JSON parsing error in getUserBatches: $e');
+      return const Failure(
+        message: 'Invalid response format from server',
+        statusCode: 0,
+      );
+    } catch (e) {
+      LogUtil.error('Error in getUserBatches: $e');
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to fetch user batches',
           response: e,
           statusCode: e.statusCode,
         );

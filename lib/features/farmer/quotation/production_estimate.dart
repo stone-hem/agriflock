@@ -296,10 +296,6 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
                       imageAssetPath: 'assets/quotation/img_8.png',
                       description: 'This is the first image description'
                   ),
-                  ImageWithDescriptionWidget(
-                      imageAssetPath: 'assets/quotation/img_9.png',
-                      description: 'This is the first image description'
-                  ),
                   const SizedBox(height: 10),
 
                   // Disclaimer
@@ -495,17 +491,17 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
         ),
         const SizedBox(height: 24),
 
-        // Basic Information Table
-        _buildBasicInfoTable(),
-        const SizedBox(height: 20),
-
-        // Financial Summary Table
-        _buildFinancialSummaryTable(),
-        const SizedBox(height: 20),
-
-        // Category-wise Breakdown
-        _buildCategoryBreakdownTable(),
-        const SizedBox(height: 20),
+        // // Basic Information Table
+        // _buildBasicInfoTable(),
+        // const SizedBox(height: 20),
+        //
+        // // Financial Summary Table
+        // _buildFinancialSummaryTable(),
+        // const SizedBox(height: 20),
+        //
+        // // Category-wise Breakdown
+        // _buildCategoryBreakdownTable(),
+        // const SizedBox(height: 20),
 
         // Detailed Items Table
         _buildDetailedItemsTable(),

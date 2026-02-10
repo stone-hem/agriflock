@@ -36,7 +36,7 @@ class ExpenseActionButton extends StatelessWidget {
     this.descriptionTextSize = 12,
     this.alignment = MainAxisAlignment.start,
     this.showIcon = true,
-    this.spacing = 4,
+    this.spacing = 2,
   });
 
   @override

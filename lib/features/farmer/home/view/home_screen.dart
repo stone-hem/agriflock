@@ -3,14 +3,15 @@ import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:agriflock360/core/utils/shared_prefs.dart';
+import 'package:agriflock360/features/farmer/home/model/batch_home_model.dart';
 import 'package:agriflock360/features/farmer/home/model/dashboard_model.dart';
 import 'package:agriflock360/features/farmer/home/model/financial_overview_model.dart';
 import 'package:agriflock360/features/farmer/home/repo/dashboard_repo.dart';
 import 'package:agriflock360/features/farmer/home/view/widgets/activities_loading.dart';
 import 'package:agriflock360/features/farmer/home/view/widgets/activity_item.dart';
+import 'package:agriflock360/features/farmer/home/view/widgets/batch_overview_carousel.dart';
 import 'package:agriflock360/features/farmer/home/view/widgets/home_skeleton.dart';
 import 'package:agriflock360/features/farmer/home/view/widgets/perfomance_graph.dart';
-import 'package:agriflock360/features/farmer/home/view/widgets/stat_card.dart';
 import 'package:agriflock360/features/farmer/home/view/widgets/welcome_section.dart';
 import 'package:agriflock360/features/farmer/payg/flow/day_27_decision_modal.dart';
 import 'package:agriflock360/features/farmer/home/view/widgets/future_framing_banner.dart';
@@ -44,7 +45,10 @@ class _HomeScreenState extends State<HomeScreen> {
   int _daysSinceFirstLogin = 0;
   String? _userName;
   bool _showDay27Modal = false;
-  final GlobalKey _buttonKey = GlobalKey();
+
+  List<BatchHomeData> _batches = [];
+  bool _isBatchesLoading = true;
+  String? _batchesError;
 
   // Constants for day thresholds
   static const int VALUE_CONFIRMATION_START_DAY = 5;
@@ -61,11 +65,11 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadSummary();
     _loadActivities();
     _loadFinancialOverview();
+    _loadBatches();
   }
 
   @override
   void dispose() {
-    // Clean up any resources if needed
     super.dispose();
   }
 
@@ -99,6 +103,43 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           _userFirstLoginDate = null;
           _isLoadingUser = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadBatches() async {
+    if (!mounted) return;
+
+    setState(() {
+      _isBatchesLoading = true;
+      _batchesError = null;
+    });
+
+    try {
+      final result = await _repository.getUserBatches();
+
+      if (!mounted) return;
+
+      switch (result) {
+        case Success<List<BatchHomeData>>(data: final data):
+          setState(() {
+            _batches = data;
+            _isBatchesLoading = false;
+          });
+          break;
+        case Failure<List<BatchHomeData>>(message: final error):
+          setState(() {
+            _batchesError = error;
+            _isBatchesLoading = false;
+          });
+          break;
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _batchesError = e.toString();
+          _isBatchesLoading = false;
         });
       }
     }
@@ -363,6 +404,9 @@ class _HomeScreenState extends State<HomeScreen> {
             _activitiesError = null;
             _financialError = null; // ADD THIS
           });
+
+          // Reload batches separately
+          await _loadBatches();
           break;
         case Failure<Map<String, dynamic>>(message: final error):
           if (mounted) {
@@ -382,7 +426,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   bool get _isLoading =>
-      _isSummaryLoading || _isActivitiesLoading || _isFinancialLoading;
+      _isSummaryLoading || _isActivitiesLoading || _isFinancialLoading || _isBatchesLoading;
   bool get _hasError => _summaryError != null || _activitiesError != null;
   String? get _error => _summaryError ?? _activitiesError;
 
@@ -393,11 +437,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return 'Good Evening';
   }
 
-  String _getSummaryMessage() {
-    if (_summary == null) return 'Loading farm data...';
-    if (_summary!.activeBatches == 0) return 'No active batches at the moment';
-    return 'Managing ${_summary!.activeBatches} active batch${_summary!.activeBatches > 1 ? "es" : ""} today';
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -490,71 +530,93 @@ class _HomeScreenState extends State<HomeScreen> {
                           WelcomeSection(
                             greeting: _getGreeting(),
                             userName: _userName,
-                            summaryMsg: _getSummaryMessage(),
+                            farms:'${_summary!.numberOfFarms}',
+                            houses: '${_summary!.numberOfHouses}',
+                            batches: '${_summary!.totalBatches}',
+                            birds: '${_summary!.totalBirds}',
                             daysSinceLogin: _userFirstLoginDate != null
                                 ? _daysSinceFirstLogin
                                 : null,
                           ),
                         const SizedBox(height: 20),
 
-                        Row(
-                          children: [
-                            Expanded(
-                              flex: 2,
-                              child: HomeStatCard(
-                                mainValue: '${_summary!.numberOfFarms}',
-                                mainLabel: 'Farms',
-                                color: Colors.green.shade100,
-                                textColor: Colors.green,
-                                additionalStats: [
-                                  StatItem(
-                                    value: '${_summary!.numberOfHouses}',
-                                    label: 'Houses',
-                                  ),
-                                  StatItem(
-                                    value: '${_summary!.totalBatches}',
-                                    label: 'Batches',
-                                  ),
-                                ],
-                                onButtonPressed: (){
-                                  context.push('/farms');
-                                },
-                                buttonText: 'View farms',
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              flex: 3,
-                              child: HomeStatCard(
-                                mainValue: '${_summary!.totalBirds}',
-                                mainLabel: 'Total Birds',
-                                color: Colors.orange.shade100,
-                                textColor: Colors.orange,
-                                additionalStats: [
-
-                                  // Breed breakdown stats
-                                  ..._summary!.breedBreakdown.map((BreedBreakdown item){
-                                    return StatItem(
-                                      value: '${item.liveCount}',
-                                      label: item.breedName,
-                                    );
-                                  }),
-
-                                  // Eggs count
-                                  StatItem(
-                                    value: '${_summary!.eggsToday}',
-                                    label: 'Eggs',
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                        Text(
+                          'Batch(es) Overview Report',
+                          style: Theme.of(context).textTheme.titleMedium!
+                              .copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey.shade800,
+                          ),
                         ),
+                        const SizedBox(height: 10),
 
+
+                        if (_isBatchesLoading)
+                          SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.33,
+                            child: Center(child: CircularProgressIndicator()),
+                          )
+                        else if (_batchesError != null)
+                          Container(
+                            height: MediaQuery.of(context).size.height * 0.33,
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.error_outline, color: Colors.red.shade700, size: 40),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Failed to load batches',
+                                  style: TextStyle(color: Colors.red.shade700),
+                                ),
+                                const SizedBox(height: 8),
+                                ElevatedButton(
+                                  onPressed: _loadBatches,
+                                  child: const Text('Retry'),
+                                ),
+                              ],
+                            ),
+                          )
+                        else if (_batches.isEmpty)
+                            Container(
+                              height: MediaQuery.of(context).size.height * 0.33,
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey.shade300),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.inbox_outlined, color: Colors.grey.shade400, size: 48),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'No batches available',
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Create your first batch to get started',
+                                    style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+                                  ),
+                                ],
+                              ),
+                            )
+                          else
+                            BatchOverviewCarousel(batches: _batches),
                         const SizedBox(height: 16),
                         Text(
                           'Quick Actions',
-                          style: Theme.of(context).textTheme.titleLarge!
+                          style: Theme.of(context).textTheme.titleMedium!
                               .copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.grey.shade800,

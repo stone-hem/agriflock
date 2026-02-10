@@ -4,16 +4,19 @@ import 'package:go_router/go_router.dart';
 
 class WelcomeSection extends StatelessWidget {
   final String greeting;
-  final String summaryMsg;
   final int? daysSinceLogin;
   final String? userName;
+  final String? farms;
+  final String? houses;
+  final String? batches;
+  final String? birds;
+
 
   const WelcomeSection({
     super.key,
     required this.greeting,
-    required this.summaryMsg,
     this.daysSinceLogin,
-    this.userName,
+    this.userName, this.farms, this.houses, this.batches, this.birds,
   });
 
   @override
@@ -32,52 +35,115 @@ class WelcomeSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (daysSinceLogin != null)
-            Container(
-              margin: const EdgeInsets.only(bottom: 6),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.green.shade300),
-              ),
-              child: Text(
-                'Day $daysSinceLogin',
-                style: TextStyle(
-                  color: Colors.green.shade800,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 11,
+
+          Row(
+            children: [
+              if (daysSinceLogin != null)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green.shade300),
+                  ),
+                  child: Text(
+                    'Day $daysSinceLogin',
+                    style: TextStyle(
+                      color: Colors.green.shade800,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+              const SizedBox(width: 2),
+              Text(
+                userName != null && userName!.isNotEmpty
+                    ? '$greeting, $userName'
+                    : greeting,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                  color: Colors.grey.shade700,
+                  fontWeight: FontWeight.w400,
+                  fontSize: 16,
                 ),
               ),
-            ),
-          const SizedBox(height: 2),
-          Text(
-            userName != null && userName!.isNotEmpty
-                ? '$greeting, $userName'
-                : greeting,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.titleMedium!.copyWith(
-              color: Colors.grey.shade700,
-              fontWeight: FontWeight.w400,
-              fontSize: 18,
-            ),
+            ],
           ),
           const SizedBox(height: 3),
-          Text(
-            summaryMsg,
-            style: TextStyle(
-              color: Colors.green.shade600,
-              fontSize: 13,
-            ),
+          Row(
+            children: [
+              Text(
+                '$farms Farm(s)',
+                style: TextStyle(
+                  color: Colors.green.shade600,
+                  fontSize: 13,
+                ),
+              ),
+              Container(
+                width: 8.0,
+                height: 8.0,
+                margin: EdgeInsets.symmetric(horizontal: 4.0),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.black54, // Color of the dot
+                ),
+              ),
+              Text(
+                '$houses House(s)',
+                style: TextStyle(
+                  color: Colors.green.shade600,
+                  fontSize: 13,
+                ),
+              ),
+              Container(
+                width: 8.0,
+                height: 8.0,
+                margin: EdgeInsets.symmetric(horizontal: 4.0),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.black54, // Color of the dot
+                ),
+              ),
+              Text(
+                '$batches Batch(es)',
+                style: TextStyle(
+                  color: Colors.green.shade600,
+                  fontSize: 13,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 6),
-          ExpenseActionButton(
+
+          TextButton.icon(
             onPressed: () {
               context.push('/record-expenditure');
             },
-            buttonColor: Colors.red,
-          )
+            icon: Icon(Icons.arrow_forward),
+            label: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: 'Quick expense',
+                    style: TextStyle(
+                      decoration: TextDecoration.underline,
+                      color: Colors.red
+                    ),
+                  ),
+                  TextSpan(text: ' '),
+                  TextSpan(
+                    text: 'Add your expenses and selling price to see your profit.',
+                    style: TextStyle(
+                      fontStyle: FontStyle.italic,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
         ],
       ),
     );

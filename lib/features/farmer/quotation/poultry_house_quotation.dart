@@ -342,50 +342,6 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
         ),
         const SizedBox(height: 24),
 
-        // Quick Overview Card
-        _buildInfoCard(
-          title: 'Quick Overview',
-          icon: Icons.dashboard,
-          color: primaryColor,
-          children: [
-            _buildOverviewItem(
-              'Bird Capacity',
-              '${_quotationData!.birdCapacity} Birds',
-            ),
-            const SizedBox(height: 8),
-            _buildOverviewItem(
-              'Material Cost Subtotal',
-              '${_quotationData!.currency} ${_formatNumber(_quotationData!.materialsSubtotal)}',
-            ),
-            const SizedBox(height: 8),
-            _buildOverviewItem(
-              'Labour Cost (${_quotationData!.laborPercentage}%)',
-              '${_quotationData!.currency} ${_formatNumber(_quotationData!.laborCost)}',
-            ),
-            const Divider(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'GRAND TOTAL',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                Text(
-                  '${_quotationData!.currency} ${_formatNumber(_quotationData!.grandTotal)}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    color: Colors.green,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
 
         // Material Table
         _buildMaterialsTable(),
@@ -566,7 +522,7 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
                         ),
                       ],
                     );
-                  }).toList(),
+                  }),
                   // Subtotal row
                   DataRow(
                     cells: [
@@ -736,82 +692,8 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
     );
   }
 
-  Widget _buildInfoCard({
-    required String title,
-    required IconData icon,
-    required Color color,
-    required List<Widget> children,
-  }) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: color.withOpacity(0.2)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(icon, color: color, size: 20),
-                ),
-                const SizedBox(width: 12),
-                SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.6,
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: color,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            ...children,
-          ],
-        ),
-      ),
-    );
-  }
 
-  Widget _buildOverviewItem(String label, String value) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Text(
-            label,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              color: Colors.grey,
-            ),
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-              fontSize: 14,
-            ),
-            textAlign: TextAlign.right,
-          ),
-        ),
-      ],
-    );
-  }
+
 
   String _formatNumber(double number) {
     return number.toStringAsFixed(2).replaceAllMapped(
