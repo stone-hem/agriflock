@@ -78,7 +78,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
             TextButton.icon(
               onPressed: _currentPage > 0 ? _previousPage : null,
               icon: const Icon(Icons.chevron_left, size: 18),
-              label: const Text('Previous'),
+              label: const Text('Previous Batch'),
               style: TextButton.styleFrom(
                 foregroundColor: _currentPage > 0
                     ? Colors.grey.shade700
@@ -91,7 +91,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                   ? _nextPage
                   : null,
               icon: const Icon(Icons.chevron_right, size: 18),
-              label: const Text('Next'),
+              label: const Text('Next Batch'),
               style: TextButton.styleFrom(
                 foregroundColor: _currentPage < widget.batches.length - 1
                     ? Colors.grey.shade700
@@ -373,6 +373,8 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                   ],
                 ),
               ),
+            
+            TextButton.icon(onPressed: (){}, label: Text('View More Details') , icon: Icon(Icons.arrow_forward),)
           ],
         ),
       ),

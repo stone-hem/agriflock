@@ -33,11 +33,25 @@ class WelcomeSection extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: .start,
         children: [
 
           Row(
+            crossAxisAlignment: .center,
             children: [
+              Text(
+                userName != null && userName!.isNotEmpty
+                    ? '$greeting, $userName'
+                    : greeting,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                  color: Colors.grey.shade700,
+                  fontWeight: FontWeight.w400,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(width: 2),
               if (daysSinceLogin != null)
                 Container(
                   margin: const EdgeInsets.only(bottom: 6),
@@ -56,19 +70,6 @@ class WelcomeSection extends StatelessWidget {
                     ),
                   ),
                 ),
-              const SizedBox(width: 2),
-              Text(
-                userName != null && userName!.isNotEmpty
-                    ? '$greeting, $userName'
-                    : greeting,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  color: Colors.grey.shade700,
-                  fontWeight: FontWeight.w400,
-                  fontSize: 16,
-                ),
-              ),
             ],
           ),
           const SizedBox(height: 3),

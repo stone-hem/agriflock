@@ -10,7 +10,6 @@ import 'package:agriflock360/features/farmer/home/repo/dashboard_repo.dart';
 import 'package:agriflock360/features/farmer/home/view/widgets/activities_loading.dart';
 import 'package:agriflock360/features/farmer/home/view/widgets/activity_item.dart';
 import 'package:agriflock360/features/farmer/home/view/widgets/batch_overview_carousel.dart';
-import 'package:agriflock360/features/farmer/home/view/widgets/home_skeleton.dart';
 import 'package:agriflock360/features/farmer/home/view/widgets/perfomance_graph.dart';
 import 'package:agriflock360/features/farmer/home/view/widgets/welcome_section.dart';
 import 'package:agriflock360/features/farmer/payg/flow/day_27_decision_modal.dart';
@@ -388,47 +387,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _onRefresh() async {
     if (!mounted) return;
 
-    try {
-      final result = await _repository.refreshDashboard(activityLimit: 5);
-
-      if (!mounted) return;
-
-      switch (result) {
-        case Success<Map<String, dynamic>>(data: final data):
-          setState(() {
-            _summary = data['summary'] as DashboardSummary;
-            _activities = data['activities'] as List<DashboardActivity>;
-            _financialOverview =
-                data['financial'] as FinancialOverview?; // ADD THIS
-            _summaryError = null;
-            _activitiesError = null;
-            _financialError = null; // ADD THIS
-          });
-
-          // Reload batches separately
-          await _loadBatches();
-          break;
-        case Failure<Map<String, dynamic>>(message: final error):
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Failed to refresh: $error')),
-            );
-          }
-          break;
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to refresh: ${e.toString()}')),
-        );
-      }
-    }
+    // Load all sections independently in parallel
+    await Future.wait([
+      _loadSummary(),
+      _loadActivities(),
+      _loadFinancialOverview(),
+      _loadBatches(),
+    ]);
   }
 
-  bool get _isLoading =>
-      _isSummaryLoading || _isActivitiesLoading || _isFinancialLoading || _isBatchesLoading;
-  bool get _hasError => _summaryError != null || _activitiesError != null;
-  String? get _error => _summaryError ?? _activitiesError;
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
@@ -482,189 +449,142 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: const ExpenseMarqueeBannerCompact(),
       body: Stack(
         children: [
-          _isLoading
-              ? HomeSkeleton()
-              : _hasError
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.error_outline,
-                        size: 48,
-                        color: Colors.red,
-                      ),
-                      const SizedBox(height: 16),
-                      Text('Error: $_error'),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () {
-                          if (_summaryError != null) _loadSummary();
-                          if (_activitiesError != null) _loadActivities();
-                        },
-                        child: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _onRefresh,
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (_shouldShowValueConfirmationBanner)
-                          ValueConfirmationBanner(
-                            onViewActivity: () => context.push('/activity'),
-                          ),
+          RefreshIndicator(
+            onRefresh: _onRefresh,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Welcome / Banner section — loads independently
+                  _buildWelcomeOrBannerSection(),
+                  const SizedBox(height: 16),
 
-                        if (_shouldShowFutureFramingBanner)
-                          FutureFramingBanner(
-                            onSeePlans: () => context.push('/plans'),
-                          ),
-
-                        if (!_shouldShowValueConfirmationBanner &&
-                            !_shouldShowFutureFramingBanner)
-                          WelcomeSection(
-                            greeting: _getGreeting(),
-                            userName: _userName,
-                            farms:'${_summary!.numberOfFarms}',
-                            houses: '${_summary!.numberOfHouses}',
-                            batches: '${_summary!.totalBatches}',
-                            birds: '${_summary!.totalBirds}',
-                            daysSinceLogin: _userFirstLoginDate != null
-                                ? _daysSinceFirstLogin
-                                : null,
-                          ),
-                        const SizedBox(height: 20),
-
-                        Text(
-                          'Batch(es) Overview Report',
-                          style: Theme.of(context).textTheme.titleMedium!
-                              .copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade800,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-
-
-                        if (_isBatchesLoading)
-                          SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.33,
-                            child: Center(child: CircularProgressIndicator()),
-                          )
-                        else if (_batchesError != null)
-                          Container(
-                            height: MediaQuery.of(context).size.height * 0.33,
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.red.shade50,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.error_outline, color: Colors.red.shade700, size: 40),
-                                const SizedBox(height: 12),
-                                Text(
-                                  'Failed to load batches',
-                                  style: TextStyle(color: Colors.red.shade700),
-                                ),
-                                const SizedBox(height: 8),
-                                ElevatedButton(
-                                  onPressed: _loadBatches,
-                                  child: const Text('Retry'),
-                                ),
-                              ],
-                            ),
-                          )
-                        else if (_batches.isEmpty)
-                            Container(
-                              height: MediaQuery.of(context).size.height * 0.33,
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade100,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.grey.shade300),
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.inbox_outlined, color: Colors.grey.shade400, size: 48),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    'No batches available',
-                                    style: TextStyle(
-                                      color: Colors.grey.shade600,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Create your first batch to get started',
-                                    style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
-                                  ),
-                                ],
-                              ),
-                            )
-                          else
-                            BatchOverviewCarousel(batches: _batches),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Quick Actions',
-                          style: Theme.of(context).textTheme.titleMedium!
-                              .copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey.shade800,
-                              ),
-                        ),
-                        const SizedBox(height: 12),
-                        _buildQuickActionsGrid(),
-                        const SizedBox(height: 16),
-
-                        if (_isFinancialLoading)
-                          SizedBox(
-                            height: 300,
-                            child: Center(child: CircularProgressIndicator()),
-                          )
-                        else if (_financialError != null)
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.red.shade50,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Column(
-                              children: [
-                                Text(
-                                  'Failed to load financial data',
-                                  style: TextStyle(color: Colors.red.shade700),
-                                ),
-                                const SizedBox(height: 8),
-                                ElevatedButton(
-                                  onPressed: _loadFinancialOverview,
-                                  child: const Text('Retry'),
-                                ),
-                              ],
-                            ),
-                          )
-                        else if (_financialOverview != null)
-                          FinancialPerformanceGraph(
-                            financialData: _financialOverview!,
-                          )
-                        else
-                          const SizedBox.shrink(),
-                        const SizedBox(height: 20),
-
-                        _buildRecentActivitySection(context),
-                      ],
+                  Text(
+                    'Batch(es) Overview Report',
+                    style: Theme.of(context).textTheme.titleMedium!
+                        .copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade800,
                     ),
                   ),
-                ),
+                  const SizedBox(height: 10),
+
+                  if (_isBatchesLoading)
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.33,
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  else if (_batchesError != null)
+                    Container(
+                      height: MediaQuery.of(context).size.height * 0.33,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.error_outline, color: Colors.red.shade700, size: 40),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Failed to load batches',
+                            style: TextStyle(color: Colors.red.shade700),
+                          ),
+                          const SizedBox(height: 8),
+                          ElevatedButton(
+                            onPressed: _loadBatches,
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    )
+                  else if (_batches.isEmpty)
+                      Container(
+                        height: MediaQuery.of(context).size.height * 0.33,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.inbox_outlined, color: Colors.grey.shade400, size: 48),
+                            const SizedBox(height: 12),
+                            Text(
+                              'No batches available',
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Create your first batch to get started',
+                              style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      BatchOverviewCarousel(batches: _batches),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Quick Actions',
+                    style: Theme.of(context).textTheme.titleMedium!
+                        .copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey.shade800,
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildQuickActionsGrid(),
+                  const SizedBox(height: 16),
+
+                  if (_isFinancialLoading)
+                    SizedBox(
+                      height: 300,
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  else if (_financialError != null)
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            'Failed to load financial data',
+                            style: TextStyle(color: Colors.red.shade700),
+                          ),
+                          const SizedBox(height: 8),
+                          ElevatedButton(
+                            onPressed: _loadFinancialOverview,
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    )
+                  else if (_financialOverview != null)
+                    FinancialPerformanceGraph(
+                      financialData: _financialOverview!,
+                    )
+                  else
+                    const SizedBox.shrink(),
+                  const SizedBox(height: 20),
+
+                  _buildRecentActivitySection(context),
+                ],
+              ),
+            ),
+          ),
 
           if (_showDay27Modal)
             GestureDetector(
@@ -684,6 +604,101 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+
+  Widget _buildWelcomeOrBannerSection() {
+    if (_shouldShowValueConfirmationBanner) {
+      return ValueConfirmationBanner(
+        onViewActivity: () => context.push('/activity'),
+      );
+    }
+
+    if (_shouldShowFutureFramingBanner) {
+      return FutureFramingBanner(
+        onSeePlans: () => context.push('/plans'),
+      );
+    }
+
+    // Show a shimmer placeholder while summary or user data is loading
+    if (_isSummaryLoading || _isLoadingUser) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade200,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 200,
+              height: 20,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Container(
+              width: 160,
+              height: 16,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Container(
+              width: 120,
+              height: 14,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_summaryError != null) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.red.shade50,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Icon(Icons.error_outline, color: Colors.red.shade700, size: 32),
+            const SizedBox(height: 8),
+            Text(
+              'Failed to load summary',
+              style: TextStyle(color: Colors.red.shade700),
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton(
+              onPressed: _loadSummary,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return WelcomeSection(
+      greeting: _getGreeting(),
+      userName: _userName,
+      farms: '${_summary!.numberOfFarms}',
+      houses: '${_summary!.numberOfHouses}',
+      batches: '${_summary!.totalBatches}',
+      birds: '${_summary!.totalBirds}',
+      daysSinceLogin: _userFirstLoginDate != null
+          ? _daysSinceFirstLogin
+          : null,
+    );
+  }
 
   Widget _buildQuickActionsGrid() {
     return GridView.count(
