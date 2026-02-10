@@ -227,10 +227,10 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                       ),
                     ),
                     Text(
-                      '${batch.ageWeeks}w ${batch.ageDays}d',
+                      '${batch.ageWeeks} weeks / ${batch.ageDays} days ',
                       style: TextStyle(
                         color: Colors.grey.shade900,
-                        fontSize: 18,
+                        fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
