@@ -1,5 +1,6 @@
 import 'package:agriflock360/features/farmer/home/model/batch_home_model.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class BatchOverviewCarousel extends StatefulWidget {
   final List<BatchHomeData> batches;
@@ -374,7 +375,9 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                 ),
               ),
             
-            TextButton.icon(onPressed: (){}, label: Text('View More Details') , icon: Icon(Icons.arrow_forward),)
+            TextButton.icon(onPressed: (){
+              context.push('/batch-report', extra: batch.batchId);
+            }, label: Text('View More Details') , icon: Icon(Icons.arrow_forward),)
           ],
         ),
       ),

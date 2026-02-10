@@ -430,8 +430,8 @@ class AppRoutes {
         GoRoute(
           path: '/batch-report',
           builder: (context, state) {
-            final batch = state.extra as BatchListItem;
-            return BatchReportScreen(batch: batch,);
+            final batchId = state.extra as String;
+            return BatchReportScreen(batchId: batchId,);
           },
         ),
         GoRoute(

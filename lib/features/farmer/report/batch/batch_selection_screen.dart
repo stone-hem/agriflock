@@ -64,7 +64,7 @@ class _BatchSelectionScreenState extends State<BatchSelectionScreen> {
 
   void _onBatchSelected(BatchListItem batch) {
 
-    context.push('/batch-report', extra: batch);
+    context.push('/batch-report', extra: batch.id);
   }
 
   @override

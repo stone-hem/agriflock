@@ -10,9 +10,9 @@ import 'package:agriflock360/main.dart';
 import 'package:flutter/material.dart';
 
 class BatchReportScreen extends StatefulWidget {
-  final BatchListItem batch;
+  final String batchId;
 
-  const BatchReportScreen({super.key, required this.batch});
+  const BatchReportScreen({super.key, required this.batchId});
 
   @override
   State<BatchReportScreen> createState() => _BatchReportScreenState();
@@ -88,7 +88,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
       final endDate = DateTime.parse(_endDateController.text);
 
       final result = await _reportRepository.getBatchReport(
-        batchId: widget.batch.id,
+        batchId: widget.batchId,
         startDate: startDate,
         endDate: endDate,
         period: 'weekly',
@@ -129,7 +129,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
     });
 
     try {
-      final result = await _batchMgtRepository.getBatchDetails(widget.batch.id);
+      final result = await _batchMgtRepository.getBatchDetails(widget.batchId);
 
       if (!mounted) return;
 
@@ -276,7 +276,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          widget.batch.batchName,
+          'Batch Report',
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         bottom: TabBar(
