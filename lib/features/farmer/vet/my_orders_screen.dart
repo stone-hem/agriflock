@@ -28,15 +28,6 @@ class _MyVetOrdersScreenState extends State<MyVetOrdersScreen> {
   bool _hasMore = true;
   bool _isLoadingMore = false;
 
-  String? _selectedStatus;
-  final List<String> _statusOptions = [
-    'ALL',
-    'PENDING',
-    'REVIEWED',
-    'SCHEDULED',
-    'COMPLETED',
-    'CANCELLED'
-  ];
 
   @override
   void initState() {
@@ -71,7 +62,6 @@ class _MyVetOrdersScreenState extends State<MyVetOrdersScreen> {
 
     try {
       final result = await _vetRepository.getFarmerVetOrders(
-        status: _selectedStatus == 'ALL' ? null : _selectedStatus,
         page: 1,
         limit: _itemsPerPage,
       );
@@ -111,7 +101,6 @@ class _MyVetOrdersScreenState extends State<MyVetOrdersScreen> {
 
     try {
       final result = await _vetRepository.getFarmerVetOrders(
-        status: _selectedStatus == 'ALL' ? null : _selectedStatus,
         page: _currentPage + 1,
         limit: _itemsPerPage,
       );
@@ -141,7 +130,6 @@ class _MyVetOrdersScreenState extends State<MyVetOrdersScreen> {
   Future<void> _refreshVetOrders() async {
     try {
       final result = await _vetRepository.refreshFarmerVetOrders(
-        status: _selectedStatus == 'ALL' ? null : _selectedStatus,
         page: 1,
         limit: _itemsPerPage,
       );
@@ -549,45 +537,7 @@ class _MyVetOrdersScreenState extends State<MyVetOrdersScreen> {
     );
   }
 
-  Widget _buildStatusFilter() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: _statusOptions.map((status) {
-            final isSelected = _selectedStatus == status;
-            return Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: FilterChip(
-                label: Text(status),
-                selected: isSelected,
-                onSelected: (selected) {
-                  setState(() {
-                    _selectedStatus = selected ? status : null;
-                  });
-                  _loadVetOrders();
-                },
-                backgroundColor: Colors.grey.shade200,
-                selectedColor: Colors.blue.shade100,
-                checkmarkColor: Colors.blue,
-                labelStyle: TextStyle(
-                  color: isSelected ? Colors.blue : Colors.grey.shade700,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  side: BorderSide(
-                    color: isSelected ? Colors.blue : Colors.grey.shade300,
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildLoadingIndicator() {
     return const Center(
@@ -670,26 +620,12 @@ class _MyVetOrdersScreenState extends State<MyVetOrdersScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 48),
             child: Text(
-              _selectedStatus != null
-                  ? 'You don\'t have any ${_selectedStatus!.toLowerCase()} orders'
-                  : 'You haven\'t placed any vet orders yet',
+              'You don\'t have any  orders, you haven\'t placed any vet orders yet',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey.shade600,
               ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () {
-              // Navigate to create new order
-              context.push('/order-vet');
-            },
-            icon: const Icon(Icons.add),
-            label: const Text('Create New Order'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
             ),
           ),
         ],
@@ -739,20 +675,11 @@ class _MyVetOrdersScreenState extends State<MyVetOrdersScreen> {
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: const Text('My Vet Orders'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              context.push('/vets');
-            },
-          ),
-        ],
       ),
       body: RefreshIndicator(
         onRefresh: _refreshVetOrders,
         child: Column(
           children: [
-            _buildStatusFilter(),
             Expanded(
               child: _buildContent(),
             ),
