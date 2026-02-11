@@ -711,8 +711,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildQuickActionsGrid() {
-    return GridView.count(
-      crossAxisCount: 2,
+    return GridView.extent(
+      maxCrossAxisExtent: 250, // controls responsiveness
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 10,

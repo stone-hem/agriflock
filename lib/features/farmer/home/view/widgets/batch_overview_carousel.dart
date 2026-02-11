@@ -157,7 +157,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(14),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: .start,
           mainAxisSize: MainAxisSize.min,
           children: [
             // Compact Header with gradient accent
@@ -173,11 +173,11 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: .start,
                 children: [
                   Expanded(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: .start,
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -244,7 +244,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                      crossAxisAlignment: .end,
                       children: [
                         Text(
                           'Age',
@@ -272,12 +272,12 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
 
             // Compact Stats Grid
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: .start,
               children: [
                 // Left Column
                 Expanded(
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
+                    mainAxisSize: .min,
                     children: [
                       _buildInfoRow(
                         'Total Birds',
@@ -452,8 +452,8 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
         const SizedBox(width: 6),
         Expanded(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: .start,
+            mainAxisSize: .min,
             children: [
               Text(
                 label,
@@ -462,17 +462,17 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                   fontSize: 10,
                 ),
                 maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                overflow: .ellipsis,
               ),
               Text(
                 value,
                 style: TextStyle(
                   color: valueColor ?? Colors.grey.shade800,
                   fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: .w600,
                 ),
                 maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                overflow: .ellipsis,
               ),
             ],
           ),

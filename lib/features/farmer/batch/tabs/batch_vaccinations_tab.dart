@@ -500,7 +500,7 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
 
   Widget _buildHistoryContent() {
     final completed = _vaccinations!.list
-        .where((v) => v.status=='completed')
+        .where((v) => v.status=='completed' || v.status=='cancelled' || v.status=='failed')
         .toList();
 
     if (completed.isEmpty) {
