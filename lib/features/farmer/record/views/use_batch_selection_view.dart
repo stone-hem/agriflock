@@ -45,7 +45,7 @@ class UseBatchSelectionView extends StatelessWidget {
             ),
           const SizedBox(height: 8),
           Text(
-            'Select the batch you want to use items on',
+            'Select the batch to apply this record to',
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey.shade600,

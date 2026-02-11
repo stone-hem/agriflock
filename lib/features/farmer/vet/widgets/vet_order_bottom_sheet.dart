@@ -608,7 +608,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                     Icon(Icons.eco, size: 16, color: Colors.green.shade700),
                     const SizedBox(width: 8),
                     SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.6,
+                      width: MediaQuery.sizeOf(context).width * 0.6,
                       child: Text(
                         'Bird Type: ${widget.estimate.birdType!}',
                         style: TextStyle(

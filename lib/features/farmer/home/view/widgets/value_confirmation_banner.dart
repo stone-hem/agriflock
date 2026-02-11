@@ -4,10 +4,15 @@ import 'package:go_router/go_router.dart';
 
 class ValueConfirmationBanner extends StatelessWidget {
   final VoidCallback? onViewActivity;
+  final String? farms;
+  final String? houses;
+  final String? batches;
+  final String? birds;
+
 
   const ValueConfirmationBanner({
     super.key,
-    this.onViewActivity,
+    this.onViewActivity, this.farms, this.houses, this.batches, this.birds,
   });
 
   void _showValueDetailsDialog(BuildContext context) {
@@ -172,6 +177,49 @@ class ValueConfirmationBanner extends StatelessWidget {
           ),
 
           const SizedBox(height: 8),
+          Row(
+            children: [
+              Text(
+                '$farms Farm(s)',
+                style: TextStyle(
+                  color: Colors.green.shade600,
+                  fontSize: 13,
+                ),
+              ),
+              Container(
+                width: 8.0,
+                height: 8.0,
+                margin: EdgeInsets.symmetric(horizontal: 4.0),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.black54, // Color of the dot
+                ),
+              ),
+              Text(
+                '$houses House(s)',
+                style: TextStyle(
+                  color: Colors.green.shade600,
+                  fontSize: 13,
+                ),
+              ),
+              Container(
+                width: 8.0,
+                height: 8.0,
+                margin: EdgeInsets.symmetric(horizontal: 4.0),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.black54, // Color of the dot
+                ),
+              ),
+              Text(
+                '$batches Batch(es)',
+                style: TextStyle(
+                  color: Colors.green.shade600,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
 
           // Expense button
           ExpenseActionButton(

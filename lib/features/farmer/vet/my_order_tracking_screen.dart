@@ -436,7 +436,7 @@ class _MyOrderTrackingScreenState extends State<MyOrderTrackingScreen> {
   @override
   Widget build(BuildContext context) {
     // Get screen height to calculate map height
-    final screenHeight = MediaQuery.of(context).size.height;
+    final screenHeight = MediaQuery.sizeOf(context).height;
     final appBarHeight = kToolbarHeight + MediaQuery.of(context).padding.top;
     final mapHeight = (screenHeight - appBarHeight) * 0.45;
 

@@ -563,9 +563,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
         key: _refreshIndicatorKey,
         onRefresh: _onRefresh,
         child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: 20),
           physics: const AlwaysScrollableScrollPhysics(),
           child: SizedBox(
-            height: MediaQuery.of(context).size.height,
+            height: MediaQuery.sizeOf(context).height,
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -585,7 +586,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   const SizedBox(height: 16),
                   FilledButton(
                     onPressed: () {
-                      context.push('/record-expenditures');
+                      context.push('/record-expenditure');
                     },
                     child: const Text('New expenditure'),
                   ),

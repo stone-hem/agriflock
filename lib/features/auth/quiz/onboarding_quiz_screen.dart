@@ -486,7 +486,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
                 controller: _scrollController,
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.7,
+                  height: MediaQuery.sizeOf(context).height * 0.7,
                   child: PageView(
                     controller: _pageController,
                     physics: const NeverScrollableScrollPhysics(),

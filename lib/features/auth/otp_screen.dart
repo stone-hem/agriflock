@@ -173,7 +173,7 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
                         children: List.generate(
                           6,
                               (index) => SizedBox(
-                            width: MediaQuery.of(context).size.width * 0.12,
+                            width: MediaQuery.sizeOf(context).width * 0.12,
                             height: 60,
                             child: TextField(
                               controller: _otpControllers[index],

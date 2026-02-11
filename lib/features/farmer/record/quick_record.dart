@@ -385,7 +385,7 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
   String _getPageTitle() {
     switch (_currentPage) {
       case 0:
-        return 'Use From Store';
+        return 'Quick recording From Store';
       case 1:
         return _selectedBatch?.batchName ?? 'Select Category';
       case 2:
@@ -393,7 +393,7 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
       case 3:
         return 'Success';
       default:
-        return 'Use From Store';
+        return 'Quick recording From Store';
     }
   }
 

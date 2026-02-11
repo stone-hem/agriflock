@@ -49,8 +49,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final screenWidth = MediaQuery.sizeOf(context ).width;
 
     return Scaffold(
       body: Stack(
@@ -257,7 +257,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
           // Logo overlay on top of the image
           Positioned(
-            top: MediaQuery.of(context).size.height*0.35, // distance from top, adjust as needed
+            top: MediaQuery.sizeOf(context).height*0.35, // distance from top, adjust as needed
             left: 0,
             right: 0,
             child: Container(

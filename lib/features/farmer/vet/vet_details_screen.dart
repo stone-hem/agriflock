@@ -312,7 +312,7 @@ class _VetDetailsScreenState extends State<VetDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
+    final screenHeight = MediaQuery.sizeOf(context).height;
     final imageContainerHeight = screenHeight * 0.33;
 
     return Scaffold(

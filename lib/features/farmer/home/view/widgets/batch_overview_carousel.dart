@@ -50,7 +50,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
+    final screenHeight = MediaQuery.sizeOf(context).height;
 
     return Column(
       children: [
@@ -127,124 +127,150 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
   Widget _buildBatchCard(BatchHomeData batch) {
     final isLayers = batch.birdType.toLowerCase() == 'layers';
 
+    // Color scheme based on bird type
+    final primaryColor = isLayers ? Colors.amber : Colors.blue;
+    final accentColor = isLayers ? Colors.orange : Colors.indigo;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white,
+            isLayers ? Colors.amber.shade50.withOpacity(0.3) : Colors.blue.shade50.withOpacity(0.3),
+          ],
+        ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(
+          color: isLayers ? Colors.amber.shade200 : Colors.blue.shade200,
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: (isLayers ? Colors.amber : Colors.blue).withOpacity(0.1),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header Section
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade100,
-                              borderRadius: BorderRadius.circular(4),
-                              border: Border.all(color: Colors.grey.shade300),
-                            ),
-                            child: Text(
-                              batch.birdType.toUpperCase(),
-                              style: TextStyle(
-                                color: Colors.grey.shade700,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.shade50,
-                              borderRadius: BorderRadius.circular(4),
-                              border: Border.all(color: Colors.blue.shade200),
-                            ),
-                            child: Text(
-                              batch.productionStage.stage,
-                              style: TextStyle(
-                                color: Colors.blue.shade700,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        batch.batchNumber,
-                        style: TextStyle(
-                          color: Colors.grey.shade900,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        '${batch.farmName} • ${batch.houseName}',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'Age',
-                      style: TextStyle(
-                        color: Colors.grey.shade500,
-                        fontSize: 11,
-                      ),
-                    ),
-                    Text(
-                      '${batch.ageWeeks} weeks / ${batch.ageDays} days ',
-                      style: TextStyle(
-                        color: Colors.grey.shade900,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+            // Compact Header with gradient accent
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    primaryColor.shade100,
+                    accentColor.shade100,
                   ],
                 ),
-              ],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: primaryColor.shade700,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            batch.birdType.toUpperCase(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: accentColor.shade300),
+                          ),
+                          child: Text(
+                            batch.productionStage.stage,
+                            style: TextStyle(
+                              color: accentColor.shade700,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          batch.batchNumber,
+                          style: TextStyle(
+                            color: primaryColor.shade900,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          '${batch.farmName} • ${batch.houseName}',
+                          style: TextStyle(
+                            color: Colors.grey.shade700,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          'Age',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 9,
+                          ),
+                        ),
+                        Text(
+                          '${batch.ageWeeks} weeks / ${batch.ageDays} days',
+                          style: TextStyle(
+                            color: primaryColor.shade800,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
 
-            const SizedBox(height: 12),
-            Divider(color: Colors.grey.shade200, height: 1),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
 
-            // Main Stats Grid
+            // Compact Stats Grid
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -257,41 +283,46 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                         'Total Birds',
                         '${batch.totalBirds}',
                         Icons.pets_outlined,
+                        primaryColor,
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       _buildInfoRow(
                         'Birds Placed',
                         '${batch.birdsPlaced}',
                         Icons.add_circle_outline,
+                        Colors.green,
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       _buildInfoRow(
                         'Mortality',
                         '${batch.mortality} (${batch.mortalityRate})',
                         Icons.warning_amber_outlined,
+                        Colors.red,
                         valueColor: batch.mortality > 0
                             ? Colors.red.shade700
                             : Colors.grey.shade700,
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       _buildInfoRow(
                         'Feed (Bags)',
-                        '${batch.foodInStoreBags} bags',
+                        '${batch.foodInStoreBags}',
                         Icons.inventory_2_outlined,
+                        Colors.brown,
                       ),
                       if (isLayers) ...[
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 6),
                         _buildInfoRow(
-                          'Egg Production',
+                          'Eggs',
                           '${batch.totalEggProduction ?? 0}',
                           Icons.egg_outlined,
+                          Colors.amber,
                         ),
                       ],
                     ],
                   ),
                 ),
 
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
 
                 // Right Column
                 Expanded(
@@ -300,40 +331,46 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                     children: [
                       if (isLayers) ...[
                         _buildInfoRow(
-                          'Production %',
+                          'Production',
                           '${batch.productionPercentage ?? 0}%',
                           Icons.trending_up,
+                          Colors.teal,
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 6),
                         _buildInfoRow(
                           'Egg Cost',
                           'KES ${batch.eggCost?.toStringAsFixed(2) ?? '0.00'}',
                           Icons.attach_money,
+                          Colors.green,
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 6),
                       ],
                       _buildInfoRow(
-                        'Expected Weight',
+                        'Expected Wt',
                         '${batch.expectedWeight?.toStringAsFixed(1) ?? 'N/A'} kg',
                         Icons.monitor_weight_outlined,
+                        Colors.purple,
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       _buildInfoRow(
-                        'Actual Weight',
+                        'Actual Wt',
                         '${batch.actualWeight?.toStringAsFixed(1) ?? 'N/A'} kg',
                         Icons.scale_outlined,
+                        accentColor,
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       _buildInfoRow(
-                        'Feed/Bird/Day',
+                        'Feed/Day',
                         '${batch.actualFoodPerBirdPerDayG.toStringAsFixed(1)}g',
                         Icons.restaurant_outlined,
+                        Colors.orange,
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       _buildInfoRow(
-                        'Days to Milestone',
-                        '${batch.productionStage.expectedMilestone.daysRemaining} days',
+                        'Milestone',
+                        '${batch.productionStage.expectedMilestone.daysRemaining}d',
                         Icons.calendar_today_outlined,
+                        Colors.indigo,
                       ),
                     ],
                   ),
@@ -341,30 +378,32 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
               ],
             ),
 
-            // Vaccination Info
+            // Compact Vaccination Info
             if (batch.vaccination.vaccinesDone.isNotEmpty)
               Container(
-                margin: const EdgeInsets.only(top: 12),
-                padding: const EdgeInsets.all(8),
+                margin: const EdgeInsets.only(top: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.green.shade50,
+                  gradient: LinearGradient(
+                    colors: [Colors.green.shade50, Colors.teal.shade50],
+                  ),
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: Colors.green.shade200),
+                  border: Border.all(color: Colors.green.shade300),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       Icons.vaccines_outlined,
-                      size: 14,
+                      size: 13,
                       color: Colors.green.shade700,
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 5),
                     Expanded(
                       child: Text(
                         'Vaccines: ${batch.vaccination.vaccinesDone.take(2).join(", ")}${batch.vaccination.vaccinesDone.length > 2 ? " +${batch.vaccination.vaccinesDone.length - 2}" : ""}',
                         style: TextStyle(
-                          color: Colors.green.shade700,
-                          fontSize: 11,
+                          color: Colors.green.shade800,
+                          fontSize: 10,
                           fontWeight: FontWeight.w500,
                         ),
                         maxLines: 1,
@@ -374,10 +413,22 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                   ],
                 ),
               ),
-            
-            TextButton.icon(onPressed: (){
-              context.push('/batch-report', extra: batch.batchId);
-            }, label: Text('View More Details') , icon: Icon(Icons.arrow_forward),)
+
+            const SizedBox(height: 8),
+            TextButton.icon(
+              onPressed: () {
+                context.push('/batch-report', extra: batch.batchId);
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: primaryColor.shade700,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              ),
+              label: const Text(
+                'View Details',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+              ),
+              icon: Icon(Icons.arrow_forward, size: 16),
+            )
           ],
         ),
       ),
@@ -387,7 +438,8 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
   Widget _buildInfoRow(
       String label,
       String value,
-      IconData icon, {
+      IconData icon,
+      Color iconColor, {
         Color? valueColor,
       }) {
     return Row(
@@ -395,7 +447,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
         Icon(
           icon,
           size: 14,
-          color: Colors.grey.shade500,
+          color: iconColor,
         ),
         const SizedBox(width: 6),
         Expanded(

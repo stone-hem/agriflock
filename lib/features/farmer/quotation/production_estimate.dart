@@ -738,7 +738,7 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
                 Icon(Icons.category, color: Colors.purple, size: 20),
                 const SizedBox(width: 8),
                 SizedBox(
-                  width: MediaQuery.of(context).size.width*0.6,
+                  width: MediaQuery.sizeOf(context).width*0.6,
                   child: Text(
                     'COST BREAKDOWN BY CATEGORY',
                     style: TextStyle(
@@ -748,8 +748,11 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
                     ),
                   ),
                 ),
+
               ],
             ),
+            TextButton.icon(onPressed: null, label: Text('Scroll to the right to see the whole table.'), icon: Icon(Icons.arrow_forward_ios),),
+
             const SizedBox(height: 16),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,

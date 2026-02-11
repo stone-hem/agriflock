@@ -473,12 +473,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   if (_isBatchesLoading)
                     SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.33,
+                      height: MediaQuery.sizeOf(context).height * 0.33,
                       child: Center(child: CircularProgressIndicator()),
                     )
                   else if (_batchesError != null)
                     Container(
-                      height: MediaQuery.of(context).size.height * 0.33,
+                      height: MediaQuery.sizeOf(context).height * 0.33,
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: Colors.red.shade50,
@@ -503,7 +503,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     )
                   else if (_batches.isEmpty)
                       Container(
-                        height: MediaQuery.of(context).size.height * 0.33,
+                        height: MediaQuery.sizeOf(context).height * 0.33,
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: Colors.grey.shade100,
@@ -606,17 +606,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
 
   Widget _buildWelcomeOrBannerSection() {
-    if (_shouldShowValueConfirmationBanner) {
-      return ValueConfirmationBanner(
-        onViewActivity: () => context.push('/activity'),
-      );
-    }
 
-    if (_shouldShowFutureFramingBanner) {
-      return FutureFramingBanner(
-        onSeePlans: () => context.push('/plans'),
-      );
-    }
 
     // Show a shimmer placeholder while summary or user data is loading
     if (_isSummaryLoading || _isLoadingUser) {
@@ -687,6 +677,26 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
+    if (_shouldShowValueConfirmationBanner) {
+      return ValueConfirmationBanner(
+        onViewActivity: () => context.push('/activity'),
+        farms: '${_summary!.numberOfFarms}',
+        houses: '${_summary!.numberOfHouses}',
+        batches: '${_summary!.totalBatches}',
+        birds: '${_summary!.totalBirds}',
+      );
+    }
+
+    if (_shouldShowFutureFramingBanner) {
+      return FutureFramingBanner(
+        onSeePlans: () => context.push('/plans'),
+        farms: '${_summary!.numberOfFarms}',
+        houses: '${_summary!.numberOfHouses}',
+        batches: '${_summary!.totalBatches}',
+        birds: '${_summary!.totalBirds}',
+      );
+    }
+
     return WelcomeSection(
       greeting: _getGreeting(),
       userName: _userName,
@@ -724,11 +734,11 @@ class _HomeScreenState extends State<HomeScreen> {
           onTap: () => context.push('/quick-recording'),
         ),
         _buildQuickActionCard(
-          icon: Icons.warning_amber_rounded,
-          title: 'Record Mortality',
-          subtitle: 'Log bird losses',
+          icon: Icons.pets,
+          title: 'My Batches',
+          subtitle: 'View all your batches',
           color: Colors.orange,
-          onTap: () => context.push('/record-mortality'),
+          onTap: () => context.push('/quick-batches'),
         ),
         _buildQuickActionCard(
           icon: Icons.assessment,
