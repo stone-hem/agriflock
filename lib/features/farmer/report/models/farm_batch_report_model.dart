@@ -30,6 +30,7 @@ class FarmBatchReportData {
   final int totalBatches;
   final int totalHouses;
   final String farmName;
+  final DateTime? reportEndDate; // Made nullable
   final String reportPeriod;
 
   FarmBatchReportData({
@@ -39,6 +40,7 @@ class FarmBatchReportData {
     required this.totalBatches,
     required this.totalHouses,
     required this.farmName,
+    this.reportEndDate, // Made optional
     required this.reportPeriod,
   });
 
@@ -52,7 +54,10 @@ class FarmBatchReportData {
       totalBatches: json['total_batches'],
       totalHouses: json['total_houses'],
       farmName: json['farm_name'],
-      reportPeriod: json['report_period'],
+      reportEndDate: json['report_end_date'] != null
+          ? DateTime.parse(json['report_end_date'])
+          : null,
+      reportPeriod: json['report_period'] ?? '', // Handle null
     );
   }
 }
@@ -61,20 +66,20 @@ class FarmSummary {
   final String farmId;
   final String farmName;
   final String reportType;
-  final String reportPeriod;
+  final String? reportPeriod; // Made nullable
   final String birdType;
   final int totalBirds;
   final FarmMetadata metadata;
-  final Mortality mortality;
+  final FarmMortality mortality;
   final List<String> batches;
-  final Medication medication;
-  final Vaccination vaccination;
+  final FarmMedication medication;
+  final FarmVaccination vaccination;
 
   FarmSummary({
     required this.farmId,
     required this.farmName,
     required this.reportType,
-    required this.reportPeriod,
+    this.reportPeriod, // Made optional
     required this.birdType,
     required this.totalBirds,
     required this.metadata,
@@ -89,14 +94,14 @@ class FarmSummary {
       farmId: json['farm_id'],
       farmName: json['farm_name'],
       reportType: json['report_type'],
-      reportPeriod: json['report_period'],
+      reportPeriod: json['report_period'], // Can be null
       birdType: json['bird_type'],
       totalBirds: json['total_birds'],
       metadata: FarmMetadata.fromJson(json['metadata']),
-      mortality: Mortality.fromJson(json['mortality']),
+      mortality: FarmMortality.fromJson(json['mortality']),
       batches: List<String>.from(json['batches']),
-      medication: Medication.fromJson(json['medication']),
-      vaccination: Vaccination.fromJson(json['vaccination']),
+      medication: FarmMedication.fromJson(json['medication']),
+      vaccination: FarmVaccination.fromJson(json['vaccination']),
     );
   }
 }
@@ -121,53 +126,53 @@ class FarmMetadata {
   }
 }
 
-class Mortality {
+class FarmMortality {
   final int day;
   final int night;
   final int total24hrs;
 
-  Mortality({
+  FarmMortality({
     required this.day,
     required this.night,
     required this.total24hrs,
   });
 
-  factory Mortality.fromJson(Map<String, dynamic> json) {
-    return Mortality(
-      day: json['day'],
-      night: json['night'],
-      total24hrs: json['total_24hrs'],
+  factory FarmMortality.fromJson(Map<String, dynamic> json) {
+    return FarmMortality(
+      day: json['day'] ?? 0,
+      night: json['night'] ?? 0,
+      total24hrs: json['total_24hrs'] ?? 0,
     );
   }
 }
 
-class Medication {
+class FarmMedication {
   final List<dynamic> items;
 
-  Medication({
+  FarmMedication({
     required this.items,
   });
 
-  factory Medication.fromJson(Map<String, dynamic> json) {
-    return Medication(
+  factory FarmMedication.fromJson(Map<String, dynamic> json) {
+    return FarmMedication(
       items: json['items'] != null ? List<dynamic>.from(json['items']) : [],
     );
   }
 }
 
-class Vaccination {
-  final List<dynamic> vaccinesDone;
+class FarmVaccination {
+  final List<String> vaccinesDone;
   final List<dynamic> vaccinesUpcoming;
 
-  Vaccination({
+  FarmVaccination({
     required this.vaccinesDone,
     required this.vaccinesUpcoming,
   });
 
-  factory Vaccination.fromJson(Map<String, dynamic> json) {
-    return Vaccination(
+  factory FarmVaccination.fromJson(Map<String, dynamic> json) {
+    return FarmVaccination(
       vaccinesDone: json['vaccines_done'] != null
-          ? List<dynamic>.from(json['vaccines_done'])
+          ? List<String>.from(json['vaccines_done'])
           : [],
       vaccinesUpcoming: json['vaccines_upcoming'] != null
           ? List<dynamic>.from(json['vaccines_upcoming'])
@@ -185,13 +190,18 @@ class BatchReport {
   final String batchNumber;
   final String birdType;
   final int totalBirds;
-  final int ageDays;
+  final int birdsPlaced;
+  final dynamic ageDays; // Can be String or int
   final int ageWeeks;
+  final ProductionStage productionStage;
   final BatchMortality mortality;
-  final Feed feed;
+  final BatchFeed feed;
+  final EggProduction? eggProduction;
   final BatchMedication medication;
   final BatchVaccination vaccination;
-  final EggProduction? eggProduction;
+  final BatchMedication medications;
+  final FeedingPlan? feedingPlan;
+  final String reportBy;
 
   BatchReport({
     required this.batchId,
@@ -202,13 +212,18 @@ class BatchReport {
     required this.batchNumber,
     required this.birdType,
     required this.totalBirds,
+    required this.birdsPlaced,
     required this.ageDays,
     required this.ageWeeks,
+    required this.productionStage,
     required this.mortality,
     required this.feed,
+    this.eggProduction,
     required this.medication,
     required this.vaccination,
-    this.eggProduction,
+    required this.medications,
+    this.feedingPlan,
+    required this.reportBy,
   });
 
   factory BatchReport.fromJson(Map<String, dynamic> json) {
@@ -221,15 +236,65 @@ class BatchReport {
       batchNumber: json['batch_number'],
       birdType: json['bird_type'],
       totalBirds: json['total_birds'],
-      ageDays: json['age_days'],
-      ageWeeks: json['age_weeks'],
+      birdsPlaced: json['birds_placed'] ?? 0,
+      ageDays: json['age_days'] ?? 0,
+      ageWeeks: json['age_weeks'] ?? 0,
+      productionStage: ProductionStage.fromJson(json['production_stage']),
       mortality: BatchMortality.fromJson(json['mortality']),
-      feed: Feed.fromJson(json['feed']),
-      medication: BatchMedication.fromJson(json['medication']),
-      vaccination: BatchVaccination.fromJson(json['vaccination']),
+      feed: BatchFeed.fromJson(json['feed']),
       eggProduction: json['egg_production'] != null
           ? EggProduction.fromJson(json['egg_production'])
           : null,
+      medication: BatchMedication.fromJson(json['medication']),
+      vaccination: BatchVaccination.fromJson(json['vaccination']),
+      medications: BatchMedication.fromJson(json['medications']),
+      feedingPlan: json['feeding_plan'] != null
+          ? FeedingPlan.fromJson(json['feeding_plan'])
+          : null,
+      reportBy: json['report_by'] ?? '',
+    );
+  }
+}
+
+class ProductionStage {
+  final String stage;
+  final String description;
+  final ExpectedMilestone expectedMilestone;
+
+  ProductionStage({
+    required this.stage,
+    required this.description,
+    required this.expectedMilestone,
+  });
+
+  factory ProductionStage.fromJson(Map<String, dynamic> json) {
+    return ProductionStage(
+      stage: json['stage'] ?? '',
+      description: json['description'] ?? '',
+      expectedMilestone: ExpectedMilestone.fromJson(json['expected_milestone']),
+    );
+  }
+}
+
+class ExpectedMilestone {
+  final String type;
+  final int expectedStartDay;
+  final int expectedStartWeeks;
+  final int daysRemaining;
+
+  ExpectedMilestone({
+    required this.type,
+    required this.expectedStartDay,
+    required this.expectedStartWeeks,
+    required this.daysRemaining,
+  });
+
+  factory ExpectedMilestone.fromJson(Map<String, dynamic> json) {
+    return ExpectedMilestone(
+      type: json['type'] ?? '',
+      expectedStartDay: json['expected_start_day'] ?? 0,
+      expectedStartWeeks: json['expected_start_weeks'] ?? 0,
+      daysRemaining: json['days_remaining'] ?? 0,
     );
   }
 }
@@ -253,72 +318,44 @@ class BatchMortality {
 
   factory BatchMortality.fromJson(Map<String, dynamic> json) {
     return BatchMortality(
-      day: json['day'],
-      night: json['night'],
-      total24hrs: json['total_24hrs'],
-      cumulativeTotal: json['cumulative_total'],
-      birdsRemaining: json['birds_remaining'],
-      reason: json['reason'],
+      day: json['day'] ?? 0,
+      night: json['night'] ?? 0,
+      total24hrs: json['total_24hrs'] ?? 0,
+      cumulativeTotal: json['cumulative_total'] ?? 0,
+      birdsRemaining: json['birds_remaining'] ?? 0,
+      reason: json['reason'] ?? '',
     );
   }
 }
 
-class Feed {
+class BatchFeed {
   final int bagsConsumed;
+  final int bagsConsumedDay;
+  final int bagsConsumedNight;
   final int totalBagsConsumed;
   final int balanceInStore;
   final String feedType;
+  final String feedVariance;
 
-  Feed({
+  BatchFeed({
     required this.bagsConsumed,
+    required this.bagsConsumedDay,
+    required this.bagsConsumedNight,
     required this.totalBagsConsumed,
     required this.balanceInStore,
     required this.feedType,
+    required this.feedVariance,
   });
 
-  factory Feed.fromJson(Map<String, dynamic> json) {
-    return Feed(
-      bagsConsumed: json['bags_consumed'],
-      totalBagsConsumed: json['total_bags_consumed'],
-      balanceInStore: json['balance_in_store'],
-      feedType: json['feed_type'],
-    );
-  }
-}
-
-class BatchMedication {
-  final List<dynamic> medicationsAvailable;
-
-  BatchMedication({
-    required this.medicationsAvailable,
-  });
-
-  factory BatchMedication.fromJson(Map<String, dynamic> json) {
-    return BatchMedication(
-      medicationsAvailable: json['medications_available'] != null
-          ? List<dynamic>.from(json['medications_available'])
-          : [],
-    );
-  }
-}
-
-class BatchVaccination {
-  final List<dynamic> vaccinesDone;
-  final List<dynamic> vaccinesUpcoming;
-
-  BatchVaccination({
-    required this.vaccinesDone,
-    required this.vaccinesUpcoming,
-  });
-
-  factory BatchVaccination.fromJson(Map<String, dynamic> json) {
-    return BatchVaccination(
-      vaccinesDone: json['vaccines_done'] != null
-          ? List<dynamic>.from(json['vaccines_done'])
-          : [],
-      vaccinesUpcoming: json['vaccines_upcoming'] != null
-          ? List<dynamic>.from(json['vaccines_upcoming'])
-          : [],
+  factory BatchFeed.fromJson(Map<String, dynamic> json) {
+    return BatchFeed(
+      bagsConsumed: json['bags_consumed'] ?? 0,
+      bagsConsumedDay: json['bags_consumed_day'] ?? 0,
+      bagsConsumedNight: json['bags_consumed_night'] ?? 0,
+      totalBagsConsumed: json['total_bags_consumed'] ?? 0,
+      balanceInStore: json['balance_in_store'] ?? 0,
+      feedType: json['feed_type'] ?? '',
+      feedVariance: json['feed_variance'] ?? '',
     );
   }
 }
@@ -332,9 +369,9 @@ class EggProduction {
   final int partialBroken;
   final int completeBroken;
   final int smallDeformed;
-  final int productionPercentage;
+  final double productionPercentage;
   final int goodEggs;
-  final int totalValue;
+  final double totalValue;
 
   EggProduction({
     required this.traysCollected,
@@ -352,17 +389,137 @@ class EggProduction {
 
   factory EggProduction.fromJson(Map<String, dynamic> json) {
     return EggProduction(
-      traysCollected: json['trays_collected'],
-      totalEggsCollected: json['total_eggs_collected'],
-      piecesCollected: json['pieces_collected'],
-      traysInStore: json['trays_in_store'],
-      piecesInStore: json['pieces_in_store'],
-      partialBroken: json['partial_broken'],
-      completeBroken: json['complete_broken'],
-      smallDeformed: json['small_deformed'],
-      productionPercentage: json['production_percentage'],
-      goodEggs: json['good_eggs'],
-      totalValue: json['total_value'],
+      traysCollected: json['trays_collected'] ?? 0,
+      totalEggsCollected: json['total_eggs_collected'] ?? 0,
+      piecesCollected: json['pieces_collected'] ?? 0,
+      traysInStore: json['trays_in_store'] ?? 0,
+      piecesInStore: json['pieces_in_store'] ?? 0,
+      partialBroken: json['partial_broken'] ?? 0,
+      completeBroken: json['complete_broken'] ?? 0,
+      smallDeformed: json['small_deformed'] ?? 0,
+      productionPercentage: (json['production_percentage'] as num?)?.toDouble() ?? 0,
+      goodEggs: json['good_eggs'] ?? 0,
+      totalValue: (json['total_value'] as num?)?.toDouble() ?? 0,
+    );
+  }
+}
+
+class BatchMedication {
+  final List<dynamic> available;
+  final List<MedicineInUse> inUse;
+  final List<dynamic> medicationsAvailable;
+
+  BatchMedication({
+    required this.available,
+    required this.inUse,
+    required this.medicationsAvailable,
+  });
+
+  factory BatchMedication.fromJson(Map<String, dynamic> json) {
+    return BatchMedication(
+      available: json['available'] != null
+          ? List<dynamic>.from(json['available'])
+          : [],
+      inUse: json['in_use'] != null
+          ? (json['in_use'] as List)
+          .map((item) => MedicineInUse.fromJson(item))
+          .toList()
+          : [],
+      medicationsAvailable: json['medications_available'] != null
+          ? List<dynamic>.from(json['medications_available'])
+          : [],
+    );
+  }
+}
+
+class MedicineInUse {
+  final String medicineName;
+  final String dosage;
+  final String quantityUsed;
+  final String unit;
+
+  MedicineInUse({
+    required this.medicineName,
+    required this.dosage,
+    required this.quantityUsed,
+    required this.unit,
+  });
+
+  factory MedicineInUse.fromJson(Map<String, dynamic> json) {
+    return MedicineInUse(
+      medicineName: json['medicine_name'] ?? '',
+      dosage: json['dosage'] ?? '',
+      quantityUsed: json['quantity_used'] ?? '',
+      unit: json['unit'] ?? '',
+    );
+  }
+}
+
+class BatchVaccination {
+  final List<String> vaccinesDone;
+  final List<dynamic> vaccinesUpcoming;
+
+  BatchVaccination({
+    required this.vaccinesDone,
+    required this.vaccinesUpcoming,
+  });
+
+  factory BatchVaccination.fromJson(Map<String, dynamic> json) {
+    return BatchVaccination(
+      vaccinesDone: json['vaccines_done'] != null
+          ? List<String>.from(json['vaccines_done'])
+          : [],
+      vaccinesUpcoming: json['vaccines_upcoming'] != null
+          ? List<dynamic>.from(json['vaccines_upcoming'])
+          : [],
+    );
+  }
+}
+
+class FeedingPlan {
+  final double expectedFeedPerDayKg;
+  final double feedPerBirdPerDayGrams;
+  final int expectedFeedPerWeekBags;
+  final String feedTypeInUse;
+  final String stageName;
+  final int timesPerDay;
+  final FeedingTimes feedingTimes;
+
+  FeedingPlan({
+    required this.expectedFeedPerDayKg,
+    required this.feedPerBirdPerDayGrams,
+    required this.expectedFeedPerWeekBags,
+    required this.feedTypeInUse,
+    required this.stageName,
+    required this.timesPerDay,
+    required this.feedingTimes,
+  });
+
+  factory FeedingPlan.fromJson(Map<String, dynamic> json) {
+    return FeedingPlan(
+      expectedFeedPerDayKg: (json['expected_feed_per_day_kg'] as num?)?.toDouble() ?? 0,
+      feedPerBirdPerDayGrams: (json['feed_per_bird_per_day_grams'] as num?)?.toDouble() ?? 0,
+      expectedFeedPerWeekBags: json['expected_feed_per_week_bags'] ?? 0,
+      feedTypeInUse: json['feed_type_in_use'] ?? '',
+      stageName: json['stage_name'] ?? '',
+      timesPerDay: json['times_per_day'] ?? 0,
+      feedingTimes: FeedingTimes.fromJson(json['feeding_times'] ?? {}),
+    );
+  }
+}
+
+class FeedingTimes {
+  final List<String> slots;
+
+  FeedingTimes({
+    required this.slots,
+  });
+
+  factory FeedingTimes.fromJson(Map<String, dynamic> json) {
+    return FeedingTimes(
+      slots: json['slots'] != null
+          ? List<String>.from(json['slots'])
+          : [],
     );
   }
 }
