@@ -2,7 +2,6 @@ import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/recommended_vaccination_model.dart';
-import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/vaccination_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -444,7 +443,7 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
   void _adoptSchedule() {
     final selectedCount = _selectedItems.values.where((v) => v).length;
 
-    if (_dateController.text.isNotEmpty) {
+    if (_dateController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please select a start date'),
@@ -582,14 +581,12 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
         return;
       }
 
-
-
       // Call the repository
       final result = await _vaccinationRepository.adoptRecommendedVaccinations(
         widget.batch.id,
         {
           'vaccineCatalogIds': vaccineCatalogIds,
-          'scheduledDate': _dateController.text, // Format as YYYY-MM-DD
+          'scheduledDate': DateTime.parse(_dateController.text).toUtc().toIso8601String(),
           'skipExisting': _adjustForAge,
         },
       );

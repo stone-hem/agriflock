@@ -9,6 +9,7 @@ import 'package:agriflock360/features/farmer/batch/log_feeding_screen.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_list_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/recommended_vaccination_model.dart';
+import 'package:agriflock360/features/farmer/batch/model/vaccination_list_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
 import 'package:agriflock360/features/farmer/expense/buy_inputs_screen.dart';
 import 'package:agriflock360/features/farmer/expense/expenditures_screen.dart';
@@ -376,7 +377,7 @@ class AppRoutes {
               builder: (context, state) {
                 final extra = state.extra as Map<String, dynamic>;
                 final batch = extra['batch'] as BatchModel;
-                final vaccination = extra['vaccination'] as Vaccination;
+                final vaccination = extra['vaccination'] as VaccinationListItem;
                 return UpdateVaccinationStatusScreen(
                   batch: batch,
                   vaccination: vaccination,

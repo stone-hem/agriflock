@@ -3,6 +3,7 @@ import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/core/widgets/reusable_time_input.dart';
+import 'package:agriflock360/features/farmer/batch/model/vaccination_list_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:agriflock360/core/utils/date_util.dart';
@@ -12,7 +13,7 @@ import 'package:agriflock360/features/farmer/batch/repo/vaccination_repo.dart';
 
 class UpdateVaccinationStatusScreen extends StatefulWidget {
   final BatchModel batch;
-  final Vaccination vaccination;
+  final VaccinationListItem vaccination;
 
   const UpdateVaccinationStatusScreen({
     super.key,
@@ -173,8 +174,8 @@ class _UpdateVaccinationStatusScreenState
                               if (widget.vaccination.scheduledDate != null)
                                 Text(
                                   widget.vaccination.isOverdue
-                                      ? 'Overdue: ${widget.vaccination.scheduledDate}'
-                                      : 'Scheduled: ${DateUtil.toDateWithDay(widget.vaccination.scheduledDate!)}',
+                                      ? 'Overdue: ${DateUtil.toDateWithDay(widget.vaccination.scheduledDate??DateTime.now())}'
+                                      : 'Scheduled: ${DateUtil.toDateWithDay(widget.vaccination.scheduledDate??DateTime.now())}',
                                   style: TextStyle(
                                     color: widget.vaccination.isOverdue
                                         ? Colors.red.shade700
@@ -660,7 +661,7 @@ class _UpdateVaccinationStatusScreenState
       );
 
       switch (result) {
-        case Success<Vaccination>(data: final data):
+        case Success(data: final data):
           // Show success message
           _showSuccessMessage();
 
@@ -669,7 +670,7 @@ class _UpdateVaccinationStatusScreenState
             context.pop(true);
           }
 
-        case Failure<Vaccination>(
+        case Failure(
           message: final e,
           statusCode: final statusCode,
         ):

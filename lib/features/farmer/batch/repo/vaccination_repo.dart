@@ -131,7 +131,7 @@ class VaccinationRepository {
   }
 
   /// Update vaccination status
-  Future<Result<Vaccination>> updateVaccinationStatus(
+  Future<Result> updateVaccinationStatus(
     String batchId,
     String vaccinationId,
     UpdateVaccinationStatusRequest request,
@@ -147,7 +147,7 @@ class VaccinationRepository {
       LogUtil.info('Update Vaccination Status API Response: $jsonResponse');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        return Success(Vaccination.fromJson(jsonResponse));
+        return Success(null);
       } else {
         return Failure(
           message:
@@ -183,7 +183,7 @@ class VaccinationRepository {
   ) async {
     try {
       final response = await apiClient.post(
-        '/batches/$batchId/vaccinations/vaccinations/adopt',
+        '/batches/$batchId/vaccinations/adopt',
         body: request,
       );
 
