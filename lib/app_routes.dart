@@ -10,7 +10,6 @@ import 'package:agriflock360/features/farmer/batch/model/batch_list_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/recommended_vaccination_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/vaccination_list_model.dart';
-import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
 import 'package:agriflock360/features/farmer/expense/buy_inputs_screen.dart';
 import 'package:agriflock360/features/farmer/expense/expenditures_screen.dart';
 import 'package:agriflock360/features/farmer/batch/record_vaccination_screen.dart';
@@ -42,7 +41,6 @@ import 'package:agriflock360/features/farmer/record/quick_record.dart';
 import 'package:agriflock360/features/farmer/home/view/quick_batches_list_screen.dart';
 import 'package:agriflock360/features/farmer/batch/record_mortality_screen.dart';
 import 'package:agriflock360/features/farmer/report/batch/batch_report_screen.dart';
-import 'package:agriflock360/features/farmer/report/batch/batch_selection_screen.dart';
 import 'package:agriflock360/features/farmer/report/farm_reports_screen.dart';
 import 'package:agriflock360/features/farmer/report/reports_flow_screen.dart';
 import 'package:agriflock360/features/farmer/vet/completed_orders_screen.dart';
@@ -425,13 +423,6 @@ class AppRoutes {
         GoRoute(
           path: '/reports',
           builder: (context, state) => const ReportsFlowScreen(),
-        ),
-        GoRoute(
-          path: '/batch-report/batch-selection',
-          builder: (context, state) {
-            final farm = state.extra as FarmModel?;
-            return BatchSelectionScreen(farm: farm);
-          },
         ),
         GoRoute(
           path: '/batch-report',

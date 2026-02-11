@@ -117,7 +117,7 @@ class _ReportsFlowScreenState extends State<ReportsFlowScreen> {
   }
 
   void _onBatchSelected(BatchListItem batch) {
-    context.push('/batch-report', extra: batch);
+    context.push('/batch-report', extra: batch.id);
   }
 
   void _nextPage() {

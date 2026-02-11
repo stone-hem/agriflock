@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/utils/date_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/core/widgets/expense/expense_marquee_banner.dart';
@@ -26,7 +27,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
   // Filter state
   late TextEditingController _startDateController;
   late TextEditingController _endDateController;
-  String _selectedQuickRange = 'today';
+  String _selectedPeriod = 'daily'; // daily, weekly, monthly, yearly, all_time
 
   // Report state
   BatchReportResponse? _reportData;
@@ -57,7 +58,8 @@ class _BatchReportScreenState extends State<BatchReportScreen>
 
   void _initializeDefaults() {
     final now = DateTime.now();
-    _startDate = DateTime(now.year, now.month, now.day);
+    // Default: last 7 days with daily period
+    _startDate = now.subtract(const Duration(days: 6));
     _endDate = now;
 
     _startDateController = TextEditingController(
@@ -91,7 +93,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
         batchId: widget.batchId,
         startDate: startDate,
         endDate: endDate,
-        period: 'weekly',
+        period: _selectedPeriod,
       );
 
       if (!mounted) return;
@@ -157,67 +159,68 @@ class _BatchReportScreenState extends State<BatchReportScreen>
     }
   }
 
-  void _setQuickRange(String range) {
-    final now = DateTime.now();
-    DateTime start;
-    DateTime end = now;
-
-    switch (range) {
-      case 'today':
-        start = DateTime(now.year, now.month, now.day);
-        break;
-      case 'week':
-        start = now.subtract(const Duration(days: 7));
-        break;
-      case 'month':
-        start = DateTime(now.year, now.month - 1, now.day);
-        break;
-      case 'year':
-        start = DateTime(now.year - 1, now.month, now.day);
-        break;
-      default:
-        start = now.subtract(const Duration(days: 7));
-    }
-
+  void _setPeriod(String period) {
     setState(() {
-      _selectedQuickRange = range;
-      _startDate = start;
-      _endDate = end;
-      _startDateController.text = start.toIso8601String().split('T').first;
-      _endDateController.text = end.toIso8601String().split('T').first;
+      _selectedPeriod = period;
     });
-
     _loadReport();
   }
 
-  void _showCustomDatePicker() {
-    setState(() {
-      _selectedQuickRange = 'custom';
-    });
-
-    showModalBottomSheet(
+  void _showDateRangePicker() async {
+    final DateTimeRange? picked = await showDateRangePicker(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => _CustomDatePickerSheet(
-        startDateController: _startDateController,
-        endDateController: _endDateController,
-        startDate: _startDate,
-        endDate: _endDate,
-        onApply: (startDate, endDate) {
-          setState(() {
-            _startDate = startDate;
-            _endDate = endDate;
-            _selectedQuickRange = 'custom';
-          });
-          _loadReport();
-        },
-      ),
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      initialDateRange: DateTimeRange(start: _startDate, end: _endDate),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Colors.black87,
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Colors.black87,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
+
+    if (picked != null) {
+      setState(() {
+        _startDate = picked.start;
+        _endDate = picked.end;
+        _startDateController.text = _startDate.toIso8601String().split('T').first;
+        _endDateController.text = _endDate.toIso8601String().split('T').first;
+      });
+      _loadReport();
+    }
   }
 
   String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
+    return DateUtil.toMMDDYYYY(date);
+  }
+
+  String _formatDateShort(DateTime date) {
+    return DateUtil.toMMDDYYYY(date);
+  }
+
+  String _getPeriodLabel(String period) {
+    switch (period) {
+      case 'daily':
+        return 'Daily';
+      case 'weekly':
+        return 'Weekly';
+      case 'monthly':
+        return 'Monthly';
+      case 'yearly':
+        return 'Yearly';
+      case 'all_time':
+        return 'All Time';
+      default:
+        return 'Daily';
+    }
   }
 
   FinancialPeriodStats _getSelectedFinancialStats() {
@@ -306,97 +309,105 @@ class _BatchReportScreenState extends State<BatchReportScreen>
   // ──────────────────────────────────────────────
 
   Widget _buildProductionTab() {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          const SizedBox(height: 12),
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+    return Column(
+      children: [
+        // Fixed Filter Section
+        Container(
+          color: Colors.white,
+          child: Column(
+            children: [
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
                   children: [
                     const Text(
-                      'Date Range',
+                      'Period',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: Colors.black87,
                       ),
                     ),
                     const Spacer(),
-                    TextButton.icon(
-                      onPressed: _showCustomDatePicker,
-                      icon: const Icon(Icons.edit_calendar, size: 16),
-                      label: const Text('Select date range', style: TextStyle(fontSize: 14)),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        minimumSize: Size.zero,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.date_range, size: 16, color: Colors.grey.shade700),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${_formatDateShort(_startDate)} - ${_formatDateShort(_endDate)}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: _showDateRangePicker,
+                      icon: const Icon(Icons.edit_calendar, size: 20),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.grey.shade100,
+                        padding: const EdgeInsets.all(8),
+                        minimumSize: const Size(36, 36),
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  height: 36,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    physics: const ClampingScrollPhysics(),
-                    children: [
-                      _buildQuickChip('Today', 'today'),
-                      const SizedBox(width: 8),
-                      _buildQuickChip('Last Week', 'week'),
-                      const SizedBox(width: 8),
-                      _buildQuickChip('Last Month', 'month'),
-                      const SizedBox(width: 8),
-                      _buildQuickChip('Last Year', 'year'),
-                    ],
-                  ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 40,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  physics: const ClampingScrollPhysics(),
+                  children: [
+                    _buildPeriodChip('Daily', 'daily'),
+                    const SizedBox(width: 8),
+                    _buildPeriodChip('Weekly', 'weekly'),
+                    const SizedBox(width: 8),
+                    _buildPeriodChip('Monthly', 'monthly'),
+                    const SizedBox(width: 8),
+                    _buildPeriodChip('Yearly', 'yearly'),
+                    const SizedBox(width: 8),
+                    _buildPeriodChip('All Time', 'all_time'),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.date_range, size: 16, color: Colors.grey.shade700),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${_formatDate(_startDate)} - ${_formatDate(_endDate)}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 12),
+            ],
           ),
-          _buildReportContent(),
-        ],
-      ),
+        ),
+        // Scrollable Report Content
+        Expanded(child: _buildReportContent()),
+      ],
     );
   }
 
-  Widget _buildQuickChip(String label, String range) {
-    final isSelected = _selectedQuickRange == range;
+  Widget _buildPeriodChip(String label, String period) {
+    final isSelected = _selectedPeriod == period;
     return GestureDetector(
-      onTap: () => _setQuickRange(range),
+      onTap: () => _setPeriod(period),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected ? Colors.black87 : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? Colors.black87 : Colors.grey.shade300,
+          ),
         ),
         child: Text(
           label,
@@ -422,6 +433,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
       return Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.error_outline, size: 48, color: Colors.red),
             const SizedBox(height: 16),
@@ -437,6 +449,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
       return Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.assignment_outlined, size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 16),
@@ -445,31 +458,133 @@ class _BatchReportScreenState extends State<BatchReportScreen>
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.grey.shade700),
             ),
             const SizedBox(height: 8),
-            Text('Try adjusting the date range', style: TextStyle(fontSize: 14, color: Colors.grey.shade500)),
+            Text('Try adjusting the date range or period', style: TextStyle(fontSize: 14, color: Colors.grey.shade500)),
           ],
         ),
       );
     }
 
-    final report = _reportData!.data.first;
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          _buildBatchHeader(report),
-          const SizedBox(height: 20),
-          _buildMortalityCard(report.mortality),
-          const SizedBox(height: 16),
-          _buildFeedCard(report.feed),
-          const SizedBox(height: 16),
-          _buildVaccinationCard(report.vaccination),
-          const SizedBox(height: 16),
-          _buildMedicationCard(report.medication),
-          if (report.eggProduction != null) ...[
-            const SizedBox(height: 16),
-            _buildEggProductionCard(report.eggProduction!),
+    return _buildGroupedReports();
+  }
+
+  Widget _buildGroupedReports() {
+    final reports = _reportData!.data;
+
+    // Group reports by date
+    final Map<String, List<BatchReportData>> groupedReports = {};
+    for (var report in reports) {
+      final dateKey = DateUtil.toMMDDYYYY(report.reportDate);
+      if (!groupedReports.containsKey(dateKey)) {
+        groupedReports[dateKey] = [];
+      }
+      groupedReports[dateKey]!.add(report);
+    }
+
+    // Sort dates in descending order (newest first)
+    final sortedDates = groupedReports.keys.toList()
+      ..sort((a, b) => b.compareTo(a));
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: sortedDates.length,
+      itemBuilder: (context, index) {
+        final dateKey = sortedDates[index];
+        final dateReports = groupedReports[dateKey]!;
+        final reportDate = dateReports.first.reportDate;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Date Header
+            Padding(
+              padding: EdgeInsets.only(bottom: 12, top: index == 0 ? 0 : 16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.black87,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.calendar_today, size: 14, color: Colors.white),
+                        const SizedBox(width: 8),
+                        Text(
+                          _formatDate(reportDate),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '(${dateReports.length} ${dateReports.length == 1 ? 'report' : 'reports'})',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Report Cards for this date
+            ...dateReports.map((report) => Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: _buildReportCard(report),
+            )),
           ],
-          const SizedBox(height: 20),
+        );
+      },
+    );
+  }
+
+  Widget _buildReportCard(BatchReportData report) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Batch Header
+          _buildBatchHeader(report),
+          const Divider(height: 1),
+
+          // Report Sections
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                _buildMortalityCard(report.mortality),
+                const SizedBox(height: 12),
+                _buildFeedCard(report.feed),
+                const SizedBox(height: 12),
+                _buildVaccinationCard(report.vaccination),
+                const SizedBox(height: 12),
+                _buildMedicationCard(report.medication),
+                if (report.eggProduction != null && report.eggProduction!.totalEggsCollected > 0) ...[
+                  const SizedBox(height: 12),
+                  _buildEggProductionCard(report.eggProduction!),
+                ],
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -478,52 +593,53 @@ class _BatchReportScreenState extends State<BatchReportScreen>
   Widget _buildBatchHeader(BatchReportData report) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.assessment, color: Colors.grey.shade700),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  report.batchNumber,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  '${report.farmName} - ${report.houseName}',
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: Colors.grey.shade100, shape: BoxShape.circle),
-                child: Icon(Icons.assessment, color: Colors.grey.shade700),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(report.batchNumber, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    Text('${report.farmName} - ${report.houseName}', style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
-                  ],
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${report.ageDays} days',
+                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
                 ),
               ),
+              const SizedBox(height: 4),
+              Text(
+                '${report.totalBirds} birds',
+                style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+              ),
             ],
           ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              _buildHeaderStat('Bird Type', report.birdType),
-              _buildHeaderStat('Total Birds', '${report.totalBirds}'),
-              _buildHeaderStat('Age', '${report.ageDays} days'),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeaderStat(String label, String value) {
-    return Expanded(
-      child: Column(
-        children: [
-          Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          Text(label, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
         ],
       ),
     );
@@ -533,15 +649,19 @@ class _BatchReportScreenState extends State<BatchReportScreen>
     return _buildSimpleCard(
       title: 'Mortality',
       icon: Icons.warning_amber,
+      iconColor: mortality.total24hrs > 0 ? Colors.orange : Colors.grey.shade700,
       stats: [
         _StatData('Day', '${mortality.day}'),
         _StatData('Night', '${mortality.night}'),
         _StatData('24hrs', '${mortality.total24hrs}'),
-        _StatData('Cumulative', '${mortality.cumulativeTotal}'),
-        _StatData('Remaining', '${mortality.birdsRemaining}'),
+        _StatData('Total', '${mortality.cumulativeTotal}'),
+        _StatData('Alive', '${mortality.birdsRemaining}'),
       ],
       footer: mortality.reason.isNotEmpty
-          ? Text('Reason: ${mortality.reason}', style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontStyle: FontStyle.italic))
+          ? Text(
+        'Reason: ${mortality.reason}',
+        style: TextStyle(fontSize: 11, color: Colors.grey.shade600, fontStyle: FontStyle.italic),
+      )
           : null,
     );
   }
@@ -550,12 +670,38 @@ class _BatchReportScreenState extends State<BatchReportScreen>
     return _buildSimpleCard(
       title: 'Feed',
       icon: Icons.fastfood,
+      iconColor: Colors.grey.shade700,
       stats: [
         _StatData('Consumed', '${feed.bagsConsumed} kgs'),
+        _StatData('Day', '${feed.bagsConsumedDay} kgs'),
+        _StatData('Night', '${feed.bagsConsumedNight} kgs'),
         _StatData('Total', '${feed.totalBagsConsumed} kgs'),
         _StatData('In Store', '${feed.balanceInStore} kgs'),
-        _StatData('Type', feed.feedType),
       ],
+      footer: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              feed.feedType,
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
+            ),
+          ),
+          const SizedBox(width: 8),
+          if (feed.feedVariance.isNotEmpty)
+            Flexible(
+              child: Text(
+                feed.feedVariance,
+                style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -563,8 +709,9 @@ class _BatchReportScreenState extends State<BatchReportScreen>
     return _buildSimpleCard(
       title: 'Vaccination',
       icon: Icons.vaccines,
+      iconColor: Colors.grey.shade700,
       stats: [
-        _StatData('Done', '${vaccination.vaccinesDone.length}'),
+        _StatData('Completed', '${vaccination.vaccinesDone.length}'),
         _StatData('Upcoming', '${vaccination.vaccinesUpcoming.length}'),
       ],
       footer: Column(
@@ -572,11 +719,11 @@ class _BatchReportScreenState extends State<BatchReportScreen>
         children: [
           if (vaccination.vaccinesDone.isNotEmpty) ...[
             const SizedBox(height: 8),
-            _buildVaccineChips('Completed', vaccination.vaccinesDone),
+            _buildVaccineChips('Completed', vaccination.vaccinesDone, Colors.green.shade50),
           ],
           if (vaccination.vaccinesUpcoming.isNotEmpty) ...[
             const SizedBox(height: 8),
-            _buildVaccineChips('Upcoming', vaccination.vaccinesUpcoming),
+            _buildVaccineChips('Upcoming', vaccination.vaccinesUpcoming, Colors.orange.shade50),
           ],
         ],
       ),
@@ -584,21 +731,67 @@ class _BatchReportScreenState extends State<BatchReportScreen>
   }
 
   Widget _buildMedicationCard(BatchMedication medication) {
+    final inUse = medication.inUse;
     return _buildSimpleCard(
       title: 'Medication',
       icon: Icons.medical_services,
+      iconColor: inUse.isNotEmpty ? Colors.blue.shade700 : Colors.grey.shade700,
       stats: [
+        _StatData('In Use', '${inUse.length}'),
         _StatData('Available', '${medication.medicationsAvailable.length}'),
       ],
-      footer: medication.medicationsAvailable.isNotEmpty
-          ? Wrap(
-        spacing: 6,
-        runSpacing: 6,
-        children: medication.medicationsAvailable.take(5).map((med) {
+      footer: inUse.isNotEmpty
+          ? Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: inUse.map((med) {
           return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(12)),
-            child: Text(med.toString(), style: const TextStyle(fontSize: 11)),
+            margin: const EdgeInsets.only(top: 8),
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue.shade100),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        med.medicineName,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Dosage: ${med.dosage}',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    '${med.quantityUsed} ${med.unit}',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           );
         }).toList(),
       )
@@ -610,30 +803,64 @@ class _BatchReportScreenState extends State<BatchReportScreen>
     return _buildSimpleCard(
       title: 'Egg Production',
       icon: Icons.egg,
+      iconColor: Colors.amber.shade700,
       stats: [
         _StatData('Trays', '${production.traysCollected}'),
         _StatData('Eggs', '${production.totalEggsCollected}'),
-        _StatData('In Store', '${production.traysInStore}'),
-        _StatData('Production', '${production.productionPercentage.toStringAsFixed(0)}%'),
         _StatData('Good', '${production.goodEggs}'),
+        _StatData('Rate', '${production.productionPercentage.toStringAsFixed(1)}%'),
         _StatData('Value', '$_currency ${production.totalValue.toStringAsFixed(0)}'),
       ],
+      footer: production.partialBroken + production.completeBroken + production.smallDeformed > 0
+          ? Wrap(
+        spacing: 6,
+        runSpacing: 6,
+        children: [
+          if (production.partialBroken > 0)
+            _buildDefectChip('Partial Broken', production.partialBroken),
+          if (production.completeBroken > 0)
+            _buildDefectChip('Complete Broken', production.completeBroken),
+          if (production.smallDeformed > 0)
+            _buildDefectChip('Small/Deformed', production.smallDeformed),
+        ],
+      )
+          : null,
+    );
+  }
+
+  Widget _buildDefectChip(String label, int count) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.red.shade100),
+      ),
+      child: Text(
+        '$label: $count',
+        style: TextStyle(
+          fontSize: 10,
+          color: Colors.red.shade700,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
     );
   }
 
   Widget _buildSimpleCard({
     required String title,
     required IconData icon,
+    required Color iconColor,
     required List<_StatData> stats,
     Widget? footer,
   }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.grey.shade200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -641,19 +868,22 @@ class _BatchReportScreenState extends State<BatchReportScreen>
         children: [
           Row(
             children: [
-              Icon(icon, color: Colors.grey.shade700, size: 20),
+              Icon(icon, color: iconColor, size: 18),
               const SizedBox(width: 8),
-              Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+              Text(
+                title,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: stats.map((stat) => _buildStatChip(stat.label, stat.value)).toList(),
           ),
           if (footer != null) ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             footer,
           ],
         ],
@@ -665,20 +895,21 @@ class _BatchReportScreenState extends State<BatchReportScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade200),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             value,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
             overflow: TextOverflow.ellipsis,
           ),
           Text(
             label,
-            style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+            style: TextStyle(fontSize: 9, color: Colors.grey.shade600),
             overflow: TextOverflow.ellipsis,
           ),
         ],
@@ -686,21 +917,32 @@ class _BatchReportScreenState extends State<BatchReportScreen>
     );
   }
 
-  Widget _buildVaccineChips(String label, List<dynamic> vaccines) {
+  Widget _buildVaccineChips(String label, List<dynamic> vaccines, Color bgColor) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+        ),
         const SizedBox(height: 4),
         Wrap(
           spacing: 4,
           runSpacing: 4,
-          children: vaccines.take(3).map((vaccine) {
+          children: vaccines.take(5).map((vaccine) {
             return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(8)),
-              child: Text(vaccine.toString(), style: const TextStyle(fontSize: 10), overflow: TextOverflow.ellipsis),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: bgColor,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: bgColor.withOpacity(0.3)),
+              ),
+              child: Text(
+                vaccine.toString(),
+                style: const TextStyle(fontSize: 10),
+                overflow: TextOverflow.ellipsis,
+              ),
             );
           }).toList(),
         ),
@@ -1049,136 +1291,4 @@ class _StatData {
   final String value;
 
   _StatData(this.label, this.value);
-}
-
-class _CustomDatePickerSheet extends StatefulWidget {
-  final TextEditingController startDateController;
-  final TextEditingController endDateController;
-  final DateTime startDate;
-  final DateTime endDate;
-  final Function(DateTime startDate, DateTime endDate) onApply;
-
-  const _CustomDatePickerSheet({
-    required this.startDateController,
-    required this.endDateController,
-    required this.startDate,
-    required this.endDate,
-    required this.onApply,
-  });
-
-  @override
-  State<_CustomDatePickerSheet> createState() => _CustomDatePickerSheetState();
-}
-
-class _CustomDatePickerSheetState extends State<_CustomDatePickerSheet> {
-  late TextEditingController _localStartController;
-  late TextEditingController _localEndController;
-
-  @override
-  void initState() {
-    super.initState();
-    _localStartController = TextEditingController(text: widget.startDateController.text);
-    _localEndController = TextEditingController(text: widget.endDateController.text);
-  }
-
-  void _applyFilters() {
-    if (_localStartController.text.isEmpty || _localEndController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select both start and end dates')));
-      return;
-    }
-
-    try {
-      final startDate = DateTime.parse(_localStartController.text);
-      final endDate = DateTime.parse(_localEndController.text);
-
-      if (startDate.isAfter(endDate)) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Start date cannot be after end date')));
-        return;
-      }
-
-      widget.startDateController.text = _localStartController.text;
-      widget.endDateController.text = _localEndController.text;
-      widget.onApply(startDate, endDate);
-      Navigator.pop(context);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid date format')));
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 20),
-                decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
-              ),
-            ),
-            const Text('Custom Date Range', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 20),
-            CustomDateTextField(
-              label: 'Start Date',
-              icon: Icons.calendar_today,
-              required: true,
-              initialDate: widget.startDate,
-              minYear: DateTime.now().year - 2,
-              maxYear: DateTime.now().year,
-              returnFormat: DateReturnFormat.isoString,
-              controller: _localStartController,
-            ),
-            const SizedBox(height: 16),
-            CustomDateTextField(
-              label: 'End Date',
-              icon: Icons.calendar_today,
-              required: true,
-              initialDate: widget.endDate,
-              minYear: DateTime.now().year - 2,
-              maxYear: DateTime.now().year,
-              returnFormat: DateReturnFormat.isoString,
-              controller: _localEndController,
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: _applyFilters,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black87,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  elevation: 0,
-                ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.check, size: 20),
-                    SizedBox(width: 8),
-                    Text('Apply', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _localStartController.dispose();
-    _localEndController.dispose();
-    super.dispose();
-  }
 }

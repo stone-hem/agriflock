@@ -803,6 +803,7 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
                       dataRowMaxHeight: 40,
                       columns: const [
                         DataColumn(label: Text('Item')),
+                        DataColumn(label: Text('Particulars')),
                         DataColumn(label: Text('Qty')),
                         DataColumn(label: Text('Unit Price')),
                         DataColumn(label: Text('Total')),
@@ -815,7 +816,11 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
                           )),
                           DataCell(Container(
                             constraints: const BoxConstraints(minWidth: 100),
-                            child: Text('${item.quantity} ${item.unit}'),
+                            child: Text(item.unit),
+                          )),
+                          DataCell(Container(
+                            constraints: const BoxConstraints(minWidth: 100),
+                            child: Text('${item.quantity}'),
                           )),
                           DataCell(Container(
                             constraints: const BoxConstraints(minWidth: 100),
