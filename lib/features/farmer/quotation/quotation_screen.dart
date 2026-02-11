@@ -475,7 +475,7 @@ class _QuotationScreenState extends State<QuotationScreen>
             ),
             const SizedBox(height: 20),
             Text(
-              'Fetching profile data...',
+              'Loading quotation ...',
               style: TextStyle(
                 color: Colors.grey.shade700,
                 fontSize: 16,

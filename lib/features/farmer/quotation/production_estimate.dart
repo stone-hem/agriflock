@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/features/farmer/batch/repo/batch_house_repo.dart';
 import 'package:agriflock360/features/farmer/quotation/models/production_quotation_model.dart';
 import 'package:agriflock360/features/farmer/quotation/repo/quotation_repository.dart';
@@ -754,6 +755,7 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
 
   Widget _buildDetailedItemsTable() {
     final itemsByCategory = _quotationData!.getItemsGroupedByCategory();
+    LogUtil.warning(itemsByCategory['feed']!.first.toJson());
 
     return Card(
       elevation: 0,
@@ -766,20 +768,16 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(Icons.list, color: Colors.teal, size: 20),
-                const SizedBox(width: 3),
-                Text(
-                  'PRODUCTION QUOTATION for ${_quotationData!.quantity} birds',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.teal,
-                  ),
-                ),
-              ],
+            Text(
+              'PRODUCTION QUOTATION for ${_quotationData!.quantity} birds',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.teal,
+              ),
             ),
+            TextButton.icon(onPressed: null, label: Text('Scroll to the right or left to see the whole table.'), icon: Icon(Icons.arrow_forward_ios),),
+
             const SizedBox(height: 16),
             ...itemsByCategory.entries.map((categoryEntry) {
               return Column(
