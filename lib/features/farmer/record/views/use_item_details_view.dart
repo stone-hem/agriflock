@@ -362,6 +362,14 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                                             color: Colors.grey.shade800,
                                           ),
                                         ),
+                                        Text(
+                                          'Quantity in Store : ${item.quantityInStore}',
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.grey.shade800,
+                                          ),
+                                        ),
                                         if (item.description.isNotEmpty)
                                           Padding(
                                             padding: const EdgeInsets.only(top: 4),

@@ -12,11 +12,10 @@ class VaccinationRepository {
   /// Get vaccinations history for a batch
   Future<Result<VaccinationListResponse>> getVaccinationList({
     required String batchId,
-    VaccinationListFilter filter = VaccinationListFilter.upcoming,
   }) async {
     try {
       final response = await apiClient.get(
-        '/batches/$batchId/vaccinations/lists?filter=${filter.value}',
+        '/batches/$batchId/vaccinations/lists',
       );
 
       final jsonResponse = jsonDecode(response.body);
@@ -179,25 +178,20 @@ class VaccinationRepository {
 
 
   /// Adopt  recommended vaccinations
-  Future<Result<List<Vaccination>>> adoptRecommendedVaccinations(
-    String batchId, AdoptVaccinationsRequest request,
+  Future<Result> adoptRecommendedVaccinations(
+    String batchId, Map<String,dynamic> request,
   ) async {
     try {
       final response = await apiClient.post(
         '/batches/$batchId/vaccinations/vaccinations/adopt',
-        body: request.toJson(),
+        body: request,
       );
 
       final jsonResponse = jsonDecode(response.body);
       LogUtil.info('Adopt All Vaccinations API Response: $jsonResponse');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        List<Vaccination> vaccinations = [];
-        if (jsonResponse['data'] != null) {
-          final List<dynamic> data = jsonResponse['data'] as List;
-          vaccinations = data.map((e) => Vaccination.fromJson(e)).toList();
-        }
-        return Success(vaccinations);
+        return Success(null);
       } else {
         return Failure(
           message:

@@ -38,7 +38,7 @@ import 'package:agriflock360/features/farmer/profile/telemetry_data_screen.dart'
 import 'package:agriflock360/features/farmer/profile/update_profile_screen.dart';
 import 'package:agriflock360/features/farmer/onboarding/onboarding_setup_screen.dart';
 import 'package:agriflock360/features/farmer/record/quick_record.dart';
-import 'package:agriflock360/features/farmer/record/views/quick_batches_list_screen.dart';
+import 'package:agriflock360/features/farmer/home/view/quick_batches_list_screen.dart';
 import 'package:agriflock360/features/farmer/batch/record_mortality_screen.dart';
 import 'package:agriflock360/features/farmer/report/batch/batch_report_screen.dart';
 import 'package:agriflock360/features/farmer/report/batch/batch_selection_screen.dart';

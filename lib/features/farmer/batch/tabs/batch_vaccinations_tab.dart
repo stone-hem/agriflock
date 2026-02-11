@@ -879,23 +879,23 @@ class _CompletedVaccinationItem extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    if(vaccination.scheduledDate != null)
+                    if(vaccination.completedDate != null)
                     Text(
-                      'Completed: ${DateUtil.toDateWithDay(vaccination.scheduledDate!)}',
+                      'Completed: ${DateUtil.toDateWithDay(vaccination.completedDate!)}',
                       style: TextStyle(
                         color: Colors.grey.shade500,
                         fontSize: 11,
                       ),
                     ),
-                    if(vaccination.scheduledDate != null)
+                    if(vaccination.completedTime != null)
                       Text(
-                      'Completed: ${DateUtil.toDateWithDay(vaccination.scheduledDate!)}',
+                      'Completed: ${vaccination.completedTime}',
                       style: TextStyle(
                         color: Colors.grey.shade500,
                         fontSize: 11,
                       ),
                     ),
-                    if(vaccination.scheduledDate == null && vaccination.scheduledDate == null)
+                    if(vaccination.completedDate == null && vaccination.completedDate == null)
                       Text(
                         'Not completed',
                         style: TextStyle(

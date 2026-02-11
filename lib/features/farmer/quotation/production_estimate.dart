@@ -457,39 +457,6 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          decoration: BoxDecoration(
-            color: _getBreedColor(_selectedBreed?.name ?? ''),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.table_chart, color: Colors.white, size: 24),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'PRODUCTION QUOTATION',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              Text(
-                '${_quotationData!.quantity} birds',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 24),
 
         // // Basic Information Table
         // _buildBasicInfoTable(),
@@ -751,7 +718,7 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
 
               ],
             ),
-            TextButton.icon(onPressed: null, label: Text('Scroll to the right to see the whole table.'), icon: Icon(Icons.arrow_forward_ios),),
+            TextButton.icon(onPressed: null, label: Text('Scroll to the right or left to see the whole table.'), icon: Icon(Icons.arrow_forward_ios),),
 
             const SizedBox(height: 16),
             SingleChildScrollView(
@@ -802,11 +769,11 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
             Row(
               children: [
                 Icon(Icons.list, color: Colors.teal, size: 20),
-                const SizedBox(width: 8),
+                const SizedBox(width: 3),
                 Text(
-                  'DETAILED ITEMS',
+                  'PRODUCTION QUOTATION for ${_quotationData!.quantity} birds',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: Colors.teal,
                   ),

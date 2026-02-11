@@ -36,7 +36,7 @@ class Day27DecisionModal extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
 
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -54,7 +54,7 @@ class Day27DecisionModal extends StatelessWidget {
             ),
 
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
             // Progress indicator
             LinearProgressIndicator(
@@ -65,7 +65,7 @@ class Day27DecisionModal extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
             ),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: 28),
 
             // Icon
             Container(
@@ -82,7 +82,7 @@ class Day27DecisionModal extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
 
             // Title
             const Text(
@@ -96,7 +96,7 @@ class Day27DecisionModal extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
             // Message
             const Text(
@@ -110,7 +110,7 @@ class Day27DecisionModal extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: 20),
 
             // Continue Button
             SizedBox(
@@ -136,7 +136,7 @@ class Day27DecisionModal extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
 
             // Dismiss Button
             TextButton(

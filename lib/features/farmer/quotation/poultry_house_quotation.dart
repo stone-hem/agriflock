@@ -426,7 +426,7 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
               ],
             ),
             const SizedBox(height: 16),
-            TextButton.icon(onPressed: null, label: Text('Scroll to the right to see the whole table.'), icon: Icon(Icons.arrow_forward_ios),),
+            TextButton.icon(onPressed: null, label: Text('Scroll to the right or left to see the whole table.'), icon: Icon(Icons.arrow_forward_ios),),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: DataTable(

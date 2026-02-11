@@ -1,4 +1,5 @@
 import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/recommended_vaccination_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
@@ -26,20 +27,21 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
 
 
   final Map<String, bool> _selectedItems = {};
-  DateTime? _startDate;
   bool _enableReminders = true;
   bool _adjustForAge = true;
   bool _isLoading = false;
+  final _dateController = TextEditingController();
+
 
   @override
   void initState() {
     super.initState();
-    // Auto-select all items from the passed-in schedule
-    for (var vaccine in widget.vaccineSchedule.data) {
-      _selectedItems[vaccine.vaccineName] = true;
-    }
-    // Set default start date to today
-    _startDate = DateTime.now();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _dateController.dispose();
   }
 
   @override
@@ -126,55 +128,15 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
             const SizedBox(height: 24),
 
             // Start Date Selection
-            Text(
-              'Schedule Start Date',
-              style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
-              ),
-            ),
-            const SizedBox(height: 8),
-            InkWell(
-              onTap: _isLoading ? null : _selectStartDate,
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade400),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.calendar_today, color: Colors.grey.shade600),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _startDate == null
-                                ? 'Select start date'
-                                : '${_startDate!.day}/${_startDate!.month}/${_startDate!.year}',
-                            style: TextStyle(
-                              color: _startDate == null
-                                  ? Colors.grey.shade600
-                                  : Colors.grey.shade800,
-                            ),
-                          ),
-                          if (_startDate == null)
-                            Text(
-                              'Reference date for calculating schedule',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade500,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            CustomDateTextField(
+              label: 'Schedule Start Date',
+              icon: Icons.calendar_today,
+              required: true,
+              initialDate: DateTime.now(),
+              minYear: DateTime.now().year - 1,
+              maxYear: DateTime.now().year,
+              returnFormat: DateReturnFormat.isoString,
+              controller: _dateController,
             ),
             const SizedBox(height: 24),
 
@@ -278,9 +240,9 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
                     _buildSummaryRow('Selected items', '$selectedCount/${widget.vaccineSchedule.data.length}'),
                     _buildSummaryRow(
                       'Start date',
-                      _startDate == null
+                      _dateController.text.isEmpty
                           ? 'Not selected'
-                          : '${_startDate!.day}/${_startDate!.month}/${_startDate!.year}',
+                          : _dateController.text,
                     ),
                     _buildSummaryRow('Reminders', _enableReminders ? 'Enabled' : 'Disabled'),
                     _buildSummaryRow('Age adjustment', _adjustForAge ? 'Yes' : 'No'),
@@ -478,24 +440,11 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
     });
   }
 
-  Future<void> _selectStartDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _startDate ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
-    );
-    if (picked != null) {
-      setState(() {
-        _startDate = picked;
-      });
-    }
-  }
 
   void _adoptSchedule() {
     final selectedCount = _selectedItems.values.where((v) => v).length;
 
-    if (_startDate == null) {
+    if (_dateController.text.isNotEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please select a start date'),
@@ -504,6 +453,8 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
       );
       return;
     }
+
+
 
     // Get selected vaccines
     final selectedVaccines = widget.vaccineSchedule.data
@@ -521,7 +472,7 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
             Text('You are about to adopt $selectedCount vaccination schedule(s).'),
             const SizedBox(height: 12),
             Text(
-              'This will create scheduled vaccinations starting from ${_startDate!.day}/${_startDate!.month}/${_startDate!.year}.',
+              'This will create scheduled vaccinations starting from ${_dateController.text}.',
               style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
             ),
             if (_adjustForAge) ...[
@@ -614,8 +565,8 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
     try {
       // Extract vaccine catalog IDs from selected vaccines
       final vaccineCatalogIds = selectedVaccines
-          .where((vaccine) => vaccine.id != null && vaccine.id!.isNotEmpty)
-          .map((vaccine) => vaccine.id!)
+          .where((vaccine) => vaccine.id.isNotEmpty)
+          .map((vaccine) => vaccine.id)
           .toList();
 
       if (vaccineCatalogIds.isEmpty) {
@@ -631,21 +582,20 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
         return;
       }
 
-      // Create the request object matching the API requirements
-      final request = AdoptVaccinationsRequest(
-        vaccineCatalogIds: vaccineCatalogIds,
-        scheduledDate: _startDate!,
-        skipExisting: _adjustForAge,
-      );
+
 
       // Call the repository
       final result = await _vaccinationRepository.adoptRecommendedVaccinations(
         widget.batch.id,
-        request,
+        {
+          'vaccineCatalogIds': vaccineCatalogIds,
+          'scheduledDate': _dateController.text, // Format as YYYY-MM-DD
+          'skipExisting': _adjustForAge,
+        },
       );
 
       switch(result) {
-        case Success<List<Vaccination>>():
+        case Success():
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Column(
@@ -664,7 +614,7 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
           if (context.mounted) {
             context.pop();
           }
-        case Failure<List<Vaccination>>(message:final error):
+        case Failure<dynamic>(message:final error):
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(error),

@@ -2,7 +2,9 @@ import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_list_model.dart';
+import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/batch_mgt_repo.dart';
+import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -68,20 +70,20 @@ class _QuickBatchesListScreenState extends State<QuickBatchesListScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _batches.isEmpty
-              ? _buildEmptyState()
-              : RefreshIndicator(
-                  onRefresh: _loadBatches,
-                  child: ListView.separated(
-                    padding: const EdgeInsets.all(20),
-                    itemCount: _batches.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final batch = _batches[index];
-                      return _buildBatchCard(batch);
-                    },
-                  ),
-                ),
+          ? _buildEmptyState()
+          : RefreshIndicator(
+              onRefresh: _loadBatches,
+              child: ListView.separated(
+                padding: const EdgeInsets.all(20),
+                itemCount: _batches.length,
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final batch = _batches[index];
+                  return _buildBatchCard(batch);
+                },
+              ),
+            ),
     );
   }
 
@@ -94,18 +96,12 @@ class _QuickBatchesListScreenState extends State<QuickBatchesListScreen> {
           const SizedBox(height: 16),
           Text(
             'No active batches',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
           ),
           const SizedBox(height: 8),
           Text(
             'You have no active batches at the moment',
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey.shade500,
-            ),
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
           ),
         ],
       ),
@@ -115,10 +111,29 @@ class _QuickBatchesListScreenState extends State<QuickBatchesListScreen> {
   Widget _buildBatchCard(BatchListItem batch) {
     return GestureDetector(
       onTap: () {
-        context.push('/batches/details', extra: {
-          'batch': batch,
-          'farm': batch.farm,
-        });
+        final FarmModel farmCopy = FarmModel(
+          id: batch.farmId,
+          farmName: batch.farm!.farmName,
+        );
+        final BatchModel batchCopy = BatchModel(
+          id: batch.id,
+          batchName: batch.batchName,
+          birdTypeId: batch.birdTypeId,
+          breed: batch.breed ?? 'Not Provided',
+          type: '',
+          startDate: DateTime.now(),
+          age: batch.ageInDays,
+          initialQuantity: batch.initialCount,
+          birdsAlive: batch.currentCount,
+          currentWeight: batch.currentWeight ?? 0.0,
+          expectedWeight: batch.expectedWeight ?? 0.0,
+          feedingTime: batch.feedingTime ?? '',
+          feedingSchedule: [?batch.feedingSchedule],
+        );
+        context.push(
+          '/batches/details',
+          extra: {'batch': batchCopy, 'farm': farmCopy},
+        );
       },
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -186,11 +201,7 @@ class _QuickBatchesListScreenState extends State<QuickBatchesListScreen> {
                     Colors.green,
                   ),
                 if (batch.house != null)
-                  _buildBatchInfo(
-                    Icons.home,
-                    batch.house!.name,
-                    Colors.purple,
-                  ),
+                  _buildBatchInfo(Icons.home, batch.house!.name, Colors.purple),
               ],
             ),
             if (batch.birdType != null)
@@ -227,13 +238,7 @@ class _QuickBatchesListScreenState extends State<QuickBatchesListScreen> {
       children: [
         Icon(icon, size: 14, color: color),
         const SizedBox(width: 4),
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey.shade700,
-          ),
-        ),
+        Text(text, style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
       ],
     );
   }

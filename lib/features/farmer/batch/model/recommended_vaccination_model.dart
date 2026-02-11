@@ -199,24 +199,3 @@ class AdoptVaccinationRequest {
     };
   }
 }
-
-// Create this new model or update the existing one
-class AdoptVaccinationsRequest {
-  final List<String> vaccineCatalogIds;
-  final DateTime scheduledDate;
-  final bool skipExisting;
-
-  AdoptVaccinationsRequest({
-    required this.vaccineCatalogIds,
-    required this.scheduledDate,
-    this.skipExisting = true,
-  });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'vaccineCatalogIds': vaccineCatalogIds,
-      'scheduledDate': scheduledDate.toIso8601String().split('T')[0], // Format as YYYY-MM-DD
-      'skipExisting': skipExisting,
-    };
-  }
-}

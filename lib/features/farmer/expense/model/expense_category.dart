@@ -51,6 +51,7 @@ class CategoryItem {
   final String description;
   final dynamic components;
   final bool useFromStore;
+  final num quantityInStore;
 
   CategoryItem({
     required this.id,
@@ -58,6 +59,7 @@ class CategoryItem {
     required this.description,
     required this.components,
     required this.useFromStore,
+    required this.quantityInStore,
   });
 
   factory CategoryItem.fromJson(Map<String, dynamic> json) {
@@ -67,6 +69,7 @@ class CategoryItem {
       description: json['description'] as String,
       components: json['components'],
       useFromStore: json['use_from_store'] as bool,
+      quantityInStore: json['quantity_in_store'] as num,
     );
   }
 
@@ -77,6 +80,7 @@ class CategoryItem {
       'description': description,
       'components': components,
       'use_from_store': useFromStore,
+      'quantity_in_store': quantityInStore,
     };
   }
 }
