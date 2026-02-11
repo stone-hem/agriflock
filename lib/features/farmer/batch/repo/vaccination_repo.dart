@@ -138,8 +138,8 @@ class VaccinationRepository {
   ) async {
     try {
       LogUtil.info(request.toJson());
-      final response = await apiClient.put(
-        '/batches/$batchId/vaccinations/$vaccinationId',
+      final response = await apiClient.patch(
+        '/batches/$batchId/vaccinations/$vaccinationId/status',
         body: request.toJson(),
       );
 
