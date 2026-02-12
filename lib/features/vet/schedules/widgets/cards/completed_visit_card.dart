@@ -1,5 +1,6 @@
 import 'package:agriflock360/core/utils/date_util.dart';
 import 'package:agriflock360/features/vet/schedules/models/visit_model.dart';
+import 'package:agriflock360/features/vet/schedules/widgets/visit_details_section.dart';
 import 'package:flutter/material.dart';
 
 class CompletedVisitCard extends StatelessWidget {
@@ -121,45 +122,15 @@ class CompletedVisitCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Icon(Icons.pets, size: 16, color: Colors.grey.shade600),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${visit.birdsCount} birds',
-                      style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
-                    ),
-                    const SizedBox(width: 16),
-                    Icon(Icons.home_work, size: 16, color: Colors.grey.shade600),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${visit.houses.length} house${visit.houses.length > 1 ? 's' : ''}',
-                      style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
-                    ),
-                  ],
+                // Comprehensive visit details
+                VisitDetailsSection(
+                  visit: visit,
+                  accentColor: isCancelled
+                      ? Colors.red
+                      : isDeclined
+                          ? Colors.orange
+                          : Colors.green,
                 ),
-                if (visit.serviceCosts.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: visit.serviceCosts.map((service) => Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        service.serviceName,
-                        style: TextStyle(
-                          color: Colors.grey.shade700,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    )).toList(),
-                  ),
-                ],
                 if (isCancelled && visit.cancellationReason != null) ...[
                   const SizedBox(height: 12),
                   Container(

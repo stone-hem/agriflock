@@ -45,7 +45,7 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
           children: [
             IconButton(
               onPressed: () {
-                context.go(AppRoutes.dashboard);
+                context.go(AppRoutes.home);
               },
               icon: const Icon(Icons.close),
               style: IconButton.styleFrom(
@@ -224,7 +224,7 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
 
           // Pop the screen with success result
           if (context.mounted) {
-            context.pushReplacement(AppRoutes.farms);
+            context.go(AppRoutes.farms);
           }
         case Failure(response: final response):
           ApiErrorHandler.handle(response);

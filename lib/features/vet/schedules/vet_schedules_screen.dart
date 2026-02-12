@@ -56,7 +56,7 @@ class _VetSchedulesScreenState extends State<VetSchedulesScreen> {
           _isLoadingStats = false;
         });
       },
-      failure: (_, __, ___) {},
+      failure: (_, _, _) {},
     );
   }
 

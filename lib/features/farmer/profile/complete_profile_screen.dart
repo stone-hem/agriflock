@@ -318,7 +318,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         );
 
         // Navigate to quotation
-        context.pushReplacement(AppRoutes.dashboard, extra: 'farmer_quotation');
+        context.go(AppRoutes.quotation);
       } else {
         ApiErrorHandler.handle(response);
       }
@@ -433,7 +433,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
             icon: const Icon(Icons.arrow_back, color: Colors.black54),
             onPressed: () {
               _dismissKeyboard();
-              context.pushReplacement(AppRoutes.dashboard, extra: 'farmer_home');
+              context.go(AppRoutes.home);
             },
           ),
           title: Text(

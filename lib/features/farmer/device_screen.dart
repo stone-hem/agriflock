@@ -81,7 +81,7 @@ class DeviceSetupScreen extends StatelessWidget {
               const SizedBox(height: 8),
               OutlinedButton(
                 onPressed: () {
-                  context.go('/dashboard');
+                  context.go('/home');
                 },
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 56),

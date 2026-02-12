@@ -221,7 +221,7 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
               _buildContinueButton(),
               const SizedBox(height: 8),
               TextButton(
-                onPressed: _isSubscribing ? null : () => context.go('/dashboard'),
+                onPressed: _isSubscribing ? null : () => context.go('/home'),
                 child: Text(
                   'Skip for now',
                   style: TextStyle(color: Colors.grey[600], fontSize: 14),

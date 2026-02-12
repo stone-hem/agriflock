@@ -64,13 +64,13 @@ class FirstLoginUtil {
     final User? user = await secureStorage.getUserData();
 
     if(isVetLogin(user)){
-      return AppRoutes.dashboard;
+      return AppRoutes.vetHome;
     }
 
     if (isFirstLogin(user)) {
       return '/day1/welcome-msg-page';
     }
 
-    return AppRoutes.dashboard;
+    return AppRoutes.home;
   }
 }

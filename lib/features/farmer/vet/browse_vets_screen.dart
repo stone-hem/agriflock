@@ -276,6 +276,7 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+
               // Vet Avatar
               Container(
                 width: 60,
@@ -285,10 +286,23 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
-                  child: Icon(
+                  child: vet.faceSelfieUrl != null
+                      ? ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      vet.faceSelfieUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => const Icon(
+                        Icons.pets,
+                        color: Colors.green,
+                        size: 24,
+                      ),
+                    ),
+                  )
+                      : const Icon(
                     Icons.pets,
                     color: Colors.green,
-                    size: 30,
+                    size: 24,
                   ),
                 ),
               ),
@@ -898,63 +912,6 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-
-                // Filter Chips
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      FilterChip(
-                        label: const Text('Active'),
-                        selected: _selectedStatus == 'active',
-                        onSelected: (selected) {
-                          setState(() {
-                            _selectedStatus = selected ? 'active' : null;
-                          });
-                          _loadAllVets();
-                        },
-                        backgroundColor: Colors.blue.shade50,
-                        selectedColor: Colors.blue,
-                        labelStyle: TextStyle(
-                          color: _selectedStatus == 'active' ? Colors.white : Colors.blue,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                      const SizedBox(width: 8),
-                      FilterChip(
-                        label: const Text('Vet Officer'),
-                        selected: _selectedOfficerType == 'vet',
-                        onSelected: (selected) {
-                          setState(() {
-                            _selectedOfficerType = selected ? 'vet' : null;
-                          });
-                          _loadAllVets();
-                        },
-                        backgroundColor: Colors.purple.shade50,
-                        selectedColor: Colors.purple,
-                        labelStyle: TextStyle(
-                          color: _selectedOfficerType == 'vet' ? Colors.white : Colors.purple,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                      const SizedBox(width: 8),
-                      if (_isLoadingAllVets)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8),
-                          child: SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
 
                 // All Vets Section
                 if (_hasAllVetsError && _allVets.isEmpty)

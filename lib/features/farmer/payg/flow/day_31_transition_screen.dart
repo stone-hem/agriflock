@@ -238,7 +238,7 @@ class Day31TransitionScreen extends StatelessWidget {
                 child: TextButton(
                   onPressed: () {
                     // Continue with limited free access
-                    context.go('/dashboard/free');
+                    context.go('/home');
                   },
                   child: const Text(
                     'Continue with Free Access',

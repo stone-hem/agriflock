@@ -1,5 +1,6 @@
 import 'package:agriflock360/features/vet/schedules/models/visit_model.dart';
 import 'package:agriflock360/features/vet/schedules/repo/visit_repo.dart';
+import 'package:agriflock360/features/vet/schedules/widgets/visit_details_section.dart';
 import 'package:flutter/material.dart';
 
 class PendingVisitCard extends StatefulWidget {
@@ -347,57 +348,11 @@ class _PendingVisitCardState extends State<PendingVisitCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Icon(Icons.calendar_today, size: 16, color: Colors.grey.shade600),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Preferred: ${widget.visit.preferredDate} at ${_formatTime(widget.visit.preferredTime)}',
-                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
-                    ),
-                  ],
+                // Comprehensive visit details
+                VisitDetailsSection(
+                  visit: widget.visit,
+                  accentColor: Colors.orange,
                 ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Icon(Icons.pets, size: 16, color: Colors.grey.shade600),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${widget.visit.birdsCount} birds',
-                      style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
-                    ),
-                    const SizedBox(width: 16),
-                    Icon(Icons.home_work, size: 16, color: Colors.grey.shade600),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${widget.visit.houses.length} house${widget.visit.houses.length > 1 ? 's' : ''}',
-                      style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
-                    ),
-                  ],
-                ),
-                if (widget.visit.serviceCosts.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: widget.visit.serviceCosts.map((service) => Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.blue.shade100),
-                      ),
-                      child: Text(
-                        service.serviceName,
-                        style: TextStyle(
-                          color: Colors.blue.shade700,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    )).toList(),
-                  ),
-                ],
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.all(12),
@@ -453,14 +408,6 @@ class _PendingVisitCardState extends State<PendingVisitCard> {
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '${widget.visit.distanceKm.toStringAsFixed(1)} km away',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 12,
-                  ),
                 ),
                 const SizedBox(height: 8),
                 Row(

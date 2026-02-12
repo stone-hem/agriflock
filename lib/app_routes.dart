@@ -1,4 +1,3 @@
-import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/features/farmer/batch/add_batch_screen.dart';
 import 'package:agriflock360/features/farmer/batch/adopt_schedule_screen.dart';
 import 'package:agriflock360/features/farmer/batch/batch_details_screen.dart';
@@ -18,6 +17,7 @@ import 'package:agriflock360/features/farmer/batch/update_vaccination_status_scr
 import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
 import 'package:agriflock360/features/farmer/farm/view/add_farm_screen.dart';
 import 'package:agriflock360/features/farmer/farm/view/farms_home_screen.dart';
+import 'package:agriflock360/features/farmer/home/view/home_screen.dart';
 import 'package:agriflock360/features/farmer/inventory/inventory_screen.dart';
 import 'package:agriflock360/features/farmer/more/notifications_screen.dart';
 import 'package:agriflock360/features/farmer/more/recent_activity_screen.dart';
@@ -33,10 +33,12 @@ import 'package:agriflock360/features/farmer/profile/complete_profile_screen.dar
 import 'package:agriflock360/features/farmer/profile/congratulations_screen.dart';
 import 'package:agriflock360/features/farmer/profile/help_support_screen.dart';
 import 'package:agriflock360/features/farmer/profile/models/profile_model.dart';
+import 'package:agriflock360/features/farmer/profile/profile_screen.dart';
 import 'package:agriflock360/features/farmer/profile/settings_screen.dart';
 import 'package:agriflock360/features/farmer/profile/telemetry_data_screen.dart';
 import 'package:agriflock360/features/farmer/profile/update_profile_screen.dart';
 import 'package:agriflock360/features/farmer/onboarding/onboarding_setup_screen.dart';
+import 'package:agriflock360/features/farmer/quotation/quotation_screen.dart';
 import 'package:agriflock360/features/farmer/record/quick_record.dart';
 import 'package:agriflock360/features/farmer/home/view/quick_batches_list_screen.dart';
 import 'package:agriflock360/features/farmer/batch/record_mortality_screen.dart';
@@ -52,14 +54,18 @@ import 'package:agriflock360/features/farmer/vet/vet_order_screen.dart';
 import 'package:agriflock360/features/farmer/vet/my_order_tracking_screen.dart';
 import 'package:agriflock360/features/farmer/vet/browse_vets_screen.dart';
 import 'package:agriflock360/features/shared/error_screen.dart';
+import 'package:agriflock360/features/shared/shell_scaffold.dart';
+import 'package:agriflock360/features/vet/home/vet_home_screen.dart';
 import 'package:agriflock360/features/vet/payments/vet_payments_history_screen.dart';
+import 'package:agriflock360/features/vet/payments/vet_payments_screen.dart';
 import 'package:agriflock360/features/vet/payments/vet_service_payments_screen.dart';
+import 'package:agriflock360/features/vet/profile/vet_profile_screen.dart';
+import 'package:agriflock360/features/vet/schedules/vet_schedules_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'core/utils/secure_storage.dart';
 import 'core/utils/shared_prefs.dart';
 
-import 'package:agriflock360/features/shared/dashboard.dart';
 import 'package:agriflock360/features/farmer/device_screen.dart';
 import 'package:agriflock360/features/auth/forgot_password_screen.dart';
 import 'package:agriflock360/features/auth/otp_screen.dart';
@@ -69,6 +75,10 @@ import 'package:agriflock360/features/auth/sign_in_screen.dart';
 import 'package:agriflock360/features/auth/sign_up_screen.dart';
 import 'package:agriflock360/features/auth/vet_verification_pending_screen.dart';
 import 'package:agriflock360/features/auth/welcome_screen.dart';
+
+// Navigator keys for ShellRoute
+final GlobalKey<NavigatorState> _shellNavigatorKey =
+    GlobalKey<NavigatorState>(debugLabel: 'shell');
 
 class AppRoutes {
   // Route paths
@@ -82,7 +92,26 @@ class AppRoutes {
   static const String createFarm = '/create-farm';
   static const String selectFarmType = '/select-farm-type';
   static const String deviceSetup = '/device-setup';
-  static const String dashboard = '/dashboard';
+
+  // Shell tab routes - Farmer
+  static const String home = '/home';
+  static const String farms = '/farms';
+  static const String quotation = '/quotation';
+  static const String browseVets = '/browse-vets';
+  static const String farmerProfile = '/farmer-profile';
+
+  // Shell tab routes - Vet
+  static const String vetHome = '/vet-home';
+  static const String vetSchedules = '/vet-schedules';
+  static const String vetPaymentsTab = '/vet-payments-tab';
+  static const String vetProfile = '/vet-profile';
+
+  // Sub-routes inside shell (rendered full-screen via parentNavigatorKey)
+  static const String farmsAdd = '/farms/add';
+  static const String farmsInventory = '/farms/inventory';
+  static const String farmsInventoryAdd = '/farms/inventory/add';
+
+  // Other routes
   static const String batches = '/batches';
   static const String batchesAdd = '/batches/add';
   static const String batchesList = '/batches/list';
@@ -101,10 +130,6 @@ class AppRoutes {
   static const String help = '/help';
   static const String about = '/about';
   static const String telemetry = '/telemetry';
-  static const String farms = '/farms';
-  static const String farmsAdd = '/farms/add';
-  static const String farmsInventory = '/farms/inventory';
-  static const String farmsInventoryAdd = '/farms/inventory/add';
   static const String activity = '/activity';
   static const String notifications = '/notifications';
   static const String completeProfile = '/complete-profile';
@@ -114,7 +139,17 @@ class AppRoutes {
 
   // Define protected routes that require authentication
   static const List<String> _protectedRoutes = [
-    dashboard,
+    // Shell tab routes
+    home,
+    farms,
+    quotation,
+    browseVets,
+    farmerProfile,
+    vetHome,
+    vetSchedules,
+    vetPaymentsTab,
+    vetProfile,
+    // Other protected routes
     batches,
     batchesAdd,
     batchesList,
@@ -131,7 +166,6 @@ class AppRoutes {
     invoice,
     settings,
     telemetry,
-    farms,
     farmsAdd,
     farmsInventory,
     farmsInventoryAdd,
@@ -158,6 +192,15 @@ class AppRoutes {
     onboardingQuiz,
     congratulations,
   ];
+
+  /// Get role-based home route
+  static Future<String> _getHomeRoute(SecureStorage secureStorage) async {
+    final user = await secureStorage.getUserData();
+    if (user?.role.name.toLowerCase() == 'extension_officer') {
+      return vetHome;
+    }
+    return home;
+  }
 
   static GoRouter createRouter({
     required SecureStorage secureStorage,
@@ -192,18 +235,17 @@ class AppRoutes {
           return login;
         }
 
-        // If logged in and trying to access auth pages
-        // redirect to dashboard
+        // If logged in and trying to access auth pages, redirect to home
         if (isLoggedIn &&
             (currentPath == login ||
                 currentPath == signup ||
                 currentPath == welcome)) {
-          return dashboard;
+          return await _getHomeRoute(secureStorage);
         }
 
         // If logged in and trying to access onboarding again
         if (isLoggedIn && hasCompletedOnboarding && isOnboardingRoute) {
-          return dashboard;
+          return await _getHomeRoute(secureStorage);
         }
 
         // Allow access to password reset flows
@@ -211,6 +253,7 @@ class AppRoutes {
         return null;
       },
       routes: <RouteBase>[
+        // ── Auth routes (outside shell, no bottom bar) ──────────
         GoRoute(
           path: welcome,
           builder: (context, state) => const OnboardingScreen(),
@@ -239,7 +282,6 @@ class AppRoutes {
           builder: (context, state) {
             final email = state.uri.queryParameters['email'];
             final userId = state.uri.queryParameters['userId'];
-
 
             if (email == null || email.isEmpty) {
               return ErrorScreen(message: 'Email parameter is missing');
@@ -278,18 +320,96 @@ class AppRoutes {
           path: deviceSetup,
           builder: (context, state) => const DeviceSetupScreen(),
         ),
-        GoRoute(
-          path: dashboard,
-          builder: (context, state) {
-            final initialTab = state.extra as String?;
-            if(initialTab != null) {
-              LogUtil.warning('In routes $initialTab');
-            }else{
-              LogUtil.warning('initialTab is null in routes');
-            }
-            return MainDashboard(initialTab: initialTab);
-            },
+
+        // ── ShellRoute (shows bottom bar / navigation rail) ─────
+        ShellRoute(
+          navigatorKey: _shellNavigatorKey,
+          builder: (context, state, child) => ShellScaffold(child: child),
+          routes: [
+            // Farmer tab routes
+            GoRoute(
+              path: home,
+              pageBuilder: (context, state) => _fadeTransition(
+                state,
+                const HomeScreen(),
+              ),
+            ),
+            GoRoute(
+              path: farms,
+              pageBuilder: (context, state) => _fadeTransition(
+                state,
+                const FarmsHomeScreen(),
+              ),
+            ),
+            GoRoute(
+              path: quotation,
+              pageBuilder: (context, state) => _fadeTransition(
+                state,
+                const QuotationScreen(),
+              ),
+            ),
+            GoRoute(
+              path: browseVets,
+              pageBuilder: (context, state) => _fadeTransition(
+                state,
+                const BrowseVetsScreen(),
+              ),
+            ),
+            GoRoute(
+              path: farmerProfile,
+              pageBuilder: (context, state) => _fadeTransition(
+                state,
+                const ProfileScreen(),
+              ),
+            ),
+
+            // Vet tab routes
+            GoRoute(
+              path: vetHome,
+              pageBuilder: (context, state) => _fadeTransition(
+                state,
+                const VetHomeScreen(),
+              ),
+            ),
+            GoRoute(
+              path: vetSchedules,
+              pageBuilder: (context, state) => _fadeTransition(
+                state,
+                const VetSchedulesScreen(),
+              ),
+            ),
+            GoRoute(
+              path: vetPaymentsTab,
+              pageBuilder: (context, state) => _fadeTransition(
+                state,
+                const VetPaymentsScreen(),
+              ),
+            ),
+            GoRoute(
+              path: vetProfile,
+              pageBuilder: (context, state) => _fadeTransition(
+                state,
+                const VetProfileScreen(),
+              ),
+            ),
+          ],
         ),
+
+        // ── Sub-routes rendered full-screen (no bottom bar) ─────
+        GoRoute(
+          path: farmsAdd,
+          parentNavigatorKey: navigatorKey,
+          builder: (context, state) => const AddFarmScreen(),
+        ),
+        GoRoute(
+          path: farmsInventory,
+          parentNavigatorKey: navigatorKey,
+          builder: (context, state) {
+            return InventoryScreen();
+          },
+        ),
+
+        // ── Other top-level routes (outside shell, no bottom bar) ─
         GoRoute(
           path: batches,
           builder: (context, state) {
@@ -366,16 +486,19 @@ class AppRoutes {
               builder: (context, state) {
                 final extra = state.extra as Map<String, dynamic>;
                 final batch = extra['batch'] as BatchModel;
-                final schedule= extra['schedule'] as RecommendedVaccinationsResponse;
-                return AdoptScheduleScreen(vaccineSchedule:schedule, batch: batch);
-                },
+                final schedule =
+                    extra['schedule'] as RecommendedVaccinationsResponse;
+                return AdoptScheduleScreen(
+                    vaccineSchedule: schedule, batch: batch);
+              },
             ),
             GoRoute(
               path: 'update-status',
               builder: (context, state) {
                 final extra = state.extra as Map<String, dynamic>;
                 final batch = extra['batch'] as BatchModel;
-                final vaccination = extra['vaccination'] as VaccinationListItem;
+                final vaccination =
+                    extra['vaccination'] as VaccinationListItem;
                 return UpdateVaccinationStatusScreen(
                   batch: batch,
                   vaccination: vaccination,
@@ -394,16 +517,15 @@ class AppRoutes {
         GoRoute(
           path: '/record-expenditure',
           builder: (context, state) {
-
             final farm = state.extra as FarmModel?;
-            return BuyInputsPageView(farm: farm,);
+            return BuyInputsPageView(farm: farm);
           },
         ),
         GoRoute(
           path: '/quick-recording',
           builder: (context, state) {
             final farm = state.extra as FarmModel?;
-            return UseFromStorePageView(farm: farm,);
+            return UseFromStorePageView(farm: farm);
           },
         ),
         GoRoute(
@@ -428,7 +550,7 @@ class AppRoutes {
           path: '/batch-report',
           builder: (context, state) {
             final batchId = state.extra as String;
-            return BatchReportScreen(batchId: batchId,);
+            return BatchReportScreen(batchId: batchId);
           },
         ),
         GoRoute(
@@ -444,14 +566,15 @@ class AppRoutes {
             return FarmReportsScreen(farm: farm);
           },
         ),
-
         GoRoute(
           path: '/my-expenditures',
           builder: (context, state) {
             return ExpendituresScreen();
           },
         ),
-        GoRoute(path: payg, builder: (context, state) => const PAYGDashboard()),
+        GoRoute(
+            path: payg,
+            builder: (context, state) => const PAYGDashboard()),
         GoRoute(
           path: paygPayment,
           builder: (context, state) => const PAYGPaymentScreen(),
@@ -486,20 +609,6 @@ class AppRoutes {
           builder: (context, state) => const TelemetryDataScreen(),
         ),
         GoRoute(
-          path: farms,
-          builder: (context, state) => const FarmsHomeScreen(),
-        ),
-        GoRoute(
-          path: farmsAdd,
-          builder: (context, state) => const AddFarmScreen(),
-        ),
-        GoRoute(
-          path: farmsInventory,
-          builder: (context, state) {
-            return InventoryScreen();
-          },
-        ),
-        GoRoute(
           path: activity,
           builder: (context, state) => const RecentActivityScreen(),
         ),
@@ -508,12 +617,11 @@ class AppRoutes {
           builder: (context, state) => const NotificationsScreen(),
         ),
         GoRoute(
-          path: completeProfile,
-          builder: (context, state) {
-            final extra = state.extra as ProfileData?;
-            return CompleteProfileScreen(profileData: extra);
-          }
-        ),
+            path: completeProfile,
+            builder: (context, state) {
+              final extra = state.extra as ProfileData?;
+              return CompleteProfileScreen(profileData: extra);
+            }),
         GoRoute(
           path: '/update-profile',
           builder: (context, state) => const UpdateProfileScreen(),
@@ -523,18 +631,12 @@ class AppRoutes {
           builder: (context, state) => const CongratulationsScreen(),
         ),
         GoRoute(
-          path: '/vets',
-          builder: (context, state) => const BrowseVetsScreen(),
-        ),
-
-        GoRoute(
           path: '/my-order-tracking',
           builder: (context, state) {
             final order = state.extra as MyOrderListItem;
             return MyOrderTrackingScreen(order: order);
           },
         ),
-
         GoRoute(
           path: '/vet-details',
           builder: (context, state) {
@@ -542,7 +644,6 @@ class AppRoutes {
             return VetDetailsScreen(vetId: id);
           },
         ),
-
         GoRoute(
           path: '/my-vet-orders',
           builder: (context, state) {
@@ -555,7 +656,6 @@ class AppRoutes {
             return CompletedOrdersScreen();
           },
         ),
-
         GoRoute(
           path: vetOrderDetails,
           builder: (context, state) {
@@ -563,12 +663,11 @@ class AppRoutes {
             if (vet is! VetFarmer) {
               return const ErrorScreen(
                 message: 'Could Not load the vet',
-              ); // or redirect
+              );
             }
             return VetOrderScreen(vet: vet);
           },
         ),
-
         GoRoute(
           path: '/welcome-day1',
           builder: (context, state) => const Day1WelcomeScreen(),
@@ -588,13 +687,12 @@ class AppRoutes {
             },
           ),
         ),
-
         GoRoute(
           path: '/plans',
           builder: (context, state) => const PlansPreviewScreen(),
         ),
 
-        //vet
+        // Vet payment routes (outside shell)
         GoRoute(
           path: '/vet/payments/history',
           builder: (context, state) => const VetPaymentsHistoryScreen(),
@@ -627,4 +725,16 @@ class AppRoutes {
     final hasSeenWelcome = SharedPrefs.getBool('hasSeenWelcome') ?? false;
     return hasSeenWelcome ? login : welcome;
   }
+}
+
+// ── Transition helpers ──────────────────────────────────────────
+
+Page<void> _fadeTransition(GoRouterState state, Widget child) {
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      return FadeTransition(opacity: animation, child: child);
+    },
+  );
 }

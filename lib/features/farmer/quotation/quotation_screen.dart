@@ -381,8 +381,7 @@ class _QuotationScreenState extends State<QuotationScreen>
                 width: double.infinity,
                 child: OutlinedButton(
                   onPressed: () {
-                    context.pushReplacement(AppRoutes.dashboard,
-                        extra: 'farmer_home');
+                    context.go(AppRoutes.home);
                   },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.grey.shade700,

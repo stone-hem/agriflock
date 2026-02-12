@@ -1100,7 +1100,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => context.go('/dashboard', extra: 'farmer_farms'),
+                onPressed: () => context.go('/farms'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
                   foregroundColor: Colors.white,
@@ -1205,7 +1205,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
   Widget _buildSkipButton() {
     return Center(
       child: TextButton(
-        onPressed: _isSubmitting ? null : () => context.go('/dashboard'),
+        onPressed: _isSubmitting ? null : () => context.go('/home'),
         child: Text(
           'Skip setup for now',
           style: TextStyle(color: Colors.grey.shade600, fontSize: 14),

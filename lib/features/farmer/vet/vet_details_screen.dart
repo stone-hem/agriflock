@@ -533,6 +533,18 @@ class _VetDetailsScreenState extends State<VetDetailsScreen> {
                                   ? _vet!.officerType[0].toUpperCase() + _vet!.officerType.substring(1).replaceAll('_', ' ')
                                   : 'Not specified',
                             ),
+                            if (_vet!.age > 0)
+                              _buildInfoCard(
+                                icon: Icons.cake_outlined,
+                                label: 'Age',
+                                value: '${_vet!.age} years',
+                              ),
+                            if (_vet!.gender.isNotEmpty)
+                              _buildInfoCard(
+                                icon: Icons.person_outline,
+                                label: 'Gender',
+                                value: _vet!.gender[0].toUpperCase() + _vet!.gender.substring(1),
+                              ),
                             _buildInfoCard(
                               icon: Icons.military_tech,
                               label: 'Tier',

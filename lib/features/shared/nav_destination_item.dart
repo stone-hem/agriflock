@@ -53,12 +53,12 @@ class NavConfig {
   final IconData icon;
   final IconData selectedIcon;
   final String label;
-  final Widget screen;
+  final String route;
 
   const NavConfig({
     required this.icon,
     required this.selectedIcon,
     required this.label,
-    required this.screen,
+    required this.route,
   });
 }

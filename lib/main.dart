@@ -6,6 +6,7 @@ import 'package:agriflock360/core/utils/shared_prefs.dart';
 import 'package:agriflock360/app_routes.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'firebase_options.dart';
 
 // Create global instances
@@ -60,8 +61,18 @@ void main() async {
   }
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late final GoRouter _router = AppRoutes.createRouter(
+    secureStorage: secureStorage,
+    navigatorKey: navigatorKey,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -75,10 +86,7 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      routerConfig: AppRoutes.createRouter(
-        secureStorage: secureStorage,
-        navigatorKey: navigatorKey,
-      ),
+      routerConfig: _router,
     );
   }
 }

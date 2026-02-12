@@ -587,7 +587,7 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
   }
 
   void _handlePlanSelection(ActivePlan plan) {
-    context.go('/dashboard/plan', extra: {
+    context.go('/home', extra: {
       'plan': plan.planType.toLowerCase(),
       'planId': plan.id,
       'amount': plan.priceAmount,
@@ -613,7 +613,7 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
-              context.go('/dashboard/trial', extra: {
+              context.go('/home', extra: {
                 'plan': plan.planType.toLowerCase(),
                 'planId': plan.id,
                 'days': plan.features.trialPeriodDays,

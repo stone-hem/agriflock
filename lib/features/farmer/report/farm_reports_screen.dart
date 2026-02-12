@@ -179,6 +179,7 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
       context: context,
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
+      initialEntryMode: DatePickerEntryMode.input,
       initialDateRange: DateTimeRange(start: _startDate, end: _endDate),
       builder: (context, child) {
         return Theme(
@@ -214,22 +215,7 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
     return DateUtil.toDDMMYYYY(date);
   }
 
-  String _getPeriodLabel(String period) {
-    switch (period) {
-      case 'daily':
-        return 'Daily';
-      case 'weekly':
-        return 'Weekly';
-      case 'monthly':
-        return 'Monthly';
-      case 'yearly':
-        return 'Yearly';
-      case 'all_time':
-        return 'All Time';
-      default:
-        return 'Daily';
-    }
-  }
+
 
   FinancialPeriodStats _getSelectedFinancialStats() {
     if (_financialData == null) {
@@ -316,52 +302,40 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
         Container(
           color: Colors.white,
           child: Column(
+            crossAxisAlignment: .start,
             children: [
               const SizedBox(height: 12),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+              Align(
+                alignment: .topRight,
+                child: FilledButton.icon(
+                  onPressed: _showDateRangePicker,
+                  icon: const Icon(Icons.edit_calendar, size: 20),
+                  style: IconButton.styleFrom(
+                    padding: const EdgeInsets.all(8),
+                    minimumSize: const Size(36, 36),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ), label: Text('Select Date range'),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                margin: EdgeInsets.only(left: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
-                      'Period',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.date_range, size: 16, color: Colors.grey.shade700),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${_formatDateShort(_startDate)} - ${_formatDateShort(_endDate)}',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    Icon(Icons.date_range, size: 16, color: Colors.grey.shade700),
                     const SizedBox(width: 8),
-                    IconButton(
-                      onPressed: _showDateRangePicker,
-                      icon: const Icon(Icons.edit_calendar, size: 20),
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.grey.shade100,
-                        padding: const EdgeInsets.all(8),
-                        minimumSize: const Size(36, 36),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    Text(
+                      'Period ${DateUtil.toShortDateWithDay(_startDate)} - ${DateUtil.toShortDateWithDay(_endDate)}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
@@ -494,7 +468,7 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
                         const Icon(Icons.calendar_today, size: 14, color: Colors.white),
                         const SizedBox(width: 8),
                         Text(
-                          _formatDate(reportDate),
+                          DateUtil.toShortDateWithDay(reportDate),
                           style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,

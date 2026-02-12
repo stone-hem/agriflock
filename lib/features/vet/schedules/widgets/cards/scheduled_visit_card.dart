@@ -1,6 +1,7 @@
 import 'package:agriflock360/core/utils/date_util.dart';
 import 'package:agriflock360/features/vet/schedules/models/visit_model.dart';
 import 'package:agriflock360/features/vet/schedules/repo/visit_repo.dart';
+import 'package:agriflock360/features/vet/schedules/widgets/visit_details_section.dart';
 import 'package:flutter/material.dart';
 
 class ScheduledVisitCard extends StatefulWidget {
@@ -332,80 +333,10 @@ class _ScheduledVisitCardState extends State<ScheduledVisitCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Icon(Icons.pets, size: 16, color: Colors.grey.shade600),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${widget.visit.birdsCount} birds',
-                      style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
-                    ),
-                    const SizedBox(width: 16),
-                    Icon(Icons.home_work, size: 16, color: Colors.grey.shade600),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${widget.visit.houses.length} house${widget.visit.houses.length > 1 ? 's' : ''}',
-                      style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
-                    ),
-                  ],
-                ),
-                if (widget.visit.serviceCosts.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: widget.visit.serviceCosts.map((service) => Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.blue.shade100),
-                      ),
-                      child: Text(
-                        service.serviceName,
-                        style: TextStyle(
-                          color: Colors.blue.shade700,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    )).toList(),
-                  ),
-                ],
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.blue.shade100),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.calendar_today, size: 18, color: Colors.blue.shade700),
-                      const SizedBox(width: 8),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Scheduled Visit',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '${widget.visit.preferredDate} at ${_formatTime(widget.visit.preferredTime)}',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: Colors.blue.shade700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                // Comprehensive visit details
+                VisitDetailsSection(
+                  visit: widget.visit,
+                  accentColor: Colors.blue,
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -418,14 +349,6 @@ class _ScheduledVisitCardState extends State<ScheduledVisitCard> {
                         color: Colors.green.shade700,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      '${widget.visit.distanceKm.toStringAsFixed(1)} km',
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 12,
                       ),
                     ),
                   ],
