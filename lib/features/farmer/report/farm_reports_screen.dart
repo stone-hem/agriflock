@@ -3,10 +3,9 @@ import 'package:agriflock360/core/utils/date_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:agriflock360/core/widgets/expense/expense_marquee_banner.dart';
-import 'package:agriflock360/features/farmer/batch/model/batch_mgt_model.dart';
-import 'package:agriflock360/features/farmer/batch/repo/batch_mgt_repo.dart';
 import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
 import 'package:agriflock360/features/farmer/report/models/farm_batch_report_model.dart';
+import 'package:agriflock360/features/farmer/report/models/farm_financial_stats_model.dart';
 import 'package:agriflock360/features/farmer/report/repo/report_repo.dart';
 import 'package:flutter/material.dart';
 
@@ -40,11 +39,9 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
   String _currency = 'KES';
 
   // Financial report state
-  final BatchMgtRepository _batchMgtRepository = BatchMgtRepository();
-  BatchMgtResponse? _financialData;
+  FarmFinancialStats? _financialStats;
   bool _isLoadingFinancial = false;
   String? _financialError;
-  String _selectedFinancialPeriod = 'today';
 
   // Default filter values
   late DateTime _startDate;
@@ -139,18 +136,25 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
     });
 
     try {
-      final result = await _batchMgtRepository.getFarmFinancialStats(_selectedFarm.id);
+      final startDate = DateTime.parse(_startDateController.text);
+      final endDate = DateTime.parse(_endDateController.text);
+
+      final result = await _reportRepository.getFarmFinancialStats(
+        farmId: _selectedFarm.id,
+        startDate: startDate,
+        endDate: endDate,
+      );
 
       if (!mounted) return;
 
       switch (result) {
-        case Success<BatchMgtResponse>(data: final data):
+        case Success<FarmFinancialStatsResponse>(data: final data):
           setState(() {
-            _financialData = data;
+            _financialStats = data.data;
             _isLoadingFinancial = false;
           });
           break;
-        case Failure<BatchMgtResponse>(message: final message):
+        case Failure<FarmFinancialStatsResponse>(message: final message):
           setState(() {
             _financialError = message;
             _isLoadingFinancial = false;
@@ -204,6 +208,7 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
         _endDateController.text = _endDate.toIso8601String().split('T').first;
       });
       _loadReport();
+      _loadFinancialData();
     }
   }
 
@@ -217,49 +222,6 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
 
 
 
-  FinancialPeriodStats _getSelectedFinancialStats() {
-    if (_financialData == null) {
-      return const FinancialPeriodStats(
-        feedingCost: 0,
-        vaccinationCost: 0,
-        inventoryCost: 0,
-        totalExpenditure: 0,
-        productIncome: 0,
-        netProfit: 0,
-      );
-    }
-    switch (_selectedFinancialPeriod) {
-      case 'today':
-        return _financialData!.financialStats.today;
-      case 'weekly':
-        return _financialData!.financialStats.weekly;
-      case 'monthly':
-        return _financialData!.financialStats.monthly;
-      case 'yearly':
-        return _financialData!.financialStats.yearly;
-      case 'all_time':
-        return _financialData!.financialStats.allTime;
-      default:
-        return _financialData!.financialStats.today;
-    }
-  }
-
-  String _getFinancialPeriodLabel(String period) {
-    switch (period) {
-      case 'today':
-        return 'Today';
-      case 'weekly':
-        return 'This Week';
-      case 'monthly':
-        return 'This Month';
-      case 'yearly':
-        return 'This Year';
-      case 'all_time':
-        return 'All Time';
-      default:
-        return 'Today';
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -1008,9 +970,11 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
       );
     }
 
-    if (_financialData == null) {
+    if (_financialStats == null) {
       return const Center(child: Text('No financial data available'));
     }
+
+    final stats = _financialStats!;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -1021,28 +985,34 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
             'Financial Overview',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
 
-          // Period Selection Buttons
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
+          // Date range label
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                _buildFinancialPeriodButton('today', 'Today'),
+                Icon(Icons.date_range, size: 16, color: Colors.grey.shade700),
                 const SizedBox(width: 8),
-                _buildFinancialPeriodButton('weekly', 'Week'),
-                const SizedBox(width: 8),
-                _buildFinancialPeriodButton('monthly', 'Month'),
-                const SizedBox(width: 8),
-                _buildFinancialPeriodButton('yearly', 'Year'),
-                const SizedBox(width: 8),
-                _buildFinancialPeriodButton('all_time', 'All Time'),
+                Text(
+                  '${DateUtil.toShortDateWithDay(_startDate)} - ${DateUtil.toShortDateWithDay(_endDate)}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
           ),
           const SizedBox(height: 16),
 
-          // Selected Period Stats Card
+          // Net Profit/Loss Header
           Card(
             elevation: 0,
             shape: RoundedRectangleBorder(
@@ -1053,37 +1023,34 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  // Period Header with net profit/loss
                   Row(
                     children: [
-                      Icon(
-                        _getFinancialPeriodIcon(_selectedFinancialPeriod),
-                        size: 24,
-                        color: _getFinancialPeriodColor(_selectedFinancialPeriod),
-                      ),
+                      Icon(Icons.account_balance_wallet,
+                          size: 24, color: Colors.blue.shade700),
                       const SizedBox(width: 12),
-                      Text(
-                        _getFinancialPeriodLabel(_selectedFinancialPeriod),
-                        style: const TextStyle(
+                      const Text(
+                        'Summary',
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       const Spacer(),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: _getSelectedFinancialStats().netProfit >= 0
+                          color: stats.netProfit >= 0
                               ? Colors.green.withOpacity(0.1)
                               : Colors.red.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          _getSelectedFinancialStats().netProfit >= 0
-                              ? 'Profit: $_currency ${_getSelectedFinancialStats().netProfit.toStringAsFixed(2)}'
-                              : 'Loss: $_currency ${_getSelectedFinancialStats().netProfit.abs().toStringAsFixed(2)}',
+                          stats.netProfit >= 0
+                              ? 'Profit: $_currency ${stats.netProfit.toStringAsFixed(2)}'
+                              : 'Loss: $_currency ${stats.netProfit.abs().toStringAsFixed(2)}',
                           style: TextStyle(
-                            color: _getSelectedFinancialStats().netProfit >= 0
+                            color: stats.netProfit >= 0
                                 ? Colors.green
                                 : Colors.red,
                             fontWeight: FontWeight.w600,
@@ -1092,14 +1059,33 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-
-                  // Cost Breakdown
-                  _buildFinancialCostBreakdown(),
+                  if (stats.profitMargin != 0) ...[
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        'Margin: ${stats.profitMargin.toStringAsFixed(1)}%',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 16),
 
                   // Income vs Expenditure Summary
-                  _buildFinancialIncomeExpenditureSummary(),
+                  _buildFinancialIncomeExpenditureSummary(stats),
+
+                  const SizedBox(height: 16),
+
+                  // Cost Breakdown
+                  _buildFinancialCostBreakdown(stats),
+
+                  const SizedBox(height: 16),
+
+                  // Income Breakdown
+                  _buildFinancialIncomeBreakdown(stats),
                 ],
               ),
             ),
@@ -1109,36 +1095,7 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
     );
   }
 
-  Widget _buildFinancialPeriodButton(String period, String label) {
-    final isSelected = _selectedFinancialPeriod == period;
-    return OutlinedButton(
-      onPressed: () {
-        setState(() {
-          _selectedFinancialPeriod = period;
-        });
-      },
-      style: OutlinedButton.styleFrom(
-        backgroundColor: isSelected
-            ? _getFinancialPeriodColor(period).withOpacity(0.1)
-            : Colors.transparent,
-        foregroundColor: isSelected
-            ? _getFinancialPeriodColor(period)
-            : Colors.grey.shade600,
-        side: BorderSide(
-          color: isSelected
-              ? _getFinancialPeriodColor(period)
-              : Colors.grey.shade300,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-      child: Text(label),
-    );
-  }
-
-  Widget _buildFinancialCostBreakdown() {
-    final stats = _getSelectedFinancialStats();
+  Widget _buildFinancialCostBreakdown(FarmFinancialStats stats) {
     final totalExpenditure = stats.totalExpenditure;
 
     if (totalExpenditure == 0) {
@@ -1148,6 +1105,23 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
       );
     }
 
+    final costItems = <_CostEntry>[
+      if (stats.feedCost > 0)
+        _CostEntry('Feed Cost', stats.feedCost, Colors.orange),
+      if (stats.medicationCost > 0)
+        _CostEntry('Medication Cost', stats.medicationCost, Colors.purple),
+      if (stats.vaccineCost > 0)
+        _CostEntry('Vaccine Cost', stats.vaccineCost, Colors.teal),
+      if (stats.laborCost > 0)
+        _CostEntry('Labor Cost', stats.laborCost, Colors.blue),
+      if (stats.utilitiesCost > 0)
+        _CostEntry('Utilities Cost', stats.utilitiesCost, Colors.indigo),
+      if (stats.equipmentCost > 0)
+        _CostEntry('Equipment Cost', stats.equipmentCost, Colors.brown),
+      if (stats.otherCosts > 0)
+        _CostEntry('Other Costs', stats.otherCosts, Colors.grey),
+    ];
+
     return ExpansionTile(
       title: const Text(
         'Cost Breakdown',
@@ -1156,30 +1130,14 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
       initiallyExpanded: true,
       children: [
         const SizedBox(height: 8),
-        _buildFinancialCostItemRow(
-          label: 'Feeding Cost',
-          amount: stats.feedingCost,
-          percentage: totalExpenditure > 0
-              ? (stats.feedingCost / totalExpenditure * 100)
-              : 0,
-          color: Colors.orange,
-        ),
-        _buildFinancialCostItemRow(
-          label: 'Vaccination Cost',
-          amount: stats.vaccinationCost,
-          percentage: totalExpenditure > 0
-              ? (stats.vaccinationCost / totalExpenditure * 100)
-              : 0,
-          color: Colors.purple,
-        ),
-        _buildFinancialCostItemRow(
-          label: 'Inventory Cost',
-          amount: stats.inventoryCost,
-          percentage: totalExpenditure > 0
-              ? (stats.inventoryCost / totalExpenditure * 100)
-              : 0,
-          color: Colors.blue,
-        ),
+        ...costItems.map((item) => _buildFinancialCostItemRow(
+              label: item.label,
+              amount: item.amount,
+              percentage: totalExpenditure > 0
+                  ? (item.amount / totalExpenditure * 100)
+                  : 0,
+              color: item.color,
+            )),
         const Divider(height: 24),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1193,6 +1151,64 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
               style: const TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFinancialIncomeBreakdown(FarmFinancialStats stats) {
+    final totalIncome = stats.totalIncome;
+
+    if (totalIncome == 0) {
+      return const Text(
+        'No income recorded for this period',
+        style: TextStyle(color: Colors.grey),
+      );
+    }
+
+    final incomeItems = <_CostEntry>[
+      if (stats.eggIncome > 0)
+        _CostEntry('Egg Income', stats.eggIncome, Colors.amber),
+      if (stats.meatIncome > 0)
+        _CostEntry('Meat Income', stats.meatIncome, Colors.red),
+      if (stats.productIncome > 0)
+        _CostEntry('Product Income', stats.productIncome, Colors.green),
+      if (stats.otherIncome > 0)
+        _CostEntry('Other Income', stats.otherIncome, Colors.blueGrey),
+    ];
+
+    return ExpansionTile(
+      title: const Text(
+        'Income Breakdown',
+        style: TextStyle(fontWeight: FontWeight.w600),
+      ),
+      initiallyExpanded: true,
+      children: [
+        const SizedBox(height: 8),
+        ...incomeItems.map((item) => _buildFinancialCostItemRow(
+              label: item.label,
+              amount: item.amount,
+              percentage:
+                  totalIncome > 0 ? (item.amount / totalIncome * 100) : 0,
+              color: item.color,
+            )),
+        const Divider(height: 24),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Total Income',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            Text(
+              '$_currency ${totalIncome.toStringAsFixed(2)}',
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+                color: Colors.green,
               ),
             ),
           ],
@@ -1227,10 +1243,12 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+                    Text(label,
+                        style: const TextStyle(fontWeight: FontWeight.w500)),
                     Text(
                       '$_currency ${amount.toStringAsFixed(2)}',
-                      style: TextStyle(fontWeight: FontWeight.w600, color: color),
+                      style:
+                          TextStyle(fontWeight: FontWeight.w600, color: color),
                     ),
                   ],
                 ),
@@ -1243,7 +1261,7 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${percentage.toStringAsFixed(1)}% of total expenditure',
+                  '${percentage.toStringAsFixed(1)}%',
                   style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
               ],
@@ -1254,9 +1272,7 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
     );
   }
 
-  Widget _buildFinancialIncomeExpenditureSummary() {
-    final stats = _getSelectedFinancialStats();
-
+  Widget _buildFinancialIncomeExpenditureSummary(FarmFinancialStats stats) {
     return Card(
       elevation: 0,
       color: Colors.grey.shade50,
@@ -1273,7 +1289,8 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
               children: [
                 _buildFinancialSummaryItem(
                   label: 'Income',
-                  value: '$_currency ${stats.productIncome.toStringAsFixed(2)}',
+                  value:
+                      '$_currency ${stats.totalIncome.toStringAsFixed(2)}',
                   icon: Icons.arrow_upward,
                   color: Colors.green,
                 ),
@@ -1284,7 +1301,8 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
                 ),
                 _buildFinancialSummaryItem(
                   label: 'Expenditure',
-                  value: '$_currency ${stats.totalExpenditure.toStringAsFixed(2)}',
+                  value:
+                      '$_currency ${stats.totalExpenditure.toStringAsFixed(2)}',
                   icon: Icons.arrow_downward,
                   color: Colors.red,
                 ),
@@ -1295,7 +1313,9 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  stats.netProfit >= 0 ? Icons.trending_up : Icons.trending_down,
+                  stats.netProfit >= 0
+                      ? Icons.trending_up
+                      : Icons.trending_down,
                   size: 20,
                   color: stats.netProfit >= 0 ? Colors.green : Colors.red,
                 ),
@@ -1344,40 +1364,6 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
     );
   }
 
-  IconData _getFinancialPeriodIcon(String period) {
-    switch (period) {
-      case 'today':
-        return Icons.today;
-      case 'weekly':
-        return Icons.date_range;
-      case 'monthly':
-        return Icons.calendar_month;
-      case 'yearly':
-        return Icons.calendar_today;
-      case 'all_time':
-        return Icons.history;
-      default:
-        return Icons.today;
-    }
-  }
-
-  Color _getFinancialPeriodColor(String period) {
-    switch (period) {
-      case 'today':
-        return Colors.blue;
-      case 'weekly':
-        return Colors.purple;
-      case 'monthly':
-        return Colors.green;
-      case 'yearly':
-        return Colors.orange;
-      case 'all_time':
-        return Colors.indigo;
-      default:
-        return Colors.blue;
-    }
-  }
-
   @override
   void dispose() {
     _tabController.dispose();
@@ -1385,4 +1371,12 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
     _endDateController.dispose();
     super.dispose();
   }
+}
+
+class _CostEntry {
+  final String label;
+  final double amount;
+  final Color color;
+
+  const _CostEntry(this.label, this.amount, this.color);
 }

@@ -4,6 +4,7 @@ import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/features/farmer/report/models/batch_report_model.dart';
 import 'package:agriflock360/features/farmer/report/models/farm_batch_report_model.dart';
+import 'package:agriflock360/features/farmer/report/models/farm_financial_stats_model.dart';
 import 'package:agriflock360/main.dart';
 import 'package:http/http.dart' as http;
 
@@ -124,4 +125,62 @@ class ReportRepository {
     }
   }
 
+  /// Get farm financial stats
+  /// {{base_url}}/financials/stats?farm_id=:farmId&start_date=2026-02-01&end_date=2026-02-11
+  Future<Result<FarmFinancialStatsResponse>> getFarmFinancialStats({
+    required String farmId,
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    try {
+      final queryParams = {
+        'farm_id': farmId,
+        'start_date': startDate.toIso8601String().split('T').first,
+        'end_date': endDate.toIso8601String().split('T').first,
+      };
+
+      LogUtil.info(
+          'Fetching farm financial stats for farm: $farmId with params: $queryParams');
+
+      final response = await apiClient.get(
+        '/financials/stats',
+        queryParameters: queryParams,
+      );
+
+      final jsonResponse = jsonDecode(response.body);
+      LogUtil.info(
+          'Farm Financial Stats API Response Status: ${response.statusCode}');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final statsResponse =
+            FarmFinancialStatsResponse.fromJson(jsonResponse);
+        return Success(statsResponse);
+      } else {
+        return Failure(
+          message:
+              jsonResponse['message'] ?? 'Failed to fetch financial stats',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in getFarmFinancialStats: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
+    } catch (e) {
+      LogUtil.error('Error in getFarmFinancialStats: $e');
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to fetch financial stats',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+
+      return Failure(message: e.toString());
+    }
+  }
 }
