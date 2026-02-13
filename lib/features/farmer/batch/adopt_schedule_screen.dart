@@ -48,7 +48,6 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
     final selectedCount = _selectedItems.values.where((v) => v).length;
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: Text('Select items to adopt - ${widget.batch.batchName}'),
         centerTitle: false,

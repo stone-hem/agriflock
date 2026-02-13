@@ -191,7 +191,6 @@ class _VetPaymentsHistoryScreenState extends State<VetPaymentsHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: const Text('Payment History'),
         centerTitle: true,

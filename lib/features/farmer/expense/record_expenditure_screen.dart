@@ -874,7 +874,6 @@ class _RecordExpenditureScreenState extends State<RecordExpenditureScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: const Text('Record Expenditure'),
         backgroundColor: Colors.transparent,

@@ -222,7 +222,6 @@ class _BatchFeedTabState extends State<BatchFeedTab> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       body: RefreshIndicator(
         onRefresh: () async {
           await _loadDashboard();

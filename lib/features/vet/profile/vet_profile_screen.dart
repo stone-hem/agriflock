@@ -83,7 +83,6 @@ class _VetProfileScreenState extends State<VetProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: Row(
           children: [

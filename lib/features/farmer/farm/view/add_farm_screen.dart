@@ -38,7 +38,6 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title:Row(
           mainAxisAlignment: .spaceBetween,

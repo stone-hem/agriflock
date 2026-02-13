@@ -672,7 +672,6 @@ class _MyVetOrdersScreenState extends State<MyVetOrdersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: const Text('My Vet Orders'),
       ),

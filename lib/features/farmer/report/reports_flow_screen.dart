@@ -141,7 +141,6 @@ class _ReportsFlowScreenState extends State<ReportsFlowScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: Text(_getPageTitle()),
         backgroundColor: Colors.transparent,

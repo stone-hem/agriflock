@@ -144,7 +144,6 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
     final availableCapacity = totalCapacity - currentBirds + widget.batch.birdsAlive;
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: Text('Edit Batch - ${widget.farm.farmName}'),
         centerTitle: false,

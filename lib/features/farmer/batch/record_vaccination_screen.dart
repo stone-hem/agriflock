@@ -305,7 +305,6 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: Text(_pageTitle),
         centerTitle: false,

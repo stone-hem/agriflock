@@ -232,7 +232,6 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
     return PopScope(
       canPop: !_isSubmitting,
       child: Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: Text(_getPageTitle()),
         backgroundColor: Colors.transparent,

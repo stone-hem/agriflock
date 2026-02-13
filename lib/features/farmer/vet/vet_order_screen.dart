@@ -868,7 +868,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: const Text('Book Veterinary Service'),
         centerTitle: false,

@@ -183,7 +183,6 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: Text(_currentPage == 0 ? 'Select Feed' : 'Log Feeding'),
         centerTitle: false,

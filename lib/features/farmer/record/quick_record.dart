@@ -259,7 +259,6 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
     return PopScope(
       canPop: !_isSubmitting,
       child: Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: Text(_getPageTitle()),
         backgroundColor: Colors.transparent,

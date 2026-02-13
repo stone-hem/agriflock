@@ -851,7 +851,6 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: Row(
           children: [

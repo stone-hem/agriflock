@@ -76,7 +76,6 @@ class _TelemetryDataScreenState extends State<TelemetryDataScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title:Row(
           children: [

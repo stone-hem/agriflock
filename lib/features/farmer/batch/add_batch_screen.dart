@@ -179,7 +179,6 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: Text('Add New Batch - ${widget.farm.farmName}'),
         centerTitle: false,

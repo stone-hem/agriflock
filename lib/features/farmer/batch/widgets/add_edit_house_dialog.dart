@@ -83,7 +83,6 @@ class _AddEditHouseDialogState extends State<AddEditHouseDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: Colors.grey.shade50,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),

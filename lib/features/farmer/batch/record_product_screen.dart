@@ -221,7 +221,6 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
     final batchName = widget.batch?['name'] ?? 'Batch #${widget.batchId}';
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: Row(
           children: [

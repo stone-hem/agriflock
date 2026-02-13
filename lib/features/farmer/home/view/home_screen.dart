@@ -261,7 +261,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
           if (mounted) {
             context.push(
-              '/day-31-transition',
+              '/transition-day31',
               extra: {
                 'recommendedPlan': 'Starter Plan',
                 'planDetails': planDetails,
@@ -409,7 +409,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: Row(
           children: [

@@ -168,7 +168,6 @@ class _BatchProductsTabState extends State<BatchProductsTab> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       body: RefreshIndicator(
         onRefresh: _onRefresh,
         child: SingleChildScrollView(

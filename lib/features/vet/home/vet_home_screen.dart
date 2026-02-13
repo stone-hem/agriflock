@@ -222,7 +222,6 @@ class _VetHomeScreenState extends State<VetHomeScreen> {
 
     if (_errorMessage.isNotEmpty && _dashboardStats == null) {
       return Scaffold(
-        backgroundColor: Colors.grey.shade50,
         body: _errorCond == 'unverified_vet'
             ? VetUnverifiedBanner(onRefresh: _loadDashboardData)
             : Center(
@@ -252,7 +251,6 @@ class _VetHomeScreenState extends State<VetHomeScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: Row(
           children: [

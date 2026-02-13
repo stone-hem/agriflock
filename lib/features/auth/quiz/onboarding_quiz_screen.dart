@@ -73,7 +73,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
 
   // Colors
   static const Color primaryGreen = Colors.green;
-  static const Color backgroundColor = Color(0xFFF8F9FA);
 
   // Step configurations
   // Farmer steps: Role -> Farm Details -> Location -> Congratulations (4 steps)
@@ -474,7 +473,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     final bool keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
 
     return Scaffold(
-      backgroundColor: backgroundColor,
       appBar: _buildAppBar(),
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),

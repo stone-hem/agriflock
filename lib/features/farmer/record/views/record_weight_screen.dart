@@ -67,7 +67,6 @@ class _RecordWeightScreenState extends State<RecordWeightScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: const Text('Record Weight'),
         centerTitle: false,

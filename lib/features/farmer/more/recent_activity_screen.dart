@@ -234,7 +234,6 @@ class _RecentActivityScreenState extends State<RecentActivityScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: Row(
           children: [

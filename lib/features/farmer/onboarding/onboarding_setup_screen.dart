@@ -393,7 +393,6 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
     return PopScope(
       canPop: !_isSubmitting,
       child: Scaffold(
-        backgroundColor: Colors.grey.shade50,
         appBar: _currentPage == 3
             ? null
             : AppBar(

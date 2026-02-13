@@ -230,7 +230,6 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
@@ -835,6 +834,33 @@ class _CompletedVaccinationItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Determine status color and icon
+    Color statusColor;
+    IconData statusIcon;
+    String statusText;
+
+    switch (vaccination.status) {
+      case 'completed':
+        statusColor = Colors.green;
+        statusIcon = Icons.check_circle;
+        statusText = 'Completed';
+        break;
+      case 'cancelled':
+        statusColor = Colors.orange;
+        statusIcon = Icons.cancel;
+        statusText = 'Cancelled';
+        break;
+      case 'failed':
+        statusColor = Colors.red;
+        statusIcon = Icons.error;
+        statusText = 'Failed';
+        break;
+      default:
+        statusColor = Colors.grey;
+        statusIcon = Icons.help;
+        statusText = 'Unknown';
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -847,17 +873,18 @@ class _CompletedVaccinationItem extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
+                  color: statusColor.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.check_circle,
+                child: Icon(
+                  statusIcon,
                   size: 18,
-                  color: Colors.green,
+                  color: statusColor,
                 ),
               ),
               const SizedBox(width: 12),
@@ -869,53 +896,129 @@ class _CompletedVaccinationItem extends StatelessWidget {
                       vaccination.vaccineName,
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
+                        fontSize: 16,
                       ),
                     ),
+                    const SizedBox(height: 4),
                     Text(
                       vaccination.dosagePerBird,
                       style: TextStyle(
                         color: Colors.grey.shade600,
-                        fontSize: 12,
+                        fontSize: 13,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    if(vaccination.completedDate != null)
-                    Text(
-                      'Completed: ${DateUtil.toDateWithDay(vaccination.completedDate!)}',
-                      style: TextStyle(
-                        color: Colors.grey.shade500,
-                        fontSize: 11,
+                    const SizedBox(height: 8),
+
+                    // Status-specific details
+                    if (vaccination.status == 'completed' && vaccination.completedDate != null)
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            size: 12,
+                            color: Colors.grey.shade500,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            DateUtil.toDateWithDay(vaccination.completedDate!),
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 12,
+                            ),
+                          ),
+                          if (vaccination.completedTime != null) ...[
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.access_time,
+                              size: 12,
+                              color: Colors.grey.shade500,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              vaccination.completedTime!,
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
-                    ),
-                    if(vaccination.completedTime != null)
-                      Text(
-                      'Completed: ${vaccination.completedTime}',
-                      style: TextStyle(
-                        color: Colors.grey.shade500,
-                        fontSize: 11,
+
+                    if (vaccination.status == 'cancelled')
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          'This vaccination was cancelled',
+                          style: TextStyle(
+                            color: Colors.orange.shade800,
+                            fontSize: 12,
+                          ),
+                        ),
                       ),
-                    ),
-                    if(vaccination.completedDate == null && vaccination.completedDate == null)
-                      Text(
-                        'Not completed',
-                        style: TextStyle(
-                          color: Colors.grey.shade500,
-                          fontSize: 11,
+
+                    if (vaccination.status == 'failed')
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          'This vaccination failed',
+                          style: TextStyle(
+                            color: Colors.red.shade800,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+
+                    // Show scheduled date as reference for cancelled/failed
+                    if ((vaccination.status == 'cancelled' || vaccination.status == 'failed') &&
+                        vaccination.scheduledDate != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.event_busy,
+                              size: 12,
+                              color: Colors.grey.shade500,
+                            ),
+                            const SizedBox(width: 4),
+                            SizedBox(
+                              width: 150,
+                              child: Text(
+                                'Originally scheduled: ${DateUtil.toDateWithDay(vaccination.scheduledDate!)}',
+                                style: TextStyle(
+                                  color: Colors.grey.shade500,
+                                  fontSize: 11,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                   ],
                 ),
               ),
+
+              // Status badge
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
+                  color: statusColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Text(
-                  'Completed',
+                child: Text(
+                  statusText,
                   style: TextStyle(
-                    color: Colors.green,
+                    color: statusColor,
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
                   ),
@@ -923,32 +1026,6 @@ class _CompletedVaccinationItem extends StatelessWidget {
               ),
             ],
           ),
-          // if (vaccination.notes != null) ...[
-          //   const SizedBox(height: 12),
-          //   Container(
-          //     padding: const EdgeInsets.all(8),
-          //     decoration: BoxDecoration(
-          //       color: Colors.grey.shade50,
-          //       borderRadius: BorderRadius.circular(8),
-          //     ),
-          //     child: Row(
-          //       crossAxisAlignment: CrossAxisAlignment.start,
-          //       children: [
-          //         Icon(Icons.note, size: 14, color: Colors.grey.shade600),
-          //         const SizedBox(width: 6),
-          //         Expanded(
-          //           child: Text(
-          //             vaccination.notes!,
-          //             style: TextStyle(
-          //               fontSize: 12,
-          //               color: Colors.grey.shade700,
-          //             ),
-          //           ),
-          //         ),
-          //       ],
-          //     ),
-          //   ),
-          // ],
         ],
       ),
     );

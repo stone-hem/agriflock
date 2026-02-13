@@ -413,9 +413,7 @@ class _QuotationScreenState extends State<QuotationScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
         elevation: 1,
         title: Row(
           children: [

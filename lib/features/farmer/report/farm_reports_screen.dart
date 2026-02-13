@@ -226,7 +226,6 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: Text(_selectedFarm.farmName),
         backgroundColor: Colors.transparent,

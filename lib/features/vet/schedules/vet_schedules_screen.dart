@@ -69,7 +69,6 @@ class _VetSchedulesScreenState extends State<VetSchedulesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: Row(
           children: [

@@ -15,7 +15,6 @@ class PoultryHouseQuotationScreen extends StatefulWidget {
 class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScreen> {
   // Color scheme
   static const Color primaryColor = Color(0xFF2E7D32);
-  static const Color backgroundColor = Color(0xFFF8F9FA);
 
   // Bird capacity options
   final List<Map<String, dynamic>> _capacityOptions = [
@@ -81,7 +80,6 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: backgroundColor,
       body: CustomScrollView(
         slivers: [
           SliverPadding(

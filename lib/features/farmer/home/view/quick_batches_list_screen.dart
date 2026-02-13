@@ -56,7 +56,6 @@ class _QuickBatchesListScreenState extends State<QuickBatchesListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: const Text('My Batches'),
         centerTitle: false,

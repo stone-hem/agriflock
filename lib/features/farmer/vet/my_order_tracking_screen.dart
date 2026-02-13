@@ -441,7 +441,6 @@ class _MyOrderTrackingScreenState extends State<MyOrderTrackingScreen> {
     final mapHeight = (screenHeight - appBarHeight) * 0.45;
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: Text('Order ${widget.order.orderNumber}'),
         centerTitle: false,

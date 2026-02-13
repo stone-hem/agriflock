@@ -18,7 +18,6 @@ class ProductionEstimateScreen extends StatefulWidget {
 
 class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
   static const Color primaryColor = Color(0xFF2E7D32);
-  static const Color backgroundColor = Color(0xFFF8F9FA);
 
   // Repositories
   final _batchRepository = BatchHouseRepository();
@@ -145,7 +144,6 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: backgroundColor,
       body: CustomScrollView(
         slivers: [
           SliverPadding(
@@ -837,7 +835,7 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
                   const SizedBox(height: 16),
                 ],
               );
-            }).toList(),
+            }),
           ],
         ),
       ),

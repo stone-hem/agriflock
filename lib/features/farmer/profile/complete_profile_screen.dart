@@ -98,7 +98,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       _idNumberController.text = widget.profileData!.nationalId ?? '';
       _dobController.text = widget.profileData!.dateOfBirth ?? '';
       _selectedGender = widget.profileData!.gender ?? '';
-      _houseCapacityController.text = widget.profileData!.chickenHouseCapacity.toString();
+      _houseCapacityController.text =
+      widget.profileData!.chickenHouseCapacity != null
+          ? widget.profileData!.chickenHouseCapacity.toString()
+          : '';
       _preferredAgrovetController.text = widget.profileData!.preferredAgrovetName ?? '';
       _preferredFeedCompanyController.text = widget.profileData!.preferredFeedCompany ?? '';
     }
