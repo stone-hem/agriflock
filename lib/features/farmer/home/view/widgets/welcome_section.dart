@@ -36,8 +36,8 @@ class WelcomeSection extends StatelessWidget {
         crossAxisAlignment: .start,
         children: [
 
-          Row(
-            crossAxisAlignment: .center,
+          Wrap(
+            crossAxisAlignment: .start,
             children: [
               Text(
                 userName != null && userName!.isNotEmpty

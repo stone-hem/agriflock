@@ -236,7 +236,8 @@ class _ReportsFlowScreenState extends State<ReportsFlowScreen> {
             subtitle: 'View detailed report for a specific batch',
             description: 'Mortality, feed, vaccination, medication & egg production data',
             color: Colors.blue,
-            isLoading: _isLoadingFarms && _selectedReportType == 'batch',
+            isLoading: _isLoadingBatches && _selectedReportType == 'batch',
+            isDisabled: _isLoadingFarms && _selectedReportType == 'farm',
             onTap: () => _selectReportType('batch'),
           ),
           const SizedBox(height: 16),
@@ -247,6 +248,7 @@ class _ReportsFlowScreenState extends State<ReportsFlowScreen> {
             description: 'Summary of all batches with key metrics',
             color: Colors.green,
             isLoading: _isLoadingFarms && _selectedReportType == 'farm',
+            isDisabled: _isLoadingBatches && _selectedReportType == 'batch',
             onTap: () => _selectReportType('farm'),
           ),
         ],
@@ -261,12 +263,16 @@ class _ReportsFlowScreenState extends State<ReportsFlowScreen> {
     required String description,
     required Color color,
     required bool isLoading,
+    bool isDisabled = false,
     required VoidCallback onTap,
   }) {
-    return Material(
+    final bool isTappable = !isLoading && !isDisabled;
+    return Opacity(
+      opacity: isDisabled ? 0.5 : 1.0,
+      child: Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: isLoading ? null : onTap,
+        onTap: isTappable ? onTap : null,
         borderRadius: BorderRadius.circular(16),
         child: Container(
           padding: const EdgeInsets.all(20),
@@ -340,6 +346,7 @@ class _ReportsFlowScreenState extends State<ReportsFlowScreen> {
             ],
           ),
         ),
+      ),
       ),
     );
   }
@@ -645,9 +652,9 @@ class _ReportsFlowScreenState extends State<ReportsFlowScreen> {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        _buildInfoChip(Icons.pets, '${batch.birdsAlive} birds'),
+                        _buildInfoChip(Icons.pets, '${batch.currentCount} birds'),
                         const SizedBox(width: 8),
-                        _buildInfoChip(Icons.calendar_today, '${batch.age} days'),
+                        _buildInfoChip(Icons.calendar_today, '${batch.ageInDays} days'),
                       ],
                     ),
                     if (batch.house?.name != null)

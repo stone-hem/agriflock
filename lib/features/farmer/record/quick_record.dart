@@ -129,6 +129,18 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
 
   void _previousPage() {
     if (_currentPage > 0) {
+      // Clear selected item when going back from item details page
+      if (_currentPage == 2) {
+        setState(() {
+          _selectedItem = null;
+        });
+      }
+      // Clear selected category when going back from category selection page
+      if (_currentPage == 1) {
+        setState(() {
+          _selectedCategory = null;
+        });
+      }
       _pageController.previousPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,

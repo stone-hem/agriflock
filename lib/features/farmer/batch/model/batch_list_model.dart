@@ -1,5 +1,8 @@
 import 'dart:convert';
 
+import 'package:agriflock360/core/utils/type_safe_utils.dart';
+
+
 class BatchListResponse {
   final List<BatchListItem> batches;
   final Pagination pagination;
@@ -13,7 +16,7 @@ class BatchListResponse {
     return BatchListResponse(
       batches: List<BatchListItem>.from(
         (json['batchs'] as List<dynamic>? ?? json['batches'] as List<dynamic>? ?? [])
-            .map((batch) => BatchListItem.fromJson(batch)),
+            .map((batch) => BatchListItem.fromJson(batch as Map<String, dynamic>)),
       ),
       pagination: Pagination.fromJson(json['pagination'] ?? {}),
     );
@@ -40,10 +43,10 @@ class Pagination {
 
   factory Pagination.fromJson(Map<String, dynamic> json) {
     return Pagination(
-      total: (json['total'] as num?)?.toInt() ?? 0,
-      page: (json['page'] as num?)?.toInt() ?? 1,
-      limit: (json['limit'] as num?)?.toInt() ?? 20,
-      totalPages: (json['totalPages'] as num?)?.toInt() ?? 1,
+      total: TypeUtils.toIntSafe(json['total']),
+      page: TypeUtils.toIntSafe(json['page'], defaultValue: 1),
+      limit: TypeUtils.toIntSafe(json['limit'], defaultValue: 20),
+      totalPages: TypeUtils.toIntSafe(json['totalPages'], defaultValue: 1),
     );
   }
 
@@ -72,7 +75,7 @@ class BatchListItem {
   final String batchType;
   final BirdType? birdType;
   final String? age;
-  final String? birdsAlive;
+  final int? birdsAlive; // Changed to int? to match your data
   final double? currentWeight;
   final double? expectedWeight;
   final String? feedingTime;
@@ -153,76 +156,61 @@ class BatchListItem {
   });
 
   factory BatchListItem.fromJson(Map<String, dynamic> json) {
+    final farmMap = TypeUtils.toMapSafe(json['farm']);
+    final houseMap = TypeUtils.toMapSafe(json['house']);
+    final birdTypeMap = TypeUtils.toMapSafe(json['bird_type']);
+    final mortalityStatsMap = TypeUtils.toMapSafe(json['mortality_stats']);
+
     return BatchListItem(
-      id: json['id'] as String? ?? '',
-      userId: json['user_id'] as String? ?? '',
-      farmId: json['farm_id'] as String? ?? '',
-      farm: json['farm'] != null ? Farm.fromJson(json['farm'] as Map<String, dynamic>) : null,
-      houseId: json['house_id'] as String?,
-      house: json['house'] != null ? House.fromJson(json['house'] as Map<String, dynamic>) : null,
-      deviceId: json['device_id'] as String?,
-      device: json['device'],
-      breed: json['breed'] as String?,
-      batchName: json['batch_name'] as String? ?? '',
-      birdTypeId: json['bird_type_id'] as String? ?? '',
-      batchType: json['batch_type'] as String? ?? '',
-      birdType: json['bird_type'] != null ? BirdType.fromJson(json['bird_type'] as Map<String, dynamic>) : null,
-      age: json['age'] as String?,
-      birdsAlive: json['birds_alive'] as String?,
-      currentWeight: _parseDouble(json['current_weight']),
-      expectedWeight: _parseDouble(json['expected_weight']),
-      feedingTime: json['feeding_time'] as String?,
-      feedingSchedule: json['feeding_schedule'] as String?,
-      currentCount: (json['current_count'] as num?)?.toInt() ?? 0,
-      initialCount: (json['initial_count'] as num?)?.toInt() ?? 0,
-      hatchDate: json['hatch_date'] as String?,
-      startDate: json['start_date'] as String?,
-      expectedEndDate: json['expected_end_date'] as String?,
-      actualEndDate: json['actual_end_date'] as String?,
-      currentStatus: json['current_status'] as String? ?? 'unknown',
-      notes: json['notes'] as String?,
-      purchaseCost: _parseDouble(json['purchase_cost']),
-      costPerBird: _parseDouble(json['cost_per_bird']),
-      currency: json['currency'] as String? ?? 'KES',
-      ageAtPurchase: json['age_at_purchase'] as String?,
-      hatcherySource: json['hatchery_source'] as String?,
-      batchPhoto: json['batch_photo'] as String?,
-      totalMortality: (json['total_mortality'] as num?)?.toInt() ?? 0,
-      mortalityRate: (json['mortality_rate'] as num?)?.toDouble() ?? 0.0,
-      ageInDays: (json['age_in_days'] as num?)?.toInt() ?? 0,
-      ageLastUpdated: json['age_last_updated'] as String?,
-      purchaseExpenditureId: json['purchase_expenditure_id'] as String?,
-      deletedAt: json['deleted_at'] as String?,
-      deletedBy: json['deleted_by'] as String?,
-      deleteByDate: json['delete_by_date'] as String?,
-      deleted: (json['deleted'] as bool?) ?? false,
-      createdAt: _parseDateTime(json['created_at']) ?? DateTime.now(),
-      updatedAt: _parseDateTime(json['updated_at']) ?? DateTime.now(),
-      mortalityStats: json['mortality_stats'] != null
-          ? MortalityStats.fromJson(json['mortality_stats'] as Map<String, dynamic>)
+      id: TypeUtils.toStringSafe(json['id']),
+      userId: TypeUtils.toStringSafe(json['user_id']),
+      farmId: TypeUtils.toStringSafe(json['farm_id']),
+      farm: farmMap != null ? Farm.fromJson(farmMap) : null,
+      houseId: TypeUtils.toNullableStringSafe(json['house_id']),
+      house: houseMap != null ? House.fromJson(houseMap) : null,
+      deviceId: TypeUtils.toNullableStringSafe(json['device_id']),
+      device: TypeUtils.toMapSafe(json['device']), // or however device is typed
+      breed: TypeUtils.toNullableStringSafe(json['breed']),
+      batchName: TypeUtils.toStringSafe(json['batch_name']),
+      birdTypeId: TypeUtils.toStringSafe(json['bird_type_id']),
+      batchType: TypeUtils.toStringSafe(json['batch_type']),
+      birdType: birdTypeMap != null ? BirdType.fromJson(birdTypeMap) : null,
+      age: TypeUtils.toNullableStringSafe(json['age']),
+      birdsAlive: TypeUtils.toNullableIntSafe(json['birds_alive']),     // simplified
+      currentWeight: TypeUtils.toNullableDoubleSafe(json['current_weight']),
+      expectedWeight: TypeUtils.toNullableDoubleSafe(json['expected_weight']),
+      feedingTime: TypeUtils.toNullableStringSafe(json['feeding_time']),
+      feedingSchedule: TypeUtils.toNullableStringSafe(json['feeding_schedule']),
+      currentCount: TypeUtils.toIntSafe(json['current_count']),
+      initialCount: TypeUtils.toIntSafe(json['initial_count']),
+      hatchDate: TypeUtils.toDateStringSafe(json['hatch_date']),
+      startDate: TypeUtils.toDateStringSafe(json['start_date']),
+      expectedEndDate: TypeUtils.toDateStringSafe(json['expected_end_date']),
+      actualEndDate: TypeUtils.toDateStringSafe(json['actual_end_date']),
+      currentStatus: TypeUtils.toStringSafe(json['current_status'], defaultValue: 'unknown'),
+      notes: TypeUtils.toNullableStringSafe(json['notes']),
+      purchaseCost: TypeUtils.toNullableDoubleSafe(json['purchase_cost']),
+      costPerBird: TypeUtils.toNullableDoubleSafe(json['cost_per_bird']),
+      currency: TypeUtils.toStringSafe(json['currency'], defaultValue: 'KES'),
+      ageAtPurchase: TypeUtils.toNullableStringSafe(json['age_at_purchase']),
+      hatcherySource: TypeUtils.toNullableStringSafe(json['hatchery_source']),
+      batchPhoto: TypeUtils.toNullableStringSafe(json['batch_photo']),
+      totalMortality: TypeUtils.toIntSafe(json['total_mortality']),
+      mortalityRate: TypeUtils.toDoubleSafe(json['mortality_rate']),
+      ageInDays: TypeUtils.toIntSafe(json['age_in_days']),
+      ageLastUpdated: TypeUtils.toDateStringSafe(json['age_last_updated']),
+      purchaseExpenditureId: TypeUtils.toNullableStringSafe(json['purchase_expenditure_id']),
+      deletedAt: TypeUtils.toDateStringSafe(json['deleted_at']),
+      deletedBy: TypeUtils.toNullableStringSafe(json['deleted_by']),
+      deleteByDate: TypeUtils.toDateStringSafe(json['delete_by_date']),
+      deleted: TypeUtils.toBoolSafe(json['deleted']),
+      createdAt: TypeUtils.toDateTimeSafe(json['created_at']) ?? DateTime.now(),
+      updatedAt: TypeUtils.toDateTimeSafe(json['updated_at']) ?? DateTime.now(),
+      mortalityStats: mortalityStatsMap != null
+          ? MortalityStats.fromJson(mortalityStatsMap)
           : null,
     );
   }
-
-  static double? _parseDouble(dynamic value) {
-    if (value == null) return null;
-    if (value is num) return value.toDouble();
-    if (value is String) return double.tryParse(value);
-    return null;
-  }
-
-  static DateTime? _parseDateTime(dynamic value) {
-    if (value == null) return null;
-    if (value is String) {
-      try {
-        return DateTime.parse(value);
-      } catch (e) {
-        return null;
-      }
-    }
-    return null;
-  }
-
   Map<String, dynamic> toJson() => {
     'id': id,
     'user_id': userId,
@@ -327,31 +315,19 @@ class Farm {
 
   factory Farm.fromJson(Map<String, dynamic> json) {
     return Farm(
-      id: json['id'] as String? ?? '',
-      userId: json['user_id'] as String? ?? '',
-      farmName: json['farm_name'] as String? ?? '',
+      id: TypeUtils.toStringSafe(json['id']),
+      userId: TypeUtils.toStringSafe(json['user_id']),
+      farmName: TypeUtils.toStringSafe(json['farm_name']),
       location: json['location'],
-      totalArea: json['total_area'] as String? ?? '0.00',
-      farmType: json['farm_type'] as String? ?? '',
-      description: json['description'] as String?,
-      contactInfo: json['contact_info'] as String?,
-      isActive: (json['is_active'] as bool?) ?? true,
-      farmPhoto: json['farm_photo'] as String?,
-      createdAt: _parseDateTime(json['created_at']) ?? DateTime.now(),
-      updatedAt: _parseDateTime(json['updated_at']) ?? DateTime.now(),
+      totalArea: TypeUtils.toStringSafe(json['total_area'], defaultValue: '0.00'),
+      farmType: TypeUtils.toStringSafe(json['farm_type']),
+      description: TypeUtils.toNullableStringSafe(json['description'], defaultValue: null),
+      contactInfo: TypeUtils.toNullableStringSafe(json['contact_info'], defaultValue: null),
+      isActive: TypeUtils.toBoolSafe(json['is_active'], defaultValue: true),
+      farmPhoto: TypeUtils.toNullableStringSafe(json['farm_photo'], defaultValue: null),
+      createdAt: TypeUtils.toDateTimeSafe(json['created_at']) ?? DateTime.now(),
+      updatedAt: TypeUtils.toDateTimeSafe(json['updated_at']) ?? DateTime.now(),
     );
-  }
-
-  static DateTime? _parseDateTime(dynamic value) {
-    if (value == null) return null;
-    if (value is String) {
-      try {
-        return DateTime.parse(value);
-      } catch (e) {
-        return null;
-      }
-    }
-    return null;
   }
 
   Map<String, dynamic> toJson() => {
@@ -418,33 +394,21 @@ class House {
 
   factory House.fromJson(Map<String, dynamic> json) {
     return House(
-      id: json['id'] as String? ?? '',
-      userId: json['user_id'] as String? ?? '',
-      farmId: json['farm_id'] as String? ?? '',
-      name: json['name'] as String? ?? '',
-      maximumCapacity: (json['maximum_capacity'] as num?)?.toInt() ?? 0,
-      minimumCapacity: (json['minimum_capacity'] as num?)?.toInt() ?? 0,
-      description: json['description'] as String?,
+      id: TypeUtils.toStringSafe(json['id']),
+      userId: TypeUtils.toStringSafe(json['user_id']),
+      farmId: TypeUtils.toStringSafe(json['farm_id']),
+      name: TypeUtils.toStringSafe(json['name']),
+      maximumCapacity: TypeUtils.toIntSafe(json['maximum_capacity']),
+      minimumCapacity: TypeUtils.toIntSafe(json['minimum_capacity']),
+      description: TypeUtils.toNullableStringSafe(json['description'], defaultValue: null),
       meta: json['meta'],
-      isActive: (json['is_active'] as bool?) ?? true,
-      housePhoto: json['house_photo'] as String?,
-      currentOccupancy: (json['current_occupancy'] as num?)?.toInt() ?? 0,
-      utilizationPercentage: (json['utilization_percentage'] as num?)?.toDouble() ?? 0.0,
-      createdAt: _parseDateTime(json['created_at']) ?? DateTime.now(),
-      updatedAt: _parseDateTime(json['updated_at']) ?? DateTime.now(),
+      isActive: TypeUtils.toBoolSafe(json['is_active'], defaultValue: true),
+      housePhoto: TypeUtils.toNullableStringSafe(json['house_photo'], defaultValue: null),
+      currentOccupancy: TypeUtils.toIntSafe(json['current_occupancy']),
+      utilizationPercentage: TypeUtils.toDoubleSafe(json['utilization_percentage']),
+      createdAt: TypeUtils.toDateTimeSafe(json['created_at']) ?? DateTime.now(),
+      updatedAt: TypeUtils.toDateTimeSafe(json['updated_at']) ?? DateTime.now(),
     );
-  }
-
-  static DateTime? _parseDateTime(dynamic value) {
-    if (value == null) return null;
-    if (value is String) {
-      try {
-        return DateTime.parse(value);
-      } catch (e) {
-        return null;
-      }
-    }
-    return null;
   }
 
   Map<String, dynamic> toJson() => {
@@ -492,29 +456,17 @@ class BirdType {
 
   factory BirdType.fromJson(Map<String, dynamic> json) {
     return BirdType(
-      id: json['id'] as String? ?? '',
-      name: json['name'] as String? ?? '',
-      type: json['type'] as String? ?? '',
-      description: json['description'] as String? ?? '',
-      maturityDays: (json['maturity_days'] as num?)?.toInt() ?? 0,
-      dayOldChickPrice: json['day_old_chick_price'] as String? ?? '0.00',
-      expectedSellingPrice: json['expected_selling_price'] as String? ?? '0.00',
-      isActive: (json['is_active'] as bool?) ?? true,
-      createdAt: _parseDateTime(json['created_at']) ?? DateTime.now(),
-      updatedAt: _parseDateTime(json['updated_at']) ?? DateTime.now(),
+      id: TypeUtils.toStringSafe(json['id']),
+      name: TypeUtils.toStringSafe(json['name']),
+      type: TypeUtils.toStringSafe(json['type']),
+      description: TypeUtils.toStringSafe(json['description']),
+      maturityDays: TypeUtils.toIntSafe(json['maturity_days']),
+      dayOldChickPrice: TypeUtils.toStringSafe(json['day_old_chick_price'], defaultValue: '0.00'),
+      expectedSellingPrice: TypeUtils.toStringSafe(json['expected_selling_price'], defaultValue: '0.00'),
+      isActive: TypeUtils.toBoolSafe(json['is_active'], defaultValue: true),
+      createdAt: TypeUtils.toDateTimeSafe(json['created_at']) ?? DateTime.now(),
+      updatedAt: TypeUtils.toDateTimeSafe(json['updated_at']) ?? DateTime.now(),
     );
-  }
-
-  static DateTime? _parseDateTime(dynamic value) {
-    if (value == null) return null;
-    if (value is String) {
-      try {
-        return DateTime.parse(value);
-      } catch (e) {
-        return null;
-      }
-    }
-    return null;
   }
 
   Map<String, dynamic> toJson() => {
@@ -534,7 +486,7 @@ class BirdType {
 class MortalityStats {
   final int initialCount;
   final int currentCount;
-  final String? birdsAlive;
+  final int? birdsAlive; // Changed to int?
   final int totalDeaths;
   final double mortalityRate;
   final double survivalRate;
@@ -556,15 +508,15 @@ class MortalityStats {
 
   factory MortalityStats.fromJson(Map<String, dynamic> json) {
     return MortalityStats(
-      initialCount: (json['initial_count'] as num?)?.toInt() ?? 0,
-      currentCount: (json['current_count'] as num?)?.toInt() ?? 0,
-      birdsAlive: json['birds_alive'] as String?,
-      totalDeaths: (json['total_deaths'] as num?)?.toInt() ?? 0,
-      mortalityRate: (json['mortality_rate'] as num?)?.toDouble() ?? 0.0,
-      survivalRate: (json['survival_rate'] as num?)?.toDouble() ?? 0.0,
-      recentDeaths7days: (json['recent_deaths_7days'] as num?)?.toInt() ?? 0,
-      recentDailyMortalityAvg: (json['recent_daily_mortality_avg'] as num?)?.toDouble() ?? 0.0,
-      lastMortalityDate: json['last_mortality_date'] as String?,
+      initialCount: TypeUtils.toIntSafe(json['initial_count']),
+      currentCount: TypeUtils.toIntSafe(json['current_count']),
+      birdsAlive: json['birds_alive'] != null ? TypeUtils.toIntSafe(json['birds_alive']) : null,
+      totalDeaths: TypeUtils.toIntSafe(json['total_deaths']),
+      mortalityRate: TypeUtils.toDoubleSafe(json['mortality_rate']),
+      survivalRate: TypeUtils.toDoubleSafe(json['survival_rate']),
+      recentDeaths7days: TypeUtils.toIntSafe(json['recent_deaths_7days']),
+      recentDailyMortalityAvg: TypeUtils.toDoubleSafe(json['recent_daily_mortality_avg']),
+      lastMortalityDate: TypeUtils.toNullableStringSafe(json['last_mortality_date'], defaultValue: null),
     );
   }
 

@@ -385,6 +385,7 @@ class ApiClient {
     } catch (e) {
       debugPrint('Logout endpoint error: $e');
     } finally {
+      await Future.microtask(() {});
       await _handleUnauthorized();
     }
   }

@@ -544,13 +544,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           content: const Text('Are you sure you want to log out?'),
                           actions: [
                             TextButton(
-                              onPressed: () => Navigator.pop(context, false),
+                              onPressed: () => context.pop(false),
                               child: const Text('Cancel'),
                             ),
                             TextButton(
-                              onPressed: () async {
-                                Navigator.pop(context, true);
-                              },
+                              onPressed: () => context.pop(true),
                               child: const Text('Log out'),
                             ),
                           ],
@@ -558,8 +556,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       );
 
                       if (confirm == true) {
-                        await apiClient.logout();
-                        context.go('/login');
+                        await apiClient.logout(); // handles navigation internally, done.
                       }
                     },
                     icon: const Icon(Icons.logout),
