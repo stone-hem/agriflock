@@ -194,97 +194,106 @@ class _ShellScaffoldState extends State<ShellScaffold> {
       },
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isTablet = constraints.maxWidth >= 600;
-          final isLargeTablet = constraints.maxWidth >= 840;
+          final isTablet = constraints.maxWidth >= 600 || constraints.maxHeight < 500;
 
           return Scaffold(
             body: Row(
               children: [
                 if (isTablet)
-                  Material(
-                    elevation: 0,
-                    color: Colors.white,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        border: Border(
-                          right: BorderSide(
-                            color: Colors.grey.shade200,
-                            width: 1,
-                          ),
+                  Container(
+                    width: 72,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border(
+                        right: BorderSide(
+                          color: Colors.grey.shade200,
+                          width: 1,
                         ),
                       ),
-                      child: NavigationRail(
-                        selectedIndex: selectedIndex,
-                        onDestinationSelected: _onItemTapped,
-                        extended: isLargeTablet,
-                        labelType: isLargeTablet
-                            ? NavigationRailLabelType.none
-                            : NavigationRailLabelType.all,
-                        backgroundColor: Colors.transparent,
-                        indicatorColor: Colors.green.withValues(alpha: 0.15),
-                        useIndicator: true,
-                        minWidth: isLargeTablet ? 200 : 72,
-                        minExtendedWidth: 200,
-                        leading: SizedBox(
-                          height: 80,
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(
-                              vertical: 16.0,
-                              horizontal: isLargeTablet ? 16.0 : 0,
-                            ),
-                            child: isLargeTablet
-                                ? Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Image.asset(
-                                        'assets/logos/Logo_0725.png',
-                                        width: 40,
-                                        height: 40,
-                                        errorBuilder:
-                                            (context, error, stackTrace) {
-                                          return const Icon(
-                                            Icons.agriculture,
-                                            size: 40,
-                                            color: Colors.green,
-                                          );
-                                        },
+                    ),
+                    child: Column(
+                      children: [
+                        // Logo header — pinned, never scrolls away
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16.0),
+                          child: Image.asset(
+                            'assets/logos/Logo_0725.png',
+                            width: 40,
+                            height: 40,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(
+                                Icons.agriculture,
+                                size: 40,
+                                color: Colors.green,
+                              );
+                            },
+                          ),
+                        ),
+                        // Nav items — scrollable downward so they never overflow
+                        Expanded(
+                          child: SingleChildScrollView(
+                            child: Column(
+                              children: _navConfigs.asMap().entries.map((entry) {
+                                final index = entry.key;
+                                final config = entry.value;
+                                final isSelected = selectedIndex == index;
+                                return InkWell(
+                                  onTap: () => _onItemTapped(index),
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 4.0,
+                                      horizontal: 8.0,
+                                    ),
+                                    child: AnimatedContainer(
+                                      duration: const Duration(milliseconds: 200),
+                                      width: 56,
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 8.0,
                                       ),
-                                      const SizedBox(width: 12),
-                                      Text(
-                                        'Agriflock 360',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.green.shade800,
-                                        ),
+                                      decoration: BoxDecoration(
+                                        color: isSelected
+                                            ? Colors.green.withValues(alpha: 0.15)
+                                            : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(16),
                                       ),
-                                    ],
-                                  )
-                                : Center(
-                                    child: Image.asset(
-                                      'assets/logos/Logo_0725.png',
-                                      width: 48,
-                                      height: 48,
-                                      errorBuilder:
-                                          (context, error, stackTrace) {
-                                        return const Icon(
-                                          Icons.agriculture,
-                                          size: 48,
-                                          color: Colors.green,
-                                        );
-                                      },
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            isSelected
+                                                ? config.selectedIcon
+                                                : config.icon,
+                                            color: isSelected
+                                                ? Colors.green.shade700
+                                                : Colors.grey.shade600,
+                                            size: 24,
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            config.label,
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: isSelected
+                                                  ? FontWeight.w600
+                                                  : FontWeight.normal,
+                                              color: isSelected
+                                                  ? Colors.green.shade700
+                                                  : Colors.grey.shade600,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
+                                );
+                              }).toList(),
+                            ),
                           ),
                         ),
-                        destinations: _navConfigs.map((config) {
-                          return NavigationRailDestination(
-                            icon: Icon(config.icon),
-                            selectedIcon: Icon(config.selectedIcon),
-                            label: Text(config.label),
-                          );
-                        }).toList(),
-                      ),
+                      ],
                     ),
                   ),
                 Expanded(child: widget.child),
@@ -293,45 +302,45 @@ class _ShellScaffoldState extends State<ShellScaffold> {
             bottomNavigationBar: isTablet
                 ? null
                 : Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 20,
-                          offset: const Offset(0, -2),
-                        ),
-                      ],
-                      border: Border(
-                        top: BorderSide(
-                          color: Colors.grey.shade200,
-                          width: 1,
-                        ),
-                      ),
-                    ),
-                    child: NavigationBar(
-                      selectedIndex: selectedIndex,
-                      onDestinationSelected: _onItemTapped,
-                      indicatorColor: Colors.green.withValues(alpha: 0.15),
-                      backgroundColor: Colors.transparent,
-                      elevation: 0,
-                      height: 72,
-                      labelBehavior:
-                          NavigationDestinationLabelBehavior.alwaysShow,
-                      animationDuration: const Duration(milliseconds: 300),
-                      destinations:
-                          _navConfigs.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final config = entry.value;
-                        return NavDestinationItem(
-                          icon: config.icon,
-                          selectedIcon: config.selectedIcon,
-                          label: config.label,
-                          isSelected: selectedIndex == index,
-                        );
-                      }).toList(),
-                    ),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, -2),
                   ),
+                ],
+                border: Border(
+                  top: BorderSide(
+                    color: Colors.grey.shade200,
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: NavigationBar(
+                selectedIndex: selectedIndex,
+                onDestinationSelected: _onItemTapped,
+                indicatorColor: Colors.green.withValues(alpha: 0.15),
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                height: 72,
+                labelBehavior:
+                NavigationDestinationLabelBehavior.alwaysShow,
+                animationDuration: const Duration(milliseconds: 300),
+                destinations:
+                _navConfigs.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final config = entry.value;
+                  return NavDestinationItem(
+                    icon: config.icon,
+                    selectedIcon: config.selectedIcon,
+                    label: config.label,
+                    isSelected: selectedIndex == index,
+                  );
+                }).toList(),
+              ),
+            ),
           );
         },
       ),

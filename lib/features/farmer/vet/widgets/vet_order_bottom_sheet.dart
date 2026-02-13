@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/core/widgets/reusable_time_input.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_farmer_model.dart';
@@ -121,15 +122,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                       _buildEstimateCard(),
                       const SizedBox(height: 24),
 
-                      // Preferred Date
-                      Text(
-                        'Preferred Date',
-                        style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey.shade800,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
+
                       CustomDateTextField(
                         label: 'Preferred Date',
                         icon: Icons.calendar_today,
@@ -711,12 +704,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
         context.pushReplacement('/my-vet-orders');
         break;
       case Failure(message: final error):
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to submit order: $error'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastUtil.showError('Failed to submit order: $error');
         break;
     }
   }

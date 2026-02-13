@@ -151,11 +151,10 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
                 GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
+                  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
-                    childAspectRatio: 1.2,
+                    childAspectRatio: 1.2, maxCrossAxisExtent: 250,
                   ),
                   itemCount: _capacityOptions.length,
                   itemBuilder: (context, index) {
