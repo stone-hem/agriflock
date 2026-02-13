@@ -59,7 +59,7 @@ class RoleCard extends StatelessWidget {
                     Text(
                       title,
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: isSelected ? Colors.green : Colors.black87,
                       ),

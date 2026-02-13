@@ -502,7 +502,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
 
   AppBar _buildAppBar() {
     return AppBar(
-      backgroundColor: Colors.white,
       elevation: 0,
       title: Text(
         _currentPage < _pageTitles.length ? _pageTitles[_currentPage] : '',
@@ -534,7 +533,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
   Widget _buildProgressSection() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      color: Colors.white,
       child: Column(
         children: [
           LinearProgressIndicator(

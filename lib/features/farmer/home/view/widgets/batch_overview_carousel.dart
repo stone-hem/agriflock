@@ -78,7 +78,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
           children: [
             TextButton.icon(
               onPressed: _currentPage > 0 ? _previousPage : null,
-              icon: const Icon(Icons.chevron_left, size: 18),
+              icon: const Icon(Icons.chevron_left, size: 16),
               label: const Text('Previous Batch'),
               style: TextButton.styleFrom(
                 foregroundColor: _currentPage > 0

@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/features/farmer/payg/models/subscription_plans_model.dart';
 import 'package:agriflock360/features/farmer/payg/repo/subscription_repo.dart';
 import 'package:flutter/material.dart';
@@ -37,7 +38,7 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
           _selectedPlanIndex = trialIndex >= 0 ? trialIndex : null;
         });
       },
-      failure: (_, __, ___) {
+      failure: (_, _, _) {
         setState(() => _isLoadingPlans = false);
       },
     );
@@ -64,8 +65,7 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
   Future<void> _handleContinue() async {
     final plan = _selectedPlan;
     if (plan == null) {
-      // No plan selected, just go to setup
-      if (mounted) context.go('/onboarding/setup');
+      ToastUtil.showError('You must select a plan to use Agriflock 360 app');
       return;
     }
 
@@ -159,7 +159,7 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Choose a plan to get started.\nSelect a plan below to continue.',
+                    'Choose a plan to get started.',
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.white.withValues(alpha: 0.9),
@@ -245,14 +245,6 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
           child: Column(
             children: [
               _buildContinueButton(),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: _isSubscribing ? null : () => context.go('/home'),
-                child: Text(
-                  'Skip for now',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                ),
-              ),
             ],
           ),
         ),
