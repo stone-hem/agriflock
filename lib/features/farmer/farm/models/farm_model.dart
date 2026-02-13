@@ -2,6 +2,8 @@
 
 import 'dart:convert';
 
+import 'package:agriflock360/core/utils/type_safe_utils.dart';
+
 class FarmModel {
   final String id;
   final String farmName;
@@ -40,46 +42,39 @@ class FarmModel {
     if (json['location'] != null) {
       if (json['location'] is String) {
         try {
-          // Try to parse as JSON string
           final locationData = jsonDecode(json['location']);
 
-          // Extract formatted address
           if (locationData['address'] != null &&
               locationData['address']['formatted_address'] != null) {
             locationStr = locationData['address']['formatted_address'];
           }
 
-          // Extract GPS coordinates
           if (locationData['latitude'] != null &&
               locationData['longitude'] != null) {
             gpsCoords = GpsCoordinates(
-              latitude: _parseDouble(locationData['latitude']),
-              longitude: _parseDouble(locationData['longitude']),
+              latitude: TypeUtils.toDoubleSafe(locationData['latitude']),
+              longitude: TypeUtils.toDoubleSafe(locationData['longitude']),
               address: locationData['address'] != null
                   ? AddressDetails.fromJson(locationData['address'])
                   : null,
             );
           }
         } catch (e) {
-          // If parsing fails, use the string as is
           locationStr = json['location'];
         }
       } else if (json['location'] is Map) {
-        // Location is already a Map/object
         final locationData = json['location'] as Map<String, dynamic>;
 
-        // Extract formatted address
         if (locationData['address'] != null &&
             locationData['address']['formatted_address'] != null) {
           locationStr = locationData['address']['formatted_address'];
         }
 
-        // Extract GPS coordinates
         if (locationData['latitude'] != null &&
             locationData['longitude'] != null) {
           gpsCoords = GpsCoordinates(
-            latitude: _parseDouble(locationData['latitude']),
-            longitude: _parseDouble(locationData['longitude']),
+            latitude: TypeUtils.toDoubleSafe(locationData['latitude']),
+            longitude: TypeUtils.toDoubleSafe(locationData['longitude']),
             address: locationData['address'] != null
                 ? AddressDetails.fromJson(locationData['address'])
                 : null,
@@ -89,32 +84,20 @@ class FarmModel {
     }
 
     return FarmModel(
-      id: json['id']?.toString() ?? '',
-      farmName: json['farm_name'] ?? '',
+      id: TypeUtils.toStringSafe(json['id']),
+      farmName: TypeUtils.toStringSafe(json['farm_name']),
       location: locationStr,
-      totalArea: _parseDouble(json['total_area']),
-      farmType: json['farm_type'],
-      description: json['description'],
+      totalArea: TypeUtils.toNullableDoubleSafe(json['total_area']),
+      farmType: TypeUtils.toNullableStringSafe(json['farm_type']),
+      description: TypeUtils.toNullableStringSafe(json['description']),
       batchCount: json['batch_count'],
       gpsCoordinates: gpsCoords,
-      totalBirds: json['total_birds'] is int ? json['total_birds'] : null,
-      activeBatches: json['active_batches'] is int ? json['active_batches'] : null,
-      imageUrl: json['farm_photo'] ?? json['image_url'],
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
-          : null,
-      updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'])
-          : null,
+      totalBirds: TypeUtils.toNullableIntSafe(json['total_birds']),
+      activeBatches: TypeUtils.toNullableIntSafe(json['active_batches']),
+      imageUrl: TypeUtils.toNullableStringSafe(json['farm_photo']) ?? TypeUtils.toNullableStringSafe(json['image_url']),
+      createdAt: TypeUtils.toDateTimeSafe(json['created_at']),
+      updatedAt: TypeUtils.toDateTimeSafe(json['updated_at']),
     );
-  }
-
-  static double _parseDouble(dynamic value) {
-    if (value == null) return 0.0;
-    if (value is double) return value;
-    if (value is int) return value.toDouble();
-    if (value is String) return double.tryParse(value) ?? 0.0;
-    return 0.0;
   }
 
   Map<String, dynamic> toJson() {
@@ -183,8 +166,8 @@ class GpsCoordinates {
       address: json['address'] != null
           ? AddressDetails.fromJson(json['address'])
           : null,
-      latitude: json['latitude']?.toDouble() ?? 0.0,
-      longitude: json['longitude']?.toDouble() ?? 0.0,
+      latitude: TypeUtils.toDoubleSafe(json['latitude']),
+      longitude: TypeUtils.toDoubleSafe(json['longitude']),
     );
   }
 
@@ -214,9 +197,9 @@ class AddressDetails {
 
   factory AddressDetails.fromJson(Map<String, dynamic> json) {
     return AddressDetails(
-      placeId: json['place_id'],
-      name: json['name'],
-      formattedAddress: json['formatted_address'],
+      placeId: TypeUtils.toNullableStringSafe(json['place_id']),
+      name: TypeUtils.toNullableStringSafe(json['name']),
+      formattedAddress: TypeUtils.toNullableStringSafe(json['formatted_address']),
       geometry: json['geometry'] != null
           ? Geometry.fromJson(json['geometry'])
           : null,
@@ -266,8 +249,8 @@ class Location {
 
   factory Location.fromJson(Map<String, dynamic> json) {
     return Location(
-      lat: json['lat']?.toDouble() ?? 0.0,
-      lng: json['lng']?.toDouble() ?? 0.0,
+      lat: TypeUtils.toDoubleSafe(json['lat']),
+      lng: TypeUtils.toDoubleSafe(json['lng']),
     );
   }
 
@@ -292,8 +275,8 @@ class AddressComponent {
 
   factory AddressComponent.fromJson(Map<String, dynamic> json) {
     return AddressComponent(
-      longName: json['long_name'] ?? '',
-      shortName: json['short_name'] ?? '',
+      longName: TypeUtils.toStringSafe(json['long_name']),
+      shortName: TypeUtils.toStringSafe(json['short_name']),
       types: (json['types'] as List?)?.cast<String>() ?? [],
     );
   }
