@@ -20,7 +20,7 @@ class MarketDisclaimerWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: const [
           Text(
-            "Market Disclaimer",
+            "✅ Legal Disclaimer",
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
@@ -30,8 +30,12 @@ class MarketDisclaimerWidget extends StatelessWidget {
           SizedBox(height: 8),
           Text(
             "The quoted prices are based on prevailing market rates at the time of preparation. \n\n"
-                "Final costs may vary(About 15%) depending on actual market conditions at the time of execution. "
-                "This quotation is indicative and does not represent a fixed-price commitment.",
+                "Disclaimer on Farm Performance & Financial Projections The information provided herein is for educational and "
+                "planning purposes only and is based on assumed averages and historical industry data. Actual poultry production,"
+                " feed consumption, costs, and profitability may vary significantly due to management practices, disease outbreaks,"
+                " climate conditions, input quality, mortality, and market volatility. No warranty or guarantee is made regarding "
+                "expected outcomes. Users are responsible for making independent management decisions and maintaining accurate farm records. "
+                "The platform and its partners shall not be held liable for losses arising from the use of this information",
             style: TextStyle(
               fontSize: 12,
               height: 1.4,
