@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'package:agriflock360/core/utils/type_safe_utils.dart';
+
 class Expenditure {
   final String id;
   final String userId;
@@ -50,36 +53,38 @@ class Expenditure {
   });
 
   factory Expenditure.fromJson(Map<String, dynamic> json) {
+    final categoryMap = TypeUtils.toMapSafe(json['category']);
+    final categoryItemMap = TypeUtils.toMapSafe(json['category_item']);
+    final inventoryItemMap = TypeUtils.toMapSafe(json['inventory_item']);
+
     return Expenditure(
-      id: json['id'] as String,
-      userId: json['user_id'] as String,
-      farmId: json['farm_id'] as String?,
-      houseId: json['house_id'] as String?,
-      batchId: json['batch_id'] as String?,
-      categoryId: json['category_id'] as String,
-      category: ExpenditureCategory.fromJson(json['category']),
-      categoryItemId: json['category_item_id'] as String?,
-      categoryItem: json['category_item'] != null
-          ? CategoryItem.fromJson(json['category_item'])
+      id: TypeUtils.toStringSafe(json['id']),
+      userId: TypeUtils.toStringSafe(json['user_id']),
+      farmId: TypeUtils.toNullableStringSafe(json['farm_id']),
+      houseId: TypeUtils.toNullableStringSafe(json['house_id']),
+      batchId: TypeUtils.toNullableStringSafe(json['batch_id']),
+      categoryId: TypeUtils.toStringSafe(json['category_id']),
+      category: ExpenditureCategory.fromJson(categoryMap ?? {}),
+      categoryItemId: TypeUtils.toNullableStringSafe(json['category_item_id']),
+      categoryItem: categoryItemMap != null
+          ? CategoryItem.fromJson(categoryItemMap)
           : null,
-      description: json['description'] as String,
-      amount: double.parse(json['amount'].toString()),
-      quantity: double.parse(json['quantity'].toString()),
-      unit: json['unit'] as String,
-      date: DateTime.parse(json['date'] as String),
-      supplier: json['supplier'] as String?,
-      usedImmediately: json['used_immediately'] as bool? ?? false,
-      inventoryItemId: json['inventory_item_id'] as String?,
-      inventoryItem: json['inventory_item'] != null
-          ? InventoryItem.fromJson(json['inventory_item'])
+      description: TypeUtils.toStringSafe(json['description']),
+      amount: TypeUtils.toDoubleSafe(json['amount']),
+      quantity: TypeUtils.toDoubleSafe(json['quantity']),
+      unit: TypeUtils.toStringSafe(json['unit']),
+      date: TypeUtils.toDateTimeSafe(json['date']) ?? DateTime.now(),
+      supplier: TypeUtils.toNullableStringSafe(json['supplier']),
+      usedImmediately: TypeUtils.toBoolSafe(json['used_immediately']),
+      inventoryItemId: TypeUtils.toNullableStringSafe(json['inventory_item_id']),
+      inventoryItem: inventoryItemMap != null
+          ? InventoryItem.fromJson(inventoryItemMap)
           : null,
-      inventoryTransactionId: json['inventory_transaction_id'] as String?,
-      expiryDate: json['expiry_date'] != null
-          ? DateTime.parse(json['expiry_date'] as String)
-          : null,
-      metadata: json['metadata'] as Map<String, dynamic>?,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      inventoryTransactionId: TypeUtils.toNullableStringSafe(json['inventory_transaction_id']),
+      expiryDate: TypeUtils.toDateTimeSafe(json['expiry_date']),
+      metadata: TypeUtils.toMapSafe(json['metadata']),
+      createdAt: TypeUtils.toDateTimeSafe(json['created_at']) ?? DateTime.now(),
+      updatedAt: TypeUtils.toDateTimeSafe(json['updated_at']) ?? DateTime.now(),
     );
   }
 
@@ -95,8 +100,8 @@ class Expenditure {
       'category_item_id': categoryItemId,
       'category_item': categoryItem?.toJson(),
       'description': description,
-      'amount': amount.toString(),
-      'quantity': quantity.toString(),
+      'amount': amount,
+      'quantity': quantity,
       'unit': unit,
       'date': date.toIso8601String(),
       'supplier': supplier,
@@ -124,13 +129,24 @@ class ExpenditureResponse {
   });
 
   factory ExpenditureResponse.fromJson(Map<String, dynamic> json) {
+    final dataList = TypeUtils.toListSafe<dynamic>(json['data']);
+
     return ExpenditureResponse(
-      success: json['success'] as bool,
-      data: (json['data'] as List)
-          .map((item) => Expenditure.fromJson(item))
+      success: TypeUtils.toBoolSafe(json['success']),
+      data: dataList
+          .map((item) => Expenditure.fromJson(
+          item is Map<String, dynamic> ? item : {}))
           .toList(),
-      count: json['count'] as int,
+      count: TypeUtils.toIntSafe(json['count']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'success': success,
+      'data': data.map((x) => x.toJson()).toList(),
+      'count': count,
+    };
   }
 }
 
@@ -157,14 +173,14 @@ class ExpenditureCategory {
 
   factory ExpenditureCategory.fromJson(Map<String, dynamic> json) {
     return ExpenditureCategory(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String,
-      isActive: json['is_active'] as bool,
-      metadata: json['metadata'] as Map<String, dynamic>?,
-      useFromStore: json['use_from_store'] as bool,
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
+      id: TypeUtils.toStringSafe(json['id']),
+      name: TypeUtils.toStringSafe(json['name']),
+      description: TypeUtils.toStringSafe(json['description']),
+      isActive: TypeUtils.toBoolSafe(json['is_active']),
+      metadata: TypeUtils.toMapSafe(json['metadata']),
+      useFromStore: TypeUtils.toBoolSafe(json['use_from_store']),
+      createdAt: TypeUtils.toDateTimeSafe(json['created_at']) ?? DateTime.now(),
+      updatedAt: TypeUtils.toDateTimeSafe(json['updated_at']) ?? DateTime.now(),
     );
   }
 
@@ -189,7 +205,7 @@ class CategoryItem {
   final String categoryItemUnit;
   final bool useFromStore;
   final String description;
-  final dynamic components; // Changed from Map<String, dynamic>? to dynamic
+  final dynamic components;
   final Map<String, dynamic>? metadata;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -209,16 +225,16 @@ class CategoryItem {
 
   factory CategoryItem.fromJson(Map<String, dynamic> json) {
     return CategoryItem(
-      id: json['id'] as String,
-      inventoryCategoryId: json['inventory_category_id'] as String,
-      categoryItemName: json['category_item_name'] as String,
-      categoryItemUnit: json['category_item_unit'] as String,
-      useFromStore: json['use_from_store'] as bool,
-      description: json['description'] as String,
-      components: json['components'], // Keep as dynamic, don't cast
-      metadata: json['metadata'] as Map<String, dynamic>?,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      id: TypeUtils.toStringSafe(json['id']),
+      inventoryCategoryId: TypeUtils.toStringSafe(json['inventory_category_id']),
+      categoryItemName: TypeUtils.toStringSafe(json['category_item_name']),
+      categoryItemUnit: TypeUtils.toStringSafe(json['category_item_unit']),
+      useFromStore: TypeUtils.toBoolSafe(json['use_from_store']),
+      description: TypeUtils.toStringSafe(json['description']),
+      components: json['components'], // Keep as dynamic
+      metadata: TypeUtils.toMapSafe(json['metadata']),
+      createdAt: TypeUtils.toDateTimeSafe(json['created_at']) ?? DateTime.now(),
+      updatedAt: TypeUtils.toDateTimeSafe(json['updated_at']) ?? DateTime.now(),
     );
   }
 
@@ -237,7 +253,6 @@ class CategoryItem {
     };
   }
 
-  // Helper methods to safely access components
   bool get isComponentsList => components is List;
   bool get isComponentsMap => components is Map;
 
@@ -266,11 +281,14 @@ class CategoriesResponse {
   });
 
   factory CategoriesResponse.fromJson(Map<String, dynamic> json) {
+    final dataList = TypeUtils.toListSafe<dynamic>(json['data']);
+
     return CategoriesResponse(
-      success: json['success'] as bool,
-      data: List<ExpenditureCategory>.from(
-        (json['data'] as List).map((x) => ExpenditureCategory.fromJson(x)),
-      ),
+      success: TypeUtils.toBoolSafe(json['success']),
+      data: dataList
+          .map((x) => ExpenditureCategory.fromJson(
+          x is Map<String, dynamic> ? x : {}))
+          .toList(),
     );
   }
 
@@ -286,8 +304,8 @@ class InventoryItem {
   final String id;
   final String userId;
   final String? farmId;
-  final String? batchId; // Add this
-  final String? houseId; // Add this
+  final String? batchId;
+  final String? houseId;
   final String categoryId;
   final String itemName;
   final String itemCode;
@@ -316,8 +334,8 @@ class InventoryItem {
     required this.id,
     required this.userId,
     this.farmId,
-    this.batchId, // Add this
-    this.houseId, // Add this
+    this.batchId,
+    this.houseId,
     required this.categoryId,
     required this.itemName,
     required this.itemCode,
@@ -345,42 +363,34 @@ class InventoryItem {
 
   factory InventoryItem.fromJson(Map<String, dynamic> json) {
     return InventoryItem(
-      id: json['id'] as String,
-      userId: json['user_id'] as String,
-      farmId: json['farm_id'] as String?,
-      batchId: json['batch_id'] as String?, // Add this
-      houseId: json['house_id'] as String?, // Add this
-      categoryId: json['category_id'] as String,
-      itemName: json['item_name'] as String,
-      itemCode: json['item_code'] as String,
-      description: json['description'] as String,
-      unitOfMeasurement: json['unit_of_measurement'] as String,
-      currentStock: double.parse(json['current_stock'].toString()),
-      minimumStockLevel: double.parse(json['minimum_stock_level'].toString()),
-      reorderPoint: double.parse(json['reorder_point'].toString()),
-      cost: double.parse(json['cost'].toString()),
-      supplier: json['supplier'] as String?,
-      supplierContact: json['supplier_contact'] as String?,
-      storageLocation: json['storage_location'] as String?,
-      lastRestockDate: json['last_restock_date'] != null
-          ? DateTime.parse(json['last_restock_date'] as String)
-          : null,
-      currency: json['currency'] as String,
-      region: json['region'] as String,
-      expiryDate: json['expiry_date'] != null
-          ? DateTime.parse(json['expiry_date'] as String)
-          : null,
-      notes: json['notes'] as String?,
-      status: json['status'] as String,
-      quantityUsed: json['quantity_used'] != null
-          ? double.parse(json['quantity_used'].toString())
-          : null,
-      lastUpdated: json['last_updated'] != null
-          ? DateTime.parse(json['last_updated'] as String)
-          : null,
-      metadata: json['metadata'] as Map<String, dynamic>?,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      id: TypeUtils.toStringSafe(json['id']),
+      userId: TypeUtils.toStringSafe(json['user_id']),
+      farmId: TypeUtils.toNullableStringSafe(json['farm_id']),
+      batchId: TypeUtils.toNullableStringSafe(json['batch_id']),
+      houseId: TypeUtils.toNullableStringSafe(json['house_id']),
+      categoryId: TypeUtils.toStringSafe(json['category_id']),
+      itemName: TypeUtils.toStringSafe(json['item_name']),
+      itemCode: TypeUtils.toStringSafe(json['item_code']),
+      description: TypeUtils.toStringSafe(json['description']),
+      unitOfMeasurement: TypeUtils.toStringSafe(json['unit_of_measurement']),
+      currentStock: TypeUtils.toDoubleSafe(json['current_stock']),
+      minimumStockLevel: TypeUtils.toDoubleSafe(json['minimum_stock_level']),
+      reorderPoint: TypeUtils.toDoubleSafe(json['reorder_point']),
+      cost: TypeUtils.toDoubleSafe(json['cost']),
+      supplier: TypeUtils.toNullableStringSafe(json['supplier']),
+      supplierContact: TypeUtils.toNullableStringSafe(json['supplier_contact']),
+      storageLocation: TypeUtils.toNullableStringSafe(json['storage_location']),
+      lastRestockDate: TypeUtils.toDateTimeSafe(json['last_restock_date']),
+      currency: TypeUtils.toStringSafe(json['currency'], defaultValue: 'KES'),
+      region: TypeUtils.toStringSafe(json['region']),
+      expiryDate: TypeUtils.toDateTimeSafe(json['expiry_date']),
+      notes: TypeUtils.toNullableStringSafe(json['notes']),
+      status: TypeUtils.toStringSafe(json['status'], defaultValue: 'active'),
+      quantityUsed: TypeUtils.toNullableDoubleSafe(json['quantity_used']),
+      lastUpdated: TypeUtils.toDateTimeSafe(json['last_updated']),
+      metadata: TypeUtils.toMapSafe(json['metadata']),
+      createdAt: TypeUtils.toDateTimeSafe(json['created_at']) ?? DateTime.now(),
+      updatedAt: TypeUtils.toDateTimeSafe(json['updated_at']) ?? DateTime.now(),
     );
   }
 
@@ -389,17 +399,17 @@ class InventoryItem {
       'id': id,
       'user_id': userId,
       'farm_id': farmId,
-      'batch_id': batchId, // Add this
-      'house_id': houseId, // Add this
+      'batch_id': batchId,
+      'house_id': houseId,
       'category_id': categoryId,
       'item_name': itemName,
       'item_code': itemCode,
       'description': description,
       'unit_of_measurement': unitOfMeasurement,
-      'current_stock': currentStock.toString(),
-      'minimum_stock_level': minimumStockLevel.toString(),
-      'reorder_point': reorderPoint.toString(),
-      'cost': cost.toString(),
+      'current_stock': currentStock,
+      'minimum_stock_level': minimumStockLevel,
+      'reorder_point': reorderPoint,
+      'cost': cost,
       'supplier': supplier,
       'supplier_contact': supplierContact,
       'storage_location': storageLocation,
@@ -409,7 +419,7 @@ class InventoryItem {
       'expiry_date': expiryDate?.toIso8601String(),
       'notes': notes,
       'status': status,
-      'quantity_used': quantityUsed?.toString(),
+      'quantity_used': quantityUsed,
       'last_updated': lastUpdated?.toIso8601String(),
       'metadata': metadata,
       'created_at': createdAt.toIso8601String(),

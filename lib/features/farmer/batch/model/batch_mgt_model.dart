@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'package:agriflock360/core/utils/type_safe_utils.dart'; // Adjust the import path as needed
+
 class BatchMgtResponse {
   final BatchInfo batch;
   final List<RecentActivity> recentActivities;
@@ -13,13 +16,12 @@ class BatchMgtResponse {
 
   factory BatchMgtResponse.fromJson(Map<String, dynamic> json) {
     return BatchMgtResponse(
-      batch: BatchInfo.fromJson(json['batch']),
-      recentActivities: (json['recent_activities'] as List?)
-          ?.map((activity) => RecentActivity.fromJson(activity))
-          .toList() ??
-          [],
-      stats: BatchStats.fromJson(json['stats']),
-      financialStats: FinancialStats.fromJson(json['financial_stats']),
+      batch: BatchInfo.fromJson(TypeUtils.toMapSafe(json['batch']) ?? {}),
+      recentActivities: TypeUtils.toListSafe<Map<String, dynamic>>(json['recent_activities'])
+          .map((activity) => RecentActivity.fromJson(activity))
+          .toList(),
+      stats: BatchStats.fromJson(TypeUtils.toMapSafe(json['stats']) ?? {}),
+      financialStats: FinancialStats.fromJson(TypeUtils.toMapSafe(json['financial_stats']) ?? {}),
     );
   }
 
@@ -66,19 +68,19 @@ class BatchInfo {
 
   factory BatchInfo.fromJson(Map<String, dynamic> json) {
     return BatchInfo(
-      id: json['id'] ?? '',
-      name: json['name'] ?? '',
-      breed: json['breed'] ?? '',
-      status: json['status'] ?? '',
-      statusLabel: json['statusLabel'] ?? '',
-      totalBirds: json['total_birds'] ?? 0,
-      liveBirds: json['live_birds']?.toString() ?? '0',
-      mortalityCount: json['mortality_count'] ?? 0,
-      mortalityRate: json['mortality_rate'] ?? 0,
-      ageDays: json['age_days'] ?? 0,
-      startDate: json['start_date'] ?? '',
-      houseName: json['house_name'] ?? '',
-      farmName: json['farm_name'] ?? '',
+      id: TypeUtils.toStringSafe(json['id']),
+      name: TypeUtils.toStringSafe(json['name']),
+      breed: TypeUtils.toStringSafe(json['breed']),
+      status: TypeUtils.toStringSafe(json['status']),
+      statusLabel: TypeUtils.toStringSafe(json['statusLabel']),
+      totalBirds: TypeUtils.toIntSafe(json['total_birds']),
+      liveBirds: TypeUtils.toStringSafe(json['live_birds']),
+      mortalityCount: TypeUtils.toIntSafe(json['mortality_count']),
+      mortalityRate: TypeUtils.toDoubleSafe(json['mortality_rate']),
+      ageDays: TypeUtils.toIntSafe(json['age_days']),
+      startDate: TypeUtils.toDateStringSafe(json['start_date']) ?? '',
+      houseName: TypeUtils.toStringSafe(json['house_name']),
+      farmName: TypeUtils.toStringSafe(json['farm_name']),
     );
   }
 
@@ -134,23 +136,19 @@ class RecentActivity {
 
   factory RecentActivity.fromJson(Map<String, dynamic> json) {
     return RecentActivity(
-      id: json['id'] ?? '',
-      activityType: json['activity_type'] ?? '',
-      title: json['title'] ?? '',
-      description: json['description'] ?? '',
-      userId: json['user_id'] ?? '',
-      farmId: json['farm_id'],
-      batchId: json['batch_id'] ?? '',
-      icon: json['icon'] ?? '📊',
-      status: json['status'] ?? '',
-      performedBy: json['performed_by'],
-      metadata: json['metadata'],
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
-          : DateTime.now(),
-      updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'])
-          : DateTime.now(),
+      id: TypeUtils.toStringSafe(json['id']),
+      activityType: TypeUtils.toStringSafe(json['activity_type']),
+      title: TypeUtils.toStringSafe(json['title']),
+      description: TypeUtils.toStringSafe(json['description']),
+      userId: TypeUtils.toStringSafe(json['user_id']),
+      farmId: TypeUtils.toNullableStringSafe(json['farm_id']),
+      batchId: TypeUtils.toStringSafe(json['batch_id']),
+      icon: TypeUtils.toStringSafe(json['icon'], defaultValue: '📊'),
+      status: TypeUtils.toStringSafe(json['status']),
+      performedBy: TypeUtils.toNullableStringSafe(json['performed_by']),
+      metadata: TypeUtils.toMapSafe(json['metadata']),
+      createdAt: TypeUtils.toDateTimeSafe(json['created_at']) ?? DateTime.now(),
+      updatedAt: TypeUtils.toDateTimeSafe(json['updated_at']) ?? DateTime.now(),
     );
   }
 
@@ -188,10 +186,10 @@ class BatchStats {
 
   factory BatchStats.fromJson(Map<String, dynamic> json) {
     return BatchStats(
-      totalBirds: json['total_birds'] ?? 0,
-      liveBirds: json['live_birds']?.toString() ?? '0',
-      mortality: json['mortality'] ?? 0,
-      ageDays: json['age_days'] ?? 0,
+      totalBirds: TypeUtils.toIntSafe(json['total_birds']),
+      liveBirds: TypeUtils.toStringSafe(json['live_birds']),
+      mortality: TypeUtils.toIntSafe(json['mortality']),
+      ageDays: TypeUtils.toIntSafe(json['age_days']),
     );
   }
 
@@ -222,11 +220,11 @@ class FinancialStats {
 
   factory FinancialStats.fromJson(Map<String, dynamic> json) {
     return FinancialStats(
-      today: FinancialPeriodStats.fromJson(json['today'] ?? {}),
-      weekly: FinancialPeriodStats.fromJson(json['weekly'] ?? {}),
-      monthly: FinancialPeriodStats.fromJson(json['monthly'] ?? {}),
-      yearly: FinancialPeriodStats.fromJson(json['yearly'] ?? {}),
-      allTime: FinancialPeriodStats.fromJson(json['all_time'] ?? {}),
+      today: FinancialPeriodStats.fromJson(TypeUtils.toMapSafe(json['today']) ?? {}),
+      weekly: FinancialPeriodStats.fromJson(TypeUtils.toMapSafe(json['weekly']) ?? {}),
+      monthly: FinancialPeriodStats.fromJson(TypeUtils.toMapSafe(json['monthly']) ?? {}),
+      yearly: FinancialPeriodStats.fromJson(TypeUtils.toMapSafe(json['yearly']) ?? {}),
+      allTime: FinancialPeriodStats.fromJson(TypeUtils.toMapSafe(json['all_time']) ?? {}),
     );
   }
 
@@ -260,12 +258,12 @@ class FinancialPeriodStats {
 
   factory FinancialPeriodStats.fromJson(Map<String, dynamic> json) {
     return FinancialPeriodStats(
-      feedingCost: (json['feeding_cost'] ?? 0).toDouble(),
-      vaccinationCost: (json['vaccination_cost'] ?? 0).toDouble(),
-      inventoryCost: (json['inventory_cost'] ?? 0).toDouble(),
-      totalExpenditure: (json['total_expenditure'] ?? 0).toDouble(),
-      productIncome: (json['product_income'] ?? 0).toDouble(),
-      netProfit: (json['net_profit'] ?? 0).toDouble(),
+      feedingCost: TypeUtils.toDoubleSafe(json['feeding_cost']),
+      vaccinationCost: TypeUtils.toDoubleSafe(json['vaccination_cost']),
+      inventoryCost: TypeUtils.toDoubleSafe(json['inventory_cost']),
+      totalExpenditure: TypeUtils.toDoubleSafe(json['total_expenditure']),
+      productIncome: TypeUtils.toDoubleSafe(json['product_income']),
+      netProfit: TypeUtils.toDoubleSafe(json['net_profit']),
     );
   }
 

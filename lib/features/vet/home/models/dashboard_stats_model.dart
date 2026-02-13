@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:agriflock360/core/utils/type_safe_utils.dart';
 
 class VetDashboardStats {
   final int todayVisits;
@@ -20,17 +21,19 @@ class VetDashboardStats {
   });
 
   factory VetDashboardStats.fromJson(Map<String, dynamic> json) {
+    final appointmentsList = TypeUtils.toListSafe<dynamic>(json['active_appointments']);
+
     return VetDashboardStats(
-      todayVisits: json['today_visits'] as int? ?? 0,
-      weekVisits: json['week_visits'] as int? ?? 0,
-      pendingReports: json['pending_reports'] as int? ?? 0,
-      totalEarningsThisMonth: (json['total_earnings_this_month'] as num?)?.toDouble() ?? 0.0,
-      completedEarnings: (json['completed_earnings'] as num?)?.toDouble() ?? 0.0,
-      pendingEarnings: (json['pending_earnings'] as num?)?.toDouble() ?? 0.0,
-      activeAppointments: (json['active_appointments'] as List<dynamic>?)
-          ?.map((item) => VisitDashboard.fromJson(item as Map<String, dynamic>))
-          .toList() ??
-          [],
+      todayVisits: TypeUtils.toIntSafe(json['today_visits']),
+      weekVisits: TypeUtils.toIntSafe(json['week_visits']),
+      pendingReports: TypeUtils.toIntSafe(json['pending_reports']),
+      totalEarningsThisMonth: TypeUtils.toDoubleSafe(json['total_earnings_this_month']),
+      completedEarnings: TypeUtils.toDoubleSafe(json['completed_earnings']),
+      pendingEarnings: TypeUtils.toDoubleSafe(json['pending_earnings']),
+      activeAppointments: appointmentsList
+          .map((item) => VisitDashboard.fromJson(
+          item is Map<String, dynamic> ? item : {}))
+          .toList(),
     );
   }
 
@@ -127,15 +130,15 @@ class VisitDashboard {
 
   factory VisitDashboard.fromJson(Map<String, dynamic> json) {
     return VisitDashboard(
-      id: json['id'] as String? ?? '',
-      farmerName: json['farmer_name'] as String? ?? '',
-      farmName: json['farm_name'] as String? ?? '',
-      birdCount: json['bird_count'] as int? ?? 0,
-      preferredDate: json['preferred_date'] as String? ?? '',
-      preferredTime: json['preferred_time'] as String? ?? '',
-      scheduledTime: json['scheduled_time'] as String?,
-      status: json['status'] as String? ?? '',
-      serviceType: json['service_type'] as String? ?? '',
+      id: TypeUtils.toStringSafe(json['id']),
+      farmerName: TypeUtils.toStringSafe(json['farmer_name']),
+      farmName: TypeUtils.toStringSafe(json['farm_name']),
+      birdCount: TypeUtils.toIntSafe(json['bird_count']),
+      preferredDate: TypeUtils.toStringSafe(json['preferred_date']),
+      preferredTime: TypeUtils.toStringSafe(json['preferred_time']),
+      scheduledTime: TypeUtils.toNullableStringSafe(json['scheduled_time']),
+      status: TypeUtils.toStringSafe(json['status']),
+      serviceType: TypeUtils.toStringSafe(json['service_type']),
     );
   }
 

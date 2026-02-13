@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'package:agriflock360/core/utils/type_safe_utils.dart';
+
 class BatchHomeResponse {
   final int statusCode;
   final String message;
@@ -12,14 +15,26 @@ class BatchHomeResponse {
   });
 
   factory BatchHomeResponse.fromJson(Map<String, dynamic> json) {
+    final dataList = TypeUtils.toListSafe<dynamic>(json['data']);
+
     return BatchHomeResponse(
-      statusCode: json['statusCode'] as int? ?? 0,
-      message: json['message'] as String? ?? '',
-      data: (json['data'] as List? ?? [])
-          .map((batch) => BatchHomeData.fromJson(batch as Map<String, dynamic>))
+      statusCode: TypeUtils.toIntSafe(json['statusCode']),
+      message: TypeUtils.toStringSafe(json['message']),
+      data: dataList
+          .map((batch) => BatchHomeData.fromJson(
+          batch is Map<String, dynamic> ? batch : {}))
           .toList(),
-      totalBatches: json['total_batches'] as int? ?? 0,
+      totalBatches: TypeUtils.toIntSafe(json['total_batches']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'statusCode': statusCode,
+      'message': message,
+      'data': data.map((batch) => batch.toJson()).toList(),
+      'total_batches': totalBatches,
+    };
   }
 }
 
@@ -79,80 +94,78 @@ class BatchHomeData {
   });
 
   // Helper getter to get age days as int when needed
-  int get ageDaysAsInt => int.tryParse(ageDays) ?? 0;
+  int get ageDaysAsInt => TypeUtils.toIntSafe(ageDays);
 
   factory BatchHomeData.fromJson(Map<String, dynamic> json) {
-    // Safely parse age_days - handle both String and int
-    String parseAgeDays(dynamic value) {
-      if (value == null) return '0';
-      if (value is String) return value;
-      if (value is int) return value.toString();
-      return '0';
-    }
-
-    // Safely parse double values
-    double parseDouble(dynamic value) {
-      if (value == null) return 0.0;
-      if (value is double) return value;
-      if (value is int) return value.toDouble();
-      if (value is String) {
-        return double.tryParse(value) ?? 0.0;
-      }
-      return 0.0;
-    }
-
-    // Safely parse int values
-    int parseInt(dynamic value, {int defaultValue = 0}) {
-      if (value == null) return defaultValue;
-      if (value is int) return value;
-      if (value is String) {
-        return int.tryParse(value) ?? defaultValue;
-      }
-      if (value is double) return value.toInt();
-      return defaultValue;
-    }
+    final productionStageMap = TypeUtils.toMapSafe(json['production_stage']);
+    final vaccinationMap = TypeUtils.toMapSafe(json['vaccination']);
 
     return BatchHomeData(
-      batchId: json['batch_id'] as String? ?? '',
-      farmId: json['farm_id'] as String? ?? '',
-      farmName: json['farm_name'] as String? ?? '',
-      houseName: json['house_name'] as String? ?? '',
-      batchNumber: json['batch_number'] as String? ?? '',
-      birdType: json['bird_type'] as String? ?? '',
-      totalBirds: parseInt(json['total_birds']),
-      birdsPlaced: parseInt(json['birds_placed']),
-      reportBy: json['report_by'] as String? ?? '',
-      ageDays: parseAgeDays(json['age_days']),
-      ageWeeks: parseInt(json['age_weeks']),
-      productionStage: ProductionStage.fromJson(
-        json['production_stage'] as Map<String, dynamic>? ?? {},
-      ),
-      mortality: parseInt(json['mortality']),
-      mortalityRate: json['mortality_rate'] as String? ?? '0%',
-      foodInStoreBags: parseInt(json['food_in_store_bags']),
-      foodInStoreKg: parseInt(json['food_in_store_kg']),
-      expectedFoodPerBirdPerDayG: parseDouble(json['expected_food_per_bird_per_day_g']),
-      totalActualFoodPerDayKg: parseDouble(json['total_actual_food_per_day_kg']),
-      actualFoodPerBirdPerDayG: parseDouble(json['actual_food_per_bird_per_day_g']),
-      expectedWeight: json['expected_weight'] != null
-          ? parseDouble(json['expected_weight'])
-          : null,
-      actualWeight: json['actual_weight'] != null
-          ? parseDouble(json['actual_weight'])
-          : null,
-      vaccination: Vaccination.fromJson(
-        json['vaccination'] as Map<String, dynamic>? ?? {},
-      ),
-      totalEggProduction: json['total_egg_production'] != null
-          ? parseInt(json['total_egg_production'])
-          : null,
-      productionPercentage: json['production_percentage'] != null
-          ? parseInt(json['production_percentage'])
-          : null,
-      eggCost: json['egg_cost'] != null
-          ? parseDouble(json['egg_cost'])
-          : null,
+      batchId: TypeUtils.toStringSafe(json['batch_id']),
+      farmId: TypeUtils.toStringSafe(json['farm_id']),
+      farmName: TypeUtils.toStringSafe(json['farm_name']),
+      houseName: TypeUtils.toStringSafe(json['house_name']),
+      batchNumber: TypeUtils.toStringSafe(json['batch_number']),
+      birdType: TypeUtils.toStringSafe(json['bird_type']),
+      totalBirds: TypeUtils.toIntSafe(json['total_birds']),
+      birdsPlaced: TypeUtils.toIntSafe(json['birds_placed']),
+      reportBy: TypeUtils.toStringSafe(json['report_by']),
+      ageDays: _parseAgeDays(json['age_days']),
+      ageWeeks: TypeUtils.toIntSafe(json['age_weeks']),
+      productionStage: ProductionStage.fromJson(productionStageMap ?? {}),
+      mortality: TypeUtils.toIntSafe(json['mortality']),
+      mortalityRate: TypeUtils.toStringSafe(json['mortality_rate'], defaultValue: '0%'),
+      foodInStoreBags: TypeUtils.toIntSafe(json['food_in_store_bags']),
+      foodInStoreKg: TypeUtils.toIntSafe(json['food_in_store_kg']),
+      expectedFoodPerBirdPerDayG: TypeUtils.toDoubleSafe(json['expected_food_per_bird_per_day_g']),
+      totalActualFoodPerDayKg: TypeUtils.toDoubleSafe(json['total_actual_food_per_day_kg']),
+      actualFoodPerBirdPerDayG: TypeUtils.toDoubleSafe(json['actual_food_per_bird_per_day_g']),
+      expectedWeight: TypeUtils.toNullableDoubleSafe(json['expected_weight']),
+      actualWeight: TypeUtils.toNullableDoubleSafe(json['actual_weight']),
+      vaccination: Vaccination.fromJson(vaccinationMap ?? {}),
+      totalEggProduction: TypeUtils.toNullableIntSafe(json['total_egg_production']),
+      productionPercentage: TypeUtils.toNullableIntSafe(json['production_percentage']),
+      eggCost: TypeUtils.toNullableDoubleSafe(json['egg_cost']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'batch_id': batchId,
+      'farm_id': farmId,
+      'farm_name': farmName,
+      'house_name': houseName,
+      'batch_number': batchNumber,
+      'bird_type': birdType,
+      'total_birds': totalBirds,
+      'birds_placed': birdsPlaced,
+      'report_by': reportBy,
+      'age_days': ageDays,
+      'age_weeks': ageWeeks,
+      'production_stage': productionStage.toJson(),
+      'mortality': mortality,
+      'mortality_rate': mortalityRate,
+      'food_in_store_bags': foodInStoreBags,
+      'food_in_store_kg': foodInStoreKg,
+      'expected_food_per_bird_per_day_g': expectedFoodPerBirdPerDayG,
+      'total_actual_food_per_day_kg': totalActualFoodPerDayKg,
+      'actual_food_per_bird_per_day_g': actualFoodPerBirdPerDayG,
+      'expected_weight': expectedWeight,
+      'actual_weight': actualWeight,
+      'vaccination': vaccination.toJson(),
+      'total_egg_production': totalEggProduction,
+      'production_percentage': productionPercentage,
+      'egg_cost': eggCost,
+    };
+  }
+
+  // Helper method to parse age_days - handle both String and int
+  static String _parseAgeDays(dynamic value) {
+    if (value == null) return '0';
+    if (value is String) return value;
+    if (value is int) return value.toString();
+    if (value is double) return value.toInt().toString();
+    return '0';
   }
 }
 
@@ -168,13 +181,21 @@ class ProductionStage {
   });
 
   factory ProductionStage.fromJson(Map<String, dynamic> json) {
+    final expectedMilestoneMap = TypeUtils.toMapSafe(json['expected_milestone']);
+
     return ProductionStage(
-      stage: json['stage'] as String? ?? '',
-      description: json['description'] as String? ?? '',
-      expectedMilestone: ExpectedMilestone.fromJson(
-        json['expected_milestone'] as Map<String, dynamic>? ?? {},
-      ),
+      stage: TypeUtils.toStringSafe(json['stage']),
+      description: TypeUtils.toStringSafe(json['description']),
+      expectedMilestone: ExpectedMilestone.fromJson(expectedMilestoneMap ?? {}),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'stage': stage,
+      'description': description,
+      'expected_milestone': expectedMilestone.toJson(),
+    };
   }
 }
 
@@ -192,23 +213,21 @@ class ExpectedMilestone {
   });
 
   factory ExpectedMilestone.fromJson(Map<String, dynamic> json) {
-    // Safely parse int values
-    int parseInt(dynamic value, {int defaultValue = 0}) {
-      if (value == null) return defaultValue;
-      if (value is int) return value;
-      if (value is String) {
-        return int.tryParse(value) ?? defaultValue;
-      }
-      if (value is double) return value.toInt();
-      return defaultValue;
-    }
-
     return ExpectedMilestone(
-      type: json['type'] as String? ?? '',
-      expectedStartDay: parseInt(json['expected_start_day']),
-      expectedStartWeeks: parseInt(json['expected_start_weeks']),
-      daysRemaining: parseInt(json['days_remaining']),
+      type: TypeUtils.toStringSafe(json['type']),
+      expectedStartDay: TypeUtils.toIntSafe(json['expected_start_day']),
+      expectedStartWeeks: TypeUtils.toIntSafe(json['expected_start_weeks']),
+      daysRemaining: TypeUtils.toIntSafe(json['days_remaining']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'type': type,
+      'expected_start_day': expectedStartDay,
+      'expected_start_weeks': expectedStartWeeks,
+      'days_remaining': daysRemaining,
+    };
   }
 }
 
@@ -222,18 +241,25 @@ class Vaccination {
   });
 
   factory Vaccination.fromJson(Map<String, dynamic> json) {
-    // Safely parse string lists
-    List<String> parseStringList(dynamic value) {
-      if (value == null) return [];
-      if (value is List) {
-        return value.map((item) => item?.toString() ?? '').toList();
-      }
-      return [];
-    }
-
     return Vaccination(
-      vaccinesDone: parseStringList(json['vaccines_done']),
-      vaccinesUpcoming: parseStringList(json['vaccines_upcoming']),
+      vaccinesDone: _parseStringList(json['vaccines_done']),
+      vaccinesUpcoming: _parseStringList(json['vaccines_upcoming']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'vaccines_done': vaccinesDone,
+      'vaccines_upcoming': vaccinesUpcoming,
+    };
+  }
+
+  // Helper method to safely parse string lists
+  static List<String> _parseStringList(dynamic value) {
+    if (value == null) return [];
+    if (value is List) {
+      return value.map((item) => TypeUtils.toStringSafe(item)).toList();
+    }
+    return [];
   }
 }

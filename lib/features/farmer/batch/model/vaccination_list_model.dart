@@ -1,4 +1,5 @@
 import 'package:agriflock360/core/utils/date_util.dart';
+import 'package:agriflock360/core/utils/type_safe_utils.dart';
 
 class VaccinationListResponse {
   final List<VaccinationListItem> list;
@@ -13,11 +14,11 @@ class VaccinationListResponse {
 
   factory VaccinationListResponse.fromJson(Map<String, dynamic> json) {
     return VaccinationListResponse(
-      list: (json['list'] as List)
+      list: TypeUtils.toListSafe<Map<String, dynamic>>(json['list'])
           .map((item) => VaccinationListItem.fromJson(item))
           .toList(),
-      upcomingFromPlan: json['upcoming_from_plan'] as List, // Added
-      counts: VaccinationListCounts.fromJson(json['counts']),
+      upcomingFromPlan: TypeUtils.toListSafe(json['upcoming_from_plan']),
+      counts: VaccinationListCounts.fromJson(TypeUtils.toMapSafe(json['counts']) ?? {}),
     );
   }
 
@@ -61,24 +62,18 @@ class VaccinationListItem {
 
   factory VaccinationListItem.fromJson(Map<String, dynamic> json) {
     return VaccinationListItem(
-      id: json['id'] as String,
-      vaccineName: json['vaccine_name'] as String,
-      method: json['method'] as String,
-      dosagePerBird: json['dosage_per_bird'] as String,
-      scheduledDate: json['scheduled_date'] != null
-          ? DateUtil.parseISODate(json['scheduled_date'])
-          : null,
-      scheduledTime: json['scheduled_time'] as String?,
-      status: json['status'] as String,
-      completedDate: json['completed_date'] != null // Added
-          ? DateUtil.parseISODate(json['completed_date'])
-          : null,
-      completedTime: json['completed_time'] as String?, // Added
-      isOverdue: json['is_overdue'] as bool,
-      isToday: json['is_today'] as bool,
-      administeredAt: json['administered_at'] != null
-          ? DateUtil.parseISODate(json['administered_at'])
-          : null,
+      id: TypeUtils.toStringSafe(json['id']),
+      vaccineName: TypeUtils.toStringSafe(json['vaccine_name']),
+      method: TypeUtils.toStringSafe(json['method']),
+      dosagePerBird: TypeUtils.toStringSafe(json['dosage_per_bird']),
+      scheduledDate: TypeUtils.toDateTimeSafe(json['scheduled_date']),
+      scheduledTime: TypeUtils.toNullableStringSafe(json['scheduled_time']),
+      status: TypeUtils.toStringSafe(json['status']),
+      completedDate: TypeUtils.toDateTimeSafe(json['completed_date']),
+      completedTime: TypeUtils.toNullableStringSafe(json['completed_time']),
+      isOverdue: TypeUtils.toBoolSafe(json['is_overdue']),
+      isToday: TypeUtils.toBoolSafe(json['is_today']),
+      administeredAt: TypeUtils.toDateTimeSafe(json['administered_at']),
     );
   }
 
@@ -88,20 +83,15 @@ class VaccinationListItem {
       'vaccine_name': vaccineName,
       'method': method,
       'dosage_per_bird': dosagePerBird,
-      'scheduled_date': scheduledDate != null
-          ? DateUtil.toISO8601(scheduledDate!)
-          : null,
+      'scheduled_date': scheduledDate != null ? DateUtil.toISO8601(scheduledDate!) : null,
       'scheduled_time': scheduledTime,
       'status': status,
       'completed_date': completedDate != null // Added
-          ? DateUtil.toISO8601(completedDate!)
-          : null,
+          ? DateUtil.toISO8601(completedDate!) : null,
       'completed_time': completedTime, // Added
       'is_overdue': isOverdue,
       'is_today': isToday,
-      'administered_at': administeredAt != null
-          ? DateUtil.toISO8601(administeredAt!)
-          : null,
+      'administered_at': administeredAt != null ? DateUtil.toISO8601(administeredAt!) : null,
     };
   }
 }
@@ -123,11 +113,11 @@ class VaccinationListCounts {
 
   factory VaccinationListCounts.fromJson(Map<String, dynamic> json) {
     return VaccinationListCounts(
-      today: json['today'] as int,
-      overdue: json['overdue'] as int,
-      upcoming: json['upcoming'] as int,
-      completed: json['completed'] as int,
-      upcomingFromPlan: json['upcoming_from_plan'] as int, // Added
+      today: TypeUtils.toIntSafe(json['today']),
+      overdue: TypeUtils.toIntSafe(json['overdue']),
+      upcoming: TypeUtils.toIntSafe(json['upcoming']),
+      completed: TypeUtils.toIntSafe(json['completed']),
+      upcomingFromPlan: TypeUtils.toIntSafe(json['upcoming_from_plan']),
     );
   }
 

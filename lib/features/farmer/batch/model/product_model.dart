@@ -1,5 +1,8 @@
 // lib/features/farmer/batch/model/product_model.dart
 
+import 'dart:convert';
+import 'package:agriflock360/core/utils/type_safe_utils.dart';
+
 class Product {
   final String id;
   final String productType;
@@ -35,26 +38,20 @@ class Product {
 
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
-      id: json['id'] ?? '',
-      productType: json['product_type'] ?? '',
-      userId: json['user_id'] ?? '',
-      batchId: json['batch_id'],
-      eggsCollected: json['eggs_collected'],
-      crackedEggs: json['cracked_eggs'] ?? 0,
-      birdsSold: json['birds_sold'],
-      weight: json['weight']?.toString(),
-      quantity: json['quantity']?.toString(),
-      price: json['price']?.toString() ?? '0',
-      collectionDate: json['collection_date'] != null
-          ? DateTime.parse(json['collection_date'])
-          : DateTime.now(),
-      notes: json['notes'],
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
-          : DateTime.now(),
-      updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'])
-          : DateTime.now(),
+      id: TypeUtils.toStringSafe(json['id']),
+      productType: TypeUtils.toStringSafe(json['product_type']),
+      userId: TypeUtils.toStringSafe(json['user_id']),
+      batchId: TypeUtils.toNullableStringSafe(json['batch_id']),
+      eggsCollected: TypeUtils.toNullableIntSafe(json['eggs_collected']),
+      crackedEggs: TypeUtils.toNullableIntSafe(json['cracked_eggs']),
+      birdsSold: TypeUtils.toNullableIntSafe(json['birds_sold']),
+      weight: TypeUtils.toNullableStringSafe(json['weight']),
+      quantity: TypeUtils.toNullableStringSafe(json['quantity']),
+      price: TypeUtils.toStringSafe(json['price'], defaultValue: '0'),
+      collectionDate: TypeUtils.toDateTimeSafe(json['collection_date']) ?? DateTime.now(),
+      notes: TypeUtils.toNullableStringSafe(json['notes']),
+      createdAt: TypeUtils.toDateTimeSafe(json['created_at']) ?? DateTime.now(),
+      updatedAt: TypeUtils.toDateTimeSafe(json['updated_at']) ?? DateTime.now(),
     );
   }
 
@@ -101,20 +98,18 @@ class ProductDashboard {
 
   factory ProductDashboard.fromJson(Map<String, dynamic> json) {
     return ProductDashboard(
-      totalEggs: json['total_eggs'] ?? 0,
-      totalCrackedEggs: json['total_cracked_eggs'] ?? 0,
-      averageDailyEggs: json['average_daily_eggs'] ?? 0,
-      totalBirdsSold: json['total_birds_sold'] ?? 0,
-      totalMeatWeight: json['total_meat_weight'] ?? 0,
-      averageMonthlySales: json['average_monthly_sales'] ?? 0,
-      productionByType: (json['production_by_type'] as List?)
-          ?.map((item) => ProductionByType.fromJson(item))
-          .toList() ??
-          [],
-      weeklyEggProduction: (json['weekly_egg_production'] as List?)
-          ?.map((item) => WeeklyProduction.fromJson(item))
-          .toList() ??
-          [],
+      totalEggs: TypeUtils.toIntSafe(json['total_eggs']),
+      totalCrackedEggs: TypeUtils.toIntSafe(json['total_cracked_eggs']),
+      averageDailyEggs: TypeUtils.toDoubleSafe(json['average_daily_eggs']),
+      totalBirdsSold: TypeUtils.toIntSafe(json['total_birds_sold']),
+      totalMeatWeight: TypeUtils.toDoubleSafe(json['total_meat_weight']),
+      averageMonthlySales: TypeUtils.toDoubleSafe(json['average_monthly_sales']),
+      productionByType: TypeUtils.toListSafe<Map<String, dynamic>>(json['production_by_type'])
+          .map((item) => ProductionByType.fromJson(item))
+          .toList(),
+      weeklyEggProduction: TypeUtils.toListSafe<Map<String, dynamic>>(json['weekly_egg_production'])
+          .map((item) => WeeklyProduction.fromJson(item))
+          .toList(),
     );
   }
 
@@ -147,10 +142,10 @@ class ProductionByType {
 
   factory ProductionByType.fromJson(Map<String, dynamic> json) {
     return ProductionByType(
-      productType: json['product_type'] ?? '',
-      totalQuantity: json['total_quantity'] ?? 0,
-      totalRevenue: json['total_revenue'] ?? 0,
-      percentage: json['percentage'] ?? 0,
+      productType: TypeUtils.toStringSafe(json['product_type']),
+      totalQuantity: TypeUtils.toDoubleSafe(json['total_quantity']),
+      totalRevenue: TypeUtils.toDoubleSafe(json['total_revenue']),
+      percentage: TypeUtils.toDoubleSafe(json['percentage']),
     );
   }
 
@@ -177,9 +172,9 @@ class WeeklyProduction {
 
   factory WeeklyProduction.fromJson(Map<String, dynamic> json) {
     return WeeklyProduction(
-      week: json['week'] ?? '',
-      eggsCollected: json['eggs_collected'] ?? 0,
-      birdsSold: json['birds_sold'] ?? 0,
+      week: TypeUtils.toStringSafe(json['week']),
+      eggsCollected: TypeUtils.toIntSafe(json['eggs_collected']),
+      birdsSold: TypeUtils.toIntSafe(json['birds_sold']),
     );
   }
 
@@ -207,8 +202,6 @@ class CreateProductRequest {
   final int? smallDeformedEggs;
   final int? partialBrokenEggs;
 
-
-
   const CreateProductRequest({
     required this.productType,
     required this.batchId,
@@ -219,7 +212,9 @@ class CreateProductRequest {
     this.quantity,
     required this.price,
     required this.collectionDate,
-    this.notes, this.smallDeformedEggs, this.partialBrokenEggs,
+    this.notes,
+    this.smallDeformedEggs,
+    this.partialBrokenEggs,
   });
 
   Map<String, dynamic> toJson() {
@@ -240,7 +235,7 @@ class CreateProductRequest {
         data['eggs_collected'] = eggsCollected;
         data['cracked_eggs'] = crackedEggs ?? 0;
         data['small_deformed_eggs'] = smallDeformedEggs ?? 0;
-        data['partial_broken_eggs'] = partialBrokenEggs??0;
+        data['partial_broken_eggs'] = partialBrokenEggs ?? 0;
         break;
       case 'meat':
         data['birds_sold'] = birdsSold;

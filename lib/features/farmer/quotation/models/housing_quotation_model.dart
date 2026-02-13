@@ -1,4 +1,5 @@
 // models/housing_quotation_model.dart
+import 'package:agriflock360/core/utils/type_safe_utils.dart';
 
 class HousingQuotationResponse {
   final bool success;
@@ -12,10 +13,12 @@ class HousingQuotationResponse {
   });
 
   factory HousingQuotationResponse.fromJson(Map<String, dynamic> json) {
+    final dataMap = TypeUtils.toMapSafe(json['data']);
+
     return HousingQuotationResponse(
-      success: json['success'] ?? false,
-      message: json['message'] ?? '',
-      data: HousingQuotationData.fromJson(json['data']),
+      success: TypeUtils.toBoolSafe(json['success']),
+      message: TypeUtils.toStringSafe(json['message']),
+      data: HousingQuotationData.fromJson(dataMap ?? {}),
     );
   }
 
@@ -62,35 +65,28 @@ class HousingQuotationData {
   });
 
   factory HousingQuotationData.fromJson(Map<String, dynamic> json) {
-    return HousingQuotationData(
-      id: json['id'] ?? '',
-      userId: json['user_id'] ?? '',
-      user: json['user'] != null ? QuotationUser.fromJson(json['user']) : null,
-      birdCapacity: json['bird_capacity'] ?? 0,
-      materials: (json['materials'] as List<dynamic>?)
-          ?.map((x) => QuotationMaterial.fromJson(x as Map<String, dynamic>))
-          .toList() ??
-          [],
-      materialsSubtotal: _parseDouble(json['materials_subtotal']),
-      laborPercentage: json['labor_percentage']?.toString() ?? '0.00',
-      laborCost: _parseDouble(json['labor_cost']),
-      grandTotal: _parseDouble(json['grand_total']),
-      currency: json['currency'] ?? 'KES',
-      status: json['status'] ?? 'draft',
-      notes: json['notes'],
-      metadata: json['metadata'],
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
-          : DateTime.now(),
-    );
-  }
+    final userMap = TypeUtils.toMapSafe(json['user']);
+    final materialsList = TypeUtils.toListSafe<dynamic>(json['materials']);
 
-  static double _parseDouble(dynamic value) {
-    if (value == null) return 0.0;
-    if (value is double) return value;
-    if (value is int) return value.toDouble();
-    if (value is String) return double.tryParse(value) ?? 0.0;
-    return 0.0;
+    return HousingQuotationData(
+      id: TypeUtils.toStringSafe(json['id']),
+      userId: TypeUtils.toStringSafe(json['user_id']),
+      user: userMap != null ? QuotationUser.fromJson(userMap) : null,
+      birdCapacity: TypeUtils.toIntSafe(json['bird_capacity']),
+      materials: materialsList
+          .map((x) => QuotationMaterial.fromJson(
+          x is Map<String, dynamic> ? x : {}))
+          .toList(),
+      materialsSubtotal: TypeUtils.toDoubleSafe(json['materials_subtotal']),
+      laborPercentage: TypeUtils.toStringSafe(json['labor_percentage'], defaultValue: '0.00'),
+      laborCost: TypeUtils.toDoubleSafe(json['labor_cost']),
+      grandTotal: TypeUtils.toDoubleSafe(json['grand_total']),
+      currency: TypeUtils.toStringSafe(json['currency'], defaultValue: 'KES'),
+      status: TypeUtils.toStringSafe(json['status'], defaultValue: 'draft'),
+      notes: TypeUtils.toNullableStringSafe(json['notes']),
+      metadata: json['metadata'], // Keep as dynamic
+      createdAt: TypeUtils.toDateTimeSafe(json['created_at']) ?? DateTime.now(),
+    );
   }
 
   Map<String, dynamic> toJson() {
@@ -122,7 +118,7 @@ class QuotationUser {
 
   factory QuotationUser.fromJson(Map<String, dynamic> json) {
     return QuotationUser(
-      id: json['id'] ?? '',
+      id: TypeUtils.toStringSafe(json['id']),
     );
   }
 
@@ -156,23 +152,15 @@ class QuotationMaterial {
 
   factory QuotationMaterial.fromJson(Map<String, dynamic> json) {
     return QuotationMaterial(
-      materialId: json['material_id'] ?? '',
-      materialName: json['material_name'] ?? '',
-      category: json['category'] ?? '',
-      unit: json['unit'] ?? '',
-      unitPrice: _parseDouble(json['unit_price']),
-      quantity: json['quantity'] ?? 0,
-      totalCost: _parseDouble(json['total_cost']),
-      specifications: json['specifications'],
+      materialId: TypeUtils.toStringSafe(json['material_id']),
+      materialName: TypeUtils.toStringSafe(json['material_name']),
+      category: TypeUtils.toStringSafe(json['category']),
+      unit: TypeUtils.toStringSafe(json['unit']),
+      unitPrice: TypeUtils.toDoubleSafe(json['unit_price']),
+      quantity: TypeUtils.toIntSafe(json['quantity']),
+      totalCost: TypeUtils.toDoubleSafe(json['total_cost']),
+      specifications: TypeUtils.toNullableStringSafe(json['specifications']),
     );
-  }
-
-  static double _parseDouble(dynamic value) {
-    if (value == null) return 0.0;
-    if (value is double) return value;
-    if (value is int) return value.toDouble();
-    if (value is String) return double.tryParse(value) ?? 0.0;
-    return 0.0;
   }
 
   Map<String, dynamic> toJson() {
@@ -189,7 +177,7 @@ class QuotationMaterial {
   }
 }
 
-// Request model for generating quotation
+// Request model for generating quotation - NOT using TypeUtils as per rules
 class GenerateQuotationRequest {
   final int birdCapacity;
 

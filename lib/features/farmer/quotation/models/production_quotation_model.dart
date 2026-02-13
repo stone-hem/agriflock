@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/utils/type_safe_utils.dart';
 
 class ProductionQuotationData {
   final String id;
@@ -29,19 +30,21 @@ class ProductionQuotationData {
   });
 
   factory ProductionQuotationData.fromJson(Map<String, dynamic> json) {
+    final breakdownMap = TypeUtils.toMapSafe(json['breakdown']);
+
     return ProductionQuotationData(
-      id: json['id'] ?? '',
-      userId: json['user_id'] ?? '',
-      breedId: json['breed_id'] ?? '',
-      quantity: json['quantity'] ?? 0,
-      totalProductionCost: (json['total_production_cost'] ?? 0).toDouble(),
-      equipmentCost: (json['equipment_cost'] ?? 0).toDouble(),
-      expectedRevenue: (json['expected_revenue'] ?? 0).toDouble(),
-      expectedProfit: (json['expected_profit'] ?? 0).toDouble(),
-      costPerBird: (json['cost_per_bird'] ?? 0).toDouble(),
-      profitPerBird: (json['profit_per_bird'] ?? 0).toDouble(),
-      breakdown: Breakdown.fromJson(json['breakdown'] ?? {}),
-      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
+      id: TypeUtils.toStringSafe(json['id']),
+      userId: TypeUtils.toStringSafe(json['user_id']),
+      breedId: TypeUtils.toStringSafe(json['breed_id']),
+      quantity: TypeUtils.toIntSafe(json['quantity']),
+      totalProductionCost: TypeUtils.toDoubleSafe(json['total_production_cost']),
+      equipmentCost: TypeUtils.toDoubleSafe(json['equipment_cost']),
+      expectedRevenue: TypeUtils.toDoubleSafe(json['expected_revenue']),
+      expectedProfit: TypeUtils.toDoubleSafe(json['expected_profit']),
+      costPerBird: TypeUtils.toDoubleSafe(json['cost_per_bird']),
+      profitPerBird: TypeUtils.toDoubleSafe(json['profit_per_bird']),
+      breakdown: Breakdown.fromJson(breakdownMap ?? {}),
+      createdAt: TypeUtils.toDateTimeSafe(json['created_at']) ?? DateTime.now(),
     );
   }
 
@@ -91,16 +94,18 @@ class Breakdown {
   });
 
   factory Breakdown.fromJson(Map<String, dynamic> json) {
+    final itemsList = TypeUtils.toListSafe<dynamic>(json['items']);
+
     return Breakdown(
-      feedCosts: (json['feed_costs'] ?? 0).toDouble(),
-      medicationCosts: (json['medication_costs'] ?? 0).toDouble(),
-      chicksCost: (json['chicks_cost'] ?? 0).toDouble(),
-      utilitiesCost: (json['utilities_cost'] ?? 0).toDouble(),
-      otherCosts: (json['other_costs'] ?? 0).toDouble(),
-      items: (json['items'] as List<dynamic>?)
-          ?.map((item) => BreakdownItem.fromJson(item))
-          .toList() ??
-          [],
+      feedCosts: TypeUtils.toDoubleSafe(json['feed_costs']),
+      medicationCosts: TypeUtils.toDoubleSafe(json['medication_costs']),
+      chicksCost: TypeUtils.toDoubleSafe(json['chicks_cost']),
+      utilitiesCost: TypeUtils.toDoubleSafe(json['utilities_cost']),
+      otherCosts: TypeUtils.toDoubleSafe(json['other_costs']),
+      items: itemsList
+          .map((item) => BreakdownItem.fromJson(
+          item is Map<String, dynamic> ? item : {}))
+          .toList(),
     );
   }
 
@@ -179,13 +184,13 @@ class BreakdownItem {
 
   factory BreakdownItem.fromJson(Map<String, dynamic> json) {
     return BreakdownItem(
-      name: json['name'] ?? '',
-      quantity: json['quantity'] ?? 0,
-      unit: json['unit'] ?? '',
-      unitPrice: json['unit_price'] ?? '0.00',
-      total: (json['total'] ?? 0).toDouble(),
-      category: json['category'] ?? '',
-      isEquipment: json['is_equipment'] ?? false,
+      name: TypeUtils.toStringSafe(json['name']),
+      quantity: TypeUtils.toIntSafe(json['quantity']),
+      unit: TypeUtils.toStringSafe(json['unit']),
+      unitPrice: TypeUtils.toStringSafe(json['unit_price'], defaultValue: '0.00'),
+      total: TypeUtils.toDoubleSafe(json['total']),
+      category: TypeUtils.toStringSafe(json['category']),
+      isEquipment: TypeUtils.toBoolSafe(json['is_equipment']),
     );
   }
 

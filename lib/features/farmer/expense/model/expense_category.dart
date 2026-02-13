@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:agriflock360/core/utils/type_safe_utils.dart';
 
 class InventoryCategory {
   final String id;
@@ -18,18 +19,18 @@ class InventoryCategory {
   });
 
   factory InventoryCategory.fromJson(Map<String, dynamic> json) {
+    final categoryItemsList = TypeUtils.toListSafe<dynamic>(json['category_items']);
+
     return InventoryCategory(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String,
-      useFromStore: json['use_from_store'] as bool,
-      metadata: json['metadata'],
-      categoryItems: json['category_items'] != null
-          ? List<CategoryItem>.from(
-        (json['category_items'] as List)
-            .map((x) => CategoryItem.fromJson(x)),
-      )
-          : [],
+      id: TypeUtils.toStringSafe(json['id']),
+      name: TypeUtils.toStringSafe(json['name']),
+      description: TypeUtils.toStringSafe(json['description']),
+      useFromStore: TypeUtils.toBoolSafe(json['use_from_store']),
+      metadata: json['metadata'], // Keep as dynamic
+      categoryItems: categoryItemsList
+          .map((x) => CategoryItem.fromJson(
+          x is Map<String, dynamic> ? x : {}))
+          .toList(),
     );
   }
 
@@ -64,12 +65,12 @@ class CategoryItem {
 
   factory CategoryItem.fromJson(Map<String, dynamic> json) {
     return CategoryItem(
-      id: json['id'] as String,
-      categoryItemName: json['category_item_name'] as String,
-      description: json['description'] as String,
-      components: json['components'],
-      useFromStore: json['use_from_store'] as bool,
-      quantityInStore: json['quantity_in_store'] as num,
+      id: TypeUtils.toStringSafe(json['id']),
+      categoryItemName: TypeUtils.toStringSafe(json['category_item_name']),
+      description: TypeUtils.toStringSafe(json['description']),
+      components: json['components'], // Keep as dynamic
+      useFromStore: TypeUtils.toBoolSafe(json['use_from_store']),
+      quantityInStore: json['quantity_in_store'] as num? ?? 0,
     );
   }
 
@@ -95,11 +96,14 @@ class CategoriesResponse {
   });
 
   factory CategoriesResponse.fromJson(Map<String, dynamic> json) {
+    final dataList = TypeUtils.toListSafe<dynamic>(json['data']);
+
     return CategoriesResponse(
-      success: json['success'] as bool,
-      data: List<InventoryCategory>.from(
-        (json['data'] as List).map((x) => InventoryCategory.fromJson(x)),
-      ),
+      success: TypeUtils.toBoolSafe(json['success']),
+      data: dataList
+          .map((x) => InventoryCategory.fromJson(
+          x is Map<String, dynamic> ? x : {}))
+          .toList(),
     );
   }
 

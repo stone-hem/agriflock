@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'package:agriflock360/core/utils/type_safe_utils.dart';
+
 class DashboardSummary {
   final num totalBirds;
   final num eggsToday;
@@ -26,6 +29,8 @@ class DashboardSummary {
   });
 
   factory DashboardSummary.fromJson(Map<String, dynamic> json) {
+    final breedBreakdownList = TypeUtils.toListSafe<dynamic>(json['breed_breakdown']);
+
     return DashboardSummary(
       totalBirds: json['total_birds'] ?? 0,
       eggsToday: json['eggs_today'] ?? 0,
@@ -37,10 +42,10 @@ class DashboardSummary {
       averageWeightKg: json['average_weight_kg'] ?? 0,
       numberOfHouses: json['number_of_houses'] ?? 0,
       numberOfFarms: json['number_of_farms'] ?? 0,
-      breedBreakdown: (json['breed_breakdown'] as List<dynamic>?)
-          ?.map((item) => BreedBreakdown.fromJson(item))
-          .toList() ??
-          [],
+      breedBreakdown: breedBreakdownList
+          .map((item) => BreedBreakdown.fromJson(
+          item is Map<String, dynamic> ? item : {}))
+          .toList(),
     );
   }
 
@@ -72,7 +77,7 @@ class BreedBreakdown {
 
   factory BreedBreakdown.fromJson(Map<String, dynamic> json) {
     return BreedBreakdown(
-      breedName: json['breed_name'] ?? '',
+      breedName: TypeUtils.toStringSafe(json['breed_name']),
       liveCount: json['live_count'] ?? 0,
     );
   }
@@ -118,23 +123,19 @@ class DashboardActivity {
 
   factory DashboardActivity.fromJson(Map<String, dynamic> json) {
     return DashboardActivity(
-      id: json['id'] ?? '',
-      activityType: json['activity_type'] ?? '',
-      title: json['title'] ?? '',
-      description: json['description'] ?? '',
-      farmId: json['farm_id'],
-      batchId: json['batch_id'],
-      icon: json['icon'] ?? '📊',
-      status: json['status'] ?? '',
-      performedBy: json['performed_by'],
-      metadata: json['metadata'],
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
-          : DateTime.now(),
-      updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'])
-          : DateTime.now(),
-      timeAgo: json['time_ago'] ?? '',
+      id: TypeUtils.toStringSafe(json['id']),
+      activityType: TypeUtils.toStringSafe(json['activity_type']),
+      title: TypeUtils.toStringSafe(json['title']),
+      description: TypeUtils.toStringSafe(json['description']),
+      farmId: TypeUtils.toNullableStringSafe(json['farm_id']),
+      batchId: TypeUtils.toNullableStringSafe(json['batch_id']),
+      icon: TypeUtils.toStringSafe(json['icon'], defaultValue: '📊'),
+      status: TypeUtils.toStringSafe(json['status']),
+      performedBy: TypeUtils.toNullableStringSafe(json['performed_by']),
+      metadata: TypeUtils.toMapSafe(json['metadata']),
+      createdAt: TypeUtils.toDateTimeSafe(json['created_at']) ?? DateTime.now(),
+      updatedAt: TypeUtils.toDateTimeSafe(json['updated_at']) ?? DateTime.now(),
+      timeAgo: TypeUtils.toStringSafe(json['time_ago']),
     );
   }
 

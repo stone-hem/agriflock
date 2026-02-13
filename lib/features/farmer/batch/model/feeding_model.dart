@@ -1,4 +1,5 @@
-// lib/features/farmer/batch/model/feeding_model.dart
+import 'dart:convert';
+import 'package:agriflock360/core/utils/type_safe_utils.dart'; // Adjust the import path as needed
 
 class FeedingRecommendation {
   final String id;
@@ -46,29 +47,28 @@ class FeedingRecommendation {
   });
 
   factory FeedingRecommendation.fromJson(Map<String, dynamic> json) {
+    final birdTypeMap = TypeUtils.toMapSafe(json['bird_type']);
     return FeedingRecommendation(
-      id: json['id'],
-      birdTypeId: json['bird_type_id'],
-      birdType: json['bird_type'] != null
-          ? BirdType.fromJson(json['bird_type'])
-          : null,
-      stageName: json['stage_name'],
-      ageStart: json['age_start'],
-      ageEnd: json['age_end'],
-      feedType: json['feed_type'],
-      proteinPercentage: json['protein_percentage'],
-      quantityPerBirdPerDay: json['quantity_per_bird_per_day'],
-      timesPerDay: json['times_per_day'],
-      feedingTimes: FeedingTimes.fromJson(json['feeding_times']),
-      notes: json['notes'],
-      supplements: json['supplements'],
-      isActive: json['is_active'],
-      isSystemDefault: json['is_system_default'],
-      metadata: json['metadata'],
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
-      dailyFeedRequiredKg: json['daily_feed_required_kg']?.toDouble(),
-      costEstimate: json['cost_estimate']?.toDouble(),
+      id: TypeUtils.toStringSafe(json['id']),
+      birdTypeId: TypeUtils.toStringSafe(json['bird_type_id']),
+      birdType: birdTypeMap != null ? BirdType.fromJson(birdTypeMap) : null,
+      stageName: TypeUtils.toStringSafe(json['stage_name']),
+      ageStart: TypeUtils.toIntSafe(json['age_start']),
+      ageEnd: TypeUtils.toIntSafe(json['age_end']),
+      feedType: TypeUtils.toStringSafe(json['feed_type']),
+      proteinPercentage: TypeUtils.toStringSafe(json['protein_percentage']),
+      quantityPerBirdPerDay: TypeUtils.toStringSafe(json['quantity_per_bird_per_day']),
+      timesPerDay: TypeUtils.toIntSafe(json['times_per_day']),
+      feedingTimes: FeedingTimes.fromJson(TypeUtils.toMapSafe(json['feeding_times']) ?? {}),
+      notes: TypeUtils.toNullableStringSafe(json['notes']),
+      supplements: TypeUtils.toNullableStringSafe(json['supplements']),
+      isActive: TypeUtils.toBoolSafe(json['is_active']),
+      isSystemDefault: TypeUtils.toBoolSafe(json['is_system_default']),
+      metadata: TypeUtils.toMapSafe(json['metadata']),
+      createdAt: TypeUtils.toDateTimeSafe(json['created_at']) ?? DateTime.now(),
+      updatedAt: TypeUtils.toDateTimeSafe(json['updated_at']) ?? DateTime.now(),
+      dailyFeedRequiredKg: TypeUtils.toNullableDoubleSafe(json['daily_feed_required_kg']),
+      costEstimate: TypeUtils.toNullableDoubleSafe(json['cost_estimate']),
     );
   }
 }
@@ -94,13 +94,13 @@ class BirdType {
 
   factory BirdType.fromJson(Map<String, dynamic> json) {
     return BirdType(
-      id: json['id'],
-      name: json['name'],
-      category: json['category'],
-      description: json['description'],
-      notes: json['notes'],
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
+      id: TypeUtils.toStringSafe(json['id']),
+      name: TypeUtils.toStringSafe(json['name']),
+      category: TypeUtils.toNullableStringSafe(json['category']),
+      description: TypeUtils.toNullableStringSafe(json['description']),
+      notes: TypeUtils.toNullableStringSafe(json['notes']),
+      createdAt: TypeUtils.toDateTimeSafe(json['created_at']) ?? DateTime.now(),
+      updatedAt: TypeUtils.toDateTimeSafe(json['updated_at']) ?? DateTime.now(),
     );
   }
 }
@@ -112,7 +112,7 @@ class FeedingTimes {
 
   factory FeedingTimes.fromJson(Map<String, dynamic> json) {
     return FeedingTimes(
-      slots: List<String>.from(json['slots']),
+      slots: TypeUtils.toListSafe<String>(json['slots']),
     );
   }
 }
@@ -132,10 +132,10 @@ class BatchInfo {
 
   factory BatchInfo.fromJson(Map<String, dynamic> json) {
     return BatchInfo(
-      id: json['id'],
-      ageDays: json['age_days'],
-      currentCount: json['current_count'],
-      birdType: json['bird_type'],
+      id: TypeUtils.toStringSafe(json['id']),
+      ageDays: TypeUtils.toIntSafe(json['age_days']),
+      currentCount: TypeUtils.toIntSafe(json['current_count']),
+      birdType: TypeUtils.toStringSafe(json['bird_type']),
     );
   }
 }
@@ -152,12 +152,11 @@ class FeedingRecommendationsResponse {
   });
 
   factory FeedingRecommendationsResponse.fromJson(Map<String, dynamic> json) {
-    final data = json['data'];
+    final data = TypeUtils.toMapSafe(json['data']) ?? {};
 
     // Handle current_recommendation - create dummy if empty
     FeedingRecommendation currentRec;
-    final currentRecData = data['current_recommendation'];
-
+    dynamic currentRecData = data['current_recommendation'];
     if (currentRecData is Map<String, dynamic>) {
       currentRec = FeedingRecommendation.fromJson(currentRecData);
     } else if (currentRecData is List && currentRecData.isNotEmpty) {
@@ -173,10 +172,10 @@ class FeedingRecommendationsResponse {
 
     return FeedingRecommendationsResponse(
       currentRecommendation: currentRec,
-      allRecommendations: (data['all_recommendations'] as List)
+      allRecommendations: TypeUtils.toListSafe<Map<String, dynamic>>(data['all_recommendations'])
           .map((item) => FeedingRecommendation.fromJson(item))
           .toList(),
-      batchInfo: BatchInfo.fromJson(data['batch_info']),
+      batchInfo: BatchInfo.fromJson(TypeUtils.toMapSafe(data['batch_info']) ?? {}),
     );
   }
 
@@ -231,18 +230,18 @@ class FeedingRecord {
 
   factory FeedingRecord.fromJson(Map<String, dynamic> json) {
     return FeedingRecord(
-      id: json['id'],
-      batchId: json['batch_id'],
-      scheduleId: json['schedule_id'],
-      age: json['age'],
-      feedType: json['feed_type'],
-      quantity: json['quantity'],
-      cost: json['cost'],
-      supplier: json['supplier'],
-      fedAt: DateTime.parse(json['fed_at']),
-      recordedBy: json['recorded_by'],
-      notes: json['notes'],
-      createdAt: DateTime.parse(json['created_at']),
+      id: TypeUtils.toStringSafe(json['id']),
+      batchId: TypeUtils.toStringSafe(json['batch_id']),
+      scheduleId: TypeUtils.toNullableStringSafe(json['schedule_id']),
+      age: TypeUtils.toIntSafe(json['age']),
+      feedType: TypeUtils.toStringSafe(json['feed_type']),
+      quantity: TypeUtils.toStringSafe(json['quantity']),
+      cost: TypeUtils.toStringSafe(json['cost']),
+      supplier: TypeUtils.toStringSafe(json['supplier']),
+      fedAt: TypeUtils.toDateTimeSafe(json['fed_at']) ?? DateTime.now(),
+      recordedBy: TypeUtils.toStringSafe(json['recorded_by']),
+      notes: TypeUtils.toNullableStringSafe(json['notes']),
+      createdAt: TypeUtils.toDateTimeSafe(json['created_at']) ?? DateTime.now(),
     );
   }
 }
@@ -258,10 +257,10 @@ class FeedingRecordsResponse {
 
   factory FeedingRecordsResponse.fromJson(Map<String, dynamic> json) {
     return FeedingRecordsResponse(
-      records: (json['data'] as List)
+      records: TypeUtils.toListSafe<Map<String, dynamic>>(json['data'])
           .map((item) => FeedingRecord.fromJson(item))
           .toList(),
-      pagination: Pagination.fromJson(json['pagination']),
+      pagination: Pagination.fromJson(TypeUtils.toMapSafe(json['pagination']) ?? {}),
     );
   }
 }
@@ -281,10 +280,10 @@ class Pagination {
 
   factory Pagination.fromJson(Map<String, dynamic> json) {
     return Pagination(
-      total: json['total'],
-      page: json['page'],
-      limit: json['limit'],
-      totalPages: json['totalPages'],
+      total: TypeUtils.toIntSafe(json['total']),
+      page: TypeUtils.toIntSafe(json['page']),
+      limit: TypeUtils.toIntSafe(json['limit']),
+      totalPages: TypeUtils.toIntSafe(json['totalPages']),
     );
   }
 }
@@ -308,12 +307,12 @@ class RecentFeeding {
 
   factory RecentFeeding.fromJson(Map<String, dynamic> json) {
     return RecentFeeding(
-      id: json['id'],
-      amountKg: json['amount_kg'],
-      time: json['time'],
-      date: json['date'],
-      dayLabel: json['dayLabel'],
-      compliancePercentage: json['compliance_percentage'],
+      id: TypeUtils.toStringSafe(json['id']),
+      amountKg: TypeUtils.toStringSafe(json['amount_kg']),
+      time: TypeUtils.toStringSafe(json['time']),
+      date: TypeUtils.toStringSafe(json['date']),
+      dayLabel: TypeUtils.toStringSafe(json['dayLabel']),
+      compliancePercentage: TypeUtils.toIntSafe(json['compliance_percentage']),
     );
   }
 }
@@ -339,13 +338,13 @@ class FeedDashboard {
 
   factory FeedDashboard.fromJson(Map<String, dynamic> json) {
     return FeedDashboard(
-      dailyConsumptionKg: json['daily_consumption_kg'],
-      weeklyTotalKg: json['weekly_total_kg'],
-      avgPerBirdKg: json['avg_per_bird_kg'],
-      fcrStatus: json['fcr_status'],
-      totalBirds: json['total_birds'],
-      batchName: json['batch_name'],
-      recentFeedings: (json['recent_feedings'] as List)
+      dailyConsumptionKg: TypeUtils.toStringSafe(json['daily_consumption_kg']),
+      weeklyTotalKg: TypeUtils.toStringSafe(json['weekly_total_kg']),
+      avgPerBirdKg: TypeUtils.toStringSafe(json['avg_per_bird_kg']),
+      fcrStatus: TypeUtils.toStringSafe(json['fcr_status']),
+      totalBirds: TypeUtils.toIntSafe(json['total_birds']),
+      batchName: TypeUtils.toStringSafe(json['batch_name']),
+      recentFeedings: TypeUtils.toListSafe<Map<String, dynamic>>(json['recent_feedings'])
           .map((item) => RecentFeeding.fromJson(item))
           .toList(),
     );

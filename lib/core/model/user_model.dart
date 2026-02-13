@@ -1,3 +1,5 @@
+import 'package:agriflock360/core/utils/type_safe_utils.dart';
+
 class LoginResponse {
   final String accessToken;
   final String refreshToken;
@@ -5,7 +7,6 @@ class LoginResponse {
   final int expiresIn;
   final User user;
   final String? currency;
-
 
   LoginResponse({
     required this.accessToken,
@@ -17,13 +18,15 @@ class LoginResponse {
   });
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
+    final userMap = TypeUtils.toMapSafe(json['user']);
+
     return LoginResponse(
-      accessToken: json['access_token'],
-      refreshToken: json['refresh_token'],
-      sessionId: json['session_id'],
-      expiresIn: json['expires_in'],
-      user: User.fromJson(json['user']),
-      currency: json['currency'],
+      accessToken: TypeUtils.toStringSafe(json['access_token']),
+      refreshToken: TypeUtils.toStringSafe(json['refresh_token']),
+      sessionId: TypeUtils.toStringSafe(json['session_id']),
+      expiresIn: TypeUtils.toIntSafe(json['expires_in']),
+      user: User.fromJson(userMap ?? {}),
+      currency: TypeUtils.toNullableStringSafe(json['currency']),
     );
   }
 
@@ -34,11 +37,10 @@ class LoginResponse {
       'session_id': sessionId,
       'expires_in': expiresIn,
       'user': user.toJson(),
-      'currency':currency
+      'currency': currency,
     };
   }
 }
-
 
 class User {
   final String id;
@@ -114,41 +116,43 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
+    final roleMap = TypeUtils.toMapSafe(json['role']);
+
     return User(
-      id: json['id'],
-      email: json['email'],
-      name: json['name'] ?? "Not Provided",
-      phoneNumber: json['phone_number'],
-      is2faEnabled: json['is_2fa_enabled'] ?? false,
-      emailVerificationExpiresAt: json['email_verification_expires_at'],
-      lastVerificationSentAt: json['last_verification_sent_at'],
-      refreshTokenExpiresAt: json['refresh_token_expires_at'],
-      passwordResetExpiresAt: json['password_reset_expires_at'],
-      status: json['status'] ?? 'active',
-      avatar: json['avatar'],
-      googleId: json['google_id'],
-      appleId: json['apple_id'],
-      oauthProvider: json['oauth_provider'] ?? 'email',
-      roleId: json['role_id'],
-      role: Role.fromJson(json['role']),
-      isActive: json['is_active'] ?? true,
-      lockedUntil: json['locked_until'],
-      firstLogin: json['first_login'],
-      lastLogin: json['last_login'],
-      createdAt: json['created_at'],
-      updatedAt: json['updated_at'],
-      deletedAt: json['deleted_at'],
-      agreedToTerms: json['agreed_to_terms'] ?? false,
-      agreedToTermsAt: json['agreed_to_terms_at'],
-      nationalId: json['national_id'],
-      dateOfBirth: json['date_of_birth'],
-      gender: json['gender'],
-      poultryType: json['poultry_type'],
-      chickenHouseCapacity: json['chicken_house_capacity'],
-      yearsOfExperience: json['years_of_experience'],
-      currentNumberOfChickens: json['current_number_of_chickens'],
-      preferredAgrovetName: json['preferred_agrovet_name'],
-      preferredFeedCompany: json['preferred_feed_company'],
+      id: TypeUtils.toStringSafe(json['id']),
+      email: TypeUtils.toStringSafe(json['email']),
+      name: TypeUtils.toStringSafe(json['name'], defaultValue: 'Not Provided'),
+      phoneNumber: TypeUtils.toNullableStringSafe(json['phone_number']),
+      is2faEnabled: TypeUtils.toBoolSafe(json['is_2fa_enabled']),
+      emailVerificationExpiresAt: TypeUtils.toNullableStringSafe(json['email_verification_expires_at']),
+      lastVerificationSentAt: TypeUtils.toNullableStringSafe(json['last_verification_sent_at']),
+      refreshTokenExpiresAt: TypeUtils.toNullableStringSafe(json['refresh_token_expires_at']),
+      passwordResetExpiresAt: TypeUtils.toNullableStringSafe(json['password_reset_expires_at']),
+      status: TypeUtils.toStringSafe(json['status'], defaultValue: 'active'),
+      avatar: TypeUtils.toNullableStringSafe(json['avatar']),
+      googleId: TypeUtils.toNullableStringSafe(json['google_id']),
+      appleId: TypeUtils.toNullableStringSafe(json['apple_id']),
+      oauthProvider: TypeUtils.toStringSafe(json['oauth_provider'], defaultValue: 'email'),
+      roleId: TypeUtils.toStringSafe(json['role_id']),
+      role: Role.fromJson(roleMap ?? {}),
+      isActive: TypeUtils.toBoolSafe(json['is_active'], defaultValue: true),
+      lockedUntil: TypeUtils.toNullableStringSafe(json['locked_until']),
+      firstLogin: TypeUtils.toNullableStringSafe(json['first_login']),
+      lastLogin: TypeUtils.toNullableStringSafe(json['last_login']),
+      createdAt: TypeUtils.toStringSafe(json['created_at']),
+      updatedAt: TypeUtils.toStringSafe(json['updated_at']),
+      deletedAt: TypeUtils.toNullableStringSafe(json['deleted_at']),
+      agreedToTerms: TypeUtils.toBoolSafe(json['agreed_to_terms']),
+      agreedToTermsAt: TypeUtils.toNullableStringSafe(json['agreed_to_terms_at']),
+      nationalId: TypeUtils.toNullableStringSafe(json['national_id']),
+      dateOfBirth: TypeUtils.toNullableStringSafe(json['date_of_birth']),
+      gender: TypeUtils.toNullableStringSafe(json['gender']),
+      poultryType: TypeUtils.toNullableStringSafe(json['poultry_type']),
+      chickenHouseCapacity: json['chicken_house_capacity'], // Keep as num
+      yearsOfExperience: json['years_of_experience'], // Keep as num
+      currentNumberOfChickens: json['current_number_of_chickens'], // Keep as num
+      preferredAgrovetName: TypeUtils.toNullableStringSafe(json['preferred_agrovet_name']),
+      preferredFeedCompany: TypeUtils.toNullableStringSafe(json['preferred_feed_company']),
     );
   }
 
@@ -234,12 +238,10 @@ class User {
       name: name ?? this.name,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       is2faEnabled: is2faEnabled ?? this.is2faEnabled,
-      emailVerificationExpiresAt:
-      emailVerificationExpiresAt ?? this.emailVerificationExpiresAt,
+      emailVerificationExpiresAt: emailVerificationExpiresAt ?? this.emailVerificationExpiresAt,
       lastVerificationSentAt: lastVerificationSentAt ?? this.lastVerificationSentAt,
       refreshTokenExpiresAt: refreshTokenExpiresAt ?? this.refreshTokenExpiresAt,
-      passwordResetExpiresAt:
-      passwordResetExpiresAt ?? this.passwordResetExpiresAt,
+      passwordResetExpiresAt: passwordResetExpiresAt ?? this.passwordResetExpiresAt,
       status: status ?? this.status,
       avatar: avatar ?? this.avatar,
       googleId: googleId ?? this.googleId,
@@ -262,8 +264,7 @@ class User {
       poultryType: poultryType ?? this.poultryType,
       chickenHouseCapacity: chickenHouseCapacity ?? this.chickenHouseCapacity,
       yearsOfExperience: yearsOfExperience ?? this.yearsOfExperience,
-      currentNumberOfChickens:
-      currentNumberOfChickens ?? this.currentNumberOfChickens,
+      currentNumberOfChickens: currentNumberOfChickens ?? this.currentNumberOfChickens,
       preferredAgrovetName: preferredAgrovetName ?? this.preferredAgrovetName,
       preferredFeedCompany: preferredFeedCompany ?? this.preferredFeedCompany,
     );
@@ -291,13 +292,13 @@ class Role {
 
   factory Role.fromJson(Map<String, dynamic> json) {
     return Role(
-      id: json['id'],
-      name: json['name'],
-      description: json['description'],
-      isSystemRole: json['is_system_role'],
-      isActive: json['is_active'],
-      createdAt: json['created_at'],
-      updatedAt: json['updated_at'],
+      id: TypeUtils.toStringSafe(json['id']),
+      name: TypeUtils.toStringSafe(json['name']),
+      description: TypeUtils.toStringSafe(json['description']),
+      isSystemRole: TypeUtils.toBoolSafe(json['is_system_role']),
+      isActive: TypeUtils.toBoolSafe(json['is_active']),
+      createdAt: TypeUtils.toStringSafe(json['created_at']),
+      updatedAt: TypeUtils.toStringSafe(json['updated_at']),
     );
   }
 

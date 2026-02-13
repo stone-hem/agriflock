@@ -1,6 +1,9 @@
 import 'dart:convert';
 
 
+import 'dart:convert';
+import 'package:agriflock360/core/utils/type_safe_utils.dart';
+
 class VaccinationDashboardSummary {
   final int completed;
   final int upcoming;
@@ -18,11 +21,11 @@ class VaccinationDashboardSummary {
 
   factory VaccinationDashboardSummary.fromJson(Map<String, dynamic> json) {
     return VaccinationDashboardSummary(
-      completed: json['completed'],
-      upcoming: json['upcoming'],
-      overdue: json['overdue'],
-      coveragePercentage: json['coverage_percentage'],
-      uniqueVaccinatedBirds: json['unique_vaccinated_birds'],
+      completed: TypeUtils.toIntSafe(json['completed']),
+      upcoming: TypeUtils.toIntSafe(json['upcoming']),
+      overdue: TypeUtils.toIntSafe(json['overdue']),
+      coveragePercentage: TypeUtils.toStringSafe(json['coverage_percentage']),
+      uniqueVaccinatedBirds: TypeUtils.toIntSafe(json['unique_vaccinated_birds']),
     );
   }
 }
@@ -40,9 +43,9 @@ class VaccinationDashboard {
 
   factory VaccinationDashboard.fromJson(Map<String, dynamic> json) {
     return VaccinationDashboard(
-      summary: VaccinationDashboardSummary.fromJson(json['summary']),
-      totalBirds: json['total_birds'],
-      batchName: json['batch_name'],
+      summary: VaccinationDashboardSummary.fromJson(TypeUtils.toMapSafe(json['summary']) ?? {}),
+      totalBirds: TypeUtils.toIntSafe(json['total_birds']),
+      batchName: TypeUtils.toStringSafe(json['batch_name']),
     );
   }
 }

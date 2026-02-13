@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'package:agriflock360/core/utils/type_safe_utils.dart';
+
 class BirdType {
   final String id;
   final String name;
@@ -6,8 +9,8 @@ class BirdType {
 
   factory BirdType.fromJson(Map<String, dynamic> json) {
     return BirdType(
-      id: json['id'] as String,
-      name: json['name'] as String,
+      id: TypeUtils.toStringSafe(json['id']),
+      name: TypeUtils.toStringSafe(json['name']),
     );
   }
 }

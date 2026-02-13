@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'package:agriflock360/core/utils/type_safe_utils.dart'; // Adjust the import path as needed
+
 class BatchModel {
   final String id;
   final String batchName;
@@ -46,22 +49,23 @@ class BatchModel {
   factory BatchModel.fromJson(Map<String, dynamic> json) {
     // Parse feeding schedule - handle both List and comma-separated string
     List<String> parsedFeedingSchedule = [];
-    if (json['feeding_schedule'] != null) {
-      if (json['feeding_schedule'] is String) {
-        String scheduleString = json['feeding_schedule'];
+    dynamic scheduleValue = json['feeding_schedule'];
+    if (scheduleValue != null) {
+      if (scheduleValue is String) {
+        String scheduleString = TypeUtils.toStringSafe(scheduleValue);
         // Split by comma and trim whitespace
         parsedFeedingSchedule = scheduleString
             .split(',')
             .map((time) => time.trim())
             .where((time) => time.isNotEmpty)
             .toList();
-      } else if (json['feeding_schedule'] is List) {
-        parsedFeedingSchedule = List<String>.from(json['feeding_schedule']);
+      } else if (scheduleValue is List) {
+        parsedFeedingSchedule = TypeUtils.toListSafe<String>(scheduleValue);
       }
     }
 
     // Parse feeding time - handle null case with default
-    String feedingTime = json['feeding_time']?.toString() ?? 'Day';
+    String feedingTime = TypeUtils.toStringSafe(json['feeding_time'], defaultValue: 'Day');
     // Ensure feeding time is one of the expected values if needed
     if (!['Day', 'Night', 'Both'].contains(feedingTime)) {
       // Map other values to valid ones, or keep as is if flexible
@@ -75,32 +79,26 @@ class BatchModel {
     }
 
     return BatchModel(
-      id: json['id'].toString(),
-      batchName: json['batch_name'] ?? json['name'] ?? '',
-      houseId: json['house_id']?.toString(),
-      birdTypeId: json['bird_type_id']?.toString() ?? '',
-      houseName: json['house_name'],
-      breed: json['breed'] ?? '',
-      type: json['batch_type'] ?? '',
-      startDate: json['start_date'] != null
-          ? DateTime.parse(json['start_date'])
-          : DateTime.now(),
-      age: int.tryParse(json['age']?.toString() ?? '0') ?? 0,
-      initialQuantity: int.tryParse((json['initial_quantity'] ?? json['quantity'])?.toString() ?? '0') ?? 0,
-      birdsAlive: int.tryParse((json['birds_alive'] ?? json['quantity'])?.toString() ?? '0') ?? 0,
-      mortality: json['mortality'] ?? 0,
-      currentWeight: (json['current_weight'] ?? 0).toDouble(),
-      expectedWeight: (json['expected_weight'] ?? 0).toDouble(),
+      id: TypeUtils.toStringSafe(json['id']),
+      batchName: TypeUtils.toStringSafe(json['batch_name'] ?? json['name'], defaultValue: ''),
+      houseId: TypeUtils.toNullableStringSafe(json['house_id']),
+      birdTypeId: TypeUtils.toStringSafe(json['bird_type_id'], defaultValue: ''),
+      houseName: TypeUtils.toNullableStringSafe(json['house_name']),
+      breed: TypeUtils.toStringSafe(json['breed'], defaultValue: ''),
+      type: TypeUtils.toStringSafe(json['batch_type'], defaultValue: ''),
+      startDate: TypeUtils.toDateTimeSafe(json['start_date']) ?? DateTime.now(),
+      age: TypeUtils.toIntSafe(json['age']),
+      initialQuantity: TypeUtils.toIntSafe(json['initial_quantity'] ?? json['quantity']),
+      birdsAlive: TypeUtils.toIntSafe(json['birds_alive'] ?? json['quantity']),
+      mortality: TypeUtils.toDoubleSafe(json['mortality']),
+      currentWeight: TypeUtils.toDoubleSafe(json['current_weight']),
+      expectedWeight: TypeUtils.toDoubleSafe(json['expected_weight']),
       feedingTime: feedingTime,
       feedingSchedule: parsedFeedingSchedule,
-      photoUrl: json['photo_url'] ?? json['batch_avatar'],
-      description: json['description'] ?? json['notes'], // Also handle notes field
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
-          : null,
-      updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'])
-          : null,
+      photoUrl: TypeUtils.toNullableStringSafe(json['photo_url'] ?? json['batch_avatar']),
+      description: TypeUtils.toNullableStringSafe(json['description'] ?? json['notes']),
+      createdAt: TypeUtils.toDateTimeSafe(json['created_at']),
+      updatedAt: TypeUtils.toDateTimeSafe(json['updated_at']),
     );
   }
 
@@ -130,12 +128,10 @@ class BatchModel {
   List<DateTime> getFeedingTimes(DateTime referenceDate) {
     final times = <DateTime>[];
     final now = referenceDate;
-
     for (final timeString in feedingSchedule) {
       try {
         // Parse time string - handle various formats
         String normalizedTime = timeString.toLowerCase();
-
         // Remove AM/PM indicators and extra text
         normalizedTime = normalizedTime
             .replaceAll('am', '')
@@ -174,7 +170,6 @@ class BatchModel {
         continue;
       }
     }
-
     return times;
   }
 
@@ -251,29 +246,22 @@ class House {
   });
 
   factory House.fromJson(Map<String, dynamic> json) {
-    List<BatchModel> batchList = [];
-    if (json['batches'] != null) {
-      batchList = (json['batches'] as List)
-          .map((b) => BatchModel.fromJson(b))
-          .toList();
-    }
+    List<BatchModel> batchList = TypeUtils.toListSafe<Map<String, dynamic>>(json['batches'])
+        .map((b) => BatchModel.fromJson(b))
+        .toList();
 
     return House(
-      id: json['id']?.toString(),
-      houseName: json['house_name'] ?? json['name'] ?? '',
-      farmId: json['farm_id']?.toString(),
-      capacity: json['capacity'] ?? 0,
-      currentBirds: json['current_birds'] ?? json['currentBirds'] ?? 0,
-      utilization: (json['utilization'] ?? 0).toDouble(),
+      id: TypeUtils.toNullableStringSafe(json['id']),
+      houseName: TypeUtils.toStringSafe(json['house_name'] ?? json['name'], defaultValue: ''),
+      farmId: TypeUtils.toNullableStringSafe(json['farm_id']),
+      capacity: TypeUtils.toIntSafe(json['capacity']),
+      currentBirds: TypeUtils.toIntSafe(json['current_birds'] ?? json['currentBirds']),
+      utilization: TypeUtils.toDoubleSafe(json['utilization']),
       batches: batchList,
-      photoUrl: json['photo_url'] ?? json['house_avatar'],
-      description: json['description'],
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
-          : null,
-      updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'])
-          : null,
+      photoUrl: TypeUtils.toNullableStringSafe(json['photo_url'] ?? json['house_avatar']),
+      description: TypeUtils.toNullableStringSafe(json['description']),
+      createdAt: TypeUtils.toDateTimeSafe(json['created_at']),
+      updatedAt: TypeUtils.toDateTimeSafe(json['updated_at']),
     );
   }
 

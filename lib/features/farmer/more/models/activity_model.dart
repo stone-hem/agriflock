@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/utils/type_safe_utils.dart';
 
 class ActivityModel {
   final String id;
@@ -32,27 +33,19 @@ class ActivityModel {
 
   factory ActivityModel.fromJson(Map<String, dynamic> json) {
     return ActivityModel(
-      id: json['id'] ?? '',
-      activityType: json['activity_type'] ?? '',
-      title: json['title'] ?? '',
-      description: json['description'] ?? '',
-      userId: json['user_id'],
-      farmId: json['farm_id'],
-      batchId: json['batch_id'],
-      icon: json['icon'] ?? '📝',
-      status: json['status'] ?? 'completed',
-      performedBy: json['performed_by'] ?? '',
-      metadata: json['metadata'] is Map<String, dynamic>
-          ? Map<String, dynamic>.from(json['metadata'])
-          : json['metadata'] != null
-          ? {'data': json['metadata']}
-          : {},
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at']).toLocal()
-          : DateTime.now(),
-      updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at']).toLocal()
-          : DateTime.now(),
+      id: TypeUtils.toStringSafe(json['id']),
+      activityType: TypeUtils.toStringSafe(json['activity_type']),
+      title: TypeUtils.toStringSafe(json['title']),
+      description: TypeUtils.toStringSafe(json['description']),
+      userId: TypeUtils.toNullableStringSafe(json['user_id']),
+      farmId: TypeUtils.toNullableStringSafe(json['farm_id']),
+      batchId: TypeUtils.toNullableStringSafe(json['batch_id']),
+      icon: TypeUtils.toStringSafe(json['icon'], defaultValue: '📝'),
+      status: TypeUtils.toStringSafe(json['status'], defaultValue: 'completed'),
+      performedBy: TypeUtils.toStringSafe(json['performed_by']),
+      metadata: _parseMetadata(json['metadata']),
+      createdAt: TypeUtils.toDateTimeSafe(json['created_at'])?.toLocal() ?? DateTime.now(),
+      updatedAt: TypeUtils.toDateTimeSafe(json['updated_at'])?.toLocal() ?? DateTime.now(),
     );
   }
 
@@ -74,22 +67,62 @@ class ActivityModel {
     };
   }
 
+  // Helper method to safely parse metadata
+  static Map<String, dynamic> _parseMetadata(dynamic value) {
+    if (value == null) return {};
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) {
+      try {
+        return Map<String, dynamic>.from(value);
+      } catch (e) {
+        return {'data': value};
+      }
+    }
+    return {'data': value};
+  }
+
   // Helper methods to extract common metadata
   String? get batchName => metadata['batch_name'] as String?;
-  int? get initialCount => metadata['initial_count'] as int?;
+
+  int? get initialCount {
+    final value = metadata['initial_count'];
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value);
+    if (value is num) return value.toInt();
+    return null;
+  }
+
   String? get farmName {
-    if (metadata['farm_details'] is Map) {
-      final farmDetails = Map<String, dynamic>.from(metadata['farm_details'] as Map);
-      return farmDetails['farm_name'] as String?;
+    final farmDetails = metadata['farm_details'];
+    if (farmDetails is Map) {
+      final farmMap = Map<String, dynamic>.from(farmDetails);
+      return farmMap['farm_name'] as String?;
     }
     return null;
   }
+
   String? get vaccinationId => metadata['vaccination_id'] as String?;
-  double? get feedQuantity => metadata['quantity'] != null
-      ? double.tryParse(metadata['quantity'].toString())
-      : null;
+
+  double? get feedQuantity {
+    final value = metadata['quantity'];
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
+
   String? get feedType => metadata['feed_type'] as String?;
-  int? get mortalityCount => metadata['mortality_today'] as int?;
+
+  int? get mortalityCount {
+    final value = metadata['mortality_today'];
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value);
+    if (value is num) return value.toInt();
+    return null;
+  }
 }
 
 class ActivityResponse {
@@ -108,21 +141,30 @@ class ActivityResponse {
   });
 
   factory ActivityResponse.fromJson(Map<String, dynamic> json) {
-    List<ActivityModel> activities = [];
+    final dataList = TypeUtils.toListSafe<dynamic>(json['data']);
 
-    if (json['data'] is List) {
-      activities = (json['data'] as List)
-          .map((activity) => ActivityModel.fromJson(activity))
-          .toList();
-    }
+    final activities = dataList
+        .map((activity) => ActivityModel.fromJson(
+        activity is Map<String, dynamic> ? activity : {}))
+        .toList();
 
     return ActivityResponse(
       activities: activities,
-      total: json['total'] ?? 0,
-      page: json['page'] ?? 1,
-      limit: json['limit'] ?? 20,
-      totalPages: json['pages'] ?? 1,
+      total: TypeUtils.toIntSafe(json['total'], defaultValue: activities.length),
+      page: TypeUtils.toIntSafe(json['page'], defaultValue: 1),
+      limit: TypeUtils.toIntSafe(json['limit'], defaultValue: 20),
+      totalPages: TypeUtils.toIntSafe(json['pages'], defaultValue: 1),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'data': activities.map((activity) => activity.toJson()).toList(),
+      'total': total,
+      'page': page,
+      'limit': limit,
+      'pages': totalPages,
+    };
   }
 
   bool get hasMore => page < totalPages;

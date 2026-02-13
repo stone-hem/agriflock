@@ -1,4 +1,7 @@
-class GeneralBatchModel  {
+import 'dart:convert';
+import 'package:agriflock360/core/utils/type_safe_utils.dart'; // Adjust the import path as needed
+
+class GeneralBatchModel {
   final String id;
   final String userId;
   final String farmId;
@@ -82,46 +85,51 @@ class GeneralBatchModel  {
   });
 
   factory GeneralBatchModel.fromJson(Map<String, dynamic> json) {
+    final farmMap = TypeUtils.toMapSafe(json['farm']);
+    final houseMap = TypeUtils.toMapSafe(json['house']);
+    final birdTypeMap = TypeUtils.toMapSafe(json['bird_type']);
+    final mortalityStatsMap = TypeUtils.toMapSafe(json['mortality_stats']);
+
     return GeneralBatchModel(
-      id: json['id'] as String? ?? '',
-      userId: json['user_id'] as String? ?? '',
-      farmId: json['farm_id'] as String? ?? '',
-      farm: json['farm'] != null ? Farm.fromJson(json['farm']) : null,
-      houseId: json['house_id'] as String?,
-      house: json['house'] != null ? House.fromJson(json['house']) : null,
-      deviceId: json['device_id'] as String?,
+      id: TypeUtils.toStringSafe(json['id']),
+      userId: TypeUtils.toStringSafe(json['user_id']),
+      farmId: TypeUtils.toStringSafe(json['farm_id']),
+      farm: farmMap != null ? Farm.fromJson(farmMap) : null,
+      houseId: TypeUtils.toNullableStringSafe(json['house_id']),
+      house: houseMap != null ? House.fromJson(houseMap) : null,
+      deviceId: TypeUtils.toNullableStringSafe(json['device_id']),
       device: json['device'],
       breed: json['breed'],
-      batchName: json['batch_name'] as String? ?? '',
-      birdTypeId: json['bird_type_id'] as String? ?? '',
-      batchType: json['batch_type'] as String? ?? '',
-      birdType: json['bird_type'] != null ? BirdType.fromJson(json['bird_type']) : null,
-      age: json['age'] as String?,
-      birdsAlive: json['birds_alive'] as String?,
-      currentWeight: json['current_weight'] != null ? double.tryParse(json['current_weight'].toString()) : null,
-      expectedWeight: json['expected_weight'] != null ? double.tryParse(json['expected_weight'].toString()) : null,
-      feedingTime: json['feeding_time'] as String?,
-      feedingSchedule: json['feeding_schedule'] as String?,
-      currentCount: json['current_count'] as int? ?? 0,
-      initialCount: json['initial_count'] as int? ?? 0,
-      hatchDate: json['hatch_date'] != null ? DateTime.parse(json['hatch_date'] as String) : null,
-      startDate: json['start_date'] != null ? DateTime.parse(json['start_date'] as String) : null,
-      expectedEndDate: json['expected_end_date'] != null ? DateTime.parse(json['expected_end_date'] as String) : null,
-      actualEndDate: json['actual_end_date'] != null ? DateTime.parse(json['actual_end_date'] as String) : null,
-      currentStatus: json['current_status'] as String? ?? 'active',
-      notes: json['notes'] as String?,
-      purchaseCost: json['purchase_cost'] != null ? double.tryParse(json['purchase_cost'].toString()) : null,
-      costPerBird: json['cost_per_bird'] != null ? double.tryParse(json['cost_per_bird'].toString()) : null,
-      currency: json['currency'] as String? ?? 'KES',
-      ageAtPurchase: json['age_at_purchase'] as int?,
-      batchPhoto: json['batch_photo'] as String?,
-      totalMortality: json['total_mortality'] as int? ?? 0,
-      mortalityRate: json['mortality_rate'] != null ? double.parse(json['mortality_rate'].toString()) : 0.0,
-      ageInDays: json['age_in_days'] as int? ?? 0,
-      ageLastUpdated: json['age_last_updated'] != null ? DateTime.parse(json['age_last_updated'] as String) : null,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
-      mortalityStats: json['mortality_stats'] != null ? MortalityStats.fromJson(json['mortality_stats']) : null,
+      batchName: TypeUtils.toStringSafe(json['batch_name']),
+      birdTypeId: TypeUtils.toStringSafe(json['bird_type_id']),
+      batchType: TypeUtils.toStringSafe(json['batch_type']),
+      birdType: birdTypeMap != null ? BirdType.fromJson(birdTypeMap) : null,
+      age: TypeUtils.toNullableStringSafe(json['age']),
+      birdsAlive: TypeUtils.toNullableStringSafe(json['birds_alive']),
+      currentWeight: TypeUtils.toNullableDoubleSafe(json['current_weight']),
+      expectedWeight: TypeUtils.toNullableDoubleSafe(json['expected_weight']),
+      feedingTime: TypeUtils.toNullableStringSafe(json['feeding_time']),
+      feedingSchedule: TypeUtils.toNullableStringSafe(json['feeding_schedule']),
+      currentCount: TypeUtils.toIntSafe(json['current_count']),
+      initialCount: TypeUtils.toIntSafe(json['initial_count']),
+      hatchDate: TypeUtils.toDateTimeSafe(json['hatch_date']),
+      startDate: TypeUtils.toDateTimeSafe(json['start_date']),
+      expectedEndDate: TypeUtils.toDateTimeSafe(json['expected_end_date']),
+      actualEndDate: TypeUtils.toDateTimeSafe(json['actual_end_date']),
+      currentStatus: TypeUtils.toStringSafe(json['current_status'], defaultValue: 'active'),
+      notes: TypeUtils.toNullableStringSafe(json['notes']),
+      purchaseCost: TypeUtils.toNullableDoubleSafe(json['purchase_cost']),
+      costPerBird: TypeUtils.toNullableDoubleSafe(json['cost_per_bird']),
+      currency: TypeUtils.toStringSafe(json['currency'], defaultValue: 'KES'),
+      ageAtPurchase: TypeUtils.toNullableIntSafe(json['age_at_purchase']),
+      batchPhoto: TypeUtils.toNullableStringSafe(json['batch_photo']),
+      totalMortality: TypeUtils.toIntSafe(json['total_mortality']),
+      mortalityRate: TypeUtils.toDoubleSafe(json['mortality_rate']),
+      ageInDays: TypeUtils.toIntSafe(json['age_in_days']),
+      ageLastUpdated: TypeUtils.toDateTimeSafe(json['age_last_updated']),
+      createdAt: TypeUtils.toDateTimeSafe(json['created_at']) ?? DateTime.now(),
+      updatedAt: TypeUtils.toDateTimeSafe(json['updated_at']) ?? DateTime.now(),
+      mortalityStats: mortalityStatsMap != null ? MortalityStats.fromJson(mortalityStatsMap) : null,
     );
   }
 
@@ -168,52 +176,9 @@ class GeneralBatchModel  {
       'mortality_stats': mortalityStats?.toJson(),
     };
   }
-
-  @override
-  List<Object?> get props => [
-    id,
-    userId,
-    farmId,
-    farm,
-    houseId,
-    house,
-    deviceId,
-    device,
-    breed,
-    batchName,
-    birdTypeId,
-    batchType,
-    birdType,
-    age,
-    birdsAlive,
-    currentWeight,
-    expectedWeight,
-    feedingTime,
-    feedingSchedule,
-    currentCount,
-    initialCount,
-    hatchDate,
-    startDate,
-    expectedEndDate,
-    actualEndDate,
-    currentStatus,
-    notes,
-    purchaseCost,
-    costPerBird,
-    currency,
-    ageAtPurchase,
-    batchPhoto,
-    totalMortality,
-    mortalityRate,
-    ageInDays,
-    ageLastUpdated,
-    createdAt,
-    updatedAt,
-    mortalityStats,
-  ];
 }
 
-class Farm  {
+class Farm {
   final String id;
   final String userId;
   final String farmName;
@@ -244,18 +209,18 @@ class Farm  {
 
   factory Farm.fromJson(Map<String, dynamic> json) {
     return Farm(
-      id: json['id'] as String? ?? '',
-      userId: json['user_id'] as String? ?? '',
-      farmName: json['farm_name'] as String? ?? '',
-      location: json['location'] as String?,
-      totalArea: json['total_area'] as String? ?? '0.00',
-      farmType: json['farm_type'] as String? ?? '',
-      description: json['description'] as String?,
+      id: TypeUtils.toStringSafe(json['id']),
+      userId: TypeUtils.toStringSafe(json['user_id']),
+      farmName: TypeUtils.toStringSafe(json['farm_name']),
+      location: TypeUtils.toNullableStringSafe(json['location']),
+      totalArea: TypeUtils.toStringSafe(json['total_area'], defaultValue: '0.00'),
+      farmType: TypeUtils.toStringSafe(json['farm_type']),
+      description: TypeUtils.toNullableStringSafe(json['description']),
       contactInfo: json['contact_info'],
-      isActive: json['is_active'] as bool? ?? true,
-      farmPhoto: json['farm_photo'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      isActive: TypeUtils.toBoolSafe(json['is_active'], defaultValue: true),
+      farmPhoto: TypeUtils.toNullableStringSafe(json['farm_photo']),
+      createdAt: TypeUtils.toDateTimeSafe(json['created_at']) ?? DateTime.now(),
+      updatedAt: TypeUtils.toDateTimeSafe(json['updated_at']) ?? DateTime.now(),
     );
   }
 
@@ -275,22 +240,6 @@ class Farm  {
       'updated_at': updatedAt.toIso8601String(),
     };
   }
-
-  @override
-  List<Object?> get props => [
-    id,
-    userId,
-    farmName,
-    location,
-    totalArea,
-    farmType,
-    description,
-    contactInfo,
-    isActive,
-    farmPhoto,
-    createdAt,
-    updatedAt,
-  ];
 }
 
 class House {
@@ -328,20 +277,20 @@ class House {
 
   factory House.fromJson(Map<String, dynamic> json) {
     return House(
-      id: json['id'] as String? ?? '',
-      userId: json['user_id'] as String? ?? '',
-      farmId: json['farm_id'] as String? ?? '',
-      name: json['name'] as String? ?? '',
-      maximumCapacity: json['maximum_capacity'] as int? ?? 0,
-      minimumCapacity: json['minimum_capacity'] as int? ?? 0,
-      description: json['description'] as String?,
+      id: TypeUtils.toStringSafe(json['id']),
+      userId: TypeUtils.toStringSafe(json['user_id']),
+      farmId: TypeUtils.toStringSafe(json['farm_id']),
+      name: TypeUtils.toStringSafe(json['name']),
+      maximumCapacity: TypeUtils.toIntSafe(json['maximum_capacity']),
+      minimumCapacity: TypeUtils.toIntSafe(json['minimum_capacity']),
+      description: TypeUtils.toNullableStringSafe(json['description']),
       meta: json['meta'],
-      isActive: json['is_active'] as bool? ?? true,
-      housePhoto: json['house_photo'] as String?,
-      currentOccupancy: json['current_occupancy'] as int? ?? 0,
-      utilizationPercentage: json['utilization_percentage'] != null ? double.parse(json['utilization_percentage'].toString()) : 0.0,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      isActive: TypeUtils.toBoolSafe(json['is_active'], defaultValue: true),
+      housePhoto: TypeUtils.toNullableStringSafe(json['house_photo']),
+      currentOccupancy: TypeUtils.toIntSafe(json['current_occupancy']),
+      utilizationPercentage: TypeUtils.toDoubleSafe(json['utilization_percentage']),
+      createdAt: TypeUtils.toDateTimeSafe(json['created_at']) ?? DateTime.now(),
+      updatedAt: TypeUtils.toDateTimeSafe(json['updated_at']) ?? DateTime.now(),
     );
   }
 
@@ -363,24 +312,6 @@ class House {
       'updated_at': updatedAt.toIso8601String(),
     };
   }
-
-  @override
-  List<Object?> get props => [
-    id,
-    userId,
-    farmId,
-    name,
-    maximumCapacity,
-    minimumCapacity,
-    description,
-    meta,
-    isActive,
-    housePhoto,
-    currentOccupancy,
-    utilizationPercentage,
-    createdAt,
-    updatedAt,
-  ];
 }
 
 class BirdType {
@@ -410,16 +341,16 @@ class BirdType {
 
   factory BirdType.fromJson(Map<String, dynamic> json) {
     return BirdType(
-      id: json['id'] as String? ?? '',
-      name: json['name'] as String? ?? '',
-      type: json['type'] as String? ?? '',
-      description: json['description'] as String?,
-      maturityDays: json['maturity_days'] as int? ?? 0,
-      dayOldChickPrice: json['day_old_chick_price'] as String? ?? '0.00',
-      expectedSellingPrice: json['expected_selling_price'] as String? ?? '0.00',
-      isActive: json['is_active'] as bool? ?? true,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      id: TypeUtils.toStringSafe(json['id']),
+      name: TypeUtils.toStringSafe(json['name']),
+      type: TypeUtils.toStringSafe(json['type']),
+      description: TypeUtils.toNullableStringSafe(json['description']),
+      maturityDays: TypeUtils.toIntSafe(json['maturity_days']),
+      dayOldChickPrice: TypeUtils.toStringSafe(json['day_old_chick_price'], defaultValue: '0.00'),
+      expectedSellingPrice: TypeUtils.toStringSafe(json['expected_selling_price'], defaultValue: '0.00'),
+      isActive: TypeUtils.toBoolSafe(json['is_active'], defaultValue: true),
+      createdAt: TypeUtils.toDateTimeSafe(json['created_at']) ?? DateTime.now(),
+      updatedAt: TypeUtils.toDateTimeSafe(json['updated_at']) ?? DateTime.now(),
     );
   }
 
@@ -437,20 +368,6 @@ class BirdType {
       'updated_at': updatedAt.toIso8601String(),
     };
   }
-
-  @override
-  List<Object?> get props => [
-    id,
-    name,
-    type,
-    description,
-    maturityDays,
-    dayOldChickPrice,
-    expectedSellingPrice,
-    isActive,
-    createdAt,
-    updatedAt,
-  ];
 }
 
 class MortalityStats {
@@ -478,15 +395,15 @@ class MortalityStats {
 
   factory MortalityStats.fromJson(Map<String, dynamic> json) {
     return MortalityStats(
-      initialCount: json['initial_count'] as int? ?? 0,
-      currentCount: json['current_count'] as int? ?? 0,
-      birdsAlive: json['birds_alive'] as String?,
-      totalDeaths: json['total_deaths'] as int? ?? 0,
-      mortalityRate: json['mortality_rate'] != null ? double.parse(json['mortality_rate'].toString()) : 0.0,
-      survivalRate: json['survival_rate'] != null ? double.parse(json['survival_rate'].toString()) : 0.0,
-      recentDeaths7days: json['recent_deaths_7days'] as int? ?? 0,
-      recentDailyMortalityAvg: json['recent_daily_mortality_avg'] != null ? double.parse(json['recent_daily_mortality_avg'].toString()) : 0.0,
-      lastMortalityDate: json['last_mortality_date'] != null ? DateTime.parse(json['last_mortality_date'] as String) : null,
+      initialCount: TypeUtils.toIntSafe(json['initial_count']),
+      currentCount: TypeUtils.toIntSafe(json['current_count']),
+      birdsAlive: TypeUtils.toNullableStringSafe(json['birds_alive']),
+      totalDeaths: TypeUtils.toIntSafe(json['total_deaths']),
+      mortalityRate: TypeUtils.toDoubleSafe(json['mortality_rate']),
+      survivalRate: TypeUtils.toDoubleSafe(json['survival_rate']),
+      recentDeaths7days: TypeUtils.toIntSafe(json['recent_deaths_7days']),
+      recentDailyMortalityAvg: TypeUtils.toDoubleSafe(json['recent_daily_mortality_avg']),
+      lastMortalityDate: TypeUtils.toDateTimeSafe(json['last_mortality_date']),
     );
   }
 
@@ -503,19 +420,6 @@ class MortalityStats {
       'last_mortality_date': lastMortalityDate?.toIso8601String(),
     };
   }
-
-  @override
-  List<Object?> get props => [
-    initialCount,
-    currentCount,
-    birdsAlive,
-    totalDeaths,
-    mortalityRate,
-    survivalRate,
-    recentDeaths7days,
-    recentDailyMortalityAvg,
-    lastMortalityDate,
-  ];
 }
 
 class GeneralBatchesResponse {
@@ -528,13 +432,11 @@ class GeneralBatchesResponse {
   });
 
   factory GeneralBatchesResponse.fromJson(Map<String, dynamic> json) {
-    final batches = (json['batches'] as List<dynamic>?)
-        ?.map((item) => GeneralBatchModel.fromJson(item as Map<String, dynamic>))
-        .toList() ?? [];
-
     return GeneralBatchesResponse(
-      batches: batches,
-      pagination: GeneralBatchPagination.fromJson(json['pagination'] as Map<String, dynamic>),
+      batches: TypeUtils.toListSafe<Map<String, dynamic>>(json['batches'])
+          .map((item) => GeneralBatchModel.fromJson(item))
+          .toList(),
+      pagination: GeneralBatchPagination.fromJson(TypeUtils.toMapSafe(json['pagination']) ?? {}),
     );
   }
 
@@ -561,10 +463,10 @@ class GeneralBatchPagination {
 
   factory GeneralBatchPagination.fromJson(Map<String, dynamic> json) {
     return GeneralBatchPagination(
-      total: json['total'] as int? ?? 0,
-      page: json['page'] as int? ?? 1,
-      limit: json['limit'] as int? ?? 10,
-      totalPages: json['totalPages'] as int? ?? 1,
+      total: TypeUtils.toIntSafe(json['total']),
+      page: TypeUtils.toIntSafe(json['page'], defaultValue: 1),
+      limit: TypeUtils.toIntSafe(json['limit'], defaultValue: 10),
+      totalPages: TypeUtils.toIntSafe(json['totalPages'], defaultValue: 1),
     );
   }
 
@@ -576,7 +478,4 @@ class GeneralBatchPagination {
       'totalPages': totalPages,
     };
   }
-
-  @override
-  List<Object?> get props => [total, page, limit, totalPages];
 }

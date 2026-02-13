@@ -1,4 +1,4 @@
-// lib/features/farmer/batch/model/recommended_vaccination_model.dart
+import 'package:agriflock360/core/utils/type_safe_utils.dart';
 
 class RecommendedVaccination {
   final String id;
@@ -59,38 +59,32 @@ class RecommendedVaccination {
 
   factory RecommendedVaccination.fromJson(Map<String, dynamic> json) {
     return RecommendedVaccination(
-      id: json['id'] as String,
-      vaccineName: json['vaccine_name'] as String,
-      vaccineType: json['vaccine_type'] as String?,
-      description: json['description'] as String?,
-      manufacturer: json['manufacturer'] as String?,
-      brandName: json['brand_name'] as String?,
-      recommendedAgeMin: (json['recommended_age_min'] as num).toInt(),
-      recommendedAgeMax: (json['recommended_age_max'] as num).toInt(),
-      recommendedAgeDescription: json['recommended_age_description'] as String?,
-      dosage: json['dosage'] as String,
-      administrationMethod: json['administration_method'] as String,
-      usageInstructions: json['usage_instructions'] as String?,
-      precautions: json['precautions'] as String?,
-      sideEffects: json['side_effects'] as String?,
-      withdrawalPeriodDays: (json['withdrawal_period_days'] as num?)?.toInt(),
-      storageConditions: json['storage_conditions'] as String?,
-      estimatedCostPerDose: json['estimated_cost_per_dose'] as String?,
-      currency: json['currency'] as String?,
-      targetDisease: json['target_disease'] as String?,
-      birdType: json['bird_type'] as String?,
-      isRecommended: json['is_recommended'] as bool?,
-      isActive: json['is_active'] as bool?,
-      usageCount: (json['usage_count'] as num?)?.toInt(),
-      metadata: json['metadata'] != null
-          ? Map<String, dynamic>.from(json['metadata'] as Map)
-          : null,
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'] as String)
-          : null,
-      updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'] as String)
-          : null,
+      id: TypeUtils.toStringSafe(json['id']),
+      vaccineName: TypeUtils.toStringSafe(json['vaccine_name']),
+      vaccineType: TypeUtils.toNullableStringSafe(json['vaccine_type']),
+      description: TypeUtils.toNullableStringSafe(json['description']),
+      manufacturer: TypeUtils.toNullableStringSafe(json['manufacturer']),
+      brandName: TypeUtils.toNullableStringSafe(json['brand_name']),
+      recommendedAgeMin: TypeUtils.toIntSafe(json['recommended_age_min']),
+      recommendedAgeMax: TypeUtils.toIntSafe(json['recommended_age_max']),
+      recommendedAgeDescription: TypeUtils.toNullableStringSafe(json['recommended_age_description']),
+      dosage: TypeUtils.toStringSafe(json['dosage']),
+      administrationMethod: TypeUtils.toStringSafe(json['administration_method']),
+      usageInstructions: TypeUtils.toNullableStringSafe(json['usage_instructions']),
+      precautions: TypeUtils.toNullableStringSafe(json['precautions']),
+      sideEffects: TypeUtils.toNullableStringSafe(json['side_effects']),
+      withdrawalPeriodDays: TypeUtils.toNullableIntSafe(json['withdrawal_period_days']),
+      storageConditions: TypeUtils.toNullableStringSafe(json['storage_conditions']),
+      estimatedCostPerDose: TypeUtils.toNullableStringSafe(json['estimated_cost_per_dose']),
+      currency: TypeUtils.toNullableStringSafe(json['currency']),
+      targetDisease: TypeUtils.toNullableStringSafe(json['target_disease']),
+      birdType: TypeUtils.toNullableStringSafe(json['bird_type']),
+      isRecommended: TypeUtils.toNullableBoolSafe(json['is_recommended']),
+      isActive: TypeUtils.toNullableBoolSafe(json['is_active']),
+      usageCount: TypeUtils.toNullableIntSafe(json['usage_count']),
+      metadata: TypeUtils.toMapSafe(json['metadata']),
+      createdAt: TypeUtils.toDateTimeSafe(json['created_at']),
+      updatedAt: TypeUtils.toDateTimeSafe(json['updated_at']),
     );
   }
 
@@ -139,11 +133,11 @@ class RecommendedVaccinationsResponse {
 
   factory RecommendedVaccinationsResponse.fromJson(Map<String, dynamic> json) {
     return RecommendedVaccinationsResponse(
-      success: json['success'] as bool,
-      data: (json['data'] as List)
-          .map((e) => RecommendedVaccination.fromJson(e as Map<String, dynamic>))
+      success: TypeUtils.toBoolSafe(json['success']),
+      data: TypeUtils.toListSafe<Map<String, dynamic>>(json['data'])
+          .map((e) => RecommendedVaccination.fromJson(e))
           .toList(),
-      meta: RecommendedVaccinationsMeta.fromJson(json['meta'] as Map<String, dynamic>),
+      meta: RecommendedVaccinationsMeta.fromJson(TypeUtils.toMapSafe(json['meta']) ?? {}),
     );
   }
 
@@ -167,8 +161,8 @@ class RecommendedVaccinationsMeta {
 
   factory RecommendedVaccinationsMeta.fromJson(Map<String, dynamic> json) {
     return RecommendedVaccinationsMeta(
-      batchAgeDays: (json['batch_age_days'] as num).toInt(),
-      scheduledCount: (json['scheduled_count'] as num).toInt(),
+      batchAgeDays: TypeUtils.toIntSafe(json['batch_age_days']),
+      scheduledCount: TypeUtils.toIntSafe(json['scheduled_count']),
     );
   }
 

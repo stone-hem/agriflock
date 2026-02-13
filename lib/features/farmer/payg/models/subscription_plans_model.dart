@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/utils/type_safe_utils.dart';
 
 class SubscriptionPlansResponse {
   final List<SubscriptionPlanItem> data;
@@ -9,15 +10,14 @@ class SubscriptionPlansResponse {
   });
 
   factory SubscriptionPlansResponse.fromJson(Map<String, dynamic> json) {
+    final dataList = TypeUtils.toListSafe<dynamic>(json['data']);
+
     return SubscriptionPlansResponse(
-      data: json['data'] != null
-          ? List<SubscriptionPlanItem>.from(
-        (json['data'] as List).map(
-              (x) => SubscriptionPlanItem.fromJson(x),
-        ),
-      )
-          : [],
-      total: json['total'] ?? 0,
+      data: dataList
+          .map((x) => SubscriptionPlanItem.fromJson(
+          x is Map<String, dynamic> ? x : {}))
+          .toList(),
+      total: TypeUtils.toIntSafe(json['total']),
     );
   }
 
@@ -25,7 +25,6 @@ class SubscriptionPlansResponse {
     'data': data.map((x) => x.toJson()).toList(),
     'total': total,
   };
-
 }
 
 class SubscriptionPlanItem {
@@ -64,22 +63,24 @@ class SubscriptionPlanItem {
   });
 
   factory SubscriptionPlanItem.fromJson(Map<String, dynamic> json) {
+    final planMap = TypeUtils.toMapSafe(json['plan']);
+
     return SubscriptionPlanItem(
-      id: json['id'] ?? '',
-      userId: json['userId'] ?? '',
-      plan: SubscriptionPlan.fromJson(json['plan'] ?? {}),
-      status: json['status'] ?? '',
-      startDate: json['startDate'] ?? '',
-      endDate: json['endDate'] ?? '',
-      trialStartDate: json['trialStartDate'],
-      trialEndDate: json['trialEndDate'],
-      currentTrialDay: json['currentTrialDay'] ?? 0,
-      isTrialActive: json['isTrialActive'] ?? false,
-      autoRenew: json['autoRenew'] ?? false,
-      daysRemaining: json['daysRemaining'] ?? 0,
-      cancellationReason: json['cancellationReason'],
-      createdAt: json['createdAt'] ?? '',
-      updatedAt: json['updatedAt'] ?? '',
+      id: TypeUtils.toStringSafe(json['id']),
+      userId: TypeUtils.toStringSafe(json['userId']),
+      plan: SubscriptionPlan.fromJson(planMap ?? {}),
+      status: TypeUtils.toStringSafe(json['status']),
+      startDate: TypeUtils.toStringSafe(json['startDate']),
+      endDate: TypeUtils.toStringSafe(json['endDate']),
+      trialStartDate: TypeUtils.toNullableStringSafe(json['trialStartDate']),
+      trialEndDate: TypeUtils.toNullableStringSafe(json['trialEndDate']),
+      currentTrialDay: TypeUtils.toIntSafe(json['currentTrialDay']),
+      isTrialActive: TypeUtils.toBoolSafe(json['isTrialActive']),
+      autoRenew: TypeUtils.toBoolSafe(json['autoRenew']),
+      daysRemaining: TypeUtils.toIntSafe(json['daysRemaining']),
+      cancellationReason: TypeUtils.toNullableStringSafe(json['cancellationReason']),
+      createdAt: TypeUtils.toStringSafe(json['createdAt']),
+      updatedAt: TypeUtils.toStringSafe(json['updatedAt']),
     );
   }
 
@@ -100,8 +101,6 @@ class SubscriptionPlanItem {
     'createdAt': createdAt,
     'updatedAt': updatedAt,
   };
-
-
 }
 
 class SubscriptionPlan {
@@ -124,16 +123,16 @@ class SubscriptionPlan {
   });
 
   factory SubscriptionPlan.fromJson(Map<String, dynamic> json) {
+    final featuresMap = TypeUtils.toMapSafe(json['features']);
+
     return SubscriptionPlan(
-      id: json['id'] ?? '',
-      planType: json['planType'] ?? '',
-      name: json['name'] ?? '',
-      priceAmount: (json['priceAmount'] ?? 0).toDouble(),
-      currency: json['currency'] ?? '',
-      includedModules: json['includedModules'] != null
-          ? List<String>.from(json['includedModules'])
-          : [],
-      features: PlanFeatures.fromJson(json['features'] ?? {}),
+      id: TypeUtils.toStringSafe(json['id']),
+      planType: TypeUtils.toStringSafe(json['planType']),
+      name: TypeUtils.toStringSafe(json['name']),
+      priceAmount: TypeUtils.toDoubleSafe(json['priceAmount']),
+      currency: TypeUtils.toStringSafe(json['currency']),
+      includedModules: _parseStringList(json['includedModules']),
+      features: PlanFeatures.fromJson(featuresMap ?? {}),
     );
   }
 
@@ -147,7 +146,11 @@ class SubscriptionPlan {
     'features': features.toJson(),
   };
 
-
+  // Helper method to safely parse string list
+  static List<String> _parseStringList(dynamic value) {
+    final list = TypeUtils.toListSafe<dynamic>(value);
+    return list.map((item) => TypeUtils.toStringSafe(item)).toList();
+  }
 }
 
 class PlanFeatures {
@@ -169,12 +172,12 @@ class PlanFeatures {
 
   factory PlanFeatures.fromJson(Map<String, dynamic> json) {
     return PlanFeatures(
-      maxChicks: json['max_chicks'],
-      minChicks: json['min_chicks'],
-      supportLevel: json['support_level'] ?? '',
-      trialPeriodDays: json['trial_period_days'] ?? 0,
-      marketplaceAccess: json['marketplace_access'] ?? '',
-      quotationFreePeriodDays: json['quotation_free_period_days'] ?? 0,
+      maxChicks: TypeUtils.toNullableIntSafe(json['max_chicks']),
+      minChicks: TypeUtils.toNullableIntSafe(json['min_chicks']),
+      supportLevel: TypeUtils.toStringSafe(json['support_level']),
+      trialPeriodDays: TypeUtils.toIntSafe(json['trial_period_days']),
+      marketplaceAccess: TypeUtils.toStringSafe(json['marketplace_access']),
+      quotationFreePeriodDays: TypeUtils.toIntSafe(json['quotation_free_period_days']),
     );
   }
 
@@ -186,7 +189,6 @@ class PlanFeatures {
     'marketplace_access': marketplaceAccess,
     'quotation_free_period_days': quotationFreePeriodDays,
   };
-  
 }
 
 /// Model for plans returned by /app-subscription-plans/active
@@ -228,24 +230,24 @@ class ActivePlan {
   bool get isFreeTrial => planType.toUpperCase() == 'FREE_TRIAL';
 
   factory ActivePlan.fromJson(Map<String, dynamic> json) {
+    final featuresMap = TypeUtils.toMapSafe(json['features']);
+
     return ActivePlan(
-      id: json['id'] ?? '',
-      planType: json['planType'] ?? '',
-      name: json['name'] ?? '',
-      description: json['description'] ?? '',
-      region: json['region'] ?? '',
-      priceAmount: (json['priceAmount'] ?? 0).toDouble(),
-      currency: json['currency'] ?? '',
-      includedModules: json['includedModules'] != null
-          ? List<String>.from(json['includedModules'])
-          : [],
-      features: PlanFeatures.fromJson(json['features'] ?? {}),
-      isActive: json['isActive'] ?? false,
-      billingCycleDays: json['billingCycleDays'] ?? 30,
-      durationInMonths: json['durationInMonths'],
-      trialPeriodDays: json['trialPeriodDays'],
-      createdAt: json['createdAt'] ?? '',
-      updatedAt: json['updatedAt'] ?? '',
+      id: TypeUtils.toStringSafe(json['id']),
+      planType: TypeUtils.toStringSafe(json['planType']),
+      name: TypeUtils.toStringSafe(json['name']),
+      description: TypeUtils.toStringSafe(json['description']),
+      region: TypeUtils.toStringSafe(json['region']),
+      priceAmount: TypeUtils.toDoubleSafe(json['priceAmount']),
+      currency: TypeUtils.toStringSafe(json['currency']),
+      includedModules: _parseStringList(json['includedModules']),
+      features: PlanFeatures.fromJson(featuresMap ?? {}),
+      isActive: TypeUtils.toBoolSafe(json['isActive']),
+      billingCycleDays: TypeUtils.toIntSafe(json['billingCycleDays'], defaultValue: 30),
+      durationInMonths: TypeUtils.toNullableIntSafe(json['durationInMonths']),
+      trialPeriodDays: TypeUtils.toNullableIntSafe(json['trialPeriodDays']),
+      createdAt: TypeUtils.toStringSafe(json['createdAt']),
+      updatedAt: TypeUtils.toStringSafe(json['updatedAt']),
     );
   }
 
@@ -266,6 +268,12 @@ class ActivePlan {
     'createdAt': createdAt,
     'updatedAt': updatedAt,
   };
+
+  // Helper method to safely parse string list
+  static List<String> _parseStringList(dynamic value) {
+    final list = TypeUtils.toListSafe<dynamic>(value);
+    return list.map((item) => TypeUtils.toStringSafe(item)).toList();
+  }
 
   /// Human-readable feature descriptions for display
   List<String> get readableFeatures {
@@ -343,7 +351,6 @@ enum SubscriptionPlanStatus {
   cancelled,
   pending,
   trial,
-
   unknown;
 
   factory SubscriptionPlanStatus.fromString(String value) {
@@ -388,7 +395,6 @@ enum PlanType {
   gold,
   bronze,
   free,
-
   unknown;
 
   factory PlanType.fromString(String value) {

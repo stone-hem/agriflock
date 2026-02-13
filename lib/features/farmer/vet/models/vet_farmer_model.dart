@@ -1,3 +1,5 @@
+import 'package:agriflock360/core/utils/type_safe_utils.dart';
+
 class VetFarmer {
   final String id;
   final String name;
@@ -86,67 +88,122 @@ class VetFarmer {
   });
 
   factory VetFarmer.fromJson(Map<String, dynamic> json) {
+    final userMap = TypeUtils.toMapSafe(json['user']);
+    final locationMap = TypeUtils.toMapSafe(json['location']);
+    final specializationsMap = TypeUtils.toMapSafe(json['specializations']);
+    final coverageAreasMap = TypeUtils.toMapSafe(json['coverage_areas']);
+    final contactInfoMap = TypeUtils.toMapSafe(json['contact_info']);
+    final metadataMap = TypeUtils.toMapSafe(json['metadata']);
+
+    final certificateUrlsList = TypeUtils.toListSafe<dynamic>(json['certificate_urls']);
+    final additionalCertificateUrlsList = TypeUtils.toListSafe<dynamic>(json['additional_certificate_urls']);
+    final vaccinationRecordsList = TypeUtils.toListSafe<dynamic>(json['vaccination_records']);
+    final appraisalsList = TypeUtils.toListSafe<dynamic>(json['appraisals']);
+
     return VetFarmer(
-      id: json['id'] as String? ?? '',
-      name: json['name'] as String? ?? '',
-      userId: json['user_id'] as String? ?? '',
-      user: json['user'] != null ? User.fromJson(json['user']) : null,
-      officerType: json['officer_type'] as String? ?? '',
-      educationLevel: json['education_level'] as String? ?? '',
-      region: json['region'] as String?,
-      dateOfBirth: json['date_of_birth'] as String? ?? '',
-      location: Location.fromJson(json['location']),
-      age: (json['age'] as num?)?.toInt() ?? 0,
-      gender: json['gender'] as String? ?? '',
-      yearsOfExperience: (json['years_of_experience'] as num?)?.toInt() ?? 0,
-      profileBio: json['profile_bio'] as String? ?? '',
-      idPhotoUrl: json['id_photo_url'] as String?,
-      faceSelfieUrl: json['face_selfie_url'] as String?,
-      certificateUrls: (json['certificate_urls'] as List<dynamic>?)
-          ?.map((e) => e.toString())
-          .toList() ??
-          [],
-      additionalCertificateUrls:
-      (json['additional_certificate_urls'] as List<dynamic>?)
-          ?.map((e) => e.toString())
-          .toList() ??
-          [],
-      licenseNumber: json['license_number'] as String?,
-      licenseExpiryDate: json['license_expiry_date'] as String?,
-      status: json['status'] as String? ?? '',
-      isVerified: json['is_verified'] as bool? ?? false,
-      verifiedAt: json['verified_at'] as String?,
-      verifiedBy: json['verified_by'] as String?,
-      rejectionReason: json['rejection_reason'] as String?,
-      suspensionReason: json['suspension_reason'] as String?,
-      specializations: json['specializations'] != null
-          ? Specializations.fromJson(json['specializations'])
+      id: TypeUtils.toStringSafe(json['id']),
+      name: TypeUtils.toStringSafe(json['name']),
+      userId: TypeUtils.toStringSafe(json['user_id']),
+      user: userMap != null ? User.fromJson(userMap) : null,
+      officerType: TypeUtils.toStringSafe(json['officer_type']),
+      educationLevel: TypeUtils.toStringSafe(json['education_level']),
+      region: TypeUtils.toNullableStringSafe(json['region']),
+      dateOfBirth: TypeUtils.toStringSafe(json['date_of_birth']),
+      location: Location.fromJson(locationMap ?? {}),
+      age: TypeUtils.toIntSafe(json['age']),
+      gender: TypeUtils.toStringSafe(json['gender']),
+      yearsOfExperience: TypeUtils.toIntSafe(json['years_of_experience']),
+      profileBio: TypeUtils.toStringSafe(json['profile_bio']),
+      idPhotoUrl: TypeUtils.toNullableStringSafe(json['id_photo_url']),
+      faceSelfieUrl: TypeUtils.toNullableStringSafe(json['face_selfie_url']),
+      certificateUrls: certificateUrlsList
+          .map((e) => TypeUtils.toStringSafe(e))
+          .toList(),
+      additionalCertificateUrls: additionalCertificateUrlsList
+          .map((e) => TypeUtils.toStringSafe(e))
+          .toList(),
+      licenseNumber: TypeUtils.toNullableStringSafe(json['license_number']),
+      licenseExpiryDate: TypeUtils.toNullableStringSafe(json['license_expiry_date']),
+      status: TypeUtils.toStringSafe(json['status']),
+      isVerified: TypeUtils.toBoolSafe(json['is_verified']),
+      verifiedAt: TypeUtils.toNullableStringSafe(json['verified_at']),
+      verifiedBy: TypeUtils.toNullableStringSafe(json['verified_by']),
+      rejectionReason: TypeUtils.toNullableStringSafe(json['rejection_reason']),
+      suspensionReason: TypeUtils.toNullableStringSafe(json['suspension_reason']),
+      specializations: specializationsMap != null
+          ? Specializations.fromJson(specializationsMap)
           : null,
-      coverageAreas: json['coverage_areas'] != null
-          ? CoverageAreas.fromJson(json['coverage_areas'])
+      coverageAreas: coverageAreasMap != null
+          ? CoverageAreas.fromJson(coverageAreasMap)
           : null,
-      isAvailable: json['is_available'] as bool? ?? false,
-      averageRating: json['average_rating'] as String? ?? '0.0',
-      tier: json['tier'] as String? ?? '',
-      totalJobsCompleted: (json['total_jobs_completed'] as num?)?.toInt() ?? 0,
-      totalRatingsCount: (json['total_ratings_count'] as num?)?.toInt() ?? 0,
-      totalEarnings: json['total_earnings'] as String? ?? '0.00',
-      currentMonthEarnings:
-      json['current_month_earnings'] as String? ?? '0.00',
-      vaccinationRecords: (json['vaccination_records'] as List<dynamic>?)
-          ?.map((e) => VaccinationRecord.fromJson(e))
-          .toList() ??
-          [],
-      totalAppraisals: (json['total_appraisals'] as num?)?.toInt() ?? 0,
-      contactInfo: json['contact_info'] != null
-          ? ContactInfo.fromJson(json['contact_info'])
+      isAvailable: TypeUtils.toBoolSafe(json['is_available']),
+      averageRating: TypeUtils.toStringSafe(json['average_rating'], defaultValue: '0.0'),
+      tier: TypeUtils.toStringSafe(json['tier']),
+      totalJobsCompleted: TypeUtils.toIntSafe(json['total_jobs_completed']),
+      totalRatingsCount: TypeUtils.toIntSafe(json['total_ratings_count']),
+      totalEarnings: TypeUtils.toStringSafe(json['total_earnings'], defaultValue: '0.00'),
+      currentMonthEarnings: TypeUtils.toStringSafe(json['current_month_earnings'], defaultValue: '0.00'),
+      vaccinationRecords: vaccinationRecordsList
+          .map((e) => VaccinationRecord.fromJson(
+          e is Map<String, dynamic> ? e : {}))
+          .toList(),
+      totalAppraisals: TypeUtils.toIntSafe(json['total_appraisals']),
+      contactInfo: contactInfoMap != null
+          ? ContactInfo.fromJson(contactInfoMap)
           : null,
-      metadata:
-      json['metadata'] != null ? Metadata.fromJson(json['metadata']) : null,
-      appraisals: json['appraisals'] as List<dynamic>?,
-      createdAt: json['created_at'] as String? ?? '',
-      updatedAt: json['updated_at'] as String? ?? '',
+      metadata: metadataMap != null
+          ? Metadata.fromJson(metadataMap)
+          : null,
+      appraisals: appraisalsList,
+      createdAt: TypeUtils.toStringSafe(json['created_at']),
+      updatedAt: TypeUtils.toStringSafe(json['updated_at']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'user_id': userId,
+      'user': user?.toJson(),
+      'officer_type': officerType,
+      'education_level': educationLevel,
+      'region': region,
+      'date_of_birth': dateOfBirth,
+      'location': location.toJson(),
+      'age': age,
+      'gender': gender,
+      'years_of_experience': yearsOfExperience,
+      'profile_bio': profileBio,
+      'id_photo_url': idPhotoUrl,
+      'face_selfie_url': faceSelfieUrl,
+      'certificate_urls': certificateUrls,
+      'additional_certificate_urls': additionalCertificateUrls,
+      'license_number': licenseNumber,
+      'license_expiry_date': licenseExpiryDate,
+      'status': status,
+      'is_verified': isVerified,
+      'verified_at': verifiedAt,
+      'verified_by': verifiedBy,
+      'rejection_reason': rejectionReason,
+      'suspension_reason': suspensionReason,
+      'specializations': specializations?.toJson(),
+      'coverage_areas': coverageAreas?.toJson(),
+      'is_available': isAvailable,
+      'average_rating': averageRating,
+      'tier': tier,
+      'total_jobs_completed': totalJobsCompleted,
+      'total_ratings_count': totalRatingsCount,
+      'total_earnings': totalEarnings,
+      'current_month_earnings': currentMonthEarnings,
+      'vaccination_records': vaccinationRecords.map((e) => e.toJson()).toList(),
+      'total_appraisals': totalAppraisals,
+      'contact_info': contactInfo?.toJson(),
+      'metadata': metadata?.toJson(),
+      'appraisals': appraisals,
+      'created_at': createdAt,
+      'updated_at': updatedAt,
+    };
   }
 }
 
@@ -163,29 +220,36 @@ class Location {
 
   factory Location.fromJson(Map<String, dynamic> json) {
     Address? address;
+    final addressValue = json['address'];
 
-    // Handle both cases: when address is a String or a Map
-    if (json['address'] is Map<String, dynamic>) {
-      address = Address.fromJson(json['address'] as Map<String, dynamic>);
-    } else if (json['address'] is String) {
+    // Handle both cases: when address is a Map or a String
+    if (addressValue is Map<String, dynamic>) {
+      address = Address.fromJson(addressValue);
+    } else if (addressValue is String) {
       // Create an Address object with the string as formatted_address
       address = Address(
         city: null,
         county: null,
         subCounty: null,
-        formattedAddress: json['address'] as String,
+        formattedAddress: addressValue,
       );
     }
 
     return Location(
       address: address,
-      latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
-      longitude: (json['longitude'] as num?)?.toDouble() ?? 0.0,
+      latitude: TypeUtils.toDoubleSafe(json['latitude']),
+      longitude: TypeUtils.toDoubleSafe(json['longitude']),
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'address': address?.toJson(),
+      'latitude': latitude,
+      'longitude': longitude,
+    };
+  }
 }
-
-
 
 class Address {
   final String? city;
@@ -202,11 +266,20 @@ class Address {
 
   factory Address.fromJson(Map<String, dynamic> json) {
     return Address(
-      city: json['city'] as String?,
-      county: json['county'] as String?,
-      subCounty: json['sub_county'] as String?,
-      formattedAddress: json['formatted_address'] as String? ?? '',
+      city: TypeUtils.toNullableStringSafe(json['city']),
+      county: TypeUtils.toNullableStringSafe(json['county']),
+      subCounty: TypeUtils.toNullableStringSafe(json['sub_county']),
+      formattedAddress: TypeUtils.toStringSafe(json['formatted_address']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'city': city,
+      'county': county,
+      'sub_county': subCounty,
+      'formatted_address': formattedAddress,
+    };
   }
 }
 
@@ -265,32 +338,60 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'] as String? ?? '',
-      email: json['email'] as String? ?? '',
-      name: json['name'] as String? ?? '',
-      phoneNumber: json['phone_number'] as String? ?? '',
-      is2faEnabled: json['is_2fa_enabled'] as bool? ?? false,
-      emailVerificationExpiresAt:
-      json['email_verification_expires_at'] as String?,
-      lastVerificationSentAt: json['last_verification_sent_at'] as String?,
-      refreshTokenExpiresAt: json['refresh_token_expires_at'] as String?,
-      passwordResetExpiresAt: json['password_reset_expires_at'] as String?,
-      status: json['status'] as String? ?? '',
-      avatar: json['avatar'] as String?,
-      googleId: json['google_id'] as String?,
-      appleId: json['apple_id'] as String?,
-      oauthProvider: json['oauth_provider'] as String?,
-      roleId: json['role_id'] as String? ?? '',
-      isActive: json['is_active'] as bool? ?? false,
-      lockedUntil: json['locked_until'] as String?,
-      firstLogin: json['first_login'] as String?,
-      lastLogin: json['last_login'] as String?,
-      createdAt: json['created_at'] as String? ?? '',
-      updatedAt: json['updated_at'] as String? ?? '',
-      deletedAt: json['deleted_at'] as String?,
-      agreedToTerms: json['agreed_to_terms'] as bool? ?? false,
-      agreedToTermsAt: json['agreed_to_terms_at'] as String?,
+      id: TypeUtils.toStringSafe(json['id']),
+      email: TypeUtils.toStringSafe(json['email']),
+      name: TypeUtils.toStringSafe(json['name']),
+      phoneNumber: TypeUtils.toStringSafe(json['phone_number']),
+      is2faEnabled: TypeUtils.toBoolSafe(json['is_2fa_enabled']),
+      emailVerificationExpiresAt: TypeUtils.toNullableStringSafe(json['email_verification_expires_at']),
+      lastVerificationSentAt: TypeUtils.toNullableStringSafe(json['last_verification_sent_at']),
+      refreshTokenExpiresAt: TypeUtils.toNullableStringSafe(json['refresh_token_expires_at']),
+      passwordResetExpiresAt: TypeUtils.toNullableStringSafe(json['password_reset_expires_at']),
+      status: TypeUtils.toStringSafe(json['status']),
+      avatar: TypeUtils.toNullableStringSafe(json['avatar']),
+      googleId: TypeUtils.toNullableStringSafe(json['google_id']),
+      appleId: TypeUtils.toNullableStringSafe(json['apple_id']),
+      oauthProvider: TypeUtils.toNullableStringSafe(json['oauth_provider']),
+      roleId: TypeUtils.toStringSafe(json['role_id']),
+      isActive: TypeUtils.toBoolSafe(json['is_active']),
+      lockedUntil: TypeUtils.toNullableStringSafe(json['locked_until']),
+      firstLogin: TypeUtils.toNullableStringSafe(json['first_login']),
+      lastLogin: TypeUtils.toNullableStringSafe(json['last_login']),
+      createdAt: TypeUtils.toStringSafe(json['created_at']),
+      updatedAt: TypeUtils.toStringSafe(json['updated_at']),
+      deletedAt: TypeUtils.toNullableStringSafe(json['deleted_at']),
+      agreedToTerms: TypeUtils.toBoolSafe(json['agreed_to_terms']),
+      agreedToTermsAt: TypeUtils.toNullableStringSafe(json['agreed_to_terms_at']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'email': email,
+      'name': name,
+      'phone_number': phoneNumber,
+      'is_2fa_enabled': is2faEnabled,
+      'email_verification_expires_at': emailVerificationExpiresAt,
+      'last_verification_sent_at': lastVerificationSentAt,
+      'refresh_token_expires_at': refreshTokenExpiresAt,
+      'password_reset_expires_at': passwordResetExpiresAt,
+      'status': status,
+      'avatar': avatar,
+      'google_id': googleId,
+      'apple_id': appleId,
+      'oauth_provider': oauthProvider,
+      'role_id': roleId,
+      'is_active': isActive,
+      'locked_until': lockedUntil,
+      'first_login': firstLogin,
+      'last_login': lastLogin,
+      'created_at': createdAt,
+      'updated_at': updatedAt,
+      'deleted_at': deletedAt,
+      'agreed_to_terms': agreedToTerms,
+      'agreed_to_terms_at': agreedToTermsAt,
+    };
   }
 }
 
@@ -304,16 +405,20 @@ class Specializations {
   });
 
   factory Specializations.fromJson(Map<String, dynamic> json) {
+    final areasList = TypeUtils.toListSafe<dynamic>(json['areas']);
+    final certificationsList = TypeUtils.toListSafe<dynamic>(json['certifications']);
+
     return Specializations(
-      areas: (json['areas'] as List<dynamic>?)
-          ?.map((e) => e.toString())
-          .toList() ??
-          [],
-      certifications: (json['certifications'] as List<dynamic>?)
-          ?.map((e) => e.toString())
-          .toList() ??
-          [],
+      areas: areasList.map((e) => TypeUtils.toStringSafe(e)).toList(),
+      certifications: certificationsList.map((e) => TypeUtils.toStringSafe(e)).toList(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'areas': areas,
+      'certifications': certifications,
+    };
   }
 }
 
@@ -327,16 +432,20 @@ class CoverageAreas {
   });
 
   factory CoverageAreas.fromJson(Map<String, dynamic> json) {
+    final countiesList = TypeUtils.toListSafe<dynamic>(json['counties']);
+    final subCountiesList = TypeUtils.toListSafe<dynamic>(json['sub_counties']);
+
     return CoverageAreas(
-      counties: (json['counties'] as List<dynamic>?)
-          ?.map((e) => e.toString())
-          .toList() ??
-          [],
-      subCounties: (json['sub_counties'] as List<dynamic>?)
-          ?.map((e) => e.toString())
-          .toList() ??
-          [],
+      counties: countiesList.map((e) => TypeUtils.toStringSafe(e)).toList(),
+      subCounties: subCountiesList.map((e) => TypeUtils.toStringSafe(e)).toList(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'counties': counties,
+      'sub_counties': subCounties,
+    };
   }
 }
 
@@ -353,10 +462,18 @@ class VaccinationRecord {
 
   factory VaccinationRecord.fromJson(Map<String, dynamic> json) {
     return VaccinationRecord(
-      date: json['date'] as String? ?? '',
-      vaccine: json['vaccine'] as String? ?? '',
-      birdsCount: (json['birds_count'] as num?)?.toInt() ?? 0,
+      date: TypeUtils.toStringSafe(json['date']),
+      vaccine: TypeUtils.toStringSafe(json['vaccine']),
+      birdsCount: TypeUtils.toIntSafe(json['birds_count']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'date': date,
+      'vaccine': vaccine,
+      'birds_count': birdsCount,
+    };
   }
 }
 
@@ -371,9 +488,16 @@ class ContactInfo {
 
   factory ContactInfo.fromJson(Map<String, dynamic> json) {
     return ContactInfo(
-      whatsapp: json['whatsapp'] as String? ?? '',
-      alternativePhone: json['alternative_phone'] as String? ?? '',
+      whatsapp: TypeUtils.toStringSafe(json['whatsapp']),
+      alternativePhone: TypeUtils.toStringSafe(json['alternative_phone']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'whatsapp': whatsapp,
+      'alternative_phone': alternativePhone,
+    };
   }
 }
 
@@ -386,8 +510,14 @@ class Metadata {
 
   factory Metadata.fromJson(Map<String, dynamic> json) {
     return Metadata(
-      organization: json['organization'] as String? ?? '',
+      organization: TypeUtils.toStringSafe(json['organization']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'organization': organization,
+    };
   }
 }
 
@@ -405,19 +535,27 @@ class VetFarmerListResponse {
   });
 
   factory VetFarmerListResponse.fromJson(Map<String, dynamic> json) {
+    final dataList = TypeUtils.toListSafe<dynamic>(json['data']);
+
     return VetFarmerListResponse(
-      data: (json['data'] as List<dynamic>?)
-          ?.map((x) => VetFarmer.fromJson(x as Map<String, dynamic>))
-          .toList() ??
-          [],
-      total: (json['total'] as num?)?.toInt() ?? 0,
-      page: (json['page'] as num?)?.toInt() ?? 1,
-      limit: (json['limit'] as num?)?.toInt() ?? 10,
+      data: dataList
+          .map((x) => VetFarmer.fromJson(x is Map<String, dynamic> ? x : {}))
+          .toList(),
+      total: TypeUtils.toIntSafe(json['total']),
+      page: TypeUtils.toIntSafe(json['page'], defaultValue: 1),
+      limit: TypeUtils.toIntSafe(json['limit'], defaultValue: 10),
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'data': data.map((x) => x.toJson()).toList(),
+      'total': total,
+      'page': page,
+      'limit': limit,
+    };
+  }
 }
-
-
 
 class VetFarmerRecommendation {
   final String id;
@@ -505,65 +643,117 @@ class VetFarmerRecommendation {
   });
 
   factory VetFarmerRecommendation.fromJson(Map<String, dynamic> json) {
+    final locationMap = TypeUtils.toMapSafe(json['location']);
+    final specializationsMap = TypeUtils.toMapSafe(json['specializations']);
+    final coverageAreasMap = TypeUtils.toMapSafe(json['coverage_areas']);
+    final contactInfoMap = TypeUtils.toMapSafe(json['contact_info']);
+    final metadataMap = TypeUtils.toMapSafe(json['metadata']);
+
+    final certificateUrlsList = TypeUtils.toListSafe<dynamic>(json['certificate_urls']);
+    final additionalCertificateUrlsList = TypeUtils.toListSafe<dynamic>(json['additional_certificate_urls']);
+    final vaccinationRecordsList = TypeUtils.toListSafe<dynamic>(json['vaccination_records']);
+
     return VetFarmerRecommendation(
-      id: json['id'] as String? ?? '',
-      name: json['name'] as String? ?? '',
-      userId: json['user_id'] as String? ?? '',
-      officerType: json['officer_type'] as String? ?? '',
-      educationLevel: json['education_level'] as String? ?? '',
-      region: json['region'] as String?,
-      dateOfBirth: json['date_of_birth'] as String? ?? '',
-      location: Location.fromJson(json['location']),
-      age: (json['age'] as num?)?.toInt() ?? 0,
-      gender: json['gender'] as String? ?? '',
-      yearsOfExperience: (json['years_of_experience'] as num?)?.toInt() ?? 0,
-      profileBio: json['profile_bio'] as String? ?? '',
-      idPhotoUrl: json['id_photo_url'] as String?,
-      faceSelfieUrl: json['face_selfie_url'] as String?,
-      certificateUrls: (json['certificate_urls'] as List<dynamic>?)
-          ?.map((e) => e.toString())
-          .toList() ??
-          [],
-      additionalCertificateUrls:
-      (json['additional_certificate_urls'] as List<dynamic>?)
-          ?.map((e) => e.toString())
-          .toList() ??
-          [],
-      licenseNumber: json['license_number'] as String?,
-      licenseExpiryDate: json['license_expiry_date'] as String?,
-      status: json['status'] as String? ?? '',
-      isVerified: json['is_verified'] as bool? ?? false,
-      verifiedAt: json['verified_at'] as String?,
-      verifiedBy: json['verified_by'] as String?,
-      rejectionReason: json['rejection_reason'] as String?,
-      suspensionReason: json['suspension_reason'] as String?,
-      specializations: json['specializations'] != null
-          ? Specializations.fromJson(json['specializations'])
+      id: TypeUtils.toStringSafe(json['id']),
+      name: TypeUtils.toStringSafe(json['name']),
+      userId: TypeUtils.toStringSafe(json['user_id']),
+      officerType: TypeUtils.toStringSafe(json['officer_type']),
+      educationLevel: TypeUtils.toStringSafe(json['education_level']),
+      region: TypeUtils.toNullableStringSafe(json['region']),
+      dateOfBirth: TypeUtils.toStringSafe(json['date_of_birth']),
+      location: Location.fromJson(locationMap ?? {}),
+      age: TypeUtils.toIntSafe(json['age']),
+      gender: TypeUtils.toStringSafe(json['gender']),
+      yearsOfExperience: TypeUtils.toIntSafe(json['years_of_experience']),
+      profileBio: TypeUtils.toStringSafe(json['profile_bio']),
+      idPhotoUrl: TypeUtils.toNullableStringSafe(json['id_photo_url']),
+      faceSelfieUrl: TypeUtils.toNullableStringSafe(json['face_selfie_url']),
+      certificateUrls: certificateUrlsList
+          .map((e) => TypeUtils.toStringSafe(e))
+          .toList(),
+      additionalCertificateUrls: additionalCertificateUrlsList
+          .map((e) => TypeUtils.toStringSafe(e))
+          .toList(),
+      licenseNumber: TypeUtils.toNullableStringSafe(json['license_number']),
+      licenseExpiryDate: TypeUtils.toNullableStringSafe(json['license_expiry_date']),
+      status: TypeUtils.toStringSafe(json['status']),
+      isVerified: TypeUtils.toBoolSafe(json['is_verified']),
+      verifiedAt: TypeUtils.toNullableStringSafe(json['verified_at']),
+      verifiedBy: TypeUtils.toNullableStringSafe(json['verified_by']),
+      rejectionReason: TypeUtils.toNullableStringSafe(json['rejection_reason']),
+      suspensionReason: TypeUtils.toNullableStringSafe(json['suspension_reason']),
+      specializations: specializationsMap != null
+          ? Specializations.fromJson(specializationsMap)
           : null,
-      coverageAreas: json['coverage_areas'] != null
-          ? CoverageAreas.fromJson(json['coverage_areas'])
+      coverageAreas: coverageAreasMap != null
+          ? CoverageAreas.fromJson(coverageAreasMap)
           : null,
-      isAvailable: json['is_available'] as bool? ?? false,
-      averageRating: json['average_rating'] as String? ?? '0.0',
-      tier: json['tier'] as String? ?? '',
-      totalJobsCompleted: (json['total_jobs_completed'] as num?)?.toInt() ?? 0,
-      totalRatingsCount: (json['total_ratings_count'] as num?)?.toInt() ?? 0,
-      totalEarnings: json['total_earnings'] as String? ?? '0.00',
-      currentMonthEarnings:
-      json['current_month_earnings'] as String? ?? '0.00',
-      vaccinationRecords: (json['vaccination_records'] as List<dynamic>?)
-          ?.map((e) => VaccinationRecord.fromJson(e))
-          .toList() ??
-          [],
-      totalAppraisals: (json['total_appraisals'] as num?)?.toInt() ?? 0,
-      contactInfo: json['contact_info'] != null
-          ? ContactInfo.fromJson(json['contact_info'])
+      isAvailable: TypeUtils.toBoolSafe(json['is_available']),
+      averageRating: TypeUtils.toStringSafe(json['average_rating'], defaultValue: '0.0'),
+      tier: TypeUtils.toStringSafe(json['tier']),
+      totalJobsCompleted: TypeUtils.toIntSafe(json['total_jobs_completed']),
+      totalRatingsCount: TypeUtils.toIntSafe(json['total_ratings_count']),
+      totalEarnings: TypeUtils.toStringSafe(json['total_earnings'], defaultValue: '0.00'),
+      currentMonthEarnings: TypeUtils.toStringSafe(json['current_month_earnings'], defaultValue: '0.00'),
+      vaccinationRecords: vaccinationRecordsList
+          .map((e) => VaccinationRecord.fromJson(
+          e is Map<String, dynamic> ? e : {}))
+          .toList(),
+      totalAppraisals: TypeUtils.toIntSafe(json['total_appraisals']),
+      contactInfo: contactInfoMap != null
+          ? ContactInfo.fromJson(contactInfoMap)
           : null,
-      metadata:
-      json['metadata'] != null ? Metadata.fromJson(json['metadata']) : null,
-      createdAt: json['created_at'] as String? ?? '',
-      updatedAt: json['updated_at'] as String? ?? '',
-      matchType: json['match_type'] as String? ?? '',
+      metadata: metadataMap != null
+          ? Metadata.fromJson(metadataMap)
+          : null,
+      createdAt: TypeUtils.toStringSafe(json['created_at']),
+      updatedAt: TypeUtils.toStringSafe(json['updated_at']),
+      matchType: TypeUtils.toStringSafe(json['match_type']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'user_id': userId,
+      'officer_type': officerType,
+      'education_level': educationLevel,
+      'region': region,
+      'date_of_birth': dateOfBirth,
+      'location': location.toJson(),
+      'age': age,
+      'gender': gender,
+      'years_of_experience': yearsOfExperience,
+      'profile_bio': profileBio,
+      'id_photo_url': idPhotoUrl,
+      'face_selfie_url': faceSelfieUrl,
+      'certificate_urls': certificateUrls,
+      'additional_certificate_urls': additionalCertificateUrls,
+      'license_number': licenseNumber,
+      'license_expiry_date': licenseExpiryDate,
+      'status': status,
+      'is_verified': isVerified,
+      'verified_at': verifiedAt,
+      'verified_by': verifiedBy,
+      'rejection_reason': rejectionReason,
+      'suspension_reason': suspensionReason,
+      'specializations': specializations?.toJson(),
+      'coverage_areas': coverageAreas?.toJson(),
+      'is_available': isAvailable,
+      'average_rating': averageRating,
+      'tier': tier,
+      'total_jobs_completed': totalJobsCompleted,
+      'total_ratings_count': totalRatingsCount,
+      'total_earnings': totalEarnings,
+      'current_month_earnings': currentMonthEarnings,
+      'vaccination_records': vaccinationRecords.map((e) => e.toJson()).toList(),
+      'total_appraisals': totalAppraisals,
+      'contact_info': contactInfo?.toJson(),
+      'metadata': metadata?.toJson(),
+      'created_at': createdAt,
+      'updated_at': updatedAt,
+      'match_type': matchType,
+    };
   }
 }

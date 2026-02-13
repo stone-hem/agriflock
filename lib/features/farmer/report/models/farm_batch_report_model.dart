@@ -1,3 +1,5 @@
+import 'package:agriflock360/core/utils/type_safe_utils.dart';
+
 class FarmBatchReportResponse {
   final int statusCode;
   final String message;
@@ -12,14 +14,26 @@ class FarmBatchReportResponse {
   });
 
   factory FarmBatchReportResponse.fromJson(Map<String, dynamic> json) {
+    final dataList = TypeUtils.toListSafe<dynamic>(json['data']);
+
     return FarmBatchReportResponse(
-      statusCode: json['statusCode'],
-      message: json['message'],
-      data: (json['data'] as List)
-          .map((item) => FarmBatchReportData.fromJson(item))
+      statusCode: TypeUtils.toIntSafe(json['statusCode']),
+      message: TypeUtils.toStringSafe(json['message']),
+      data: dataList
+          .map((item) => FarmBatchReportData.fromJson(
+          item is Map<String, dynamic> ? item : {}))
           .toList(),
-      count: json['count'],
+      count: TypeUtils.toIntSafe(json['count']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'statusCode': statusCode,
+      'message': message,
+      'data': data.map((item) => item.toJson()).toList(),
+      'count': count,
+    };
   }
 }
 
@@ -30,7 +44,7 @@ class FarmBatchReportData {
   final int totalBatches;
   final int totalHouses;
   final String farmName;
-  final DateTime? reportEndDate; // Made nullable
+  final DateTime? reportEndDate;
   final String reportPeriod;
 
   FarmBatchReportData({
@@ -40,25 +54,40 @@ class FarmBatchReportData {
     required this.totalBatches,
     required this.totalHouses,
     required this.farmName,
-    this.reportEndDate, // Made optional
+    this.reportEndDate,
     required this.reportPeriod,
   });
 
   factory FarmBatchReportData.fromJson(Map<String, dynamic> json) {
+    final farmSummaryMap = TypeUtils.toMapSafe(json['farm_summary']);
+    final batchesList = TypeUtils.toListSafe<dynamic>(json['batches']);
+
     return FarmBatchReportData(
-      farmSummary: FarmSummary.fromJson(json['farm_summary']),
-      batches: (json['batches'] as List)
-          .map((item) => BatchReport.fromJson(item))
+      farmSummary: FarmSummary.fromJson(farmSummaryMap ?? {}),
+      batches: batchesList
+          .map((item) => BatchReport.fromJson(
+          item is Map<String, dynamic> ? item : {}))
           .toList(),
-      reportDate: DateTime.parse(json['report_date']),
-      totalBatches: json['total_batches'],
-      totalHouses: json['total_houses'],
-      farmName: json['farm_name'],
-      reportEndDate: json['report_end_date'] != null
-          ? DateTime.parse(json['report_end_date'])
-          : null,
-      reportPeriod: json['report_period'] ?? '', // Handle null
+      reportDate: TypeUtils.toDateTimeSafe(json['report_date']) ?? DateTime.now(),
+      totalBatches: TypeUtils.toIntSafe(json['total_batches']),
+      totalHouses: TypeUtils.toIntSafe(json['total_houses']),
+      farmName: TypeUtils.toStringSafe(json['farm_name']),
+      reportEndDate: TypeUtils.toDateTimeSafe(json['report_end_date']),
+      reportPeriod: TypeUtils.toStringSafe(json['report_period']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'farm_summary': farmSummary.toJson(),
+      'batches': batches.map((item) => item.toJson()).toList(),
+      'report_date': reportDate.toIso8601String(),
+      'total_batches': totalBatches,
+      'total_houses': totalHouses,
+      'farm_name': farmName,
+      'report_end_date': reportEndDate?.toIso8601String(),
+      'report_period': reportPeriod,
+    };
   }
 }
 
@@ -66,7 +95,7 @@ class FarmSummary {
   final String farmId;
   final String farmName;
   final String reportType;
-  final String? reportPeriod; // Made nullable
+  final String? reportPeriod;
   final String birdType;
   final int totalBirds;
   final FarmMetadata metadata;
@@ -79,7 +108,7 @@ class FarmSummary {
     required this.farmId,
     required this.farmName,
     required this.reportType,
-    this.reportPeriod, // Made optional
+    this.reportPeriod,
     required this.birdType,
     required this.totalBirds,
     required this.metadata,
@@ -90,19 +119,43 @@ class FarmSummary {
   });
 
   factory FarmSummary.fromJson(Map<String, dynamic> json) {
+    final metadataMap = TypeUtils.toMapSafe(json['metadata']);
+    final mortalityMap = TypeUtils.toMapSafe(json['mortality']);
+    final medicationMap = TypeUtils.toMapSafe(json['medication']);
+    final vaccinationMap = TypeUtils.toMapSafe(json['vaccination']);
+    final batchesList = TypeUtils.toListSafe<dynamic>(json['batches']);
+
     return FarmSummary(
-      farmId: json['farm_id'],
-      farmName: json['farm_name'],
-      reportType: json['report_type'],
-      reportPeriod: json['report_period'], // Can be null
-      birdType: json['bird_type'],
-      totalBirds: json['total_birds'],
-      metadata: FarmMetadata.fromJson(json['metadata']),
-      mortality: FarmMortality.fromJson(json['mortality']),
-      batches: List<String>.from(json['batches']),
-      medication: FarmMedication.fromJson(json['medication']),
-      vaccination: FarmVaccination.fromJson(json['vaccination']),
+      farmId: TypeUtils.toStringSafe(json['farm_id']),
+      farmName: TypeUtils.toStringSafe(json['farm_name']),
+      reportType: TypeUtils.toStringSafe(json['report_type']),
+      reportPeriod: TypeUtils.toNullableStringSafe(json['report_period']),
+      birdType: TypeUtils.toStringSafe(json['bird_type']),
+      totalBirds: TypeUtils.toIntSafe(json['total_birds']),
+      metadata: FarmMetadata.fromJson(metadataMap ?? {}),
+      mortality: FarmMortality.fromJson(mortalityMap ?? {}),
+      batches: batchesList
+          .map((item) => TypeUtils.toStringSafe(item))
+          .toList(),
+      medication: FarmMedication.fromJson(medicationMap ?? {}),
+      vaccination: FarmVaccination.fromJson(vaccinationMap ?? {}),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'farm_id': farmId,
+      'farm_name': farmName,
+      'report_type': reportType,
+      'report_period': reportPeriod,
+      'bird_type': birdType,
+      'total_birds': totalBirds,
+      'metadata': metadata.toJson(),
+      'mortality': mortality.toJson(),
+      'batches': batches,
+      'medication': medication.toJson(),
+      'vaccination': vaccination.toJson(),
+    };
   }
 }
 
@@ -119,10 +172,18 @@ class FarmMetadata {
 
   factory FarmMetadata.fromJson(Map<String, dynamic> json) {
     return FarmMetadata(
-      totalBatches: json['total_batches'],
-      totalHouses: json['total_houses'],
-      activeBatches: json['active_batches'],
+      totalBatches: TypeUtils.toIntSafe(json['total_batches']),
+      totalHouses: TypeUtils.toIntSafe(json['total_houses']),
+      activeBatches: TypeUtils.toIntSafe(json['active_batches']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'total_batches': totalBatches,
+      'total_houses': totalHouses,
+      'active_batches': activeBatches,
+    };
   }
 }
 
@@ -139,10 +200,18 @@ class FarmMortality {
 
   factory FarmMortality.fromJson(Map<String, dynamic> json) {
     return FarmMortality(
-      day: json['day'] ?? 0,
-      night: json['night'] ?? 0,
-      total24hrs: json['total_24hrs'] ?? 0,
+      day: TypeUtils.toIntSafe(json['day']),
+      night: TypeUtils.toIntSafe(json['night']),
+      total24hrs: TypeUtils.toIntSafe(json['total_24hrs']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'day': day,
+      'night': night,
+      'total_24hrs': total24hrs,
+    };
   }
 }
 
@@ -154,9 +223,16 @@ class FarmMedication {
   });
 
   factory FarmMedication.fromJson(Map<String, dynamic> json) {
+    final itemsList = TypeUtils.toListSafe<dynamic>(json['items']);
     return FarmMedication(
-      items: json['items'] != null ? List<dynamic>.from(json['items']) : [],
+      items: itemsList,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'items': items,
+    };
   }
 }
 
@@ -170,14 +246,22 @@ class FarmVaccination {
   });
 
   factory FarmVaccination.fromJson(Map<String, dynamic> json) {
+    final vaccinesDoneList = TypeUtils.toListSafe<dynamic>(json['vaccines_done']);
+    final vaccinesUpcomingList = TypeUtils.toListSafe<dynamic>(json['vaccines_upcoming']);
+
     return FarmVaccination(
-      vaccinesDone: json['vaccines_done'] != null
-          ? List<String>.from(json['vaccines_done'])
-          : [],
-      vaccinesUpcoming: json['vaccines_upcoming'] != null
-          ? List<dynamic>.from(json['vaccines_upcoming'])
-          : [],
+      vaccinesDone: vaccinesDoneList
+          .map((item) => TypeUtils.toStringSafe(item))
+          .toList(),
+      vaccinesUpcoming: vaccinesUpcomingList,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'vaccines_done': vaccinesDone,
+      'vaccines_upcoming': vaccinesUpcoming,
+    };
   }
 }
 
@@ -191,7 +275,7 @@ class BatchReport {
   final String birdType;
   final int totalBirds;
   final int birdsPlaced;
-  final dynamic ageDays; // Can be String or int
+  final dynamic ageDays;
   final int ageWeeks;
   final ProductionStage productionStage;
   final BatchMortality mortality;
@@ -227,32 +311,66 @@ class BatchReport {
   });
 
   factory BatchReport.fromJson(Map<String, dynamic> json) {
+    final productionStageMap = TypeUtils.toMapSafe(json['production_stage']);
+    final mortalityMap = TypeUtils.toMapSafe(json['mortality']);
+    final feedMap = TypeUtils.toMapSafe(json['feed']);
+    final eggProductionMap = TypeUtils.toMapSafe(json['egg_production']);
+    final medicationMap = TypeUtils.toMapSafe(json['medication']);
+    final vaccinationMap = TypeUtils.toMapSafe(json['vaccination']);
+    final medicationsMap = TypeUtils.toMapSafe(json['medications']);
+    final feedingPlanMap = TypeUtils.toMapSafe(json['feeding_plan']);
+
     return BatchReport(
-      batchId: json['batch_id'],
-      farmId: json['farm_id'],
-      farmName: json['farm_name'],
-      houseId: json['house_id'],
-      houseName: json['house_name'],
-      batchNumber: json['batch_number'],
-      birdType: json['bird_type'],
-      totalBirds: json['total_birds'],
-      birdsPlaced: json['birds_placed'] ?? 0,
+      batchId: TypeUtils.toStringSafe(json['batch_id']),
+      farmId: TypeUtils.toStringSafe(json['farm_id']),
+      farmName: TypeUtils.toStringSafe(json['farm_name']),
+      houseId: TypeUtils.toStringSafe(json['house_id']),
+      houseName: TypeUtils.toStringSafe(json['house_name']),
+      batchNumber: TypeUtils.toStringSafe(json['batch_number']),
+      birdType: TypeUtils.toStringSafe(json['bird_type']),
+      totalBirds: TypeUtils.toIntSafe(json['total_birds']),
+      birdsPlaced: TypeUtils.toIntSafe(json['birds_placed']),
       ageDays: json['age_days'] ?? 0,
-      ageWeeks: json['age_weeks'] ?? 0,
-      productionStage: ProductionStage.fromJson(json['production_stage']),
-      mortality: BatchMortality.fromJson(json['mortality']),
-      feed: BatchFeed.fromJson(json['feed']),
-      eggProduction: json['egg_production'] != null
-          ? EggProduction.fromJson(json['egg_production'])
+      ageWeeks: TypeUtils.toIntSafe(json['age_weeks']),
+      productionStage: ProductionStage.fromJson(productionStageMap ?? {}),
+      mortality: BatchMortality.fromJson(mortalityMap ?? {}),
+      feed: BatchFeed.fromJson(feedMap ?? {}),
+      eggProduction: eggProductionMap != null
+          ? EggProduction.fromJson(eggProductionMap)
           : null,
-      medication: BatchMedication.fromJson(json['medication']),
-      vaccination: BatchVaccination.fromJson(json['vaccination']),
-      medications: BatchMedication.fromJson(json['medications']),
-      feedingPlan: json['feeding_plan'] != null
-          ? FeedingPlan.fromJson(json['feeding_plan'])
+      medication: BatchMedication.fromJson(medicationMap ?? {}),
+      vaccination: BatchVaccination.fromJson(vaccinationMap ?? {}),
+      medications: BatchMedication.fromJson(medicationsMap ?? {}),
+      feedingPlan: feedingPlanMap != null
+          ? FeedingPlan.fromJson(feedingPlanMap)
           : null,
-      reportBy: json['report_by'] ?? '',
+      reportBy: TypeUtils.toStringSafe(json['report_by']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'batch_id': batchId,
+      'farm_id': farmId,
+      'farm_name': farmName,
+      'house_id': houseId,
+      'house_name': houseName,
+      'batch_number': batchNumber,
+      'bird_type': birdType,
+      'total_birds': totalBirds,
+      'birds_placed': birdsPlaced,
+      'age_days': ageDays,
+      'age_weeks': ageWeeks,
+      'production_stage': productionStage.toJson(),
+      'mortality': mortality.toJson(),
+      'feed': feed.toJson(),
+      'egg_production': eggProduction?.toJson(),
+      'medication': medication.toJson(),
+      'vaccination': vaccination.toJson(),
+      'medications': medications.toJson(),
+      'feeding_plan': feedingPlan?.toJson(),
+      'report_by': reportBy,
+    };
   }
 }
 
@@ -268,11 +386,21 @@ class ProductionStage {
   });
 
   factory ProductionStage.fromJson(Map<String, dynamic> json) {
+    final expectedMilestoneMap = TypeUtils.toMapSafe(json['expected_milestone']);
+
     return ProductionStage(
-      stage: json['stage'] ?? '',
-      description: json['description'] ?? '',
-      expectedMilestone: ExpectedMilestone.fromJson(json['expected_milestone']),
+      stage: TypeUtils.toStringSafe(json['stage']),
+      description: TypeUtils.toStringSafe(json['description']),
+      expectedMilestone: ExpectedMilestone.fromJson(expectedMilestoneMap ?? {}),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'stage': stage,
+      'description': description,
+      'expected_milestone': expectedMilestone.toJson(),
+    };
   }
 }
 
@@ -291,11 +419,20 @@ class ExpectedMilestone {
 
   factory ExpectedMilestone.fromJson(Map<String, dynamic> json) {
     return ExpectedMilestone(
-      type: json['type'] ?? '',
-      expectedStartDay: json['expected_start_day'] ?? 0,
-      expectedStartWeeks: json['expected_start_weeks'] ?? 0,
-      daysRemaining: json['days_remaining'] ?? 0,
+      type: TypeUtils.toStringSafe(json['type']),
+      expectedStartDay: TypeUtils.toIntSafe(json['expected_start_day']),
+      expectedStartWeeks: TypeUtils.toIntSafe(json['expected_start_weeks']),
+      daysRemaining: TypeUtils.toIntSafe(json['days_remaining']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'type': type,
+      'expected_start_day': expectedStartDay,
+      'expected_start_weeks': expectedStartWeeks,
+      'days_remaining': daysRemaining,
+    };
   }
 }
 
@@ -318,13 +455,24 @@ class BatchMortality {
 
   factory BatchMortality.fromJson(Map<String, dynamic> json) {
     return BatchMortality(
-      day: json['day'] ?? 0,
-      night: json['night'] ?? 0,
-      total24hrs: json['total_24hrs'] ?? 0,
-      cumulativeTotal: json['cumulative_total'] ?? 0,
-      birdsRemaining: json['birds_remaining'] ?? 0,
-      reason: json['reason'] ?? '',
+      day: TypeUtils.toIntSafe(json['day']),
+      night: TypeUtils.toIntSafe(json['night']),
+      total24hrs: TypeUtils.toIntSafe(json['total_24hrs']),
+      cumulativeTotal: TypeUtils.toIntSafe(json['cumulative_total']),
+      birdsRemaining: TypeUtils.toIntSafe(json['birds_remaining']),
+      reason: TypeUtils.toStringSafe(json['reason']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'day': day,
+      'night': night,
+      'total_24hrs': total24hrs,
+      'cumulative_total': cumulativeTotal,
+      'birds_remaining': birdsRemaining,
+      'reason': reason,
+    };
   }
 }
 
@@ -349,14 +497,26 @@ class BatchFeed {
 
   factory BatchFeed.fromJson(Map<String, dynamic> json) {
     return BatchFeed(
-      bagsConsumed: json['bags_consumed'] ?? 0,
-      bagsConsumedDay: json['bags_consumed_day'] ?? 0,
-      bagsConsumedNight: json['bags_consumed_night'] ?? 0,
-      totalBagsConsumed: json['total_bags_consumed'] ?? 0,
-      balanceInStore: json['balance_in_store'] ?? 0,
-      feedType: json['feed_type'] ?? '',
-      feedVariance: json['feed_variance'] ?? '',
+      bagsConsumed: TypeUtils.toIntSafe(json['bags_consumed']),
+      bagsConsumedDay: TypeUtils.toIntSafe(json['bags_consumed_day']),
+      bagsConsumedNight: TypeUtils.toIntSafe(json['bags_consumed_night']),
+      totalBagsConsumed: TypeUtils.toIntSafe(json['total_bags_consumed']),
+      balanceInStore: TypeUtils.toIntSafe(json['balance_in_store']),
+      feedType: TypeUtils.toStringSafe(json['feed_type']),
+      feedVariance: TypeUtils.toStringSafe(json['feed_variance']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'bags_consumed': bagsConsumed,
+      'bags_consumed_day': bagsConsumedDay,
+      'bags_consumed_night': bagsConsumedNight,
+      'total_bags_consumed': totalBagsConsumed,
+      'balance_in_store': balanceInStore,
+      'feed_type': feedType,
+      'feed_variance': feedVariance,
+    };
   }
 }
 
@@ -389,18 +549,34 @@ class EggProduction {
 
   factory EggProduction.fromJson(Map<String, dynamic> json) {
     return EggProduction(
-      traysCollected: json['trays_collected'] ?? 0,
-      totalEggsCollected: json['total_eggs_collected'] ?? 0,
-      piecesCollected: json['pieces_collected'] ?? 0,
-      traysInStore: json['trays_in_store'] ?? 0,
-      piecesInStore: json['pieces_in_store'] ?? 0,
-      partialBroken: json['partial_broken'] ?? 0,
-      completeBroken: json['complete_broken'] ?? 0,
-      smallDeformed: json['small_deformed'] ?? 0,
-      productionPercentage: (json['production_percentage'] as num?)?.toDouble() ?? 0,
-      goodEggs: json['good_eggs'] ?? 0,
-      totalValue: (json['total_value'] as num?)?.toDouble() ?? 0,
+      traysCollected: TypeUtils.toIntSafe(json['trays_collected']),
+      totalEggsCollected: TypeUtils.toIntSafe(json['total_eggs_collected']),
+      piecesCollected: TypeUtils.toIntSafe(json['pieces_collected']),
+      traysInStore: TypeUtils.toIntSafe(json['trays_in_store']),
+      piecesInStore: TypeUtils.toIntSafe(json['pieces_in_store']),
+      partialBroken: TypeUtils.toIntSafe(json['partial_broken']),
+      completeBroken: TypeUtils.toIntSafe(json['complete_broken']),
+      smallDeformed: TypeUtils.toIntSafe(json['small_deformed']),
+      productionPercentage: TypeUtils.toDoubleSafe(json['production_percentage']),
+      goodEggs: TypeUtils.toIntSafe(json['good_eggs']),
+      totalValue: TypeUtils.toDoubleSafe(json['total_value']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'trays_collected': traysCollected,
+      'total_eggs_collected': totalEggsCollected,
+      'pieces_collected': piecesCollected,
+      'trays_in_store': traysInStore,
+      'pieces_in_store': piecesInStore,
+      'partial_broken': partialBroken,
+      'complete_broken': completeBroken,
+      'small_deformed': smallDeformed,
+      'production_percentage': productionPercentage,
+      'good_eggs': goodEggs,
+      'total_value': totalValue,
+    };
   }
 }
 
@@ -416,19 +592,26 @@ class BatchMedication {
   });
 
   factory BatchMedication.fromJson(Map<String, dynamic> json) {
+    final availableList = TypeUtils.toListSafe<dynamic>(json['available']);
+    final inUseList = TypeUtils.toListSafe<dynamic>(json['in_use']);
+    final medicationsAvailableList = TypeUtils.toListSafe<dynamic>(json['medications_available']);
+
     return BatchMedication(
-      available: json['available'] != null
-          ? List<dynamic>.from(json['available'])
-          : [],
-      inUse: json['in_use'] != null
-          ? (json['in_use'] as List)
-          .map((item) => MedicineInUse.fromJson(item))
-          .toList()
-          : [],
-      medicationsAvailable: json['medications_available'] != null
-          ? List<dynamic>.from(json['medications_available'])
-          : [],
+      available: availableList,
+      inUse: inUseList
+          .map((item) => MedicineInUse.fromJson(
+          item is Map<String, dynamic> ? item : {}))
+          .toList(),
+      medicationsAvailable: medicationsAvailableList,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'available': available,
+      'in_use': inUse.map((item) => item.toJson()).toList(),
+      'medications_available': medicationsAvailable,
+    };
   }
 }
 
@@ -447,11 +630,20 @@ class MedicineInUse {
 
   factory MedicineInUse.fromJson(Map<String, dynamic> json) {
     return MedicineInUse(
-      medicineName: json['medicine_name'] ?? '',
-      dosage: json['dosage'] ?? '',
-      quantityUsed: json['quantity_used'] ?? '',
-      unit: json['unit'] ?? '',
+      medicineName: TypeUtils.toStringSafe(json['medicine_name']),
+      dosage: TypeUtils.toStringSafe(json['dosage']),
+      quantityUsed: TypeUtils.toStringSafe(json['quantity_used']),
+      unit: TypeUtils.toStringSafe(json['unit']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'medicine_name': medicineName,
+      'dosage': dosage,
+      'quantity_used': quantityUsed,
+      'unit': unit,
+    };
   }
 }
 
@@ -465,14 +657,22 @@ class BatchVaccination {
   });
 
   factory BatchVaccination.fromJson(Map<String, dynamic> json) {
+    final vaccinesDoneList = TypeUtils.toListSafe<dynamic>(json['vaccines_done']);
+    final vaccinesUpcomingList = TypeUtils.toListSafe<dynamic>(json['vaccines_upcoming']);
+
     return BatchVaccination(
-      vaccinesDone: json['vaccines_done'] != null
-          ? List<String>.from(json['vaccines_done'])
-          : [],
-      vaccinesUpcoming: json['vaccines_upcoming'] != null
-          ? List<dynamic>.from(json['vaccines_upcoming'])
-          : [],
+      vaccinesDone: vaccinesDoneList
+          .map((item) => TypeUtils.toStringSafe(item))
+          .toList(),
+      vaccinesUpcoming: vaccinesUpcomingList,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'vaccines_done': vaccinesDone,
+      'vaccines_upcoming': vaccinesUpcoming,
+    };
   }
 }
 
@@ -496,15 +696,29 @@ class FeedingPlan {
   });
 
   factory FeedingPlan.fromJson(Map<String, dynamic> json) {
+    final feedingTimesMap = TypeUtils.toMapSafe(json['feeding_times']);
+
     return FeedingPlan(
-      expectedFeedPerDayKg: (json['expected_feed_per_day_kg'] as num?)?.toDouble() ?? 0,
-      feedPerBirdPerDayGrams: (json['feed_per_bird_per_day_grams'] as num?)?.toDouble() ?? 0,
-      expectedFeedPerWeekBags: json['expected_feed_per_week_bags'] ?? 0,
-      feedTypeInUse: json['feed_type_in_use'] ?? '',
-      stageName: json['stage_name'] ?? '',
-      timesPerDay: json['times_per_day'] ?? 0,
-      feedingTimes: FeedingTimes.fromJson(json['feeding_times'] ?? {}),
+      expectedFeedPerDayKg: TypeUtils.toDoubleSafe(json['expected_feed_per_day_kg']),
+      feedPerBirdPerDayGrams: TypeUtils.toDoubleSafe(json['feed_per_bird_per_day_grams']),
+      expectedFeedPerWeekBags: TypeUtils.toIntSafe(json['expected_feed_per_week_bags']),
+      feedTypeInUse: TypeUtils.toStringSafe(json['feed_type_in_use']),
+      stageName: TypeUtils.toStringSafe(json['stage_name']),
+      timesPerDay: TypeUtils.toIntSafe(json['times_per_day']),
+      feedingTimes: FeedingTimes.fromJson(feedingTimesMap ?? {}),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'expected_feed_per_day_kg': expectedFeedPerDayKg,
+      'feed_per_bird_per_day_grams': feedPerBirdPerDayGrams,
+      'expected_feed_per_week_bags': expectedFeedPerWeekBags,
+      'feed_type_in_use': feedTypeInUse,
+      'stage_name': stageName,
+      'times_per_day': timesPerDay,
+      'feeding_times': feedingTimes.toJson(),
+    };
   }
 }
 
@@ -516,10 +730,18 @@ class FeedingTimes {
   });
 
   factory FeedingTimes.fromJson(Map<String, dynamic> json) {
+    final slotsList = TypeUtils.toListSafe<dynamic>(json['slots']);
+
     return FeedingTimes(
-      slots: json['slots'] != null
-          ? List<String>.from(json['slots'])
-          : [],
+      slots: slotsList
+          .map((item) => TypeUtils.toStringSafe(item))
+          .toList(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'slots': slots,
+    };
   }
 }

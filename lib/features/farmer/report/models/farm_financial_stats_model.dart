@@ -1,3 +1,5 @@
+import 'package:agriflock360/core/utils/type_safe_utils.dart';
+
 class FarmFinancialStatsResponse {
   final bool success;
   final FarmFinancialStats data;
@@ -8,10 +10,19 @@ class FarmFinancialStatsResponse {
   });
 
   factory FarmFinancialStatsResponse.fromJson(Map<String, dynamic> json) {
+    final dataMap = TypeUtils.toMapSafe(json['data']);
+
     return FarmFinancialStatsResponse(
-      success: json['success'] ?? false,
-      data: FarmFinancialStats.fromJson(json['data'] ?? {}),
+      success: TypeUtils.toBoolSafe(json['success']),
+      data: FarmFinancialStats.fromJson(dataMap ?? {}),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'success': success,
+      'data': data.toJson(),
+    };
   }
 }
 
@@ -55,31 +66,56 @@ class FarmFinancialStats {
   });
 
   factory FarmFinancialStats.fromJson(Map<String, dynamic> json) {
+    final expenditureList = TypeUtils.toListSafe<dynamic>(json['expenditure_by_category']);
+    final incomeList = TypeUtils.toListSafe<dynamic>(json['income_by_product_type']);
+
     return FarmFinancialStats(
-      productIncome: (json['product_income'] ?? 0).toDouble(),
-      eggIncome: (json['egg_income'] ?? 0).toDouble(),
-      meatIncome: (json['meat_income'] ?? 0).toDouble(),
-      otherIncome: (json['other_income'] ?? 0).toDouble(),
-      feedCost: (json['feed_cost'] ?? 0).toDouble(),
-      medicationCost: (json['medication_cost'] ?? 0).toDouble(),
-      vaccineCost: (json['vaccine_cost'] ?? 0).toDouble(),
-      laborCost: (json['labor_cost'] ?? 0).toDouble(),
-      utilitiesCost: (json['utilities_cost'] ?? 0).toDouble(),
-      equipmentCost: (json['equipment_cost'] ?? 0).toDouble(),
-      otherCosts: (json['other_costs'] ?? 0).toDouble(),
-      totalIncome: (json['total_income'] ?? 0).toDouble(),
-      totalExpenditure: (json['total_expenditure'] ?? 0).toDouble(),
-      netProfit: (json['net_profit'] ?? 0).toDouble(),
-      profitMargin: (json['profit_margin'] ?? 0).toDouble(),
-      expenditureByCategory: (json['expenditure_by_category'] as List?)
-              ?.map((e) => ExpenditureByCategory.fromJson(e))
-              .toList() ??
-          [],
-      incomeByProductType: (json['income_by_product_type'] as List?)
-              ?.map((e) => IncomeByProductType.fromJson(e))
-              .toList() ??
-          [],
+      productIncome: TypeUtils.toDoubleSafe(json['product_income']),
+      eggIncome: TypeUtils.toDoubleSafe(json['egg_income']),
+      meatIncome: TypeUtils.toDoubleSafe(json['meat_income']),
+      otherIncome: TypeUtils.toDoubleSafe(json['other_income']),
+      feedCost: TypeUtils.toDoubleSafe(json['feed_cost']),
+      medicationCost: TypeUtils.toDoubleSafe(json['medication_cost']),
+      vaccineCost: TypeUtils.toDoubleSafe(json['vaccine_cost']),
+      laborCost: TypeUtils.toDoubleSafe(json['labor_cost']),
+      utilitiesCost: TypeUtils.toDoubleSafe(json['utilities_cost']),
+      equipmentCost: TypeUtils.toDoubleSafe(json['equipment_cost']),
+      otherCosts: TypeUtils.toDoubleSafe(json['other_costs']),
+      totalIncome: TypeUtils.toDoubleSafe(json['total_income']),
+      totalExpenditure: TypeUtils.toDoubleSafe(json['total_expenditure']),
+      netProfit: TypeUtils.toDoubleSafe(json['net_profit']),
+      profitMargin: TypeUtils.toDoubleSafe(json['profit_margin']),
+      expenditureByCategory: expenditureList
+          .map((e) => ExpenditureByCategory.fromJson(
+          e is Map<String, dynamic> ? e : {}))
+          .toList(),
+      incomeByProductType: incomeList
+          .map((e) => IncomeByProductType.fromJson(
+          e is Map<String, dynamic> ? e : {}))
+          .toList(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'product_income': productIncome,
+      'egg_income': eggIncome,
+      'meat_income': meatIncome,
+      'other_income': otherIncome,
+      'feed_cost': feedCost,
+      'medication_cost': medicationCost,
+      'vaccine_cost': vaccineCost,
+      'labor_cost': laborCost,
+      'utilities_cost': utilitiesCost,
+      'equipment_cost': equipmentCost,
+      'other_costs': otherCosts,
+      'total_income': totalIncome,
+      'total_expenditure': totalExpenditure,
+      'net_profit': netProfit,
+      'profit_margin': profitMargin,
+      'expenditure_by_category': expenditureByCategory.map((e) => e.toJson()).toList(),
+      'income_by_product_type': incomeByProductType.map((e) => e.toJson()).toList(),
+    };
   }
 }
 
@@ -94,9 +130,16 @@ class ExpenditureByCategory {
 
   factory ExpenditureByCategory.fromJson(Map<String, dynamic> json) {
     return ExpenditureByCategory(
-      category: json['category'] ?? '',
-      amount: (json['amount'] ?? 0).toDouble(),
+      category: TypeUtils.toStringSafe(json['category']),
+      amount: TypeUtils.toDoubleSafe(json['amount']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'category': category,
+      'amount': amount,
+    };
   }
 }
 
@@ -111,8 +154,15 @@ class IncomeByProductType {
 
   factory IncomeByProductType.fromJson(Map<String, dynamic> json) {
     return IncomeByProductType(
-      productType: json['product_type'] ?? '',
-      amount: (json['amount'] ?? 0).toDouble(),
+      productType: TypeUtils.toStringSafe(json['product_type']),
+      amount: TypeUtils.toDoubleSafe(json['amount']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'product_type': productType,
+      'amount': amount,
+    };
   }
 }

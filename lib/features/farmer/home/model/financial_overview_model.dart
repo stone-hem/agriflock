@@ -1,4 +1,7 @@
-class FinancialOverview  {
+import 'dart:convert';
+import 'package:agriflock360/core/utils/type_safe_utils.dart';
+
+class FinancialOverview {
   final double totalIncome;
   final double totalExpenditure;
   final double netProfit;
@@ -12,15 +15,16 @@ class FinancialOverview  {
   });
 
   factory FinancialOverview.fromJson(Map<String, dynamic> json) {
+    final graphList = TypeUtils.toListSafe<dynamic>(json['graph']);
+
     return FinancialOverview(
-      totalIncome: (json['total_income'] as num?)?.toDouble() ?? 0.0,
-      totalExpenditure: (json['total_expenditure'] as num?)?.toDouble() ?? 0.0,
-      netProfit: (json['net_profit'] as num?)?.toDouble() ?? 0.0,
-      graph: json['graph'] != null
-          ? (json['graph'] as List)
-          .map((e) => FinancialGraphData.fromJson(e))
-          .toList()
-          : [],
+      totalIncome: TypeUtils.toDoubleSafe(json['total_income']),
+      totalExpenditure: TypeUtils.toDoubleSafe(json['total_expenditure']),
+      netProfit: TypeUtils.toDoubleSafe(json['net_profit']),
+      graph: graphList
+          .map((e) => FinancialGraphData.fromJson(
+          e is Map<String, dynamic> ? e : {}))
+          .toList(),
     );
   }
 
@@ -36,7 +40,7 @@ class FinancialOverview  {
   List<Object?> get props => [totalIncome, totalExpenditure, netProfit, graph];
 }
 
-class FinancialGraphData  {
+class FinancialGraphData {
   final String month;
   final double totalIncome;
   final double totalExpenditure;
@@ -51,10 +55,10 @@ class FinancialGraphData  {
 
   factory FinancialGraphData.fromJson(Map<String, dynamic> json) {
     return FinancialGraphData(
-      month: json['month'] as String? ?? '',
-      totalIncome: (json['total_income'] as num?)?.toDouble() ?? 0.0,
-      totalExpenditure: (json['total_expenditure'] as num?)?.toDouble() ?? 0.0,
-      netProfit: (json['net_profit'] as num?)?.toDouble() ?? 0.0,
+      month: TypeUtils.toStringSafe(json['month']),
+      totalIncome: TypeUtils.toDoubleSafe(json['total_income']),
+      totalExpenditure: TypeUtils.toDoubleSafe(json['total_expenditure']),
+      netProfit: TypeUtils.toDoubleSafe(json['net_profit']),
     );
   }
 

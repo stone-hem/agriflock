@@ -1,19 +1,21 @@
 // vet_service_type.dart
+import 'package:agriflock360/core/utils/type_safe_utils.dart';
+
 class VetServiceType {
   final String id;
   final String serviceCode;
   final String serviceName;
   final String description;
-  final double? basePrice; // Changed to nullable
+  final double? basePrice;
   final String region;
   final String currency;
   final String category;
   final bool active;
-  final String pricingType; // Added field
-  final double? perBirdRate; // Added field, nullable
-  final double? perPersonRate; // Added field, nullable
-  final bool requiresTransport; // Added field
-  final bool requiresUpfrontPayment; // Added field
+  final String pricingType;
+  final double? perBirdRate;
+  final double? perPersonRate;
+  final bool requiresTransport;
+  final bool requiresUpfrontPayment;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -38,28 +40,22 @@ class VetServiceType {
 
   factory VetServiceType.fromJson(Map<String, dynamic> json) {
     return VetServiceType(
-      id: json['id'] as String,
-      serviceCode: json['service_code'] as String,
-      serviceName: json['service_name'] as String,
-      description: json['description'] as String,
-      basePrice: json['base_price'] != null
-          ? double.tryParse(json['base_price'].toString())
-          : null,
-      region: json['region'] as String,
-      currency: json['currency'] as String,
-      category: json['category'] as String,
-      active: json['active'] as bool,
-      pricingType: json['pricing_type'] as String,
-      perBirdRate: json['per_bird_rate'] != null
-          ? double.tryParse(json['per_bird_rate'].toString())
-          : null,
-      perPersonRate: json['per_person_rate'] != null
-          ? double.tryParse(json['per_person_rate'].toString())
-          : null,
-      requiresTransport: json['requires_transport'] as bool,
-      requiresUpfrontPayment: json['requires_upfront_payment'] as bool,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      id: TypeUtils.toStringSafe(json['id']),
+      serviceCode: TypeUtils.toStringSafe(json['service_code']),
+      serviceName: TypeUtils.toStringSafe(json['service_name']),
+      description: TypeUtils.toStringSafe(json['description']),
+      basePrice: TypeUtils.toNullableDoubleSafe(json['base_price']),
+      region: TypeUtils.toStringSafe(json['region']),
+      currency: TypeUtils.toStringSafe(json['currency']),
+      category: TypeUtils.toStringSafe(json['category']),
+      active: TypeUtils.toBoolSafe(json['active']),
+      pricingType: TypeUtils.toStringSafe(json['pricing_type']),
+      perBirdRate: TypeUtils.toNullableDoubleSafe(json['per_bird_rate']),
+      perPersonRate: TypeUtils.toNullableDoubleSafe(json['per_person_rate']),
+      requiresTransport: TypeUtils.toBoolSafe(json['requires_transport']),
+      requiresUpfrontPayment: TypeUtils.toBoolSafe(json['requires_upfront_payment']),
+      createdAt: TypeUtils.toDateTimeSafe(json['created_at']) ?? DateTime.now(),
+      updatedAt: TypeUtils.toDateTimeSafe(json['updated_at']) ?? DateTime.now(),
     );
   }
 
@@ -112,9 +108,12 @@ class VetServiceTypesResponse {
   });
 
   factory VetServiceTypesResponse.fromJson(List<dynamic> jsonList) {
+    final safeList = TypeUtils.toListSafe<dynamic>(jsonList);
+
     return VetServiceTypesResponse(
-      serviceTypes: jsonList
-          .map((item) => VetServiceType.fromJson(item as Map<String, dynamic>))
+      serviceTypes: safeList
+          .map((item) => VetServiceType.fromJson(
+          item is Map<String, dynamic> ? item : {}))
           .toList(),
     );
   }

@@ -1,3 +1,5 @@
+import 'package:agriflock360/core/utils/type_safe_utils.dart'; // Adjust the import path as needed
+
 class Expenditure {
   final String id;
   final String batchId;
@@ -31,19 +33,19 @@ class Expenditure {
 
   factory Expenditure.fromJson(Map<String, dynamic> json) {
     return Expenditure(
-      id: json['id'],
-      batchId: json['batchId'],
-      type: json['type'],
-      category: json['category'],
-      description: json['description'],
-      amount: (json['amount'] as num).toDouble(),
-      quantity: json['quantity'] ?? 1,
-      unit: json['unit'] ?? 'unit',
-      date: DateTime.parse(json['date']),
-      supplier: json['supplier'],
-      receiptNumber: json['receiptNumber'],
-      createdAt: DateTime.parse(json['createdAt']),
-      updatedAt: DateTime.parse(json['updatedAt']),
+      id: TypeUtils.toStringSafe(json['id']),
+      batchId: TypeUtils.toStringSafe(json['batchId']),
+      type: TypeUtils.toStringSafe(json['type']),
+      category: TypeUtils.toStringSafe(json['category']),
+      description: TypeUtils.toStringSafe(json['description']),
+      amount: TypeUtils.toDoubleSafe(json['amount']),
+      quantity: TypeUtils.toIntSafe(json['quantity'], defaultValue: 1),
+      unit: TypeUtils.toStringSafe(json['unit'], defaultValue: 'unit'),
+      date: TypeUtils.toDateTimeSafe(json['date']) ?? DateTime.now(),
+      supplier: TypeUtils.toNullableStringSafe(json['supplier']),
+      receiptNumber: TypeUtils.toNullableStringSafe(json['receiptNumber']),
+      createdAt: TypeUtils.toDateTimeSafe(json['createdAt']) ?? DateTime.now(),
+      updatedAt: TypeUtils.toDateTimeSafe(json['updatedAt']) ?? DateTime.now(),
     );
   }
 
@@ -86,4 +88,36 @@ class ExpenditureDashboard {
     required this.laborCost,
     required this.otherCost,
   });
+
+  factory ExpenditureDashboard.fromJson(Map<String, dynamic> json) {
+    Map<String, dynamic> breakdownMap = TypeUtils.toMapSafe(json['category_breakdown']) ?? {};
+    Map<String, double> categoryBreakdown = {};
+    breakdownMap.forEach((key, value) {
+      categoryBreakdown[key] = TypeUtils.toDoubleSafe(value);
+    });
+
+    return ExpenditureDashboard(
+      totalAmount: TypeUtils.toDoubleSafe(json['totalAmount']),
+      averageDailyCost: TypeUtils.toDoubleSafe(json['averageDailyCost']),
+      categoryBreakdown: categoryBreakdown,
+      feedCost: TypeUtils.toDoubleSafe(json['feedCost']),
+      medicationCost: TypeUtils.toDoubleSafe(json['medicationCost']),
+      utilitiesCost: TypeUtils.toDoubleSafe(json['utilitiesCost']),
+      laborCost: TypeUtils.toDoubleSafe(json['laborCost']),
+      otherCost: TypeUtils.toDoubleSafe(json['otherCost']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'totalAmount': totalAmount,
+      'averageDailyCost': averageDailyCost,
+      'category_breakdown': categoryBreakdown,
+      'feedCost': feedCost,
+      'medicationCost': medicationCost,
+      'utilitiesCost': utilitiesCost,
+      'laborCost': laborCost,
+      'otherCost': otherCost,
+    };
+  }
 }

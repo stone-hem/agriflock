@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'package:agriflock360/core/utils/type_safe_utils.dart';
 
+// Request class - NOT using TypeUtils as per rules
 class UpdateProfileRequest {
   final String fullName;
   final String phoneNumber;
@@ -58,31 +60,28 @@ class Location {
     if (json.containsKey('address')) {
       // If address is a Map (nested structure)
       if (json['address'] is Map) {
-        final addressMap = json['address'] as Map<String, dynamic>;
-        address = addressMap['formatted_address'] ?? addressMap['name'] ?? '';
+        final addressMap = TypeUtils.toMapSafe(json['address']) ?? {};
+        address = TypeUtils.toStringSafe(addressMap['formatted_address']) ??
+            TypeUtils.toStringSafe(addressMap['name']) ?? '';
 
         // Extract lat/lng from geometry
         if (addressMap.containsKey('geometry') && addressMap['geometry'] is Map) {
-          final geometry = addressMap['geometry'] as Map<String, dynamic>;
+          final geometry = TypeUtils.toMapSafe(addressMap['geometry']) ?? {};
           if (geometry.containsKey('location') && geometry['location'] is Map) {
-            final location = geometry['location'] as Map<String, dynamic>;
-            latitude = (location['lat'] ?? 0.0).toDouble();
-            longitude = (location['lng'] ?? 0.0).toDouble();
+            final location = TypeUtils.toMapSafe(geometry['location']) ?? {};
+            latitude = TypeUtils.toDoubleSafe(location['lat']);
+            longitude = TypeUtils.toDoubleSafe(location['lng']);
           }
         }
       } else {
         // If address is a String
-        address = json['address'].toString();
+        address = TypeUtils.toStringSafe(json['address']);
       }
     }
 
     // Override with direct lat/lng if present
-    if (json.containsKey('latitude')) {
-      latitude = (json['latitude'] ?? 0.0).toDouble();
-    }
-    if (json.containsKey('longitude')) {
-      longitude = (json['longitude'] ?? 0.0).toDouble();
-    }
+    latitude = TypeUtils.toDoubleSafe(json['latitude'], defaultValue: latitude);
+    longitude = TypeUtils.toDoubleSafe(json['longitude'], defaultValue: longitude);
 
     return Location(
       address: address,
@@ -112,11 +111,21 @@ class ProfileResponse {
   });
 
   factory ProfileResponse.fromJson(Map<String, dynamic> json) {
+    final dataMap = TypeUtils.toMapSafe(json['data']);
+
     return ProfileResponse(
-      success: json['success'] ?? false,
-      message: json['message'] as String?,
-      data: ProfileData.fromJson(json['data']),
+      success: TypeUtils.toBoolSafe(json['success']),
+      message: TypeUtils.toNullableStringSafe(json['message']),
+      data: ProfileData.fromJson(dataMap ?? {}),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'success': success,
+      'message': message,
+      'data': data.toJson(),
+    };
   }
 }
 
@@ -124,18 +133,18 @@ class ProfileData {
   final String id;
   final String? userId;
   final String fullName;
-  final String? email;  // ⚠️ ADD THIS
-  final String? name;   // ⚠️ ADD THIS
+  final String? email;
+  final String? name;
   final String? nationalId;
   final String phoneNumber;
-  final String? callingCode;  // ⚠️ ADD THIS
+  final String? callingCode;
   final String? dateOfBirth;
   final int? age;
   final String? gender;
   final Location location;
   final String? avatar;
   final String? farmId;
-  final Map<String, dynamic>? farm;  // ⚠️ ADD THIS
+  final Map<String, dynamic>? farm;
   final int? yearsOfExperience;
   final String? poultryTypeId;
   final String? poultryType;
@@ -146,13 +155,13 @@ class ProfileData {
   final String? preferredChicksCompany;
   final String? preferredOfftakerAgent;
   final String region;
-  final String? currency;  // ⚠️ ADD THIS
-  final Map<String, dynamic>? currencyInfo;  // ⚠️ ADD THIS
-  final Map<String, dynamic>? preferences;  // ⚠️ ADD THIS
-  final UserRole? role;  // ⚠️ ADD THIS
-  final String? status;  // ⚠️ ADD THIS
-  final bool? is2faEnabled;  // ⚠️ ADD THIS
-  final String? oauthProvider;  // ⚠️ ADD THIS
+  final String? currency;
+  final Map<String, dynamic>? currencyInfo;
+  final Map<String, dynamic>? preferences;
+  final UserRole? role;
+  final String? status;
+  final bool? is2faEnabled;
+  final String? oauthProvider;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -194,64 +203,67 @@ class ProfileData {
   });
 
   factory ProfileData.fromJson(Map<String, dynamic> json) {
-    // ⚠️ CRITICAL FIX: Parse location properly
+    // Parse location properly - handle both String and Map
     Map<String, dynamic> locationJson = {};
+    final locationValue = json['location'];
 
-    if (json['location'] != null) {
-      if (json['location'] is String) {
+    if (locationValue != null) {
+      if (locationValue is String) {
         // Parse the JSON string
         try {
-          locationJson = jsonDecode(json['location']) as Map<String, dynamic>;
+          final decoded = jsonDecode(locationValue);
+          if (decoded is Map) {
+            locationJson = Map<String, dynamic>.from(decoded);
+          }
         } catch (e) {
           print('Error parsing location string: $e');
-          locationJson = {};
         }
-      } else if (json['location'] is Map) {
-        locationJson = json['location'] as Map<String, dynamic>;
+      } else if (locationValue is Map) {
+        locationJson = Map<String, dynamic>.from(locationValue);
       }
     }
 
+    final roleMap = TypeUtils.toMapSafe(json['role']);
+    final farmMap = TypeUtils.toMapSafe(json['farm']);
+    final currencyInfoMap = TypeUtils.toMapSafe(json['currency_info']);
+    final preferencesMap = TypeUtils.toMapSafe(json['preferences']);
+
     return ProfileData(
-      id: json['id'] ?? '',
-      userId: json['user_id'] as String?,
-      fullName: json['full_name'] ?? json['name'] ?? '',
-      email: json['email'] as String?,
-      name: json['name'] as String?,
-      nationalId: json['national_id'] as String?,
-      phoneNumber: json['phone_number'] ?? '',
-      callingCode: json['calling_code'] as String?,
-      dateOfBirth: json['date_of_birth'] as String?,
-      age: json['age'] != null ? int.tryParse(json['age'].toString()) : null,
-      gender: json['gender'] as String?,
+      id: TypeUtils.toStringSafe(json['id']),
+      userId: TypeUtils.toNullableStringSafe(json['user_id']),
+      fullName: TypeUtils.toStringSafe(json['full_name']) ??
+          TypeUtils.toStringSafe(json['name']) ?? '',
+      email: TypeUtils.toNullableStringSafe(json['email']),
+      name: TypeUtils.toNullableStringSafe(json['name']),
+      nationalId: TypeUtils.toNullableStringSafe(json['national_id']),
+      phoneNumber: TypeUtils.toStringSafe(json['phone_number']),
+      callingCode: TypeUtils.toNullableStringSafe(json['calling_code']),
+      dateOfBirth: TypeUtils.toNullableStringSafe(json['date_of_birth']),
+      age: TypeUtils.toNullableIntSafe(json['age']),
+      gender: TypeUtils.toNullableStringSafe(json['gender']),
       location: Location.fromJson(locationJson),
-      avatar: json['avatar'] as String?,
-      farmId: json['farm_id'] as String?,
-      farm: json['farm'] as Map<String, dynamic>?,
-      yearsOfExperience: json['years_of_experience'] != null
-          ? int.tryParse(json['years_of_experience'].toString())
-          : null,
-      poultryTypeId: json['poultry_type_id'] as String?,
-      poultryType: json['poultry_type'] as String?,
-      chickenHouseCapacity: json['chicken_house_capacity'] != null
-          ? int.tryParse(json['chicken_house_capacity'].toString())
-          : null,
-      currentNumberOfChickens: json['current_number_of_chickens'] != null
-          ? int.tryParse(json['current_number_of_chickens'].toString())
-          : null,
-      preferredAgrovetName: json['preferred_agrovet_name'] as String?,
-      preferredFeedCompany: json['preferred_feed_company'] as String?,
-      preferredChicksCompany: json['preferred_chicks_company'] as String?,
-      preferredOfftakerAgent: json['preferred_offtaker_agent'] as String?,
-      region: json['region'] ?? 'GLOBAL',
-      currency: json['currency'] as String?,
-      currencyInfo: json['currency_info'] as Map<String, dynamic>?,
-      preferences: json['preferences'] as Map<String, dynamic>?,
-      role: json['role'] != null ? UserRole.fromJson(json['role']) : null,
-      status: json['status'] as String?,
-      is2faEnabled: json['is_2fa_enabled'] as bool?,
-      oauthProvider: json['oauth_provider'] as String?,
-      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
-      updatedAt: DateTime.parse(json['updated_at'] ?? DateTime.now().toIso8601String()),
+      avatar: TypeUtils.toNullableStringSafe(json['avatar']),
+      farmId: TypeUtils.toNullableStringSafe(json['farm_id']),
+      farm: farmMap,
+      yearsOfExperience: TypeUtils.toNullableIntSafe(json['years_of_experience']),
+      poultryTypeId: TypeUtils.toNullableStringSafe(json['poultry_type_id']),
+      poultryType: TypeUtils.toNullableStringSafe(json['poultry_type']),
+      chickenHouseCapacity: TypeUtils.toNullableIntSafe(json['chicken_house_capacity']),
+      currentNumberOfChickens: TypeUtils.toNullableIntSafe(json['current_number_of_chickens']),
+      preferredAgrovetName: TypeUtils.toNullableStringSafe(json['preferred_agrovet_name']),
+      preferredFeedCompany: TypeUtils.toNullableStringSafe(json['preferred_feed_company']),
+      preferredChicksCompany: TypeUtils.toNullableStringSafe(json['preferred_chicks_company']),
+      preferredOfftakerAgent: TypeUtils.toNullableStringSafe(json['preferred_offtaker_agent']),
+      region: TypeUtils.toStringSafe(json['region'], defaultValue: 'GLOBAL'),
+      currency: TypeUtils.toNullableStringSafe(json['currency']),
+      currencyInfo: currencyInfoMap,
+      preferences: preferencesMap,
+      role: roleMap != null ? UserRole.fromJson(roleMap) : null,
+      status: TypeUtils.toNullableStringSafe(json['status']),
+      is2faEnabled: TypeUtils.toNullableBoolSafe(json['is_2fa_enabled']),
+      oauthProvider: TypeUtils.toNullableStringSafe(json['oauth_provider']),
+      createdAt: TypeUtils.toDateTimeSafe(json['created_at']) ?? DateTime.now(),
+      updatedAt: TypeUtils.toDateTimeSafe(json['updated_at']) ?? DateTime.now(),
     );
   }
 
@@ -295,7 +307,6 @@ class ProfileData {
   }
 }
 
-// ⚠️ ADD UserRole model
 class UserRole {
   final String id;
   final String name;
@@ -317,13 +328,13 @@ class UserRole {
 
   factory UserRole.fromJson(Map<String, dynamic> json) {
     return UserRole(
-      id: json['id'] ?? '',
-      name: json['name'] ?? '',
-      description: json['description'] ?? '',
-      isSystemRole: json['is_system_role'] ?? false,
-      isActive: json['is_active'] ?? true,
-      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
-      updatedAt: DateTime.parse(json['updated_at'] ?? DateTime.now().toIso8601String()),
+      id: TypeUtils.toStringSafe(json['id']),
+      name: TypeUtils.toStringSafe(json['name']),
+      description: TypeUtils.toStringSafe(json['description']),
+      isSystemRole: TypeUtils.toBoolSafe(json['is_system_role']),
+      isActive: TypeUtils.toBoolSafe(json['is_active'], defaultValue: true),
+      createdAt: TypeUtils.toDateTimeSafe(json['created_at']) ?? DateTime.now(),
+      updatedAt: TypeUtils.toDateTimeSafe(json['updated_at']) ?? DateTime.now(),
     );
   }
 

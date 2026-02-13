@@ -1,3 +1,5 @@
+import 'package:agriflock360/core/utils/type_safe_utils.dart';
+
 class VisitStats {
   final int pending;
   final int inProgress;
@@ -19,13 +21,13 @@ class VisitStats {
 
   factory VisitStats.fromJson(Map<String, dynamic> json) {
     return VisitStats(
-      pending: json['pending'] as int? ?? 0,
-      inProgress: json['in_progress'] as int? ?? 0,
-      completed: json['completed'] as int? ?? 0,
-      accepted: json['accepted'] as int? ?? 0,
-      declined: json['declined'] as int? ?? 0,
-      cancelled: json['cancelled'] as int? ?? 0,
-      total: json['total'] as int? ?? 0,
+      pending: TypeUtils.toIntSafe(json['pending']),
+      inProgress: TypeUtils.toIntSafe(json['in_progress']),
+      completed: TypeUtils.toIntSafe(json['completed']),
+      accepted: TypeUtils.toIntSafe(json['accepted']),
+      declined: TypeUtils.toIntSafe(json['declined']),
+      cancelled: TypeUtils.toIntSafe(json['cancelled']),
+      total: TypeUtils.toIntSafe(json['total']),
     );
   }
 

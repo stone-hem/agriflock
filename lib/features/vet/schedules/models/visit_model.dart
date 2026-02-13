@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/utils/type_safe_utils.dart';
 
 class Visit {
   final String id;
@@ -14,7 +15,7 @@ class Visit {
   final List<Batch> batches;
   final int birdsCount;
   final String birdTypeId;
-  final List<dynamic> services; // Based on your data, this appears to be empty array
+  final List<dynamic> services;
   final List<ServiceCost> serviceCosts;
   final String priorityLevel;
   final String preferredDate;
@@ -79,44 +80,59 @@ class Visit {
   });
 
   factory Visit.fromJson(Map<String, dynamic> json) {
+    final vetLocationMap = TypeUtils.toMapSafe(json['vet_location']);
+    final housesList = TypeUtils.toListSafe<dynamic>(json['houses']);
+    final batchesList = TypeUtils.toListSafe<dynamic>(json['batches']);
+    final servicesList = TypeUtils.toListSafe<dynamic>(json['services']);
+    final serviceCostsList = TypeUtils.toListSafe<dynamic>(json['service_costs']);
+    final vetSpecializationList = TypeUtils.toListSafe<dynamic>(json['vet_specialization']);
+
     return Visit(
-      id: json['id'] as String,
-      orderNumber: json['order_number'] as String,
-      farmerId: json['farmer_id'] as String,
-      farmerName: json['farmer_name'] as String,
-      farmerPhone: json['farmer_phone'] as String,
-      farmerLocation: json['farmer_location'] as String,
-      vetId: json['vet_id'] as String,
-      vetName: json['vet_name'] as String,
-      vetSpecialization: List<String>.from(json['vet_specialization'] ?? []),
-      vetLocation: VetLocation.fromJson(json['vet_location'] ?? {}),
-      houses: List<House>.from((json['houses'] ?? []).map((x) => House.fromJson(x))),
-      batches: List<Batch>.from((json['batches'] ?? []).map((x) => Batch.fromJson(x))),
-      birdsCount: (json['birds_count'] as num).toInt(),
-      birdTypeId: json['bird_type_id'] as String,
-      services: json['services'] ?? [],
-      serviceCosts: List<ServiceCost>.from((json['service_costs'] ?? []).map((x) => ServiceCost.fromJson(x))),
-      priorityLevel: json['priority_level'] as String,
-      preferredDate: json['preferred_date'] as String,
-      preferredTime: json['preferred_time'] as String,
-      reasonForVisit: json['reason_for_visit'] as String,
-      additionalNotes: json['additional_notes'],
-      serviceFee: (json['serviceFee'] as num).toDouble(),
-      mileageFee: (json['mileageFee'] as num).toDouble(),
-      distanceKm: (json['distanceKm'] as num).toDouble(),
-      prioritySurcharge: (json['prioritySurcharge'] as num).toDouble(),
-      totalEstimatedCost: (json['totalEstimatedCost'] as num).toDouble(),
-      officerEarnings: (json['officerEarnings'] as num).toDouble(),
-      platformCommission: (json['platformCommission'] as num).toDouble(),
-      status: json['status'] as String,
-      submittedAt: DateTime.parse(json['submitted_at']),
-      reviewedAt: json['reviewed_at'] != null ? DateTime.parse(json['reviewed_at']) : null,
-      scheduledAt: json['scheduled_at'] != null ? DateTime.parse(json['scheduled_at']) : null,
-      completedAt: json['completed_at'] != null ? DateTime.parse(json['completed_at']) : null,
-      cancelledAt: json['cancelled_at'] != null ? DateTime.parse(json['cancelled_at']) : null,
-      cancellationReason: json['cancellation_reason'],
-      termsAgreed: json['terms_agreed'] as bool,
-      isPaid: json['is_paid'] as bool,
+      id: TypeUtils.toStringSafe(json['id']),
+      orderNumber: TypeUtils.toStringSafe(json['order_number']),
+      farmerId: TypeUtils.toStringSafe(json['farmer_id']),
+      farmerName: TypeUtils.toStringSafe(json['farmer_name']),
+      farmerPhone: TypeUtils.toStringSafe(json['farmer_phone']),
+      farmerLocation: TypeUtils.toStringSafe(json['farmer_location']),
+      vetId: TypeUtils.toStringSafe(json['vet_id']),
+      vetName: TypeUtils.toStringSafe(json['vet_name']),
+      vetSpecialization: vetSpecializationList
+          .map((item) => TypeUtils.toStringSafe(item))
+          .toList(),
+      vetLocation: VetLocation.fromJson(vetLocationMap ?? {}),
+      houses: housesList
+          .map((x) => House.fromJson(x is Map<String, dynamic> ? x : {}))
+          .toList(),
+      batches: batchesList
+          .map((x) => Batch.fromJson(x is Map<String, dynamic> ? x : {}))
+          .toList(),
+      birdsCount: TypeUtils.toIntSafe(json['birds_count']),
+      birdTypeId: TypeUtils.toStringSafe(json['bird_type_id']),
+      services: servicesList,
+      serviceCosts: serviceCostsList
+          .map((x) => ServiceCost.fromJson(x is Map<String, dynamic> ? x : {}))
+          .toList(),
+      priorityLevel: TypeUtils.toStringSafe(json['priority_level']),
+      preferredDate: TypeUtils.toStringSafe(json['preferred_date']),
+      preferredTime: TypeUtils.toStringSafe(json['preferred_time']),
+      reasonForVisit: TypeUtils.toStringSafe(json['reason_for_visit']),
+      additionalNotes: TypeUtils.toNullableStringSafe(json['additional_notes']),
+      serviceFee: TypeUtils.toDoubleSafe(json['serviceFee']),
+      mileageFee: TypeUtils.toDoubleSafe(json['mileageFee']),
+      distanceKm: TypeUtils.toDoubleSafe(json['distanceKm']),
+      prioritySurcharge: TypeUtils.toDoubleSafe(json['prioritySurcharge']),
+      totalEstimatedCost: TypeUtils.toDoubleSafe(json['totalEstimatedCost']),
+      officerEarnings: TypeUtils.toDoubleSafe(json['officerEarnings']),
+      platformCommission: TypeUtils.toDoubleSafe(json['platformCommission']),
+      status: TypeUtils.toStringSafe(json['status']),
+      submittedAt: TypeUtils.toDateTimeSafe(json['submitted_at']) ?? DateTime.now(),
+      reviewedAt: TypeUtils.toDateTimeSafe(json['reviewed_at']),
+      scheduledAt: TypeUtils.toDateTimeSafe(json['scheduled_at']),
+      completedAt: TypeUtils.toDateTimeSafe(json['completed_at']),
+      cancelledAt: TypeUtils.toDateTimeSafe(json['cancelled_at']),
+      cancellationReason: TypeUtils.toNullableStringSafe(json['cancellation_reason']),
+      termsAgreed: TypeUtils.toBoolSafe(json['terms_agreed']),
+      isPaid: TypeUtils.toBoolSafe(json['is_paid']),
     );
   }
 
@@ -175,10 +191,12 @@ class VetLocation {
   });
 
   factory VetLocation.fromJson(Map<String, dynamic> json) {
+    final addressMap = TypeUtils.toMapSafe(json['address']);
+
     return VetLocation(
-      address: Address.fromJson(json['address'] ?? {}),
-      latitude: (json['latitude'] as num).toDouble(),
-      longitude: (json['longitude'] as num).toDouble(),
+      address: Address.fromJson(addressMap ?? {}),
+      latitude: TypeUtils.toDoubleSafe(json['latitude']),
+      longitude: TypeUtils.toDoubleSafe(json['longitude']),
     );
   }
 
@@ -206,10 +224,10 @@ class Address {
 
   factory Address.fromJson(Map<String, dynamic> json) {
     return Address(
-      city: json['city'] ?? '',
-      county: json['county'] ?? '',
-      subCounty: json['sub_county'] ?? '',
-      formattedAddress: json['formatted_address'] ?? '',
+      city: TypeUtils.toStringSafe(json['city']),
+      county: TypeUtils.toStringSafe(json['county']),
+      subCounty: TypeUtils.toStringSafe(json['sub_county']),
+      formattedAddress: TypeUtils.toStringSafe(json['formatted_address']),
     );
   }
 
@@ -236,9 +254,9 @@ class House {
 
   factory House.fromJson(Map<String, dynamic> json) {
     return House(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      birdsCount: (json['birds_count'] as num).toInt(),
+      id: TypeUtils.toStringSafe(json['id']),
+      name: TypeUtils.toStringSafe(json['name']),
+      birdsCount: TypeUtils.toIntSafe(json['birds_count']),
     );
   }
 
@@ -272,13 +290,13 @@ class Batch {
 
   factory Batch.fromJson(Map<String, dynamic> json) {
     return Batch(
-      batchId: json['batch_id'] as String,
-      houseId: json['house_id'] as String,
-      batchName: json['batch_name'] as String,
-      houseName: json['house_name'] as String,
-      birdsCount: (json['birds_count'] as num).toInt(),
-      birdTypeId: json['bird_type_id'] as String,
-      birdTypeName: json['bird_type_name'] as String,
+      batchId: TypeUtils.toStringSafe(json['batch_id']),
+      houseId: TypeUtils.toStringSafe(json['house_id']),
+      batchName: TypeUtils.toStringSafe(json['batch_name']),
+      houseName: TypeUtils.toStringSafe(json['house_name']),
+      birdsCount: TypeUtils.toIntSafe(json['birds_count']),
+      birdTypeId: TypeUtils.toStringSafe(json['bird_type_id']),
+      birdTypeName: TypeUtils.toStringSafe(json['bird_type_name']),
     );
   }
 
@@ -310,10 +328,10 @@ class ServiceCost {
 
   factory ServiceCost.fromJson(Map<String, dynamic> json) {
     return ServiceCost(
-      cost: (json['cost'] as num).toDouble(),
-      serviceId: json['service_id'] as String,
-      serviceCode: json['service_code'] as String,
-      serviceName: json['service_name'] as String,
+      cost: TypeUtils.toDoubleSafe(json['cost']),
+      serviceId: TypeUtils.toStringSafe(json['service_id']),
+      serviceCode: TypeUtils.toStringSafe(json['service_code']),
+      serviceName: TypeUtils.toStringSafe(json['service_name']),
     );
   }
 
@@ -343,12 +361,16 @@ class VisitListResponse {
   });
 
   factory VisitListResponse.fromJson(Map<String, dynamic> json) {
+    final dataList = TypeUtils.toListSafe<dynamic>(json['data']);
+
     return VisitListResponse(
-      visits: List<Visit>.from((json['data'] ?? []).map((x) => Visit.fromJson(x))),
-      total: json['total'] as int? ?? 0,
-      page: json['page'] as int? ?? 1,
-      limit: json['limit'] as int? ?? 10,
-      totalPages: json['total_pages'] as int? ?? 1,
+      visits: dataList
+          .map((x) => Visit.fromJson(x is Map<String, dynamic> ? x : {}))
+          .toList(),
+      total: TypeUtils.toIntSafe(json['total']),
+      page: TypeUtils.toIntSafe(json['page'], defaultValue: 1),
+      limit: TypeUtils.toIntSafe(json['limit'], defaultValue: 10),
+      totalPages: TypeUtils.toIntSafe(json['total_pages'], defaultValue: 1),
     );
   }
 
