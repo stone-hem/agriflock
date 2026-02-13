@@ -1,4 +1,5 @@
 import 'package:agriflock360/core/widgets/expense/expense_marquee_banner.dart';
+import 'package:agriflock360/core/widgets/search_input.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_farmer_model.dart';
 import 'package:agriflock360/features/farmer/vet/repo/vet_farmer_repository.dart';
 import 'package:flutter/material.dart';
@@ -36,7 +37,6 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
   final int _limit = 10;
   int _totalVets = 0;
 
-
   @override
   void initState() {
     super.initState();
@@ -46,10 +46,7 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
 
   Future<void> _loadAllData() async {
     // Load both data sources independently
-    await Future.wait([
-      _loadRecommendedVets(),
-      _loadAllVets(),
-    ]);
+    await Future.wait([_loadRecommendedVets(), _loadAllVets()]);
   }
 
   Future<void> _loadRecommendedVets() async {
@@ -101,7 +98,9 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
         isVerified: true,
         page: _currentPage,
         limit: _limit,
-        search: _searchController.text.isNotEmpty ? _searchController.text : null,
+        search: _searchController.text.isNotEmpty
+            ? _searchController.text
+            : null,
       );
 
       switch (result) {
@@ -152,32 +151,36 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
             break;
         }
       }),
-      _vetRepository.refreshVetFarmers(
-        officerType: _selectedOfficerType,
-        region: _selectedRegion,
-        status: _selectedStatus,
-        isVerified: true,
-        page: _currentPage,
-        limit: _limit,
-        search: _searchController.text.isNotEmpty ? _searchController.text : null,
-      ).then((result) {
-        switch (result) {
-          case Success<VetFarmerListResponse>(data: final data):
-            setState(() {
-              _allVets = data.data;
-              _filteredVets = data.data;
-              _totalVets = data.total;
-              _hasAllVetsError = false;
-            });
-            break;
-          case Failure(message: final error):
-            setState(() {
-              _hasAllVetsError = true;
-              _allVetsErrorMessage = error;
-            });
-            break;
-        }
-      }),
+      _vetRepository
+          .refreshVetFarmers(
+            officerType: _selectedOfficerType,
+            region: _selectedRegion,
+            status: _selectedStatus,
+            isVerified: true,
+            page: _currentPage,
+            limit: _limit,
+            search: _searchController.text.isNotEmpty
+                ? _searchController.text
+                : null,
+          )
+          .then((result) {
+            switch (result) {
+              case Success<VetFarmerListResponse>(data: final data):
+                setState(() {
+                  _allVets = data.data;
+                  _filteredVets = data.data;
+                  _totalVets = data.total;
+                  _hasAllVetsError = false;
+                });
+                break;
+              case Failure(message: final error):
+                setState(() {
+                  _hasAllVetsError = true;
+                  _allVetsErrorMessage = error;
+                });
+                break;
+            }
+          }),
     ]);
   }
 
@@ -202,7 +205,6 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
     context.push('/vet-details', extra: id);
   }
 
-
   Widget _buildLoadingIndicator() {
     return const Center(
       child: Padding(
@@ -220,11 +222,7 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
       padding: const EdgeInsets.symmetric(vertical: 32),
       child: Column(
         children: [
-          Icon(
-            Icons.error_outline,
-            size: 64,
-            color: Colors.red.shade400,
-          ),
+          Icon(Icons.error_outline, size: 64, color: Colors.red.shade400),
           const SizedBox(height: 16),
           Text(
             'Something went wrong',
@@ -237,10 +235,7 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
           const SizedBox(height: 8),
           Text(
             message,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -264,9 +259,7 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
 
     return Card(
       elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       margin: const EdgeInsets.only(bottom: 16),
       child: InkWell(
         onTap: () => _navigateToVetDetails(vet.id),
@@ -276,7 +269,6 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
               // Vet Avatar
               Container(
                 width: 60,
@@ -288,22 +280,18 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                 child: Center(
                   child: vet.faceSelfieUrl != null
                       ? ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      vet.faceSelfieUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => const Icon(
-                        Icons.pets,
-                        color: Colors.green,
-                        size: 24,
-                      ),
-                    ),
-                  )
-                      : const Icon(
-                    Icons.pets,
-                    color: Colors.green,
-                    size: 24,
-                  ),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            vet.faceSelfieUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => const Icon(
+                              Icons.pets,
+                              color: Colors.green,
+                              size: 24,
+                            ),
+                          ),
+                        )
+                      : const Icon(Icons.pets, color: Colors.green, size: 24),
                 ),
               ),
               const SizedBox(width: 16),
@@ -337,13 +325,17 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                                 : Colors.red.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: vet.isAvailable ? Colors.green : Colors.red,
+                              color: vet.isAvailable
+                                  ? Colors.green
+                                  : Colors.red,
                             ),
                           ),
                           child: Text(
-                            vet.isAvailable?'Available':'Unavailable',
+                            vet.isAvailable ? 'Available' : 'Unavailable',
                             style: TextStyle(
-                              color: vet.isAvailable ? Colors.green : Colors.red,
+                              color: vet.isAvailable
+                                  ? Colors.green
+                                  : Colors.red,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                             ),
@@ -362,11 +354,7 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        Icon(
-                          Icons.work,
-                          color: Colors.grey.shade500,
-                          size: 14,
-                        ),
+                        Icon(Icons.work, color: Colors.grey.shade500, size: 14),
                         const SizedBox(width: 4),
                         Text(
                           '$yearsExp years experience',
@@ -478,11 +466,7 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
       padding: const EdgeInsets.symmetric(vertical: 32),
       child: Column(
         children: [
-          Icon(
-            icon,
-            size: 64,
-            color: Colors.grey.shade400,
-          ),
+          Icon(icon, size: 64, color: Colors.grey.shade400),
           const SizedBox(height: 16),
           Text(
             title,
@@ -495,10 +479,7 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
           const SizedBox(height: 8),
           Text(
             message,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             textAlign: TextAlign.center,
           ),
         ],
@@ -575,7 +556,6 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
       ),
     );
   }
-
 
   bool get _isLoading => _isLoadingAllVets || _isLoadingRecommended;
   bool get _hasError => _hasAllVetsError && _hasRecommendedError;
@@ -671,11 +651,16 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                 const SizedBox(height: 10),
                 Row(
                   children: [
-                    Icon(Icons.location_on, color: Colors.grey.shade500, size: 14),
+                    Icon(
+                      Icons.location_on,
+                      color: Colors.grey.shade500,
+                      size: 14,
+                    ),
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
-                        vet.location.address?.formattedAddress ?? 'Location not specified',
+                        vet.location.address?.formattedAddress ??
+                            'Location not specified',
                         style: TextStyle(
                           color: Colors.grey.shade600,
                           fontSize: 11,
@@ -691,7 +676,11 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.star, color: Colors.amber.shade700, size: 14),
+                        Icon(
+                          Icons.star,
+                          color: Colors.amber.shade700,
+                          size: 14,
+                        ),
                         const SizedBox(width: 2),
                         Text(
                           rating.toStringAsFixed(1),
@@ -711,7 +700,10 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                       ],
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.amber.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(10),
@@ -779,8 +771,7 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
               const SizedBox(height: 10),
 
               // Loading state
-              if (_isLoading && !_hasAnyData)
-                _buildLoadingIndicator(),
+              if (_isLoading && !_hasAnyData) _buildLoadingIndicator(),
 
               // Error state for both data sources
               if (_hasError && !_hasAnyData)
@@ -829,10 +820,7 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                   const SizedBox(height: 4),
                   Text(
                     'Top-rated veterinarians in your area',
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                   ),
                   const SizedBox(height: 12),
                   SizedBox(
@@ -841,7 +829,9 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                       scrollDirection: Axis.horizontal,
                       itemCount: _recommendedVets.length,
                       itemBuilder: (context, index) {
-                        return _buildHorizontalRecommendedVetCard(_recommendedVets[index]);
+                        return _buildHorizontalRecommendedVetCard(
+                          _recommendedVets[index],
+                        );
                       },
                     ),
                   ),
@@ -849,7 +839,9 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                 ],
 
                 // Error for recommended section only
-                if (_hasRecommendedError && _recommendedVets.isEmpty && _searchController.text.isEmpty)
+                if (_hasRecommendedError &&
+                    _recommendedVets.isEmpty &&
+                    _searchController.text.isEmpty)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 16),
                     child: Container(
@@ -861,7 +853,11 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.error_outline, color: Colors.red, size: 20),
+                          Icon(
+                            Icons.error_outline,
+                            color: Colors.red,
+                            size: 20,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
@@ -878,45 +874,26 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                   ),
 
                 // Search Bar
-                Card(
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.search, color: Colors.grey),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: TextField(
-                            controller: _searchController,
-                            decoration: const InputDecoration(
-                              hintText: 'Search by name, education, or specialization...',
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(vertical: 14),
-                            ),
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                        ),
-                        if (_searchController.text.isNotEmpty)
-                          IconButton(
-                            icon: const Icon(Icons.clear, size: 20),
-                            onPressed: () {
-                              _searchController.clear();
-                            },
-                          ),
-                      ],
-                    ),
-                  ),
+                SearchInput(
+                  controller: _searchController,
+                  hintText:
+                  'Search by name, education, or specialization...',
+                  prefixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                    icon: const Icon(Icons.clear, size: 20),
+                    onPressed: () {
+                      _searchController.clear();
+                    },
+                  )
+                      : null,
                 ),
                 const SizedBox(height: 12),
 
                 // All Vets Section
                 if (_hasAllVetsError && _allVets.isEmpty)
                   _buildErrorState(
-                    message: _allVetsErrorMessage ?? 'Failed to load veterinarians',
+                    message:
+                        _allVetsErrorMessage ?? 'Failed to load veterinarians',
                     onRetry: _loadAllVets,
                   )
                 else if (_isLoadingAllVets && _allVets.isEmpty)
@@ -929,7 +906,9 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            _searchController.text.isEmpty ? 'All Veterinary Officers' : 'Search Results',
+                            _searchController.text.isEmpty
+                                ? 'All Veterinary Officers'
+                                : 'Search Results',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -968,7 +947,6 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                         ..._filteredVets.map(_buildVetCard),
                     ],
                   ),
-
 
                 const SizedBox(height: 20),
               ],

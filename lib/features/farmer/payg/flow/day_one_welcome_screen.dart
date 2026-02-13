@@ -17,6 +17,7 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
   bool _isLoadingPlans = true;
   bool _isSubscribing = false;
   int? _expandedIndex;
+  int? _selectedPlanIndex;
 
   @override
   void initState() {
@@ -31,6 +32,9 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
         setState(() {
           _plans = plans;
           _isLoadingPlans = false;
+          // Default select the free trial plan
+          final trialIndex = plans.indexWhere((p) => p.isFreeTrial);
+          _selectedPlanIndex = trialIndex >= 0 ? trialIndex : null;
         });
       },
       failure: (_, __, ___) {
@@ -54,31 +58,53 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
     }
   }
 
-  Future<void> _subscribeToPlan() async {
-    // Find the free trial plan
-    final trialPlan = _plans.where((p) => p.isFreeTrial).firstOrNull;
-    if (trialPlan == null) {
-      // No trial plan found, just navigate
+  ActivePlan? get _selectedPlan =>
+      _selectedPlanIndex != null ? _plans[_selectedPlanIndex!] : null;
+
+  Future<void> _handleContinue() async {
+    final plan = _selectedPlan;
+    if (plan == null) {
+      // No plan selected, just go to setup
       if (mounted) context.go('/onboarding/setup');
       return;
     }
 
     setState(() => _isSubscribing = true);
 
-    final result = await _repo.subscribeToPlan(trialPlan.id);
-    if (!mounted) return;
+    if (plan.isFreeTrial) {
+      // Free trial: subscribe and go to farm setup
+      final result = await _repo.subscribeToPlan(plan.id);
+      if (!mounted) return;
 
-    result.when(
-      success: (_) {
-        context.go('/onboarding/setup');
-      },
-      failure: (message, _, __) {
-        setState(() => _isSubscribing = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message), backgroundColor: Colors.red),
-        );
-      },
-    );
+      result.when(
+        success: (_) {
+          context.go('/onboarding/setup');
+        },
+        failure: (message, _, __) {
+          setState(() => _isSubscribing = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(message), backgroundColor: Colors.red),
+          );
+        },
+      );
+    } else {
+      // Paid plan: go to payment screen with plan details
+      setState(() => _isSubscribing = false);
+      context.push('/payg/payment', extra: {
+        'planId': plan.id,
+        'planName': plan.name,
+        'planType': plan.planType,
+        'amount': plan.priceAmount,
+        'currency': plan.currency,
+      });
+    }
+  }
+
+  String get _buttonText {
+    final plan = _selectedPlan;
+    if (plan == null) return 'Continue';
+    if (plan.isFreeTrial) return 'Start Free Trial & Set Up Farm';
+    return 'Subscribe to ${plan.name}';
   }
 
   IconData _planIcon(String planType) {
@@ -133,7 +159,7 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'You\'re starting with a free 30-day trial.\nExplore all features before choosing a plan.',
+                    'Choose a plan to get started.\nSelect a plan below to continue.',
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.white.withValues(alpha: 0.9),
@@ -199,7 +225,7 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12, left: 4),
                   child: Text(
-                    'Your Plan',
+                    'Choose a Plan',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -235,18 +261,24 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
   }
 
   Widget _buildContinueButton() {
+    final plan = _selectedPlan;
+    final buttonColor = plan != null ? _planColor(plan.planType) : Colors.green;
+
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: _isSubscribing ? null : _subscribeToPlan,
+        onPressed: _isSubscribing || _selectedPlanIndex == null
+            ? null
+            : _handleContinue,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.green,
+          backgroundColor: buttonColor,
           foregroundColor: Colors.white,
           minimumSize: const Size(double.infinity, 52),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
           elevation: 2,
+          disabledBackgroundColor: buttonColor.withValues(alpha: 0.5),
         ),
         child: _isSubscribing
             ? const SizedBox(
@@ -257,9 +289,9 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
                   strokeWidth: 2.5,
                 ),
               )
-            : const Text(
-                'Set up your first farm & batch',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            : Text(
+                _buttonText,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
       ),
     );
@@ -270,6 +302,7 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
     final color = _planColor(plan.planType);
     final isExpanded = _expandedIndex == index;
     final isTrial = plan.isFreeTrial;
+    final isSelected = _selectedPlanIndex == index;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -279,13 +312,13 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isTrial ? Colors.green : Colors.grey.shade200,
-            width: isTrial ? 2 : 1,
+            color: isSelected ? color : Colors.grey.shade200,
+            width: isSelected ? 2 : 1,
           ),
           boxShadow: [
-            if (isTrial)
+            if (isSelected)
               BoxShadow(
-                color: Colors.green.withValues(alpha: 0.12),
+                color: color.withValues(alpha: 0.12),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -298,6 +331,7 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
               borderRadius: BorderRadius.circular(14),
               onTap: () {
                 setState(() {
+                  _selectedPlanIndex = index;
                   _expandedIndex = isExpanded ? null : index;
                 });
               },
@@ -305,6 +339,31 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 child: Row(
                   children: [
+                    // Radio indicator
+                    Container(
+                      width: 22,
+                      height: 22,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected ? color : Colors.grey.shade400,
+                          width: 2,
+                        ),
+                      ),
+                      child: isSelected
+                          ? Center(
+                              child: Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: color,
+                                ),
+                              ),
+                            )
+                          : null,
+                    ),
+                    const SizedBox(width: 10),
                     Container(
                       width: 38,
                       height: 38,
@@ -349,7 +408,7 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          'ACTIVE',
+                          'FREE',
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,

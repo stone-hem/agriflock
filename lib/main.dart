@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:agriflock360/core/network/api_client.dart';
 import 'package:agriflock360/core/services/social_auth_service.dart';
+import 'package:agriflock360/core/theme/theme.dart';
 import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:agriflock360/core/utils/shared_prefs.dart';
 import 'package:agriflock360/app_routes.dart';
@@ -79,13 +80,7 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp.router(
       title: 'Agriflock 360',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.green,
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.light,
       routerConfig: _router,
     );
   }

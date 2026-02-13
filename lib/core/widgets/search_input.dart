@@ -31,68 +31,52 @@ class SearchInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        color: fillColor ?? Colors.grey.shade50,
-        border: borderColor != null
-            ? Border.all(color: borderColor!, width: 1)
-            : null,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.shade200,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: TextFormField(
-        controller: controller,
-        onChanged: onChanged,
-        focusNode: focusNode,
-        textInputAction: textInputAction,
-        onFieldSubmitted: onSubmitted,
-        decoration: InputDecoration(
-          hintText: hintText,
-          hintStyle: TextStyle(
-            color: Colors.grey.shade500,
-            fontSize: 14,
-          ),
-          prefixIcon: prefixIcon ?? const Icon(
-            Icons.search,
-            size: 20,
+    return TextFormField(
+      controller: controller,
+      onChanged: onChanged,
+      focusNode: focusNode,
+      textInputAction: textInputAction,
+      onFieldSubmitted: onSubmitted,
+      decoration: InputDecoration(
+        hintText: hintText,
+        hintStyle: TextStyle(
+          color: Colors.grey.shade500,
+          fontSize: 14,
+        ),
+        prefixIcon: prefixIcon ?? const Icon(
+          Icons.search,
+          size: 20,
+          color: Colors.grey,
+        ),
+        suffixIcon: suffixIcon ?? (controller?.text.isNotEmpty == true
+            ? IconButton(
+          icon: const Icon(
+            Icons.clear,
+            size: 18,
             color: Colors.grey,
           ),
-          suffixIcon: suffixIcon ?? (controller?.text.isNotEmpty == true
-              ? IconButton(
-            icon: const Icon(
-              Icons.clear,
-              size: 18,
-              color: Colors.grey,
+          onPressed: () {
+            controller?.clear();
+            onChanged?.call('');
+            onClear?.call();
+          },
+        )
+            : null),
+        border: InputBorder.none,
+        enabledBorder: InputBorder.none,
+        focusedBorder: InputBorder.none,
+        errorBorder: InputBorder.none,
+        focusedErrorBorder: InputBorder.none,
+        contentPadding: padding ??
+            const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
             ),
-            onPressed: () {
-              controller?.clear();
-              onChanged?.call('');
-              onClear?.call();
-            },
-          )
-              : null),
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          errorBorder: InputBorder.none,
-          focusedErrorBorder: InputBorder.none,
-          contentPadding: padding ??
-              const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-          isDense: true,
-        ),
-        style: const TextStyle(
-          fontSize: 14,
-          color: Colors.black87,
-        ),
+        isDense: true,
+      ),
+      style: const TextStyle(
+        fontSize: 14,
+        color: Colors.black87,
       ),
     );
   }

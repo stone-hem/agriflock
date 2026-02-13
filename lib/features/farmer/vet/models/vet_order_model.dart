@@ -10,6 +10,8 @@ class VetOrderRequest {
   final String reasonForVisit;
   final String? additionalNotes;
   final bool termsAgreed;
+  final int? participantsCount;
+
 
   VetOrderRequest({
     required this.vetId,
@@ -22,7 +24,7 @@ class VetOrderRequest {
     required this.preferredTime,
     required this.reasonForVisit,
     this.additionalNotes,
-    required this.termsAgreed,
+    required this.termsAgreed, this.participantsCount,
   });
 
   Map<String, dynamic> toJson() {
@@ -38,6 +40,7 @@ class VetOrderRequest {
       'reason_for_visit': reasonForVisit,
       'additional_notes': additionalNotes,
       'terms_agreed': termsAgreed,
+      'participants_count': participantsCount,
     };
   }
 }
@@ -47,6 +50,7 @@ class VetEstimateRequest {
   final List<String>? houseIds;
   final List<String>? batchIds; // Changed from single batchId to list
   final List<String> serviceIds; // Changed from single serviceId to list
+  final int? participantsCount;
   final int birdsCount;
   final String priorityLevel;
   final String preferredDate;
@@ -66,7 +70,7 @@ class VetEstimateRequest {
     required this.preferredTime,
     required this.reasonForVisit,
     this.additionalNotes,
-    required this.termsAgreed,
+    required this.termsAgreed, this.participantsCount,
   });
 
   Map<String, dynamic> toJson() {
@@ -82,6 +86,7 @@ class VetEstimateRequest {
       'reason_for_visit': reasonForVisit,
       'additional_notes': additionalNotes,
       'terms_agreed': termsAgreed,
+      'participants_count': participantsCount,
     };
   }
 }

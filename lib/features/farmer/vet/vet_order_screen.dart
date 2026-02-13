@@ -27,7 +27,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
   final VetFarmerRepository _vetRepository = VetFarmerRepository();
   final _formKey = GlobalKey<FormState>();
   final _reasonController = TextEditingController();
-  final _batchCountController = TextEditingController();
 
   // Selection states
   String? _selectedFarm;
@@ -36,9 +35,13 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
   List<String> _selectedServices = [];
   String? _selectedPriority;
 
-  // Manual batch count
-  bool _useManualBatchCount = false;
-  int? _manualBatchCount;
+  // Manual birds count (used when no farm/house/batch selected)
+  final _birdsCountController = TextEditingController();
+  int? _manualBirdsCount;
+
+  // Number of people (for PER_PERSON services)
+  final _numberOfPeopleController = TextEditingController();
+  int? _numberOfPeople;
 
   // Estimate state
   bool _isLoadingEstimate = false;
@@ -152,8 +155,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
       _availableBatches = [];
       _selectedHouse = null;
       _selectedBatches.clear();
-      _useManualBatchCount = false;
-      _batchCountController.clear();
     });
 
     try {
@@ -185,8 +186,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
     setState(() {
       _selectedHouse = houseId;
       _selectedBatches.clear();
-      _useManualBatchCount = false;
-      _batchCountController.clear();
 
       // Update available batches based on selected house
       if (houseId != null) {
@@ -217,13 +216,11 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
       } else {
         _selectedBatches.remove(batchId);
       }
-      // If user selects any batch, disable manual count
-      if (_selectedBatches.isNotEmpty) {
-        _useManualBatchCount = false;
-        _batchCountController.clear();
-      }
     });
   }
+
+  /// Whether the user has selected farm details (farm + house + batches)
+  bool get _hasFarmDetails => _selectedFarm != null && _selectedHouse != null && _selectedBatches.isNotEmpty;
 
   void _onServiceSelected(String serviceId, bool selected) {
     setState(() {
@@ -243,37 +240,35 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
         const SnackBar(
           content: Text('Please select priority level and at least one service'),
           backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
         ),
       );
       return;
     }
 
-    if (_selectedFarm == null || _selectedHouse == null) {
+    // If no farm details provided, birds count is required
+    if (!_hasFarmDetails && (_manualBirdsCount == null || _manualBirdsCount! <= 0)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please select farm and house'),
+          content: Text('Please select farm details or enter the number of birds'),
           backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
         ),
       );
       return;
     }
 
-    // Validate batch selection or manual count
-    if (_selectedBatches.isEmpty && !_useManualBatchCount) {
+    // Validate number of people for PER_PERSON services
+    final hasPerPersonService = _selectedServices.any((serviceId) {
+      final service = _serviceTypes.firstWhere((s) => s.id == serviceId, orElse: () => _serviceTypes.first);
+      return service.pricingType == 'PER_PERSON';
+    });
+    if (hasPerPersonService && (_numberOfPeople == null || _numberOfPeople! <= 0)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please select batches or enable manual batch count'),
+          content: Text('Please enter the number of people for the training/group session'),
           backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-
-    if (_useManualBatchCount && (_manualBatchCount == null || _manualBatchCount! <= 0)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid batch count'),
-          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
         ),
       );
       return;
@@ -287,7 +282,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
       _isLoadingEstimate = true;
     });
 
-    // Calculate birds count
+    // Calculate birds count from selected batches, or use manual count
     int birdsCount = 0;
     if (_selectedBatches.isNotEmpty) {
       for (final batchId in _selectedBatches) {
@@ -304,13 +299,13 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
         );
         birdsCount += batch.birdsAlive;
       }
-    } else if (_useManualBatchCount) {
-      birdsCount = _manualBatchCount!;
+    } else {
+      birdsCount = _manualBirdsCount ?? 0;
     }
 
     final request = VetEstimateRequest(
       vetId: widget.vet.id,
-      houseIds: [?_selectedHouse],
+      houseIds: _selectedHouse != null ? [_selectedHouse!] : null,
       batchIds: _selectedBatches.isNotEmpty ? _selectedBatches : null,
       serviceIds: _selectedServices,
       birdsCount: birdsCount,
@@ -323,6 +318,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
       preferredTime: '09:00',
       reasonForVisit: _reasonController.text,
       termsAgreed: false,
+      participantsCount: hasPerPersonService ? _numberOfPeople : null,
     );
 
     final result = await _vetRepository.getVetOrderEstimate(request);
@@ -337,12 +333,15 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
         _showOrderBottomSheet(estimate, request);
         break;
       case Failure(message: final error):
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to get estimate: $error'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to get estimate: $error'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
         break;
     }
   }
@@ -606,100 +605,34 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
             color: Colors.white,
           ),
           child: Column(
-            children: [
-              // Checkbox list for batches
-              if (_availableBatches.isNotEmpty)
-                ..._availableBatches.map((batch) {
-                  final isSelected = _selectedBatches.contains(batch.id);
+            children: _availableBatches.map((batch) {
+              final isSelected = _selectedBatches.contains(batch.id);
 
-                  return CheckboxListTile(
-                    title: Text(
-                      batch.batchName,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    subtitle: Row(
-                      children: [
-                        Text('${batch.birdsAlive} birds'),
-                        const SizedBox(width: 12),
-                        Text('${batch.age} days'),
-
-                      ],
-                    ),
-                    value: isSelected,
-                    onChanged: (bool? value) {
-                      _onBatchSelected(batch.id, value ?? false);
-                    },
-                    controlAffinity: ListTileControlAffinity.leading,
-                    secondary: Icon(
-                      Icons.pets,
-                      color: isSelected ? Colors.green : Colors.grey,
-                    ),
-                  );
-                }),
-
-              // Manual batch count option
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              return CheckboxListTile(
+                title: Text(
+                  batch.batchName,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                subtitle: Row(
                   children: [
-                    const Divider(),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Checkbox(
-                          value: _useManualBatchCount,
-                          onChanged: (bool? value) {
-                            setState(() {
-                              _useManualBatchCount = value ?? false;
-                              if (_useManualBatchCount) {
-                                // Clear selected batches when using manual count
-                                _selectedBatches.clear();
-                              }
-                            });
-                          },
-                        ),
-                        const SizedBox(width: 8),
-                        const Expanded(
-                          child: Text(
-                            'Enter manual batch count',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (_useManualBatchCount)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 40, top: 12),
-                        child: ReusableInput(
-                          controller: _batchCountController,
-                          labelText: 'Number of Birds',
-                          hintText: 'Enter total number of birds',
-                          keyboardType: TextInputType.number,
-                          onChanged: (value) {
-                            setState(() {
-                              _manualBatchCount = int.tryParse(value ?? '');
-                            });
-                          },
-                          validator: (value) {
-                            if (_useManualBatchCount && (value == null || value.isEmpty)) {
-                              return 'Please enter batch count';
-                            }
-                            if (_useManualBatchCount && (int.tryParse(value ?? '') ?? 0) <= 0) {
-                              return 'Please enter a valid number';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
+                    Text('${batch.birdsAlive} birds'),
+                    const SizedBox(width: 12),
+                    Text('${batch.age} days'),
                   ],
                 ),
-              ),
-            ],
+                value: isSelected,
+                onChanged: (bool? value) {
+                  _onBatchSelected(batch.id, value ?? false);
+                },
+                controlAffinity: ListTileControlAffinity.leading,
+                secondary: Icon(
+                  Icons.pets,
+                  color: isSelected ? Colors.green : Colors.grey,
+                ),
+              );
+            }).toList(),
           ),
         ),
         // Selected batches summary
@@ -754,36 +687,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
             ),
           ),
         ],
-        if (_useManualBatchCount && _manualBatchCount != null) ...[
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.orange.shade50,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.orange.shade100),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.info,
-                  color: Colors.orange.shade600,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Manual batch count: $_manualBatchCount birds',
-                    style: TextStyle(
-                      color: Colors.orange.shade800,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ],
     );
   }
@@ -808,6 +711,12 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
       return _buildEmptyState('No active services available');
     }
 
+    // Check if any selected service requires number of people
+    final hasPerPersonService = _selectedServices.any((serviceId) {
+      final service = _serviceTypes.firstWhere((s) => s.id == serviceId, orElse: () => _serviceTypes.first);
+      return service.pricingType == 'PER_PERSON';
+    });
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -828,6 +737,20 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
           child: Column(
             children: activeServices.map((service) {
               final isSelected = _selectedServices.contains(service.id);
+
+              // Build price display based on pricing type
+              String priceText;
+              switch (service.pricingType) {
+                case 'PER_BIRD':
+                  priceText = '${service.currency} ${service.perBirdRate?.toStringAsFixed(2) ?? '0.00'}/bird';
+                  break;
+                case 'PER_PERSON':
+                  priceText = '${service.currency} ${service.perPersonRate?.toStringAsFixed(2) ?? '0.00'}/person';
+                  break;
+                default: // FIXED
+                  priceText = '${service.currency} ${service.basePrice?.toStringAsFixed(2) ?? '0.00'}';
+              }
+
               return CheckboxListTile(
                 title: Text(
                   service.serviceName,
@@ -848,7 +771,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                       ),
                     const SizedBox(height: 4),
                     Text(
-                      'Price: ${service.currency} ${service.basePrice}',
+                      'Price: $priceText',
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -870,6 +793,32 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
             }).toList(),
           ),
         ),
+
+        // Number of people input (for PER_PERSON services)
+        if (hasPerPersonService) ...[
+          const SizedBox(height: 12),
+          ReusableInput(
+            controller: _numberOfPeopleController,
+            labelText: 'Number of People',
+            hintText: 'Enter number of attendees',
+            keyboardType: TextInputType.number,
+            onChanged: (value) {
+              setState(() {
+                _numberOfPeople = int.tryParse(value ?? '');
+              });
+            },
+            validator: (value) {
+              if (hasPerPersonService && (value == null || value.isEmpty)) {
+                return 'Please enter the number of people';
+              }
+              if (hasPerPersonService && (int.tryParse(value ?? '') ?? 0) <= 0) {
+                return 'Please enter a valid number';
+              }
+              return null;
+            },
+          ),
+        ],
+
         // Selected services summary
         if (_selectedServices.isNotEmpty) ...[
           const SizedBox(height: 12),
@@ -1082,23 +1031,9 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Farm Selection
-              _buildFarmDropdown(),
-              if (_selectedFarm != null) _buildFarmDetails(),
+              // Farm Selection (Optional)
+              _buildFarmSection(),
               const SizedBox(height: 20),
-
-              // House Selection
-              if (_selectedFarm != null) ...[
-                _buildHouseDropdown(),
-                if (_selectedHouse != null) _buildHouseDetails(),
-                const SizedBox(height: 20),
-              ],
-
-              // Batch Selection
-              if (_selectedHouse != null) ...[
-                _buildBatchSelection(),
-                const SizedBox(height: 20),
-              ],
 
               // Service Selection
               _buildServiceSelection(),
@@ -1230,6 +1165,104 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
     );
   }
 
+  /// Builds the optional farm → house → batch section, OR the manual birds count input.
+  Widget _buildFarmSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Farm Details (Optional)',
+          style: Theme.of(context).textTheme.titleMedium!.copyWith(
+            fontWeight: FontWeight.bold,
+            color: Colors.grey.shade800,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Select your farm, house, and batches — or just enter the number of birds below.',
+          style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+        ),
+        const SizedBox(height: 12),
+
+        // Farm dropdown
+        _buildFarmDropdown(),
+        if (_selectedFarm != null) _buildFarmDetails(),
+        if (_selectedFarm != null) FilledButton(onPressed: () {
+          setState(() {
+            _selectedFarm = null;
+            _selectedHouse = null;
+            _selectedBatches.clear();
+          });
+        }, child: Text('Clear Farm selection'),),
+
+        // House dropdown
+        if (_selectedFarm != null) const SizedBox(height: 16),
+
+        // House dropdown
+        if (_selectedFarm != null) ...[
+          _buildHouseDropdown(),
+          if (_selectedHouse != null) _buildHouseDetails(),
+          if (_selectedHouse != null) const SizedBox(height: 16),
+        ],
+
+        // Batch selection
+        if (_selectedHouse != null) ...[
+          _buildBatchSelection(),
+        ],
+
+        // Manual birds count — only shown when no farm is selected
+        if (_selectedFarm == null) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.orange.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.orange.shade100),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.info_outline, color: Colors.orange.shade700, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'No farm set up yet? Just enter how many birds you have.',
+                    style: TextStyle(fontSize: 12.5, color: Colors.orange.shade800),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          ReusableInput(
+            controller: _birdsCountController,
+            labelText: 'Number of Birds',
+            hintText: 'Enter total number of birds',
+            keyboardType: TextInputType.number,
+            onChanged: (value) {
+              setState(() {
+                _manualBirdsCount = int.tryParse(value ?? '');
+              });
+            },
+            validator: (value) {
+              // Only validate if no farm details are provided
+              if (!_hasFarmDetails) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter the number of birds';
+                }
+                if ((int.tryParse(value) ?? 0) <= 0) {
+                  return 'Please enter a valid number';
+                }
+              }
+              return null;
+            },
+          ),
+        ],
+      ],
+    );
+  }
+
   Widget _buildFarmDropdown() {
     if (_isLoadingFarms) {
       return _buildLoadingIndicator('Loading farms...');
@@ -1240,7 +1273,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
     }
 
     if (_farmsResponse == null || _farmsResponse!.farms.isEmpty) {
-      return _buildEmptyState('No farms available');
+      return const SizedBox.shrink();
     }
 
     return ReusableDropdown<String>(
@@ -1269,18 +1302,10 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
           _selectedBatches.clear();
           _houses = [];
           _availableBatches = [];
-          _useManualBatchCount = false;
-          _batchCountController.clear();
         });
         if (newValue != null) {
           _loadHousesForSelectedFarm();
         }
-      },
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Please select a farm';
-        }
-        return null;
       },
     );
   }
@@ -1314,19 +1339,14 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
         );
       }).toList(),
       onChanged: _onHouseSelected,
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Please select a poultry house';
-        }
-        return null;
-      },
     );
   }
 
   @override
   void dispose() {
     _reasonController.dispose();
-    _batchCountController.dispose();
+    _birdsCountController.dispose();
+    _numberOfPeopleController.dispose();
     super.dispose();
   }
 }

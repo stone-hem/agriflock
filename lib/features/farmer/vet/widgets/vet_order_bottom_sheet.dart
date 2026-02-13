@@ -134,6 +134,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                         label: 'Preferred Date',
                         icon: Icons.calendar_today,
                         required: true,
+                        initialDate: DateTime.now(),
                         minYear: DateTime.now().year,
                         returnFormat: DateReturnFormat.isoString,
                         maxYear: DateTime.now().year + 1,
@@ -694,6 +695,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
       preferredDate: _selectedDateController.text,
       reasonForVisit: widget.request.reasonForVisit,
       termsAgreed: _termsAgreed, preferredTime: _selectedTime!.format(context),
+      participantsCount: widget.request.participantsCount,
     );
 
     final result = await widget.vetRepository.submitVetOrder(request);
