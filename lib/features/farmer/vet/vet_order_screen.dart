@@ -1044,7 +1044,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                 value: _selectedPriority,
                 hintText: 'Select priority level',
                 icon: Icons.priority_high,
-                labelText: 'Priority Level',
                 isExpanded: true,
                 items: _priorities.map((String priority) {
                   String displayText = priority.toUpperCase();
@@ -1279,7 +1278,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
       value: _selectedFarm,
       topLabel: "Select a farm",
       hintText: 'Choose a farm',
-      labelText: 'Farm',
       icon: Icons.agriculture,
       isExpanded: true,
       items: _farmsResponse!.farms.map((farm) {

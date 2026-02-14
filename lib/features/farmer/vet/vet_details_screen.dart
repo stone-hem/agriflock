@@ -109,16 +109,6 @@ class _VetDetailsScreenState extends State<VetDetailsScreen> {
       width: double.infinity,
       child: ElevatedButton(
         onPressed: _vet!.isAvailable ? () => _orderVet(context) : null,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: primaryGreen,
-          foregroundColor: Colors.white,
-          disabledBackgroundColor: borderColor,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
         child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -252,9 +242,7 @@ class _VetDetailsScreenState extends State<VetDetailsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(primaryGreen),
-          ),
+          CircularProgressIndicator(),
           SizedBox(height: 20),
           Text(
             'Loading vet details...',
