@@ -536,14 +536,6 @@ class _HouseCard extends StatelessWidget {
             const SizedBox(height: 10),
             ElevatedButton(
               onPressed: onViewBatches,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

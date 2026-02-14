@@ -265,14 +265,6 @@ class _BatchesBottomSheetState extends State<BatchesBottomSheet> {
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       onPressed: _navigateToAddBatch,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
                       icon: const Icon(Icons.add),
                       label: const Text('Add New Batch'),
                     ),

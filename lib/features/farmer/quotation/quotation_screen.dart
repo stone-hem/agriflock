@@ -328,15 +328,7 @@ class _QuotationScreenState extends State<QuotationScreen>
                       }
                     });
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    elevation: 2,
-                  ),
+
                   child: const Text(
                     'Complete Profile',
                     style: TextStyle(
@@ -355,14 +347,6 @@ class _QuotationScreenState extends State<QuotationScreen>
                   width: double.infinity,
                   child: OutlinedButton(
                     onPressed: _fetchAndCheckProfileCompletion,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.blue.shade700,
-                      side: BorderSide(color: Colors.blue.shade400),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -384,14 +368,6 @@ class _QuotationScreenState extends State<QuotationScreen>
                   onPressed: () {
                     context.go(AppRoutes.home);
                   },
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.grey.shade700,
-                    side: BorderSide(color: Colors.grey.shade400),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
                   child: const Text(
                     'Maybe Later',
                     style: TextStyle(fontSize: 16),
@@ -415,7 +391,6 @@ class _QuotationScreenState extends State<QuotationScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        elevation: 1,
         title: Row(
           children: [
             Image.asset(

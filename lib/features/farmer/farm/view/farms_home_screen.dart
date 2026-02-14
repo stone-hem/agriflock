@@ -136,11 +136,6 @@ class _FarmsHomeScreenState extends State<FarmsHomeScreen> {
             _refreshData();
           }
         },
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
         label: Row(
       children: [
       Text('Add Farm'),
@@ -392,7 +387,7 @@ class _FarmsHomeScreenState extends State<FarmsHomeScreen> {
               style: TextStyle(color: Colors.grey.shade600),
             ),
             const SizedBox(height: 24),
-            ElevatedButton.icon(
+            FilledButton.icon(
               onPressed: () async {
                 final result = await context.push('/farms/add');
                 if (result == true) {
@@ -401,12 +396,6 @@ class _FarmsHomeScreenState extends State<FarmsHomeScreen> {
               },
               icon: const Icon(Icons.add),
               label: const Text('Add Farm'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-                padding:
-                const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
             ),
           ],
         ),

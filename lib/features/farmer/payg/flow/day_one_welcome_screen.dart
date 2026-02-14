@@ -135,16 +135,27 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
               child: Column(
                 children: [
                   Container(
-                    width: 80,
-                    height: 80,
+                    width: 50,
+                    height: 50,
                     decoration: const BoxDecoration(
                       color: Colors.white,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
-                      Icons.agriculture,
-                      size: 44,
-                      color: Colors.green,
+                    child:  Image.asset(
+                      'assets/logos/Logo_0725.png',
+                      fit: BoxFit.cover,
+                      width: 40,
+                      height: 40,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.green,
+                          child: const Icon(
+                            Icons.image,
+                            size: 100,
+                            color: Colors.white54,
+                          ),
+                        );
+                      },
                     ),
                   ),
                   const SizedBox(height: 16),
