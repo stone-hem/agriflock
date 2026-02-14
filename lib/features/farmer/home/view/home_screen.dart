@@ -536,11 +536,7 @@ AlertsButton(alertCount: 1,),
                               FilledButton.icon(
                                 icon: Icon(Icons.add),
                                 onPressed: () {
-                                  if(_summary?.numberOfFarms==null || _summary?.numberOfFarms==0){
-                                    context.go('/onboarding/setup');
-                                  }else{
-                                    context.go('/farms');
-                                  }
+                                  context.go('/farms');
                                 }, label: Text('Create batch' ),
                               ),
                             ],
