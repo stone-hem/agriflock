@@ -223,7 +223,7 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
 
           // Pop the screen with success result
           if (context.mounted) {
-            context.go(AppRoutes.farms);
+            context.pushReplacement(AppRoutes.farms);
           }
         case Failure(cond: final cond, response: final response):
           if (cond == 'no_subscription_plan' && context.mounted) {

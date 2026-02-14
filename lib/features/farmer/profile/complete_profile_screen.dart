@@ -232,6 +232,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   }
 
   Future<void> _completeProfile() async {
+
     // Check if user is loaded
     if (_user == null) {
       ToastUtil.showError('User data not loaded. Please try again.');
@@ -321,7 +322,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         );
 
         // Navigate to quotation
-        context.go(AppRoutes.quotation);
+        if (context.mounted) {
+          context.go(AppRoutes.quotation);
+        }
       } else {
         ApiErrorHandler.handle(response);
       }
