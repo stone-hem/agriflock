@@ -533,6 +533,16 @@ AlertsButton(alertCount: 1,),
                                 'Create your first batch to get started',
                                 style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
                               ),
+                              FilledButton.icon(
+                                icon: Icon(Icons.add),
+                                onPressed: () {
+                                  if(_summary?.numberOfFarms==null || _summary?.numberOfFarms==0){
+                                    context.go('/onboarding/setup');
+                                  }else{
+                                    context.go('/farms');
+                                  }
+                                }, label: Text('Create batch' ),
+                              ),
                             ],
                           ),
                         )
