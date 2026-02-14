@@ -159,7 +159,7 @@ class _ExpenseMarqueeBannerCompactState extends State<ExpenseMarqueeBannerCompac
           ),
           const SizedBox(width: 8),
           Text(
-            'Add your expenses and selling price to see your profit.',
+            'Record your expenses to see production cost.',
             style: TextStyle(
               fontSize: 12,
               color: Colors.brown.shade700,

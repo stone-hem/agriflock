@@ -23,7 +23,7 @@ class ExpenseActionButton extends StatelessWidget {
     super.key,
     required this.onPressed,
     this.buttonText = 'Quick expense',
-    this.description = 'Add your expenses and selling price to see your profit.',
+    this.description = 'Record your expenses to see production cost.',
     this.icon = Icons.arrow_forward,
     this.buttonColor,
     this.textColor = Colors.white,
@@ -42,7 +42,7 @@ class ExpenseActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
-    final Color primaryColor = buttonColor ?? colorScheme.primary;
+    final Color primaryColor = buttonColor ?? colorScheme.error;
     final Color descColor = descriptionColor ?? Theme.of(context).hintColor;
 
     return Column(

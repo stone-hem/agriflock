@@ -26,6 +26,7 @@ class DashboardRepository {
           message: jsonResponse['message'] ?? 'Failed to fetch dashboard summary',
           response: response,
           statusCode: response.statusCode,
+          cond: jsonResponse['cond'],
         );
       }
     } on SocketException catch (e) {
@@ -114,6 +115,7 @@ class DashboardRepository {
           message: jsonResponse['message'] ?? 'Failed to fetch financial overview',
           response: response,
           statusCode: response.statusCode,
+          cond: jsonResponse['cond'],
         );
       }
     } on SocketException catch (e) {
@@ -229,6 +231,7 @@ class DashboardRepository {
           message: jsonResponse['message'] ?? 'Failed to fetch user batches',
           response: response,
           statusCode: response.statusCode,
+          cond: jsonResponse['cond'],
         );
       }
     } on SocketException catch (e) {

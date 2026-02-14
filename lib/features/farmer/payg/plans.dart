@@ -191,10 +191,6 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
       children: [
-        // Special‑offer banner
-        _buildOfferBanner(),
-        const SizedBox(height: 16),
-
         // Plan cards
         ...List.generate(_plans.length, (i) {
           return Padding(
@@ -208,36 +204,6 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
         // Bottom action section
         if (_plans.isNotEmpty) _buildActionSection(),
       ],
-    );
-  }
-
-  // ── Offer banner ───────────────────────────────────────────────────
-
-  Widget _buildOfferBanner() {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.green.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.green.shade100),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.local_offer_rounded, color: Colors.green[700], size: 20),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              '30-day free trial on every plan  •  Quotation module free for 90 days  •  Pay-per-use marketplace access',
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.green[800],
-                height: 1.45,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -452,28 +418,6 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: () => _startFreeTrial(plan),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: color,
-                side: BorderSide(color: color),
-                minimumSize: const Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: Text(
-                'Start ${plan.features.trialPeriodDays}-Day Free Trial',
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -587,47 +531,13 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
   }
 
   void _handlePlanSelection(ActivePlan plan) {
-    context.go('/home', extra: {
-      'plan': plan.planType.toLowerCase(),
+    context.push('/payg/payment', extra: {
       'planId': plan.id,
+      'planName': plan.name,
+      'planType': plan.planType,
       'amount': plan.priceAmount,
       'currency': plan.currency,
-      'region': plan.region,
     });
-  }
-
-  void _startFreeTrial(ActivePlan plan) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Start Free Trial'),
-        content: Text(
-          'You\'ll get full access to all ${plan.name} features for ${plan.features.trialPeriodDays} days, including the Quotation Module free for ${plan.features.quotationFreePeriodDays} days.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              context.go('/home', extra: {
-                'plan': plan.planType.toLowerCase(),
-                'planId': plan.id,
-                'days': plan.features.trialPeriodDays,
-              });
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _planColor(plan.planType),
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Start Free Trial'),
-          ),
-        ],
-      ),
-    );
   }
 
   void _showHelpDialog() {

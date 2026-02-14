@@ -225,8 +225,37 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
           if (context.mounted) {
             context.go(AppRoutes.farms);
           }
-        case Failure(response: final response):
-          ApiErrorHandler.handle(response);
+        case Failure(cond: final cond, response: final response):
+          if (cond == 'no_subscription_plan' && context.mounted) {
+            showDialog(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: const Text('Subscription Required'),
+                content: const Text(
+                  'To access core modules, please select a subscription plan.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    child: const Text('Cancel'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(ctx).pop();
+                      context.push('/plans');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Choose a Plan'),
+                  ),
+                ],
+              ),
+            );
+          } else {
+            ApiErrorHandler.handle(response);
+          }
       }
     } finally {
       if (mounted) {

@@ -117,33 +117,7 @@ class WelcomeSection extends StatelessWidget {
             ],
           ),
 
-          TextButton.icon(
-            onPressed: () {
-              context.push('/record-expenditure');
-            },
-            icon: Icon(Icons.arrow_forward),
-            label: Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: 'Quick expense',
-                    style: TextStyle(
-                      decoration: TextDecoration.underline,
-                      color: Colors.red
-                    ),
-                  ),
-                  TextSpan(text: ' '),
-                  TextSpan(
-                    text: 'Add your expenses and selling price to see your profit.',
-                    style: TextStyle(
-                      fontStyle: FontStyle.italic,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          ExpenseActionButton(onPressed:()=> context.push('/record-expenditure'))
 
         ],
       ),

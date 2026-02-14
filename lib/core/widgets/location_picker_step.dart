@@ -260,7 +260,7 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          widget.title ?? 'Select Your Location',
+          widget.title ?? 'Select Location',
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,

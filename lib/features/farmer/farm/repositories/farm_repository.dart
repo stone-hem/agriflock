@@ -193,6 +193,7 @@ class FarmRepository {
             message: jsonResponse['message'] ?? 'Failed to create farm',
             response: response,
             statusCode: response.statusCode,
+            cond: jsonResponse['cond'],
           );
         }
       } else {
@@ -211,6 +212,7 @@ class FarmRepository {
             message: jsonResponse['message'] ?? 'Failed to create farm',
             response: response,
             statusCode: response.statusCode,
+            cond: jsonResponse['cond'],
           );
         }
       }
