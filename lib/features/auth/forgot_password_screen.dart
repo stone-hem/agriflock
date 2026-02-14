@@ -1,4 +1,5 @@
 import 'package:agriflock360/features/auth/repo/manual_auth_repo.dart';
+import 'package:agriflock360/features/auth/shared/auth_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
@@ -99,42 +100,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     child: Column(
                       children: [
                         // Email Field
-                        TextFormField(
+                        AuthTextField(
                           controller: _emailController,
-                          decoration: InputDecoration(
-                            labelText: 'Email Address',
-                            hintText: 'Enter your registered email',
-                            prefixIcon: Container(
-                              margin: const EdgeInsets.only(right: 12),
-                              decoration: BoxDecoration(
-                                color: Colors.green.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(
-                                Icons.email_outlined,
-                                color: Colors.green.shade600,
-                              ),
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Colors.grey.shade300,
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Colors.grey.shade300,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Colors.green.shade600,
-                                width: 2,
-                              ),
-                            ),
-                          ),
+                          labelText: 'Email Address',
+                          hintText: 'Enter your registered email',
                           keyboardType: TextInputType.emailAddress,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -146,7 +115,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               return 'Please enter a valid email';
                             }
                             return null;
-                          },
+                          }, icon: Icons.email_outlined,
                         ),
                         const SizedBox(height: 24),
 
@@ -162,17 +131,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 _sendResetLink();
                               }
                             },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              disabledBackgroundColor: Colors.green.withOpacity(
-                                0.5,
-                              ),
-                            ),
                             child: _isLoading
                                 ? const SizedBox(
                               width: 20,

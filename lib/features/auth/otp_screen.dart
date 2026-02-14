@@ -275,15 +275,6 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
                           onPressed: _isLoading || _otpCode.length != 6
                               ? null
                               : _verifyOTP,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            disabledBackgroundColor: Colors.green.withOpacity(0.5),
-                          ),
                           child: _isLoading
                               ? const SizedBox(
                             width: 20,

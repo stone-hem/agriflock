@@ -1,4 +1,5 @@
 import 'package:agriflock360/features/auth/repo/manual_auth_repo.dart';
+import 'package:agriflock360/features/auth/shared/auth_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
@@ -233,56 +234,25 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         const SizedBox(height: 20),
 
                         // New Password Field
-                        TextFormField(
+                        AuthTextField(
                           controller: _newPasswordController,
                           obscureText: _obscureNewPassword,
-                          decoration: InputDecoration(
-                            labelText: 'New Password',
-                            hintText: 'Enter new password',
-                            prefixIcon: Container(
-                              margin: const EdgeInsets.only(right: 12),
-                              decoration: BoxDecoration(
-                                color: Colors.green.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(
-                                Icons.lock_outline,
-                                color: Colors.green.shade600,
-                              ),
+                          labelText: 'New Password',
+                          hintText: 'Enter new password',
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscureNewPassword
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                              color: Colors.grey.shade600,
                             ),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscureNewPassword
-                                    ? Icons.visibility_outlined
-                                    : Icons.visibility_off_outlined,
-                                color: Colors.grey.shade600,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscureNewPassword = !_obscureNewPassword;
-                                });
-                              },
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Colors.grey.shade300,
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Colors.grey.shade300,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Colors.green.shade600,
-                                width: 2,
-                              ),
-                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscureNewPassword = !_obscureNewPassword;
+                              });
+                            },
                           ),
+icon: Icons.lock_outline,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Please enter new password';
@@ -297,58 +267,26 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         const SizedBox(height: 20),
 
                         // Confirm Password Field
-                        TextFormField(
+                        AuthTextField(
                           controller: _confirmPasswordController,
                           obscureText: _obscureConfirmPassword,
-                          decoration: InputDecoration(
-                            labelText: 'Confirm Password',
-                            hintText: 'Confirm your new password',
-                            prefixIcon: Container(
-                              margin: const EdgeInsets.only(right: 12),
-                              decoration: BoxDecoration(
-                                color: Colors.green.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Icon(
-                                Icons.lock_reset_outlined,
-                                color: Colors.green.shade600,
-                              ),
+                          labelText: 'Confirm Password',
+                          hintText: 'Confirm your new password',
+                          icon: Icons.lock_reset_outlined,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscureConfirmPassword
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                              color: Colors.grey.shade600,
                             ),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscureConfirmPassword
-                                    ? Icons.visibility_outlined
-                                    : Icons.visibility_off_outlined,
-                                color: Colors.grey.shade600,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscureConfirmPassword =
-                                  !_obscureConfirmPassword;
-                                });
-                              },
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Colors.grey.shade300,
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Colors.grey.shade300,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: Colors.green.shade600,
-                                width: 2,
-                              ),
-                            ),
-                          ),
-                          validator: (value) {
+                            onPressed: () {
+                              setState(() {
+                                _obscureConfirmPassword =
+                                !_obscureConfirmPassword;
+                              });
+                            },
+                          ),                          validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Please confirm your password';
                             }
@@ -372,17 +310,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                 _resetPassword();
                               }
                             },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              disabledBackgroundColor: Colors.green.withOpacity(
-                                0.5,
-                              ),
-                            ),
                             child: _isLoading
                                 ? const SizedBox(
                               width: 20,

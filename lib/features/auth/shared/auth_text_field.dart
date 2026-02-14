@@ -69,16 +69,8 @@ class AuthTextField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: labelText,
         hintText: hintText,
-        prefixIcon: Container(
-          margin: const EdgeInsets.only(right: 12),
-          decoration: BoxDecoration(
-            color: backgroundColor ?? Colors.green.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(
-            icon,
-            color: iconColor ?? Colors.green.shade600,
-          ),
+        prefixIcon: Icon(
+          icon,
         ),
         suffixIcon: suffixIcon,
         border: OutlineInputBorder(

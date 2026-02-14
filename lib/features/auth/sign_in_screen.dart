@@ -139,9 +139,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             onPressed: () {
                               context.push('/forgot-password');
                             },
-                            style: TextButton.styleFrom(
-                              foregroundColor: Colors.green.shade600,
-                            ),
                             child: const Text(
                               'Forgot Password?',
                               style: TextStyle(fontWeight: FontWeight.w600),
@@ -162,17 +159,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       _login();
                                     }
                                   },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              disabledBackgroundColor: Colors.green.withOpacity(
-                                0.5,
-                              ),
-                            ),
+
                             child: _isLoading
                                 ? const SizedBox(
                                     width: 20,
@@ -227,13 +214,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       height: 56,
                       child: OutlinedButton(
                         onPressed: _isLoading ? null : _signInWithGoogle,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.grey.shade700,
-                          side: BorderSide(color: Colors.grey.shade300),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -268,13 +248,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       height: 56,
                       child: OutlinedButton(
                         onPressed: _isLoading ? null : _signInWithApple,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.grey.shade700,
-                          side: BorderSide(color: Colors.grey.shade300),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -310,9 +283,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   TextButton(
                     onPressed: _isLoading ? null : () => context.go('/signup'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.green.shade600,
-                    ),
                     child: const Text(
                       'Sign Up',
                       style: TextStyle(
