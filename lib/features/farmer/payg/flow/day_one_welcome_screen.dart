@@ -135,8 +135,8 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
               child: Column(
                 children: [
                   Container(
-                    width: 50,
-                    height: 50,
+                    width: 70,
+                    height: 70,
                     decoration: const BoxDecoration(
                       color: Colors.white,
                       shape: BoxShape.circle,
@@ -144,8 +144,8 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
                     child:  Image.asset(
                       'assets/logos/Logo_0725.png',
                       fit: BoxFit.cover,
-                      width: 40,
-                      height: 40,
+                      width: 50,
+                      height: 50,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
                           color: Colors.green,
