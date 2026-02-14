@@ -1,5 +1,6 @@
 import 'package:agriflock360/app_routes.dart';
 import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock360/core/widgets/alert_button.dart';
 import 'package:agriflock360/core/widgets/expense/expense_marquee_banner.dart';
 import 'package:agriflock360/features/farmer/profile/models/profile_model.dart';
 import 'package:agriflock360/features/farmer/profile/repo/profile_repository.dart';
@@ -437,11 +438,8 @@ class _QuotationScreenState extends State<QuotationScreen>
           ],
         ),
         actions: [
-          IconButton(
-            icon: Icon(Icons.notifications_outlined,
-                color: Colors.grey.shade700),
-            onPressed: () => context.push('/notifications'),
-          ),
+          AlertsButton(alertCount: 1,),
+          SizedBox(width: 8,)
         ],
         bottom: _profileCompletion >= PROFILE_COMPLETION_THRESHOLD
             ? TabBar(

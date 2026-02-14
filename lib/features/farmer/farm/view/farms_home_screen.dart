@@ -1,6 +1,7 @@
 import 'package:agriflock360/app_routes.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
+import 'package:agriflock360/core/widgets/alert_button.dart';
 import 'package:agriflock360/core/widgets/expense/expense_marquee_banner.dart';
 import 'package:agriflock360/features/farmer/batch/widgets/add_edit_house_dialog.dart';
 import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
@@ -122,11 +123,8 @@ class _FarmsHomeScreenState extends State<FarmsHomeScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
-          IconButton(
-            icon: Icon(Icons.notifications_outlined,
-                color: Colors.grey.shade700),
-            onPressed: () => context.push('/notifications'),
-          ),
+          AlertsButton(alertCount: 1,),
+          SizedBox(width: 8,)
         ],
       ),
       bottomNavigationBar: const ExpenseMarqueeBannerCompact(),

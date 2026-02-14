@@ -5,6 +5,7 @@ import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
+import 'package:agriflock360/core/widgets/alert_button.dart';
 import 'package:agriflock360/core/widgets/expense/expense_marquee_banner.dart';
 import 'package:agriflock360/features/farmer/profile/models/profile_model.dart';
 import 'package:agriflock360/features/farmer/profile/repo/profile_repository.dart';
@@ -332,10 +333,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
-          IconButton(
-            icon: Icon(Icons.notifications_outlined, color: Colors.grey.shade700),
-            onPressed: () => context.push('/notifications'),
-          ),
+          AlertsButton(alertCount: 1,),
+          SizedBox(width: 8,)
         ],
       ),
       bottomNavigationBar: const ExpenseMarqueeBannerCompact(),
