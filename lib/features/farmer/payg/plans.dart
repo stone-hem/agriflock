@@ -16,6 +16,7 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
 
   List<ActivePlan> _plans = [];
   bool _isLoading = true;
+  bool _isSubscribing = false;
   String? _errorMessage;
   int _selectedIndex = 0;
 
@@ -399,7 +400,7 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () => _handlePlanSelection(plan),
+              onPressed: _isSubscribing ? null : () => _handlePlanSelection(plan),
               style: ElevatedButton.styleFrom(
                 backgroundColor: color,
                 foregroundColor: Colors.white,
@@ -408,14 +409,24 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 elevation: 2,
+                disabledBackgroundColor: color.withValues(alpha: 0.5),
               ),
-              child: Text(
-                'Get ${plan.name}',
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              child: _isSubscribing
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2.5,
+                      ),
+                    )
+                  : Text(
+                      plan.isFreeTrial ? 'Start Free Trial' : 'Get ${plan.name}',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
             ),
           ),
         ],
@@ -530,14 +541,33 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
     );
   }
 
-  void _handlePlanSelection(ActivePlan plan) {
-    context.push('/payg/payment', extra: {
-      'planId': plan.id,
-      'planName': plan.name,
-      'planType': plan.planType,
-      'amount': plan.priceAmount,
-      'currency': plan.currency,
-    });
+  Future<void> _handlePlanSelection(ActivePlan plan) async {
+    if (plan.isFreeTrial) {
+      setState(() => _isSubscribing = true);
+
+      final result = await _repo.subscribeToPlan(plan.id);
+      if (!mounted) return;
+
+      result.when(
+        success: (_) {
+          context.go('/home');
+        },
+        failure: (message, _, __) {
+          setState(() => _isSubscribing = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(message), backgroundColor: Colors.red),
+          );
+        },
+      );
+    } else {
+      context.push('/payg/payment', extra: {
+        'planId': plan.id,
+        'planName': plan.name,
+        'planType': plan.planType,
+        'amount': plan.priceAmount,
+        'currency': plan.currency,
+      });
+    }
   }
 
   void _showHelpDialog() {

@@ -538,17 +538,19 @@ AlertsButton(alertCount: 1,),
                         )
                       else
                         BatchOverviewCarousel(batches: _batches),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Quick Actions',
-                      style: Theme.of(context).textTheme.titleMedium!
-                          .copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey.shade800,
-                          ),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildQuickActionsGrid(),
+                    if (!_isBatchesLoading && _batchesError == null) ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        'Quick Actions',
+                        style: Theme.of(context).textTheme.titleMedium!
+                            .copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade800,
+                            ),
+                      ),
+                      const SizedBox(height: 12),
+                      _buildQuickActionsGrid(),
+                    ],
                     const SizedBox(height: 16),
 
                     if (_isFinancialLoading)
