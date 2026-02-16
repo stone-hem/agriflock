@@ -1,55 +1,6 @@
 import 'dart:convert';
 
 
-import 'dart:convert';
-import 'package:agriflock360/core/utils/type_safe_utils.dart';
-
-class VaccinationDashboardSummary {
-  final int completed;
-  final int upcoming;
-  final int overdue;
-  final String coveragePercentage;
-  final int uniqueVaccinatedBirds;
-
-  VaccinationDashboardSummary({
-    required this.completed,
-    required this.upcoming,
-    required this.overdue,
-    required this.coveragePercentage,
-    required this.uniqueVaccinatedBirds,
-  });
-
-  factory VaccinationDashboardSummary.fromJson(Map<String, dynamic> json) {
-    return VaccinationDashboardSummary(
-      completed: TypeUtils.toIntSafe(json['completed']),
-      upcoming: TypeUtils.toIntSafe(json['upcoming']),
-      overdue: TypeUtils.toIntSafe(json['overdue']),
-      coveragePercentage: TypeUtils.toStringSafe(json['coverage_percentage']),
-      uniqueVaccinatedBirds: TypeUtils.toIntSafe(json['unique_vaccinated_birds']),
-    );
-  }
-}
-
-class VaccinationDashboard {
-  final VaccinationDashboardSummary summary;
-  final int totalBirds;
-  final String batchName;
-
-  VaccinationDashboard({
-    required this.summary,
-    required this.totalBirds,
-    required this.batchName,
-  });
-
-  factory VaccinationDashboard.fromJson(Map<String, dynamic> json) {
-    return VaccinationDashboard(
-      summary: VaccinationDashboardSummary.fromJson(TypeUtils.toMapSafe(json['summary']) ?? {}),
-      totalBirds: TypeUtils.toIntSafe(json['total_birds']),
-      batchName: TypeUtils.toStringSafe(json['batch_name']),
-    );
-  }
-}
-
 class CreateVaccinationRequest {
   final String vaccineName;
   final String vaccineType;

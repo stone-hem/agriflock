@@ -126,7 +126,7 @@ class _ShellScaffoldState extends State<ShellScaffold> {
     if (_isLoading) {
       return const Scaffold(
         body: Center(
-          child: CircularProgressIndicator(color: Colors.green),
+          child: CircularProgressIndicator(),
         ),
       );
     }
@@ -221,10 +221,10 @@ class _ShellScaffoldState extends State<ShellScaffold> {
                             width: 40,
                             height: 40,
                             errorBuilder: (context, error, stackTrace) {
-                              return const Icon(
+                              return  Icon(
                                 Icons.agriculture,
                                 size: 40,
-                                color: Colors.green,
+                                color: Theme.of(context).primaryColor,
                               );
                             },
                           ),
@@ -265,7 +265,7 @@ class _ShellScaffoldState extends State<ShellScaffold> {
                                                 ? config.selectedIcon
                                                 : config.icon,
                                             color: isSelected
-                                                ? Colors.green.shade700
+                                                ? Theme.of(context).primaryColor
                                                 : Colors.grey.shade600,
                                             size: 24,
                                           ),
@@ -278,7 +278,7 @@ class _ShellScaffoldState extends State<ShellScaffold> {
                                                   ? FontWeight.w600
                                                   : FontWeight.normal,
                                               color: isSelected
-                                                  ? Colors.green.shade700
+                                                  ? Theme.of(context).primaryColor
                                                   : Colors.grey.shade600,
                                             ),
                                             textAlign: TextAlign.center,
@@ -321,7 +321,7 @@ class _ShellScaffoldState extends State<ShellScaffold> {
               child: NavigationBar(
                 selectedIndex: selectedIndex,
                 onDestinationSelected: _onItemTapped,
-                indicatorColor: Colors.green.withValues(alpha: 0.15),
+                indicatorColor: Theme.of(context).primaryColor.withValues(alpha: 0.15),
                 backgroundColor: Colors.transparent,
                 elevation: 0,
                 height: 72,

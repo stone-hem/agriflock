@@ -10,7 +10,7 @@ class FileUpload extends StatefulWidget {
   final String description;
   final List<String> allowedExtensions;
   final bool allowMultiple;
-  final Color primaryColor;
+  final Color? primaryColor;
 
   const FileUpload({
     super.key,
@@ -21,7 +21,7 @@ class FileUpload extends StatefulWidget {
     this.description = 'Upload your documents',
     this.allowedExtensions = const ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'],
     this.allowMultiple = true,
-    this.primaryColor =  Colors.green,
+    this.primaryColor,
   });
 
   @override
@@ -29,6 +29,8 @@ class FileUpload extends StatefulWidget {
 }
 
 class _FileUploadState extends State<FileUpload> {
+  Color get _primaryColor => widget.primaryColor ?? Theme.of(context).primaryColor;
+
   Future<void> _pickFiles() async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(

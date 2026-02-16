@@ -63,7 +63,6 @@ class VetDocumentsStep extends StatelessWidget {
             onFileRemoved: onCertificateRemoved,
             title: 'Qualification Certificates *Required',
             description: 'Upload your professional certificate(s) (PDF/DOC/Images)',
-            primaryColor: primaryGreen,
           ),
           const SizedBox(height: 30),
 
@@ -73,7 +72,6 @@ class VetDocumentsStep extends StatelessWidget {
             onFileSelected: onIdPhotoSelected,
             title: 'ID Photo *Required',
             description: 'Upload a clear photo of your government-issued ID',
-            primaryColor: primaryGreen,
           ),
           const SizedBox(height: 24),
 
@@ -83,7 +81,6 @@ class VetDocumentsStep extends StatelessWidget {
             onFileSelected: onSelfieSelected,
             title: 'Face Selfie *Required',
             description: 'Take a recent clear photo of yourself',
-            primaryColor: primaryGreen,
             showSelfieFirst: true,
             cameraOnly: true,
           ),
@@ -96,7 +93,6 @@ class VetDocumentsStep extends StatelessWidget {
             onFileRemoved: onFileRemoved,
             title: 'Additional Certifications (Optional)',
             description: 'Upload additional professional certificates if any',
-            primaryColor: primaryGreen,
           ),
 
           const SizedBox(height: 30),

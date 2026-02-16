@@ -2,12 +2,12 @@ import 'package:agriflock360/core/utils/date_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/vaccination_list_model.dart';
-import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/recommended_vaccination_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/vaccination_repo.dart';
 import 'package:agriflock360/features/farmer/batch/shared/stat_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 
 class BatchVaccinationsTab extends StatefulWidget {
   final BatchModel batch;
@@ -27,17 +27,13 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
   bool _isStatsVisible = true;
   final Map<int, ScrollController> _scrollControllers = {};
 
-  // State
-  VaccinationDashboard? _dashboard;
+  // State - removed _dashboard
   VaccinationListResponse? _vaccinations;
   RecommendedVaccinationsResponse? _recommendations;
 
-  bool _isDashboardLoading = true;
   bool _isVaccinationsLoading = true;
   bool _isRecommendationsLoading = true;
-  String? _dashboardError;
   String? _vaccinationsError;
-  String? _scheduledVaccinationsError;
   String? _recommendationsError;
 
   @override
@@ -54,50 +50,15 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
 
     _tabController.addListener(_handleTabChange);
 
-    // Load data
-    _loadDashboard();
+    // Load only the history data which contains all stats we need
     _loadVaccinationsHistory();
     _loadRecommendations();
-  }
-  Future<void> _loadDashboard() async {
-    setState(() {
-      _isDashboardLoading = true;
-      _dashboardError = null;
-    });
-
-    try {
-      final result = await _repository.getVaccinationDashboard(widget.batch.id);
-
-      switch(result) {
-        case Success<VaccinationDashboard>(data: final data):
-          setState(() {
-            _dashboard = data;
-            _isDashboardLoading = false;
-          });
-          break;
-        case Failure(message: final error, :final statusCode, :final response):
-          setState(() {
-            _dashboardError = error;
-            _isDashboardLoading = false;
-          });
-          // Optionally handle the error using ApiErrorHandler
-          // ApiErrorHandler.handle(error);
-          break;
-      }
-    } finally {
-      // Ensure loading state is reset even if there's an unexpected error
-      if (_isDashboardLoading) {
-        setState(() {
-          _isDashboardLoading = false;
-        });
-      }
-    }
   }
 
   Future<void> _loadVaccinationsHistory() async {
     setState(() {
       _isVaccinationsLoading = true;
-      _scheduledVaccinationsError = null;
+      _vaccinationsError = null;
     });
 
     try {
@@ -112,15 +73,12 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
           break;
         case Failure(message: final error, :final statusCode, :final response):
           setState(() {
-            _scheduledVaccinationsError = error;
+            _vaccinationsError = error;
             _isVaccinationsLoading = false;
           });
-          // Optionally handle the error using ApiErrorHandler
-          // ApiErrorHandler.handle(error);
           break;
       }
     } finally {
-      // Ensure loading state is reset even if there's an unexpected error
       if (_isVaccinationsLoading) {
         setState(() {
           _isVaccinationsLoading = false;
@@ -128,8 +86,6 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
       }
     }
   }
-
-
 
   Future<void> _loadRecommendations() async {
     setState(() {
@@ -152,12 +108,9 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
             _recommendationsError = error;
             _isRecommendationsLoading = false;
           });
-          // Optionally handle the error using ApiErrorHandler
-          // ApiErrorHandler.handle(error);
           break;
       }
     } finally {
-      // Ensure loading state is reset even if there's an unexpected error
       if (_isRecommendationsLoading) {
         setState(() {
           _isRecommendationsLoading = false;
@@ -168,7 +121,6 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
 
   Future<void> _onRefresh() async {
     await Future.wait([
-      _loadDashboard(),
       _loadVaccinationsHistory(),
       _loadRecommendations(),
     ]);
@@ -327,7 +279,7 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
   }
 
   Widget _buildDashboardStats() {
-    if (_isDashboardLoading) {
+    if (_isVaccinationsLoading) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(32.0),
@@ -336,7 +288,7 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
       );
     }
 
-    if (_dashboardError != null || _dashboard == null) {
+    if (_vaccinationsError != null || _vaccinations == null) {
       return Center(
         child: Column(
           children: [
@@ -345,7 +297,7 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
             Text('Error loading stats',
                 style: TextStyle(color: Colors.grey.shade600)),
             TextButton(
-              onPressed: _loadDashboard,
+              onPressed: _loadVaccinationsHistory,
               child: const Text('Retry'),
             ),
           ],
@@ -353,13 +305,21 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
       );
     }
 
+    final counts = _vaccinations!.counts;
+
+    // Calculate coverage percentage
+    final totalScheduled = counts.today + counts.overdue + counts.upcoming;
+    final coveragePercentage = totalScheduled > 0
+        ? ((counts.completed / (totalScheduled + counts.completed)) * 100).round()
+        : 0;
+
     return Column(
       children: [
         Row(
           children: [
             Expanded(
               child: StatCard(
-                value: '${_dashboard!.summary.completed}',
+                value: '${counts.completed}',
                 label: 'Completed',
                 color: Colors.green.shade100,
                 textColor: Colors.green.shade800,
@@ -368,7 +328,7 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
             const SizedBox(width: 12),
             Expanded(
               child: StatCard(
-                value: '${_dashboard!.summary.upcoming}',
+                value: '${counts.today + counts.upcoming}',
                 label: 'Upcoming',
                 color: Colors.orange.shade100,
                 textColor: Colors.orange.shade800,
@@ -381,7 +341,7 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
           children: [
             Expanded(
               child: StatCard(
-                value: '${_dashboard!.summary.overdue}',
+                value: '${counts.overdue}',
                 label: 'Overdue',
                 color: Colors.red.shade100,
                 textColor: Colors.red.shade800,
@@ -390,7 +350,7 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
             const SizedBox(width: 12),
             Expanded(
               child: StatCard(
-                value: _dashboard!.summary.coveragePercentage,
+                value: '$coveragePercentage%',
                 label: 'Coverage',
                 color: Colors.blue.shade100,
                 textColor: Colors.blue.shade800,
@@ -407,8 +367,8 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
       onRefresh: _onRefresh,
       child: _isVaccinationsLoading
           ? const Center(child: CircularProgressIndicator())
-          : _scheduledVaccinationsError != null || _vaccinations == null
-          ? _buildErrorView(_scheduledVaccinationsError)
+          : _vaccinationsError != null || _vaccinations == null
+          ? _buildErrorView(_vaccinationsError)
           : _buildTodayContent(),
     );
   }
@@ -538,26 +498,26 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
       children: [
         if (_recommendations!.data.isNotEmpty)
           Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          child: FilledButton.icon(
-            onPressed: () async {
-              final result = await context.push(
+            margin: const EdgeInsets.only(bottom: 16),
+            child: FilledButton.icon(
+              onPressed: () async {
+                final result = await context.push(
                   '/batches/adopt-schedule', extra: {
-                'batch': widget.batch,
-                'schedule': _recommendations,
-              },);
-              if (result == true) {
-                _onRefresh();
-              }
-            },
-            icon: const Icon(Icons.download),
-            label: const Text('Adopt Schedule'),
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.green,
-              minimumSize: const Size(double.infinity, 48),
+                  'batch': widget.batch,
+                  'schedule': _recommendations,
+                },);
+                if (result == true) {
+                  _onRefresh();
+                }
+              },
+              icon: const Icon(Icons.download),
+              label: const Text('Adopt Schedule'),
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.green,
+                minimumSize: const Size(double.infinity, 48),
+              ),
             ),
           ),
-        ),
         Padding(
           padding: const EdgeInsets.only(bottom: 16),
           child: Container(
@@ -707,8 +667,6 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
       _onRefresh();
     }
   }
-
-
 }
 
 class _VaccinationItem extends StatelessWidget {

@@ -82,7 +82,6 @@ class _EditFarmScreenState extends State<EditFarmScreen> {
                 : const Text(
               'Update',
               style: TextStyle(
-                color: Colors.green,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -108,7 +107,6 @@ class _EditFarmScreenState extends State<EditFarmScreen> {
                 description: widget.farm.imageUrl != null
                     ? 'Current photo will be replaced if you upload a new one'
                     : 'Upload a photo of your farm',
-                primaryColor: Colors.green,
               ),
 
               // Show existing photo if available
@@ -155,7 +153,6 @@ class _EditFarmScreenState extends State<EditFarmScreen> {
                     _longitude = lng;
                   });
                 },
-                primaryColor: Colors.green,
               ),
               const SizedBox(height: 20),
 

@@ -685,7 +685,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
             _longitude = lng;
           });
         },
-        primaryColor: primaryGreen,
       ),
     );
   }

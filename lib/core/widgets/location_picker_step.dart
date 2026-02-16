@@ -12,7 +12,8 @@ class LocationPickerStep extends StatefulWidget {
   final String? title;
   final String? text;
   final Function(String address, double lat, double lng) onLocationSelected;
-  final Color primaryColor;
+  final Color? primaryColor;
+
 
   const LocationPickerStep({
     super.key,
@@ -20,7 +21,7 @@ class LocationPickerStep extends StatefulWidget {
     this.latitude,
     this.longitude,
     required this.onLocationSelected,
-    this.primaryColor = Colors.green, this.title, this.text,
+    this.primaryColor, this.title, this.text,
   });
 
   @override
@@ -34,6 +35,8 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
   double? _latitude;
   double? _longitude;
   bool _isLoadingLocation = false;
+  Color get _primaryColor => widget.primaryColor ?? Theme.of(context).primaryColor;
+
 
   @override
   void initState() {
@@ -219,7 +222,7 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text('Current location detected successfully!'),
-              backgroundColor: widget.primaryColor,
+              backgroundColor: _primaryColor,
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -288,26 +291,16 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
               height: 20,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(widget.primaryColor),
+                valueColor: AlwaysStoppedAnimation<Color>(_primaryColor),
               ),
             )
-                : Icon(Icons.my_location, color: widget.primaryColor),
+                : Icon(Icons.my_location, color: _primaryColor),
             label: Text(
               _isLoadingLocation ? 'Getting Location...' : 'Use My Current Location',
               style: TextStyle(
-                color: _isLoadingLocation ? Colors.grey : widget.primaryColor,
+                color: _isLoadingLocation ? Colors.grey : _primaryColor,
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-              ),
-            ),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              side: BorderSide(
-                color: _isLoadingLocation ? Colors.grey : widget.primaryColor,
-                width: 1.5,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
               ),
             ),
           ),
@@ -350,7 +343,7 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
               hintText: 'Search for your location',
               prefixIcon: Icon(
                 Icons.location_on,
-                color: widget.primaryColor,
+                color: _primaryColor,
               ),
               suffixIcon: _controller.text.isNotEmpty
                   ? IconButton(
@@ -371,7 +364,7 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(
-                  color: widget.primaryColor,
+                  color: _primaryColor,
                   width: 2,
                 ),
               ),
@@ -393,7 +386,7 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
                   children: [
                     Icon(
                       Icons.location_on,
-                      color: widget.primaryColor,
+                      color: _primaryColor,
                     ),
                     const SizedBox(width: 7),
                     Expanded(
@@ -419,10 +412,10 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: widget.primaryColor.withOpacity(0.1),
+              color: _primaryColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: widget.primaryColor.withOpacity(0.3),
+                color: _primaryColor.withOpacity(0.3),
               ),
             ),
             child: Column(
@@ -432,7 +425,7 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
                   children: [
                     Icon(
                       Icons.check_circle,
-                      color: widget.primaryColor,
+                      color: _primaryColor,
                       size: 24,
                     ),
                     const SizedBox(width: 12),

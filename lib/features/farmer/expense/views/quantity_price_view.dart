@@ -202,7 +202,7 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'How much did spent?',
+                    'How much did you spent?',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,

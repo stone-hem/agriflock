@@ -9,7 +9,7 @@ class PhotoUpload extends StatefulWidget {
   final bool isRequired;
   final String title;
   final String description;
-  final Color primaryColor;
+  final Color? primaryColor;
   final bool showSelfieFirst;
   final bool cameraOnly;
 
@@ -20,7 +20,7 @@ class PhotoUpload extends StatefulWidget {
     this.isRequired = true,
     this.title = 'Photo',
     this.description = 'Upload photo',
-    this.primaryColor = Colors.green,
+    this.primaryColor,
     this.showSelfieFirst = false,
     this.cameraOnly = false,
   });
@@ -31,6 +31,8 @@ class PhotoUpload extends StatefulWidget {
 
 class _PhotoUploadState extends State<PhotoUpload> {
   final ImagePicker _imagePicker = ImagePicker();
+  Color get _primaryColor => widget.primaryColor ?? Theme.of(context).primaryColor;
+
 
   Future<void> _openCamera() async {
     try {
@@ -177,7 +179,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
                   icon: const Icon(Icons.camera),
                   label: const Text('Take Photo'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: widget.primaryColor,
+                    backgroundColor: _primaryColor,
                     foregroundColor: Colors.white,
                   ),
                 )
@@ -189,7 +191,7 @@ class _PhotoUploadState extends State<PhotoUpload> {
                       icon: const Icon(Icons.camera),
                       label: const Text('Camera'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: widget.primaryColor,
+                        backgroundColor: _primaryColor,
                         foregroundColor: Colors.white,
                       ),
                     ),
@@ -199,8 +201,8 @@ class _PhotoUploadState extends State<PhotoUpload> {
                       icon: const Icon(Icons.photo),
                       label: const Text('Gallery'),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: widget.primaryColor,
-                        side: BorderSide(color: widget.primaryColor),
+                        foregroundColor: _primaryColor,
+                        side: BorderSide(color: _primaryColor),
                       ),
                     ),
                   ],

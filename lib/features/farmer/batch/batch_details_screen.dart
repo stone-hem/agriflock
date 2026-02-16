@@ -80,7 +80,7 @@ class _BatchDetailsScreenState extends State<BatchDetailsScreen>
                   width: 1.5,
                 ),
               ),
-              labelColor: Colors.green.shade700,
+              labelColor: Theme.of(context).primaryColor,
               labelPadding: const EdgeInsets.symmetric(horizontal: 4),
               unselectedLabelColor: Colors.grey.shade600,
               labelStyle: const TextStyle(

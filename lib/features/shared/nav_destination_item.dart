@@ -21,13 +21,13 @@ class NavDestinationItem extends StatelessWidget {
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: isSelected
-              ? Colors.green.withValues(alpha: 0.1)
+              ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
               : Colors.transparent,
           shape: BoxShape.circle,
         ),
         child: Icon(
           icon,
-          color: isSelected ? Colors.green : Colors.grey.shade600,
+          color: isSelected ? Theme.of(context).primaryColor : Colors.grey.shade600,
           size: 24,
         ),
       ),
@@ -39,7 +39,7 @@ class NavDestinationItem extends StatelessWidget {
         ),
         child: Icon(
           selectedIcon,
-          color: Colors.green,
+          color: Theme.of(context).primaryColor,
           size: 24,
         ),
       ),

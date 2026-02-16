@@ -68,7 +68,6 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
                   : const Text(
                 'Save',
                 style: TextStyle(
-                  color: Colors.green,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -96,7 +95,6 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
                 },
                 title: 'Farm Photo (Optional)',
                 description: 'Upload a photo of your farm',
-                primaryColor: Colors.green,
               ),
               const SizedBox(height: 32),
 
@@ -127,7 +125,6 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
                     _longitude = lng;
                   });
                 },
-                primaryColor: Colors.green,
               ),
               const SizedBox(height: 20),
 

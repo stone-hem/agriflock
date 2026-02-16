@@ -48,46 +48,6 @@ class VaccinationRepository {
     }
   }
 
-  /// Get vaccination dashboard statistics
-  Future<Result<VaccinationDashboard>> getVaccinationDashboard(
-    String batchId,
-  ) async {
-    try {
-      final response = await apiClient.get(
-        '/batches/$batchId/vaccinations/dashboard',
-      );
-
-      final jsonResponse = jsonDecode(response.body);
-      LogUtil.info('Vaccination Dashboard API Response: $jsonResponse');
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return Success(VaccinationDashboard.fromJson(jsonResponse));
-      } else {
-        return Failure(
-          message:
-              jsonResponse['message'] ??
-              'Failed to fetch vaccination dashboard',
-          response: response,
-          statusCode: response.statusCode,
-        );
-      }
-    } on SocketException catch (e) {
-      LogUtil.error('Network error in getVaccinationDashboard: $e');
-      return const Failure(message: 'No internet connection', statusCode: 0);
-    } catch (e) {
-      LogUtil.error('Error in getVaccinationDashboard: $e');
-
-      if (e is http.Response) {
-        return Failure(
-          message: 'Failed to fetch vaccination dashboard',
-          response: e,
-          statusCode: e.statusCode,
-        );
-      }
-
-      return Failure(message: e.toString());
-    }
-  }
 
   /// Get recommended vaccinations for a batch based on age
   Future<Result<RecommendedVaccinationsResponse>> getRecommendedVaccinations(
@@ -262,12 +222,6 @@ class VaccinationRepository {
     String batchId,
   ) async {
     return getVaccinationList(batchId: batchId);
-  }
-
-  Future<Result<VaccinationDashboard>> refreshVaccinationDashboard(
-    String batchId,
-  ) async {
-    return getVaccinationDashboard(batchId);
   }
 
   Future<Result<RecommendedVaccinationsResponse>>
