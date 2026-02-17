@@ -45,6 +45,7 @@ import 'package:agriflock360/features/farmer/batch/record_mortality_screen.dart'
 import 'package:agriflock360/features/farmer/report/batch/batch_report_screen.dart';
 import 'package:agriflock360/features/farmer/report/farm_reports_screen.dart';
 import 'package:agriflock360/features/farmer/report/reports_flow_screen.dart';
+import 'package:agriflock360/features/farmer/vet/all_vets_screen.dart';
 import 'package:agriflock360/features/farmer/vet/completed_orders_screen.dart';
 import 'package:agriflock360/features/farmer/vet/models/my_order_list_item.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_farmer_model.dart';
@@ -635,6 +636,12 @@ class AppRoutes {
           builder: (context, state) {
             final order = state.extra as MyOrderListItem;
             return MyOrderTrackingScreen(order: order);
+          },
+        ),
+        GoRoute(
+          path: '/all-vets',
+          builder: (context, state) {
+            return AllVetsScreen();
           },
         ),
         GoRoute(

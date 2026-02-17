@@ -66,9 +66,6 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
   // Batch selection (if use now)
   BatchListItem? _selectedBatch;
 
-  // Vaccination details (if applicable)
-  double? _dosesUsed;
-
   // Loading states
   bool _isLoadingCategories = true;
   bool _isLoadingBatches = false;
@@ -202,7 +199,6 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
           if (_selectedBatch != null) 'batch_id': _selectedBatch!.id,
           if (_selectedBatch != null && _selectedBatch!.houseId != null) 'house_id': _selectedBatch!.houseId,
           'used_immediately': _useNow,
-          if (_dosesUsed != null) 'doses_used': _dosesUsed,
         };
       }
 
@@ -408,8 +404,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
                     onBatchSelected: (batch) {
                       setState(() => _selectedBatch = batch);
                     },
-                    onSave: ({double? dosesUsed}) {
-                      setState(() => _dosesUsed = dosesUsed);
+                    onSave: () {
                       _submitExpense();
                     },
                     onBack: _previousPage,
@@ -432,7 +427,6 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
                   totalPrice: _totalPrice!,
                   selectedDate: _selectedDate,
                   batch: _selectedBatch,
-                  dosesUsed: _dosesUsed,
                   farm: widget.farm,
                   onDone: () => context.pop(true),
                 ),

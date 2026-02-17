@@ -50,6 +50,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   final TextEditingController _otherPoultryTypeController = TextEditingController();
   final TextEditingController _preferredAgrovetController = TextEditingController();
   final TextEditingController _preferredFeedCompanyController = TextEditingController();
+  final TextEditingController _preferredHatcheryCompany = TextEditingController();
+  final TextEditingController _preferredAggregator=TextEditingController();
+
 
 
   // Loading state
@@ -62,6 +65,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   final FocusNode _otherPoultryTypeFocus = FocusNode();
   final FocusNode _preferredAgrovetFocus = FocusNode();
   final FocusNode _preferredFeedCompanyFocus = FocusNode();
+  final FocusNode _preferredHatcheryCompanyFocus = FocusNode();
+  final FocusNode _preferredAggregatorFocus = FocusNode();
+
 
 
 
@@ -157,6 +163,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     _preferredFeedCompanyFocus.dispose();
     _preferredAgrovetController.dispose();
     _preferredFeedCompanyController.dispose();
+    _preferredHatcheryCompanyFocus.dispose();
+    _preferredHatcheryCompany.dispose();
+    _preferredAggregatorFocus.dispose();
+    _preferredAggregator.dispose();
     super.dispose();
   }
 
@@ -186,7 +196,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         return _idNumberController.text.trim().isNotEmpty &&
             _dobController.text.trim().isNotEmpty &&
             _selectedGender != null && _preferredAgrovetController.text.trim().isNotEmpty &&
-            _preferredFeedCompanyController.text.trim().isNotEmpty;
+            _preferredFeedCompanyController.text.trim().isNotEmpty && _preferredHatcheryCompany.text.trim().isNotEmpty;
 
       case 1: // Farm Operations
         final hasPoultryType = _selectedPoultryType != null;
@@ -261,6 +271,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         'chicken_house_capacity': int.tryParse(_houseCapacityController.text.trim()) ?? 0,
         'preferred_agrovet_name': _preferredAgrovetController.text.trim(),
         'preferred_feed_company': _preferredFeedCompanyController.text.trim(),
+        'preferred_chicks_company': _preferredHatcheryCompany.text.trim(),
+        'preferred_offtaker_agent': _preferredAggregator.text.trim(),
       };
 
       LogUtil.warning('Profile Data: $profileData');
@@ -279,31 +291,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       if (response.statusCode == 200) {
 
         // Create updated user with profile data
-        final updatedUser = User(
-          id: _user!.id,
-          email: _user!.email,
-          name: _user!.name,
-          phoneNumber: _user!.phoneNumber,
-          is2faEnabled: _user!.is2faEnabled,
-          emailVerificationExpiresAt: _user!.emailVerificationExpiresAt,
-          refreshTokenExpiresAt: _user!.refreshTokenExpiresAt,
-          passwordResetExpiresAt: _user!.passwordResetExpiresAt,
-          status: _user!.status,
-          avatar: _user!.avatar,
-          googleId: _user!.googleId,
-          appleId: _user!.appleId,
-          oauthProvider: _user!.oauthProvider,
-          roleId: _user!.roleId,
-          role: _user!.role,
-          isActive: _user!.isActive,
-          lockedUntil: _user!.lockedUntil,
-          createdAt: _user!.createdAt,
-          updatedAt: _user!.updatedAt,
-          deletedAt: _user!.deletedAt,
-          agreedToTerms: _user!.agreedToTerms,
-          agreedToTermsAt: _user!.agreedToTermsAt,
-          firstLogin: _user!.firstLogin,
-          lastLogin: _user!.lastLogin,
+        final updatedUser = _user?.copyWith(
           // Add profile-specific fields (make sure your User model has these)
           nationalId: _idNumberController.text.trim(),
           dateOfBirth: _dobController.text.trim(),
@@ -314,8 +302,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           preferredFeedCompany: _preferredFeedCompanyController.text.trim(),
         );
 
+
         // Save updated user to secure storage
-        await _secureStorage.saveUser(updatedUser);
+        await _secureStorage.saveUser(updatedUser!);
 
         ToastUtil.showSuccess(
           'Profile completed successfully!',
@@ -609,6 +598,25 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
               topLabel: 'Preferred Feed Company *',
               labelText: 'Preferred Feed Company *',
               hintText: 'Enter your preferred Feed Company',
+              icon: Icons.input,
+            ),
+            const SizedBox(height: 20),
+            ReusableInput(
+              controller: _preferredHatcheryCompany,
+              focusNode: _preferredHatcheryCompanyFocus,
+              topLabel: 'Preferred Hatchery Company *',
+              labelText: 'Preferred Hatchery Company *',
+              hintText: 'eg kenchick,  kuku chick , etc',
+              icon: Icons.input,
+            ),
+
+            const SizedBox(height: 20),
+            ReusableInput(
+              controller: _preferredAggregator,
+              focusNode: _preferredAggregatorFocus,
+              topLabel: 'Preferred Aggregator',
+              labelText: 'Preferred Aggregator',
+              hintText: 'hotel supermarket, agent etc',
               icon: Icons.input,
             ),
           ],

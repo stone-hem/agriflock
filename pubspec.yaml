@@ -43,6 +43,8 @@ dependencies:
   firebase_auth: ^6.1.4
   sign_in_with_apple: ^8.0.0-spm.1
   http: ^1.6.0
+  dio_cache_interceptor: ^4.0.5
+  dio: ^5.9.1
   flutter_secure_storage: ^10.0.0
   fluttertoast: ^9.0.0
   shared_preferences: ^2.5.4

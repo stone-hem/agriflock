@@ -1,18 +1,19 @@
 // lib/core/utils/result.dart
 
-import 'package:http/http.dart' as http;
-
 sealed class Result<T> {
   const Result();
 
-  /// Pattern matching method for handling success and failure cases
   R when<R>({
     required R Function(T data) success,
-    required R Function(String message, http.Response? response, int? statusCode) failure,
+    required R Function(String message, dynamic response, int? statusCode) failure,
   }) {
     return switch (this) {
       Success<T>(data: final data) => success(data),
-      Failure<T>(message: final message, response: final response, statusCode: final statusCode) =>
+      Failure<T>(
+      message: final message,
+      response: final response,
+      statusCode: final statusCode,
+      ) =>
           failure(message, response, statusCode),
     };
   }
@@ -25,7 +26,7 @@ class Success<T> extends Result<T> {
 
 class Failure<T> extends Result<T> {
   final String message;
-  final http.Response? response;
+  final dynamic response;   // was http.Response? — now any decoded Dio body
   final int? statusCode;
   final String? cond;
   final Map<String, dynamic>? data;

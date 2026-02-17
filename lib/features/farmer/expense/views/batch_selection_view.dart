@@ -1,4 +1,3 @@
-import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_list_model.dart';
 import 'package:agriflock360/features/farmer/expense/model/expense_category.dart';
 import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
@@ -13,7 +12,7 @@ class BatchSelectionView extends StatefulWidget {
   final InventoryCategory category;
   final double quantity;
   final Function(BatchListItem?) onBatchSelected;
-  final Function({double? dosesUsed}) onSave;
+  final Function() onSave;
   final VoidCallback onBack;
   final bool isSubmitting;
 
@@ -37,7 +36,6 @@ class BatchSelectionView extends StatefulWidget {
 }
 
 class _BatchSelectionViewState extends State<BatchSelectionView> {
-  final TextEditingController _dosesController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   bool get _isVaccineOrMedicine {
@@ -68,15 +66,8 @@ class _BatchSelectionViewState extends State<BatchSelectionView> {
       return;
     }
 
-    if (_isVaccineOrMedicine && !_formKey.currentState!.validate()) {
-      return;
-    }
 
-    final dosesUsed = _isVaccineOrMedicine && _dosesController.text.isNotEmpty
-        ? double.tryParse(_dosesController.text)
-        : null;
-
-    widget.onSave(dosesUsed: dosesUsed);
+    widget.onSave();
   }
 
   @override
@@ -294,59 +285,7 @@ class _BatchSelectionViewState extends State<BatchSelectionView> {
                       );
                     }).toList(),
 
-                  // Doses used (for vaccines/medicines)
-                  if (_isVaccineOrMedicine && widget.selectedBatch != null) ...[
-                    const SizedBox(height: 24),
-                    ReusableInput(
-                      topLabel: 'Doses/Amount Used',
-                      icon: Icons.medication_liquid,
-                      controller: _dosesController,
-                      hintText: '0',
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter amount used';
-                        }
-                        if (double.tryParse(value) == null) {
-                          return 'Please enter a valid number';
-                        }
-                        final dosesUsed = double.parse(value);
-                        if (dosesUsed <= 0) {
-                          return 'Amount must be greater than 0';
-                        }
-                        if (dosesUsed > widget.quantity) {
-                          return 'Cannot use more than purchased (${widget.quantity})';
-                        }
-                        return null;
-                      },
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.blue.shade200),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.lightbulb_outline,
-                            color: Colors.blue.shade700,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'Recommended: ${widget.selectedBatch!.currentCount} doses (1 per bird)',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.blue.shade700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+
 
                   const SizedBox(height: 32),
 
@@ -410,7 +349,6 @@ class _BatchSelectionViewState extends State<BatchSelectionView> {
 
   @override
   void dispose() {
-    _dosesController.dispose();
     super.dispose();
   }
 }
