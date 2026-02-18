@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/expense/model/expense_category.dart';
 import 'package:flutter/material.dart';
 
@@ -281,26 +282,9 @@ class _ItemSelectionViewState extends State<ItemSelectionView> {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          TextField(
+                          ReusableInput(
                             controller: _customNameController,
-                            decoration: InputDecoration(
-                              hintText: 'Enter item name',
-                              filled: true,
-                              fillColor: Colors.white,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Colors.grey.shade300),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Colors.grey.shade300),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(color: Colors.green.shade400),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                            ),
+                            hintText: 'Enter item name',
                           ),
                           const SizedBox(height: 12),
                           SizedBox(
