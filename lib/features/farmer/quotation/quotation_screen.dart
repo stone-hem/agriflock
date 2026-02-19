@@ -413,7 +413,7 @@ class _QuotationScreenState extends State<QuotationScreen>
           ],
         ),
         actions: [
-          AlertsButton(alertCount: 1,),
+          AlertsButton(),
           SizedBox(width: 8,)
         ],
         bottom: _profileCompletion >= PROFILE_COMPLETION_THRESHOLD

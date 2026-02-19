@@ -9,6 +9,7 @@ import 'package:agriflock360/core/widgets/alert_button.dart';
 import 'package:agriflock360/core/widgets/expense/expense_marquee_banner.dart';
 import 'package:agriflock360/features/farmer/profile/models/profile_model.dart';
 import 'package:agriflock360/features/farmer/profile/repo/profile_repository.dart';
+import 'package:agriflock360/features/shared/widgets/avatar_with_initials.dart';
 import 'package:agriflock360/features/shared/widgets/profile_menu_item.dart';
 import 'package:agriflock360/main.dart';
 import 'package:flutter/material.dart';
@@ -333,7 +334,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
-          AlertsButton(alertCount: 1,),
+          AlertsButton(),
           SizedBox(width: 8,)
         ],
       ),
@@ -384,21 +385,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 width: 2,
                               ),
                             ),
-                            child: CircleAvatar(
-                              radius: 46,
-                              backgroundColor: Colors.white,
-                              backgroundImage: _user.avatar != null
-                                  ? NetworkImage(_user.avatar!)
-                                  : const AssetImage('assets/images/default_avatar.png')
-                              as ImageProvider,
-                              child: _user.avatar == null
-                                  ? const Icon(
-                                Icons.person,
-                                size: 40,
-                                color: Colors.grey,
-                              )
-                                  : null,
-                            ),
+                            child: AvatarWithInitials(name: _user.name, imageUrl: _user.avatar),
                           ),
                         ),
                       // Edit icon overlay
@@ -497,7 +484,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   subtitle: 'See live brooder data',
                   color: Colors.brown,
                   onTap: () {
-                    context.push('/telemetry');
+                    context.push('/my-devices');
                   },
                 ),
                 ProfileMenuItem(

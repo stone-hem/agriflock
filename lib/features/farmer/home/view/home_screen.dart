@@ -444,7 +444,7 @@ class _HomeScreenState extends State<HomeScreen> {
         automaticallyImplyLeading: false,
         elevation: 0,
         actions: [
-AlertsButton(alertCount: 1,),
+AlertsButton(),
           SizedBox(width: 8,)
         ],
       ),

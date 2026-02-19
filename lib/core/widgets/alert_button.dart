@@ -1,17 +1,34 @@
+import 'package:agriflock360/core/notifications/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+/// Notification bell button that shows a live unread-count badge.
+///
+/// The badge count is driven by [NotificationService.instance.unreadCount]
+/// so it updates in real-time as WebSocket messages arrive or notifications
+/// are marked as read — no manual wiring required.
 class AlertsButton extends StatelessWidget {
-  final int alertCount;
+  const AlertsButton({super.key});
 
-  const AlertsButton({super.key, this.alertCount = 0});
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<int>(
+      valueListenable: NotificationService.instance.unreadCount,
+      builder: (_, count, __) => _AlertsButtonCore(alertCount: count),
+    );
+  }
+}
+
+class _AlertsButtonCore extends StatelessWidget {
+  final int alertCount;
+  const _AlertsButtonCore({required this.alertCount});
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        // The main button
+        // ── Main button ────────────────────────────────────────────────────
         Container(
           decoration: BoxDecoration(
             color: alertCount > 0
@@ -34,7 +51,6 @@ class AlertsButton extends StatelessWidget {
             ),
             icon: Row(
               mainAxisSize: MainAxisSize.min,
-              spacing: 5,
               children: [
                 Icon(
                   Icons.notifications_outlined,
@@ -43,6 +59,7 @@ class AlertsButton extends StatelessWidget {
                       : Colors.grey.shade700,
                   size: 18,
                 ),
+                const SizedBox(width: 5),
                 Text(
                   'Check alerts',
                   style: TextStyle(
@@ -60,7 +77,7 @@ class AlertsButton extends StatelessWidget {
           ),
         ),
 
-        // Badge — only shown when alertCount > 0
+        // ── Badge — only shown when unread count > 0 ───────────────────────
         if (alertCount > 0)
           Positioned(
             top: -6,
@@ -72,7 +89,7 @@ class AlertsButton extends StatelessWidget {
                 color: Colors.red.shade600,
                 shape: alertCount > 9 ? BoxShape.rectangle : BoxShape.circle,
                 borderRadius:
-                alertCount > 9 ? BorderRadius.circular(9) : null,
+                    alertCount > 9 ? BorderRadius.circular(9) : null,
                 border: Border.all(color: Colors.white, width: 1.5),
                 boxShadow: [
                   BoxShadow(

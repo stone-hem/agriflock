@@ -1,4 +1,5 @@
 import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock360/core/widgets/alert_button.dart';
 import 'package:agriflock360/core/widgets/vet_unverified_banner.dart';
 import 'package:agriflock360/features/vet/home/models/dashboard_stats_model.dart';
 import 'package:agriflock360/features/vet/home/repo/dashboard_stats_repo.dart';
@@ -278,9 +279,9 @@ class _VetHomeScreenState extends State<VetHomeScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
-          IconButton(
-            icon: Icon(Icons.notifications_outlined, color: Colors.grey.shade700),
-            onPressed: () => context.push('/vet/notifications'),
+          const Padding(
+            padding: EdgeInsets.only(right: 8),
+            child: AlertsButton(),
           ),
         ],
       ),

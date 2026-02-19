@@ -390,11 +390,11 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
           Expanded(
             child: OutlinedButton.icon(
               onPressed: () => context.push('/my-completed-orders'),
-              icon: const Icon(Icons.check_circle, size: 18),
+              icon: const Icon(Icons.check_circle, size: 14),
               label: const Text('Completed'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.green.shade700,

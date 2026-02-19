@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:agriflock360/core/network/api_client.dart';
+import 'package:agriflock360/core/notifications/notification_service.dart';
 import 'package:agriflock360/core/services/social_auth_service.dart';
 import 'package:agriflock360/core/theme/theme.dart';
 import 'package:agriflock360/core/utils/secure_storage.dart';
@@ -43,6 +44,14 @@ void main() async {
     // 5. Initialize ApiClient
     print('Initializing ApiClient...');
     apiClient = ApiClient(storage: secureStorage, navigatorKey: navigatorKey);
+
+    // 6. Initialize & connect NotificationService (if already logged in)
+    print('Initializing NotificationService...');
+    NotificationService.instance.initialize(secureStorage);
+    final isLoggedIn = await secureStorage.isLoggedIn();
+    if (isLoggedIn) {
+      NotificationService.instance.connect();
+    }
 
     print('=== App Initialization Complete ===');
 

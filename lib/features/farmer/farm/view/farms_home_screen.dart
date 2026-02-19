@@ -123,7 +123,7 @@ class _FarmsHomeScreenState extends State<FarmsHomeScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
-          AlertsButton(alertCount: 1,),
+          AlertsButton(),
           SizedBox(width: 8,)
         ],
       ),

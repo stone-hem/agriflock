@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/notifications/notification_service.dart';
 import 'package:agriflock360/features/farmer/batch/add_batch_screen.dart';
 import 'package:agriflock360/features/farmer/batch/adopt_schedule_screen.dart';
 import 'package:agriflock360/features/farmer/batch/batch_details_screen.dart';
@@ -35,7 +36,7 @@ import 'package:agriflock360/features/farmer/profile/help_support_screen.dart';
 import 'package:agriflock360/features/farmer/profile/models/profile_model.dart';
 import 'package:agriflock360/features/farmer/profile/profile_screen.dart';
 import 'package:agriflock360/features/farmer/profile/settings_screen.dart';
-import 'package:agriflock360/features/farmer/profile/telemetry_data_screen.dart';
+import 'package:agriflock360/features/farmer/devices/screens/devices_screen.dart';
 import 'package:agriflock360/features/farmer/profile/update_profile_screen.dart';
 import 'package:agriflock360/features/farmer/onboarding/onboarding_setup_screen.dart';
 import 'package:agriflock360/features/farmer/quotation/quotation_screen.dart';
@@ -67,7 +68,6 @@ import 'package:go_router/go_router.dart';
 import 'core/utils/secure_storage.dart';
 import 'core/utils/shared_prefs.dart';
 
-import 'package:agriflock360/features/farmer/device_screen.dart';
 import 'package:agriflock360/features/auth/forgot_password_screen.dart';
 import 'package:agriflock360/features/auth/otp_screen.dart';
 import 'package:agriflock360/features/auth/quiz/onboarding_quiz_screen.dart';
@@ -92,7 +92,6 @@ class AppRoutes {
   static const String resetPassword = '/reset-password';
   static const String createFarm = '/create-farm';
   static const String selectFarmType = '/select-farm-type';
-  static const String deviceSetup = '/device-setup';
 
   // Shell tab routes - Farmer
   static const String home = '/home';
@@ -130,7 +129,6 @@ class AppRoutes {
   static const String settings = '/settings';
   static const String help = '/help';
   static const String about = '/about';
-  static const String telemetry = '/telemetry';
   static const String activity = '/activity';
   static const String notifications = '/notifications';
   static const String completeProfile = '/complete-profile';
@@ -166,7 +164,6 @@ class AppRoutes {
     paygHistory,
     invoice,
     settings,
-    telemetry,
     farmsAdd,
     farmsInventory,
     farmsInventoryAdd,
@@ -241,7 +238,19 @@ class AppRoutes {
             (currentPath == login ||
                 currentPath == signup ||
                 currentPath == welcome)) {
+          // Ensure WebSocket is connected when user is authenticated
+          NotificationService.instance.connect();
           return await _getHomeRoute(secureStorage);
+        }
+
+        // Connect WS whenever a protected route is navigated to (no-op if already connected)
+        if (isLoggedIn && isProtectedRoute) {
+          NotificationService.instance.connect();
+        }
+
+        // Disconnect WS on logout / redirect to auth
+        if (!isLoggedIn && currentPath == login) {
+          NotificationService.instance.disconnect();
         }
 
         // If logged in and trying to access onboarding again
@@ -317,11 +326,6 @@ class AppRoutes {
           path: vetVerificationPending,
           builder: (context, state) => const VetVerificationPendingScreen(),
         ),
-        GoRoute(
-          path: deviceSetup,
-          builder: (context, state) => const DeviceSetupScreen(),
-        ),
-
         // ── ShellRoute (shows bottom bar / navigation rail) ─────
         ShellRoute(
           navigatorKey: _shellNavigatorKey,
@@ -606,8 +610,8 @@ class AppRoutes {
         ),
         GoRoute(path: about, builder: (context, state) => const AboutScreen()),
         GoRoute(
-          path: telemetry,
-          builder: (context, state) => const TelemetryDataScreen(),
+          path: '/my-devices',
+          builder: (context, state) => const DevicesScreen(),
         ),
         GoRoute(
           path: activity,
@@ -700,6 +704,11 @@ class AppRoutes {
         ),
 
         // Vet payment routes (outside shell)
+        // Shared notifications screen for vet users
+        GoRoute(
+          path: '/vet/notifications',
+          builder: (context, state) => const NotificationsScreen(),
+        ),
         GoRoute(
           path: '/vet/payments/history',
           builder: (context, state) => const VetPaymentsHistoryScreen(),
