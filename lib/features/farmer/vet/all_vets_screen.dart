@@ -107,7 +107,7 @@ class _AllVetsScreenState extends State<AllVetsScreen> {
   }
 
   void _viewDetails(String id) => context.push('/vet-details', extra: id);
-  void _bookVet(String id) => context.push('/book-vet', extra: id);
+  void _bookVet(VetFarmer vet) => context.push('/vet-order-details', extra: vet);
 
   // ── Star row ──
   Widget _stars(double r) => Row(
@@ -319,7 +319,7 @@ class _AllVetsScreenState extends State<AllVetsScreen> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () => _bookVet(vet.id),
+                      onPressed: () => _bookVet(vet),
                       icon: const Icon(Icons.calendar_today, size: 15),
                       label: const Text('Book Now', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(

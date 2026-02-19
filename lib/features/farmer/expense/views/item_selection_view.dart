@@ -186,8 +186,8 @@ class _ItemSelectionViewState extends State<ItemSelectionView> {
                 ),
                 const SizedBox(height: 20),
 
-                // Add Custom Item Option for Others category
-                if (_isOthersCategory && widget.onCustomItemSelected != null) ...[
+                // Other / Add Custom Item option — shown for ALL categories
+                if (widget.onCustomItemSelected != null) ...[
                   GestureDetector(
                     onTap: () {
                       setState(() {
@@ -233,7 +233,7 @@ class _ItemSelectionViewState extends State<ItemSelectionView> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Add Custom Item',
+                                  'Other',
                                   style: TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w600,
@@ -241,7 +241,9 @@ class _ItemSelectionViewState extends State<ItemSelectionView> {
                                   ),
                                 ),
                                 Text(
-                                  'Enter a custom expense name',
+                                  _isOthersCategory
+                                      ? 'Enter a custom expense name'
+                                      : 'Add another item not listed above',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.grey.shade600,
@@ -274,7 +276,7 @@ class _ItemSelectionViewState extends State<ItemSelectionView> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Custom Item Name',
+                            _isOthersCategory ? 'Custom Item Name' : 'Item Name',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -303,7 +305,7 @@ class _ItemSelectionViewState extends State<ItemSelectionView> {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
-                              child: const Text('Continue with Custom Item'),
+                              child: const Text('Continue'),
                             ),
                           ),
                         ],

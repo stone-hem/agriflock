@@ -71,7 +71,8 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
   }
 
   void _navigateToAllVets() => context.push('/all-vets');
-  void _bookVet(String id) => context.push('/vet-order-details', extra: id);
+  void _viewDetails(String id) => context.push('/vet-details', extra: id);
+  void _bookVet(VetFarmerRecommendation vet) => context.push('/vet-order-details', extra: vet.toVetFarmer());
 
   // ── Responsive helpers ──
   double _cardWidth(BuildContext context) {
@@ -312,23 +313,39 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
               ),
             ),
 
-            // ── Book Now ──
+            // ── Action buttons ──
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 4, 14, 14),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () => _bookVet(vet.id),
-                  icon: const Icon(Icons.calendar_today, size: 16),
-                  label: const Text('Book Now', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange.shade600,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 13),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    elevation: 2,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _viewDetails(vet.id),
+                      icon: Icon(Icons.info_outline, size: 16, color: Colors.green.shade700),
+                      label: Text('View Details', style: TextStyle(fontSize: 13, color: Colors.green.shade700, fontWeight: FontWeight.w600)),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        side: BorderSide(color: Colors.green.shade400),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _bookVet(vet),
+                      icon: const Icon(Icons.calendar_today, size: 15),
+                      label: const Text('Book Now', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange.shade600,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 2,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -456,20 +473,22 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      const Text('Recommended Vets',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green)),
+                       Text('Recommended Vets',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor)),
                       Text('Top-rated veterinarians near you',
                           style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
-                    ]),
-                    if (_recommendedVets.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(16),
+                      if (_recommendedVets.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).primaryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Text('${_recommendedVets.length} nearby',
+                              style:  TextStyle(color: Theme.of(context).primaryColor, fontSize: 11, fontWeight: FontWeight.bold)),
                         ),
-                        child: Text('${_recommendedVets.length} nearby',
-                            style: const TextStyle(color: Colors.green, fontSize: 11, fontWeight: FontWeight.bold)),
-                      ),
+                    ]),
+                   TextButton.icon(onPressed: ()=>context.push('/all-vets'), label: const Text('All Vets'),
+                      icon: Icon(Icons.arrow_forward))
                   ],
                 ),
                 const SizedBox(height: 14),

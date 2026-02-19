@@ -169,21 +169,37 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
     try {
       Map<String, dynamic> expenditureData;
 
-      // Check if this is an "Others" category with custom name
-      if (_isOthersCategory && _hasCustomOtherName) {
-        // Payload format for custom "Others" items
-        expenditureData = {
-          'category_id': _selectedCategory!.id,
-          'other_name': _customOtherName,
-          'used_immediately': _useNow,
-          'amount': _totalPrice,
-          'quantity': _quantity?.toInt() ?? 1,
-          'unit': 'unit',
-          'date': _selectedDate.toUtc().toIso8601String(),
-          if (widget.farm != null) 'farm_id': widget.farm!.id,
-          if (_selectedBatch != null) 'batch_id': _selectedBatch!.id,
-          if (_selectedBatch != null && _selectedBatch!.houseId != null) 'house_id': _selectedBatch!.houseId,
-        };
+      // Check if this is a custom item (Others category → other_name, any other category → custom_name)
+      if (_hasCustomOtherName) {
+        if (_isOthersCategory) {
+          // Payload format for custom "Others" items
+          expenditureData = {
+            'category_id': _selectedCategory!.id,
+            'other_name': _customOtherName,
+            'used_immediately': _useNow,
+            'amount': _totalPrice,
+            'quantity': _quantity?.toInt() ?? 1,
+            'unit': 'unit',
+            'date': _selectedDate.toUtc().toIso8601String(),
+            if (widget.farm != null) 'farm_id': widget.farm!.id,
+            if (_selectedBatch != null) 'batch_id': _selectedBatch!.id,
+            if (_selectedBatch != null && _selectedBatch!.houseId != null) 'house_id': _selectedBatch!.houseId,
+          };
+        } else {
+          // Payload format for custom item under an existing (non-Other) category
+          expenditureData = {
+            'category_id': _selectedCategory!.id,
+            'custom_name': _customOtherName,
+            'used_immediately': _useNow,
+            'amount': _totalPrice,
+            'quantity': _quantity?.toInt() ?? 1,
+            'unit': 'unit',
+            'date': _selectedDate.toUtc().toIso8601String(),
+            if (widget.farm != null) 'farm_id': widget.farm!.id,
+            if (_selectedBatch != null) 'batch_id': _selectedBatch!.id,
+            if (_selectedBatch != null && _selectedBatch!.houseId != null) 'house_id': _selectedBatch!.houseId,
+          };
+        }
       } else {
         // Standard payload with category_item_id
         expenditureData = {
@@ -300,13 +316,13 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
                     });
                     _nextPage();
                   },
-                  onCustomItemSelected: _isOthersCategory ? (customName) {
+                  onCustomItemSelected: (customName) {
                     setState(() {
                       _customOtherName = customName;
                       _selectedItem = null; // Clear selected item when using custom
                     });
                     _nextPage();
-                  } : null,
+                  },
                   onBack: _previousPage,
                 ),
 
