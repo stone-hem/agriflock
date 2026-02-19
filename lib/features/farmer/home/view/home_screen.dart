@@ -1,7 +1,6 @@
 import 'package:agriflock360/core/model/user_model.dart';
 import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
-import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:agriflock360/core/utils/shared_prefs.dart';
 import 'package:agriflock360/core/widgets/alert_button.dart';
 import 'package:agriflock360/features/farmer/home/model/batch_home_model.dart';
@@ -17,6 +16,7 @@ import 'package:agriflock360/features/farmer/payg/flow/day_27_decision_modal.dar
 import 'package:agriflock360/features/farmer/home/view/widgets/future_framing_banner.dart';
 import 'package:agriflock360/features/farmer/home/view/widgets/value_confirmation_banner.dart';
 import 'package:agriflock360/core/widgets/expense/expense_marquee_banner.dart';
+import 'package:agriflock360/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -29,7 +29,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final DashboardRepository _repository = DashboardRepository();
-  final SecureStorage _secureStorage = SecureStorage();
 
   DashboardSummary? _summary;
   FinancialOverview? _financialOverview;
@@ -76,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadUserData() async {
     try {
-      final User? userData = await _secureStorage.getUserData();
+      final User? userData = await secureStorage.getUserData();
 
       if (userData != null && mounted) {
         LogUtil.warning(userData.toJson());

@@ -49,13 +49,15 @@ class VetPaymentsScreen extends StatelessWidget {
             _buildPaymentOverview(),
             const SizedBox(height: 32),
 
+            // Pending Payments
+            _buildPendingPayments(context),
+
+            const SizedBox(height: 32),
 
             // Recent Transactions
             _buildRecentTransactions(context),
-            const SizedBox(height: 32),
 
-            // Pending Payments
-            _buildPendingPayments(context),
+
           ],
         ),
       ),
@@ -253,7 +255,7 @@ class VetPaymentsScreen extends StatelessWidget {
           amount: 180.00,
           visitDate: 'Dec 7, 2023',
           dueDate: 'Dec 14, 2023',
-          onRemind: () {},
+          onPay: () {},
         ),
         _PendingPaymentItem(
           farmerName: 'Sarah Miller',
@@ -261,7 +263,7 @@ class VetPaymentsScreen extends StatelessWidget {
           amount: 120.00,
           visitDate: 'Dec 6, 2023',
           dueDate: 'Dec 13, 2023',
-          onRemind: () {},
+          onPay: () {},
         ),
       ],
     );
@@ -391,7 +393,7 @@ class _PendingPaymentItem extends StatelessWidget {
   final double amount;
   final String visitDate;
   final String dueDate;
-  final VoidCallback onRemind;
+  final VoidCallback onPay;
 
   const _PendingPaymentItem({
     required this.farmerName,
@@ -399,7 +401,7 @@ class _PendingPaymentItem extends StatelessWidget {
     required this.amount,
     required this.visitDate,
     required this.dueDate,
-    required this.onRemind,
+    required this.onPay,
   });
 
   @override
@@ -477,37 +479,11 @@ class _PendingPaymentItem extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: onRemind,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.orange.shade700,
-                    side: BorderSide(color: Colors.orange.shade300),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text('Send Reminder'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange.shade600,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text('View Invoice'),
-                ),
-              ),
-            ],
-          ),
+          ElevatedButton(
+            onPressed: onPay,
+            child: const Text('Pay Now ...'),
+          )
+
         ],
       ),
     );

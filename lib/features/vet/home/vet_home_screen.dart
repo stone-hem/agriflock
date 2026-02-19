@@ -1,9 +1,12 @@
+import 'package:agriflock360/core/model/user_model.dart';
+import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/widgets/alert_button.dart';
 import 'package:agriflock360/core/widgets/vet_unverified_banner.dart';
 import 'package:agriflock360/features/vet/home/models/dashboard_stats_model.dart';
 import 'package:agriflock360/features/vet/home/repo/dashboard_stats_repo.dart';
 import 'package:agriflock360/features/vet/home/widgets/vet_dashboard_skeleton.dart';
+import 'package:agriflock360/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:agriflock360/features/vet/schedules/repo/visit_repo.dart';
@@ -24,11 +27,45 @@ class _VetHomeScreenState extends State<VetHomeScreen> {
   bool _isRefreshing = false;
   String _errorMessage = '';
   String? _errorCond;
+  bool _isLoadingUser = true;
+  User? _user;
+
+
 
   @override
   void initState() {
     super.initState();
+    _loadUserData();
     _loadDashboardData();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      final User? userData = await secureStorage.getUserData();
+
+      if (userData != null && mounted) {
+        LogUtil.warning(userData.toJson());
+
+        if (mounted) {
+          setState(() {
+            _user = userData;
+            _isLoadingUser = false;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _isLoadingUser = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingUser = false;
+        });
+      }
+    }
   }
 
   Future<void> _loadDashboardData() async {
@@ -260,7 +297,7 @@ class _VetHomeScreenState extends State<VetHomeScreen> {
               },
             ),
             const SizedBox(width: 8),
-            const Text('Agriflock 360 - Vet'),
+            const Text('Agriflock 360'),
           ],
         ),
         centerTitle: false,
@@ -319,7 +356,7 @@ class _VetHomeScreenState extends State<VetHomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Good Morning, Dr. Smith',
+            'Good Morning, ${_user?.name ?? ''}!',
             style: Theme.of(context).textTheme.titleLarge!.copyWith(
               color: Colors.grey.shade700,
               fontWeight: FontWeight.w400,
