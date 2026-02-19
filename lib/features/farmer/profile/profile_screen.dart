@@ -480,8 +480,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 ProfileMenuItem(
                   icon: Icons.location_on_outlined,
-                  title: 'Brooder live data',
-                  subtitle: 'See live brooder data',
+                  title: 'My Brooder Devices',
+                  subtitle: 'See My Active Brooder devices',
                   color: Colors.brown,
                   onTap: () {
                     context.push('/my-devices');
