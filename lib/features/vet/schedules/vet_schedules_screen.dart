@@ -1,4 +1,5 @@
 import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock360/core/widgets/alert_button.dart';
 import 'package:agriflock360/core/widgets/vet_unverified_banner.dart';
 import 'package:agriflock360/features/vet/schedules/models/visit_stats.dart';
 import 'package:agriflock360/features/vet/schedules/repo/visit_repo.dart';
@@ -94,13 +95,9 @@ class _VetSchedulesScreenState extends State<VetSchedulesScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
-          IconButton(
-            icon: Icon(Icons.notifications_outlined, color: Colors.grey.shade700),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: Icon(Icons.refresh, color: Colors.grey.shade700),
-            onPressed: _loadVisitStats,
+          const Padding(
+            padding: EdgeInsets.only(right: 8),
+            child: AlertsButton(),
           ),
         ],
       ),

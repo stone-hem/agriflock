@@ -1,3 +1,4 @@
+import 'package:agriflock360/core/widgets/alert_button.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -33,13 +34,9 @@ class VetPaymentsScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
-          IconButton(
-            icon: Icon(Icons.download, color: Colors.grey.shade700),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: Icon(Icons.filter_list, color: Colors.grey.shade700),
-            onPressed: () {},
+          const Padding(
+            padding: EdgeInsets.only(right: 8),
+            child: AlertsButton(),
           ),
         ],
       ),

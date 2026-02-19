@@ -201,19 +201,7 @@ class _VetHomeScreenState extends State<VetHomeScreen> {
     );
   }
 
-  String _formatTime(String time24) {
-    if (time24.isEmpty) return '';
-    try {
-      final parts = time24.split(':');
-      final hour = int.parse(parts[0]);
-      final minute = parts[1];
-      final period = hour >= 12 ? 'PM' : 'AM';
-      final hour12 = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
-      return '$hour12:${minute.padLeft(2, '0')} $period';
-    } catch (e) {
-      return time24;
-    }
-  }
+
 
   @override
   Widget build(BuildContext context) {

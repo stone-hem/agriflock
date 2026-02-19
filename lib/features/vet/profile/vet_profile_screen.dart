@@ -1,5 +1,7 @@
 import 'package:agriflock360/core/model/user_model.dart';
 import 'package:agriflock360/core/utils/secure_storage.dart';
+import 'package:agriflock360/core/widgets/alert_button.dart';
+import 'package:agriflock360/features/shared/widgets/avatar_with_initials.dart';
 import 'package:agriflock360/features/shared/widgets/profile_menu_item.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -109,9 +111,9 @@ class _VetProfileScreenState extends State<VetProfileScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
-          IconButton(
-            icon: Icon(Icons.notifications_outlined, color: Colors.grey.shade700),
-            onPressed: () => context.push('/notifications'),
+          const Padding(
+            padding: EdgeInsets.only(right: 8),
+            child: AlertsButton(),
           ),
         ],
       ),
@@ -130,18 +132,7 @@ class _VetProfileScreenState extends State<VetProfileScreen> {
               ),
               child: Column(
                 children: [
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Colors.white,
-                    child: _isLoading
-                        ? const CircularProgressIndicator()
-                        : CircleAvatar(
-                      radius: 46,
-                      backgroundImage: _userAvatar != null
-                          ? NetworkImage(_userAvatar!)
-                          : const NetworkImage('https://i.pravatar.cc/300'),
-                    ),
-                  ),
+                  AvatarWithInitials(name: _userName, imageUrl: _userAvatar,radius: 50,),
                   const SizedBox(height: 5),
                   Text(
                     _userName,
