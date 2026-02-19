@@ -443,7 +443,7 @@ class _HomeScreenState extends State<HomeScreen> {
         automaticallyImplyLeading: false,
         elevation: 0,
         actions: [
-AlertsButton(),
+           AlertsButton(),
           SizedBox(width: 8,)
         ],
       ),
@@ -477,7 +477,7 @@ AlertsButton(),
 
                     if (_isBatchesLoading)
                       SizedBox(
-                        height: MediaQuery.sizeOf(context).height * 0.33,
+                        height: MediaQuery.sizeOf(context).height * 0.4,
                         child: Center(child: CircularProgressIndicator()),
                       )
                     else if (_batchesError != null)
@@ -690,25 +690,25 @@ AlertsButton(),
       );
     }
 
-    if (_shouldShowValueConfirmationBanner) {
-      return ValueConfirmationBanner(
-        onViewActivity: () => context.push('/activity'),
-        farms: '${_summary!.numberOfFarms}',
-        houses: '${_summary!.numberOfHouses}',
-        batches: '${_summary!.totalBatches}',
-        birds: '${_summary!.totalBirds}',
-      );
-    }
-
-    if (_shouldShowFutureFramingBanner) {
-      return FutureFramingBanner(
-        onSeePlans: () => context.push('/plans'),
-        farms: '${_summary!.numberOfFarms}',
-        houses: '${_summary!.numberOfHouses}',
-        batches: '${_summary!.totalBatches}',
-        birds: '${_summary!.totalBirds}',
-      );
-    }
+    // if (_shouldShowValueConfirmationBanner) {
+    //   return ValueConfirmationBanner(
+    //     onViewActivity: () => context.push('/activity'),
+    //     farms: '${_summary!.numberOfFarms}',
+    //     houses: '${_summary!.numberOfHouses}',
+    //     batches: '${_summary!.totalBatches}',
+    //     birds: '${_summary!.totalBirds}',
+    //   );
+    // }
+    //
+    // if (_shouldShowFutureFramingBanner) {
+    //   return FutureFramingBanner(
+    //     onSeePlans: () => context.push('/plans'),
+    //     farms: '${_summary!.numberOfFarms}',
+    //     houses: '${_summary!.numberOfHouses}',
+    //     batches: '${_summary!.totalBatches}',
+    //     birds: '${_summary!.totalBirds}',
+    //   );
+    // }
 
     return WelcomeSection(
       greeting: _getGreeting(),

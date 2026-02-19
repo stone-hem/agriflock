@@ -268,7 +268,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
               ),
             ),
 
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
 
             // Compact Stats Grid
             Row(
@@ -284,13 +284,6 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                         '${batch.totalBirds}',
                         Icons.pets_outlined,
                         primaryColor,
-                      ),
-                      const SizedBox(height: 6),
-                      _buildInfoRow(
-                        'Birds Placed',
-                        '${batch.birdsPlaced}',
-                        Icons.add_circle_outline,
-                        Colors.green,
                       ),
                       const SizedBox(height: 6),
                       _buildInfoRow(
@@ -364,13 +357,6 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                         '${batch.actualFoodPerBirdPerDayG.toStringAsFixed(1)}g',
                         Icons.restaurant_outlined,
                         Colors.orange,
-                      ),
-                      const SizedBox(height: 6),
-                      _buildInfoRow(
-                        'Milestone',
-                        '${batch.productionStage.expectedMilestone.daysRemaining}d',
-                        Icons.calendar_today_outlined,
-                        Colors.indigo,
                       ),
                     ],
                   ),
