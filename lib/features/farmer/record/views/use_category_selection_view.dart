@@ -196,11 +196,10 @@ class UseCategorySelectionView extends StatelessWidget {
                   GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
+                    gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
-                      childAspectRatio: 1.1,
+                      childAspectRatio: 1.1, maxCrossAxisExtent: 250,
                     ),
                     itemCount: filteredCategories.length,
                     itemBuilder: (context, index) {

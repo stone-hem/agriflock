@@ -541,7 +541,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
           onPressed: () => context.go(AppRoutes.login),
           child: const Text(
             "Cancel Onboarding",
-            style: TextStyle(color: Colors.white, fontSize: 10),
           ),
         ),
         const SizedBox(width: 5),

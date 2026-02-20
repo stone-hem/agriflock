@@ -344,6 +344,171 @@ class ActivePlan {
   }
 }
 
+/// Response model for /app-subscriptions/recommend
+class PlanRecommendationResponse {
+  final RecommendedPlan recommendedPlan;
+  final FarmMetrics farmMetrics;
+  final String reasoning;
+  final List<AlternativePlan> alternativePlans;
+
+  const PlanRecommendationResponse({
+    required this.recommendedPlan,
+    required this.farmMetrics,
+    required this.reasoning,
+    required this.alternativePlans,
+  });
+
+  factory PlanRecommendationResponse.fromJson(Map<String, dynamic> json) {
+    final recMap = TypeUtils.toMapSafe(json['recommendedPlan']) ?? {};
+    final metricsMap = TypeUtils.toMapSafe(json['farmMetrics']) ?? {};
+    final altList = TypeUtils.toListSafe<dynamic>(json['alternativePlans']);
+
+    return PlanRecommendationResponse(
+      recommendedPlan: RecommendedPlan.fromJson(recMap),
+      farmMetrics: FarmMetrics.fromJson(metricsMap),
+      reasoning: TypeUtils.toStringSafe(json['reasoning']),
+      alternativePlans: altList
+          .map((e) => AlternativePlan.fromJson(
+              e is Map<String, dynamic> ? e : {}))
+          .toList(),
+    );
+  }
+}
+
+class RecommendedPlan {
+  final String id;
+  final String name;
+  final String description;
+  final String planType;
+  final double priceAmount;
+  final String currency;
+  final int billingCycleDays;
+  final List<String> includedModules;
+  final PlanFeatures features;
+
+  const RecommendedPlan({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.planType,
+    required this.priceAmount,
+    required this.currency,
+    required this.billingCycleDays,
+    required this.includedModules,
+    required this.features,
+  });
+
+  factory RecommendedPlan.fromJson(Map<String, dynamic> json) {
+    final featuresMap = TypeUtils.toMapSafe(json['features']) ?? {};
+    return RecommendedPlan(
+      id: TypeUtils.toStringSafe(json['id']),
+      name: TypeUtils.toStringSafe(json['name']),
+      description: TypeUtils.toStringSafe(json['description']),
+      planType: TypeUtils.toStringSafe(json['planType']),
+      priceAmount: TypeUtils.toDoubleSafe(json['priceAmount']),
+      currency: TypeUtils.toStringSafe(json['currency']),
+      billingCycleDays: TypeUtils.toIntSafe(json['billingCycleDays'], defaultValue: 30),
+      includedModules: _parseStringList(json['includedModules']),
+      features: PlanFeatures.fromJson(featuresMap),
+    );
+  }
+
+  static List<String> _parseStringList(dynamic value) {
+    final list = TypeUtils.toListSafe<dynamic>(value);
+    return list.map((item) => TypeUtils.toStringSafe(item)).toList();
+  }
+
+  /// Human-readable feature list for display
+  List<String> get readableFeatures {
+    final list = <String>[];
+    for (final module in includedModules) {
+      switch (module) {
+        case 'VACCINATIONS':
+          list.add('Full vaccination tracking & reminders');
+        case 'FEEDING':
+          list.add('Smart feeding schedules & monitoring');
+        case 'MARKETPLACE':
+          list.add('Access to extension & vet marketplace');
+        case 'QUOTATIONS':
+          list.add('Quotation module — free for ${features.quotationFreePeriodDays} days');
+        default:
+          list.add(module[0] + module.substring(1).toLowerCase());
+      }
+    }
+    if (features.minChicks != null) {
+      list.add('Designed for ${features.minChicks}+ chicks');
+    }
+    switch (features.supportLevel) {
+      case 'premium':
+        list.add('Premium 24/7 dedicated support');
+      case 'priority':
+        list.add('Priority support — faster response times');
+      case 'standard':
+        list.add('Standard community support');
+      default:
+        if (features.supportLevel.isNotEmpty) {
+          list.add('${features.supportLevel[0].toUpperCase()}${features.supportLevel.substring(1)} support');
+        }
+    }
+    return list;
+  }
+}
+
+class FarmMetrics {
+  final int totalChicks;
+  final int totalCapacity;
+  final double utilizationPercentage;
+  final int numberOfFarms;
+  final int numberOfHouses;
+
+  const FarmMetrics({
+    required this.totalChicks,
+    required this.totalCapacity,
+    required this.utilizationPercentage,
+    required this.numberOfFarms,
+    required this.numberOfHouses,
+  });
+
+  factory FarmMetrics.fromJson(Map<String, dynamic> json) {
+    return FarmMetrics(
+      totalChicks: TypeUtils.toIntSafe(json['totalChicks']),
+      totalCapacity: TypeUtils.toIntSafe(json['totalCapacity']),
+      utilizationPercentage: TypeUtils.toDoubleSafe(json['utilizationPercentage']),
+      numberOfFarms: TypeUtils.toIntSafe(json['numberOfFarms']),
+      numberOfHouses: TypeUtils.toIntSafe(json['numberOfHouses']),
+    );
+  }
+}
+
+class AlternativePlan {
+  final String id;
+  final String name;
+  final String planType;
+  final double priceAmount;
+  final String currency;
+  final String description;
+
+  const AlternativePlan({
+    required this.id,
+    required this.name,
+    required this.planType,
+    required this.priceAmount,
+    required this.currency,
+    required this.description,
+  });
+
+  factory AlternativePlan.fromJson(Map<String, dynamic> json) {
+    return AlternativePlan(
+      id: TypeUtils.toStringSafe(json['id']),
+      name: TypeUtils.toStringSafe(json['name']),
+      planType: TypeUtils.toStringSafe(json['planType']),
+      priceAmount: TypeUtils.toDoubleSafe(json['priceAmount']),
+      currency: TypeUtils.toStringSafe(json['currency']),
+      description: TypeUtils.toStringSafe(json['description']),
+    );
+  }
+}
+
 // Enum for subscription status (optional but recommended)
 enum SubscriptionPlanStatus {
   active,

@@ -629,6 +629,7 @@ class BatchHouseRepository {
 
         return Success(birdTypes);
       } else {
+        LogUtil.error('Network error loading bird types: ${response.body}');
         return Failure(
           message: 'Failed to load bird types',
           response: response,

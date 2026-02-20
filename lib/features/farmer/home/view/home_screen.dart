@@ -12,7 +12,7 @@ import 'package:agriflock360/features/farmer/home/view/widgets/activity_item.dar
 import 'package:agriflock360/features/farmer/home/view/widgets/batch_overview_carousel.dart';
 import 'package:agriflock360/features/farmer/home/view/widgets/perfomance_graph.dart';
 import 'package:agriflock360/features/farmer/home/view/widgets/welcome_section.dart';
-import 'package:agriflock360/features/farmer/payg/flow/day_27_decision_modal.dart';
+import 'package:agriflock360/features/farmer/payg/flow/upgrade_decision_modal.dart';
 import 'package:agriflock360/features/farmer/home/view/widgets/future_framing_banner.dart';
 import 'package:agriflock360/features/farmer/home/view/widgets/value_confirmation_banner.dart';
 import 'package:agriflock360/core/widgets/expense/expense_marquee_banner.dart';
@@ -50,13 +50,14 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isBatchesLoading = true;
   String? _batchesError;
 
-  // Constants for day thresholds
+  // Constants for day thresholds (free plan = 90 days)
   static const int VALUE_CONFIRMATION_START_DAY = 5;
-  static const int VALUE_CONFIRMATION_END_DAY = 10;
-  static const int FUTURE_FRAMING_DAY = 21;
-  static const int FUTURE_FRAMING_END_DAY = 27;
-  static const int DECISION_MODAL_DAY = 27;
-  static const int TRANSITION_DAY = 31;
+  static const int VALUE_CONFIRMATION_END_DAY = 30;
+  static const int FUTURE_FRAMING_DAY = 63;
+  static const int FUTURE_FRAMING_END_DAY = 81;
+  static const int DECISION_MODAL_DAY = 81;
+  static const int TRANSITION_DAY = 91;
+  static const int FREE_PLAN_TOTAL_DAYS = 90;
 
   @override
   void initState() {
@@ -171,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _checkDay27Modal() {
     if (_daysSinceFirstLogin >= DECISION_MODAL_DAY) {
-      final lastShown = SharedPrefs.getInt('day27_modal_last_shown') ?? 0;
+      final lastShown = SharedPrefs.getInt('upgrade_modal_last_shown') ?? 0;
       final today = DateTime.now();
       final todayDate = DateTime(today.year, today.month, today.day);
 
@@ -193,7 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
     SharedPrefs.setInt(
-      'day27_modal_last_shown',
+      'upgrade_modal_last_shown',
       todayDate.millisecondsSinceEpoch,
     );
 
@@ -209,7 +210,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
     SharedPrefs.setInt(
-      'day27_modal_last_shown',
+      'upgrade_modal_last_shown',
       todayDate.millisecondsSinceEpoch,
     );
 
@@ -242,35 +243,18 @@ class _HomeScreenState extends State<HomeScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
 
-        final lastShown = SharedPrefs.getInt('day31_last_shown') ?? 0;
+        final lastShown = SharedPrefs.getInt('transition_screen_last_shown') ?? 0;
         final today = DateTime.now();
         final todayDate = DateTime(today.year, today.month, today.day);
 
         if (lastShown != todayDate.millisecondsSinceEpoch) {
           SharedPrefs.setInt(
-            'day31_last_shown',
+            'transition_screen_last_shown',
             todayDate.millisecondsSinceEpoch,
           );
 
-          final planDetails = {
-            'features': [
-              'Basic farm management',
-              'Up to 3 farms',
-              'Basic analytics',
-              'Community support',
-            ],
-            'price': '\$9.99',
-            'period': '/month',
-          };
-
           if (mounted) {
-            context.push(
-              '/transition-day31',
-              extra: {
-                'recommendedPlan': 'Starter Plan',
-                'planDetails': planDetails,
-              },
-            );
+            context.push('/plan-transition');
           }
         }
       });
@@ -605,9 +589,11 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Container(
                 color: Colors.black54,
                 child: Center(
-                  child: Day27DecisionModal(
+                  child: UpgradeDecisionModal(
                     onContinue: _onDay27ModalContinue,
                     onDismiss: _onDay27ModalDismiss,
+                    currentDay: _daysSinceFirstLogin,
+                    totalDays: FREE_PLAN_TOTAL_DAYS,
                   ),
                 ),
               ),
@@ -690,25 +676,25 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    // if (_shouldShowValueConfirmationBanner) {
-    //   return ValueConfirmationBanner(
-    //     onViewActivity: () => context.push('/activity'),
-    //     farms: '${_summary!.numberOfFarms}',
-    //     houses: '${_summary!.numberOfHouses}',
-    //     batches: '${_summary!.totalBatches}',
-    //     birds: '${_summary!.totalBirds}',
-    //   );
-    // }
-    //
-    // if (_shouldShowFutureFramingBanner) {
-    //   return FutureFramingBanner(
-    //     onSeePlans: () => context.push('/plans'),
-    //     farms: '${_summary!.numberOfFarms}',
-    //     houses: '${_summary!.numberOfHouses}',
-    //     batches: '${_summary!.totalBatches}',
-    //     birds: '${_summary!.totalBirds}',
-    //   );
-    // }
+    if (_shouldShowValueConfirmationBanner) {
+      return ValueConfirmationBanner(
+        onViewActivity: () => context.push('/activity'),
+        farms: '${_summary!.numberOfFarms}',
+        houses: '${_summary!.numberOfHouses}',
+        batches: '${_summary!.totalBatches}',
+        birds: '${_summary!.totalBirds}',
+      );
+    }
+
+    if (_shouldShowFutureFramingBanner) {
+      return FutureFramingBanner(
+        onSeePlans: () => context.push('/plans'),
+        farms: '${_summary!.numberOfFarms}',
+        houses: '${_summary!.numberOfHouses}',
+        batches: '${_summary!.totalBatches}',
+        birds: '${_summary!.totalBirds}',
+      );
+    }
 
     return WelcomeSection(
       greeting: _getGreeting(),

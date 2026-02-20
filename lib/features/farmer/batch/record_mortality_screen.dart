@@ -40,15 +40,18 @@ class _RecordMortalityScreenState extends State<RecordMortalityScreen> {
 
   // Common mortality reasons
   final List<String> _mortalityReasons = [
-    'Heat stress',
-    'Cold stress',
-    'Disease',
-    'Predator attack',
-    'Suffocation/Piling',
-    'Feed issues',
-    'Water issues',
-    'Unknown',
-    'Other',
+  'Temperature(heat/cold)',
+  'Wet litter',
+  'Overcrowding',
+  'Disease related eg,Coccidiosis,NCD etc.',
+  'Predator attack eg snake etc',
+  'Cannibalism',
+  'Sudden death.',
+  'Starvation / lack of feed',
+ ' Poor quality feed.',
+  'Lack of water.',
+  'Aflatoxin poisoning.',
+  'Other'
   ];
 
   @override
@@ -412,15 +415,21 @@ class _RecordMortalityScreenState extends State<RecordMortalityScreen> {
               if (_selectedReason == 'Other') ...[
                 const SizedBox(height: 16),
                 ReusableInput(
-                  topLabel: 'Specify Reason *',
+                  topLabel: 'Specify Reason * (max 3 words)',
                   icon: Icons.edit_note,
                   controller: _reasonController,
-                  hintText: 'Enter specific reason',
+                  hintText: 'Enter specific reason (max 3 words)',
                   maxLines: 2,
                   validator: (value) {
                     if (_selectedReason == 'Other' &&
                         (value == null || value.trim().isEmpty)) {
                       return 'Please specify the reason';
+                    }
+                    if (value != null && value.trim().isNotEmpty) {
+                      final wordCount = value.trim().split(RegExp(r'\s+')).length;
+                      if (wordCount > 3) {
+                        return 'Reason must be 3 words or fewer';
+                      }
                     }
                     return null;
                   },

@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 
-class Day27DecisionModal extends StatelessWidget {
+class UpgradeDecisionModal extends StatelessWidget {
   final VoidCallback onContinue;
   final VoidCallback? onDismiss;
+  final int currentDay;
+  final int totalDays;
 
-  const Day27DecisionModal({
+  const UpgradeDecisionModal({
     super.key,
     required this.onContinue,
     this.onDismiss,
+    required this.currentDay,
+    required this.totalDays,
   });
+
+  int get _daysLeft => (totalDays - currentDay).clamp(0, totalDays);
 
   @override
   Widget build(BuildContext context) {
@@ -22,13 +28,13 @@ class Day27DecisionModal extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header with progress
+            // Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  '27 Days Completed',
-                  style: TextStyle(
+                Text(
+                  '$currentDay Days Completed',
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.green,
@@ -41,24 +47,23 @@ class Day27DecisionModal extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
+                color: Colors.orange.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                '4 days left',
+                '$_daysLeft days left',
                 style: TextStyle(
-                  color: Colors.green[800],
+                  color: Colors.orange[800],
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ),
 
-
             const SizedBox(height: 20),
 
             // Progress indicator
             LinearProgressIndicator(
-              value: 27/30,
+              value: currentDay / totalDays,
               backgroundColor: Colors.grey[200],
               color: Colors.green,
               minHeight: 8,
@@ -85,13 +90,12 @@ class Day27DecisionModal extends StatelessWidget {
             const SizedBox(height: 16),
 
             // Title
-            const Text(
-              'You\'ve been farming smarter for 27 days',
-              style: TextStyle(
+            Text(
+              'You\'ve been farming smarter for $currentDay days',
+              style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
                 color: Colors.black87,
-
               ),
               textAlign: TextAlign.center,
             ),
@@ -105,7 +109,6 @@ class Day27DecisionModal extends StatelessWidget {
                 fontSize: 15,
                 color: Colors.black54,
                 height: 1.5,
-
               ),
               textAlign: TextAlign.center,
             ),

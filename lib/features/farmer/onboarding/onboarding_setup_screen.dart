@@ -10,6 +10,7 @@ import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/core/widgets/location_picker_step.dart';
 import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
+import 'package:agriflock360/core/widgets/reusable_decimal_input.dart';
 import 'package:agriflock360/core/widgets/photo_upload.dart';
 import 'package:agriflock360/features/farmer/batch/model/bird_type.dart';
 import 'package:agriflock360/features/farmer/batch/repo/batch_house_repo.dart';
@@ -55,6 +56,15 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
   String? _selectedBatchType;
   String? _selectedFeedingTimeCategory;
   File? _batchPhotoFile;
+  bool _isOwnHatch = true;
+  bool _hasChickCost = false;
+  String _currency = '';
+  final _currentWeightController = TextEditingController();
+  final _expectedWeightController = TextEditingController();
+  final _notesController = TextEditingController();
+  final _chickCostController = TextEditingController();
+  final _chickAgeController = TextEditingController();
+  final _hatchSourceController = TextEditingController();
 
   final List<String> _batchTypes = [
     'Meat Production',
@@ -98,7 +108,55 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
     super.initState();
     _houseNameController.text = 'House 1';
     _hatchController.text = DateUtil.toReadableDate(DateTime.now());
+    _chickCostController.text = '0';
+    _chickAgeController.text = '0';
     _loadBirdTypes();
+    _loadCurrency();
+  }
+
+  Future<void> _loadCurrency() async {
+    final currency = await secureStorage.getCurrency();
+    if (mounted) setState(() => _currency = currency);
+  }
+
+  void _switchHatchSource(bool isOwnHatch) {
+    setState(() {
+      final wasOwnHatch = _isOwnHatch;
+      _isOwnHatch = isOwnHatch;
+      if (wasOwnHatch != isOwnHatch) {
+        if (isOwnHatch) {
+          _chickAgeController.text = '0';
+          _hatchSourceController.clear();
+          _hatchController.text = DateUtil.toReadableDate(DateTime.now());
+        } else {
+          _hatchController.text = DateUtil.toReadableDate(DateTime.now());
+          _calculateAndUpdateHatchDate();
+        }
+      }
+    });
+  }
+
+  void _calculateAndUpdateHatchDate() {
+    if (!_isOwnHatch) {
+      final age = int.tryParse(_chickAgeController.text) ?? 0;
+      if (age >= 0) {
+        setState(() {
+          _hatchController.text = DateUtil.toReadableDate(
+            DateTime.now().subtract(Duration(days: age)),
+          );
+        });
+      }
+    }
+  }
+
+  double _calculateTotalChickCost() {
+    try {
+      final costPerChick = double.tryParse(_chickCostController.text) ?? 0;
+      final initialCount = int.tryParse(_initialQuantityController.text) ?? 0;
+      return costPerChick * initialCount;
+    } catch (_) {
+      return 0;
+    }
   }
 
   Future<void> _loadBirdTypes() async {
@@ -281,6 +339,31 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
   Future<void> _createBatch() async {
     if (!_batchFormKey.currentState!.validate()) return;
 
+    // Hatch date / chick age validation
+    if (_isOwnHatch) {
+      if (_hatchController.text.isEmpty) {
+        ToastUtil.showError('Please select a hatch date');
+        return;
+      }
+    } else {
+      if (_chickAgeController.text.isEmpty) {
+        ToastUtil.showError('Please enter chick age');
+        return;
+      }
+      final age = int.tryParse(_chickAgeController.text) ?? -1;
+      if (age < 0) {
+        ToastUtil.showError('Chick age cannot be negative');
+        return;
+      }
+      if (age > 365) {
+        ToastUtil.showError('Chick age cannot be more than 1 year');
+        return;
+      }
+      _hatchController.text = DateTime.now()
+          .subtract(Duration(days: age))
+          .toIso8601String();
+    }
+
     if (_selectedFeedingTimeCategory == null ||
         _selectedFeedingTimes[_selectedFeedingTimeCategory]!.isEmpty) {
       ToastUtil.showError('Please select at least one feeding time');
@@ -295,8 +378,6 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
     setState(() => _isCreatingBatch = true);
 
     try {
-      final initialCount =
-          int.tryParse(_initialQuantityController.text.trim()) ?? 100;
       final selectedFeedingTimes =
           _selectedFeedingTimes[_selectedFeedingTimeCategory]!;
 
@@ -305,16 +386,30 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
         'batch_name': _batchNameController.text.trim(),
         'bird_type_id': _selectedBirdTypeId,
         'batch_type': _selectedBatchType,
-        'initial_count': initialCount,
-        'current_count':
-            int.tryParse(_birdsAliveController.text.trim()) ?? initialCount,
+        'initial_count': int.parse(_initialQuantityController.text.trim()),
+        'current_count': int.parse(_birdsAliveController.text.trim()),
         'hatch_date':
             DateTime.parse(_hatchController.text).toUtc().toIso8601String(),
-        'birds_alive':
-            int.tryParse(_birdsAliveController.text.trim()) ?? initialCount,
+        'birds_alive': int.parse(_birdsAliveController.text.trim()),
         'feeding_time': _selectedFeedingTimeCategory,
         'feeding_schedule': selectedFeedingTimes.join(','),
+        'purchase_cost': double.parse(_chickCostController.text.trim()),
+        'age_at_purchase': int.parse(_chickAgeController.text.trim()),
+        if (!_isOwnHatch && _hatchSourceController.text.isNotEmpty)
+          'hatchery_source': _hatchSourceController.text.trim(),
+        if (_currentWeightController.text.isNotEmpty)
+          'current_weight':
+              double.parse(_currentWeightController.text.trim()),
+        if (_expectedWeightController.text.isNotEmpty)
+          'expected_weight':
+              double.parse(_expectedWeightController.text.trim()),
+        if (_notesController.text.trim().isNotEmpty)
+          'notes': _notesController.text.trim(),
       };
+
+      if (double.parse(_chickCostController.text.trim()) == 0) {
+        batchData.remove('purchase_cost');
+      }
 
       batchData.removeWhere((key, value) => value == null);
 
@@ -355,7 +450,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
         });
 
         ToastUtil.showSuccess('Batch created successfully!');
-        _goToPage(3); // Go to success page
+        _goToPage(3);
       } else {
         ApiErrorHandler.handle(response);
         setState(() => _isCreatingBatch = false);
@@ -551,6 +646,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
               title: 'Farm Photo (Optional)',
               description: 'Upload a photo of your farm',
               primaryColor: Colors.green,
+                isRequired:false
             ),
             const SizedBox(height: 24),
 
@@ -753,6 +849,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
               ),
             const SizedBox(height: 20),
 
+            // Batch Photo
             PhotoUpload(
               file: _batchPhotoFile,
               onFileSelected: (File? file) => setState(() => _batchPhotoFile = file),
@@ -760,8 +857,9 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
               description: 'Upload a photo of your batch',
               primaryColor: Colors.green,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
 
+            // Batch Name
             ReusableInput(
               topLabel: 'Batch Name',
               controller: _batchNameController,
@@ -770,7 +868,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                 return null;
               },
               labelText: 'Name',
-              hintText: 'e.g., Broiler Batch 1',
+              hintText: 'e.g., Spring Broiler Batch 2024',
             ),
             const SizedBox(height: 20),
 
@@ -810,6 +908,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                   ),
             const SizedBox(height: 20),
 
+            // Batch Type
             ReusableDropdown<String>(
               topLabel: 'Batch Type',
               value: _selectedBatchType,
@@ -823,56 +922,273 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
             ),
             const SizedBox(height: 20),
 
-            CustomDateTextField(
-              label: 'Date of Hatching',
-              icon: Icons.calendar_today,
-              required: true,
-              initialDate: DateTime.now(),
-              minYear: DateTime.now().year - 1,
-              maxYear: DateTime.now().year,
-              returnFormat: DateReturnFormat.isoString,
-              controller: _hatchController,
+            // ── Hatch Source ──────────────────────────────────────────
+            Text(
+              'Hatch Source',
+              style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.shade800,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: ChoiceChip(
+                    label: const Text('Own Hatch'),
+                    selected: _isOwnHatch,
+                    onSelected: (_) => _switchHatchSource(true),
+                    selectedColor: Colors.green,
+                    labelStyle: TextStyle(
+                      color: _isOwnHatch ? Colors.white : Colors.grey.shade800,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ChoiceChip(
+                    label: const Text('Purchased Chicks'),
+                    selected: !_isOwnHatch,
+                    onSelected: (_) => _switchHatchSource(false),
+                    selectedColor: Colors.blue,
+                    labelStyle: TextStyle(
+                      color: !_isOwnHatch ? Colors.white : Colors.grey.shade800,
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
 
+            // Hatch Date (own hatch only)
+            if (_isOwnHatch) ...[
+              CustomDateTextField(
+                label: 'Date of Hatching',
+                icon: Icons.calendar_today,
+                required: true,
+                initialDate: DateTime.now(),
+                minYear: DateTime.now().year - 1,
+                maxYear: DateTime.now().year,
+                returnFormat: DateReturnFormat.isoString,
+                controller: _hatchController,
+              ),
+              const SizedBox(height: 20),
+            ],
+
+            // Purchased chicks fields
+            if (!_isOwnHatch) ...[
+              ReusableInput(
+                topLabel: 'Chick Age (Days)',
+                controller: _chickAgeController,
+                keyboardType: TextInputType.number,
+                onChanged: (_) => _calculateAndUpdateHatchDate(),
+                validator: (value) {
+                  if (value == null || value.isEmpty) return 'Please enter chick age in days';
+                  if (int.tryParse(value) == null) return 'Please enter a valid number';
+                  final age = int.parse(value);
+                  if (age < 0) return 'Age cannot be negative';
+                  if (age > 365) return 'Age cannot be more than 1 year';
+                  return null;
+                },
+                labelText: 'Age of chicks when purchased (days)',
+                hintText: 'e.g., 1, 7, 14',
+              ),
+              const SizedBox(height: 20),
+              ReusableInput(
+                topLabel: 'Hatchery/Source (Optional)',
+                controller: _hatchSourceController,
+                labelText: 'Where did you purchase the chicks?',
+                hintText: 'e.g., XYZ Hatchery, Local Market, Farm Name',
+                maxLines: 2,
+              ),
+              const SizedBox(height: 20),
+              // Calculated hatch date display
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.blue.shade100),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.calendar_today, color: Colors.blue.shade700, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Calculated Hatch Date',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue.shade700,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _hatchController.text.isNotEmpty
+                          ? _hatchController.text
+                          : 'Not provided',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey.shade800,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Based on chicks being ${_chickAgeController.text} days old',
+                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+
+            // ── Chick Cost ────────────────────────────────────────────
+            Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(color: Colors.grey.shade300),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Chick Cost',
+                          style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey.shade800,
+                              ),
+                        ),
+                        Switch(
+                          value: _hasChickCost,
+                          onChanged: (value) {
+                            setState(() {
+                              _hasChickCost = value;
+                              if (!value) _chickCostController.text = '0';
+                            });
+                          },
+                          activeThumbColor: Colors.green,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    if (_hasChickCost) ...[
+                      Text(
+                        _isOwnHatch
+                            ? 'If there were any costs incurred for hatching (optional)'
+                            : 'Cost of purchased chicks (optional)',
+                        style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                      ),
+                      const SizedBox(height: 8),
+                      ReusableInput(
+                        controller: _chickCostController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                          signed: false,
+                        ),
+                        validator: (value) {
+                          if (_hasChickCost && (value == null || value.isEmpty)) {
+                            return 'Please enter chick cost or set to 0';
+                          }
+                          if (value != null && value.isNotEmpty) {
+                            final cost = double.tryParse(value);
+                            if (cost == null) return 'Please enter a valid amount';
+                            if (cost < 0) return 'Cost cannot be negative';
+                          }
+                          return null;
+                        },
+                        labelText: 'Cost per chick${_currency.isNotEmpty ? ' ($_currency)' : ''}',
+                        hintText: _isOwnHatch ? 'e.g., 0 (no cost)' : 'e.g., 50, 75, 100',
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _chickCostController.text.isNotEmpty &&
+                                _initialQuantityController.text.isNotEmpty
+                            ? 'Total cost: $_currency ${_calculateTotalChickCost().toStringAsFixed(2)}'
+                            : 'Total cost: $_currency 0.00',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green.shade700,
+                        ),
+                      ),
+                    ] else ...[
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.info, color: Colors.grey.shade600, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Chick cost field is set to 0. Enable if there are costs.',
+                                style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // ── Initial bird count ─────────────────────────────────────
             ReusableInput(
-              topLabel: 'Initial Bird Count',
+              topLabel: 'Initial bird count',
               controller: _initialQuantityController,
               keyboardType: TextInputType.number,
               onChanged: (value) {
-                if (_birdsAliveController.text.isEmpty) {
-                  _birdsAliveController.text = value;
-                }
                 setState(() {});
               },
               validator: (value) {
                 if (value == null || value.isEmpty) return 'Please enter initial count';
-                if (int.tryParse(value) == null) return 'Enter a valid number';
-                if (int.parse(value) <= 0) return 'Must be greater than 0';
+                if (int.tryParse(value) == null) return 'Please enter a valid number';
+                if (int.parse(value) <= 0) return 'Initial count must be greater than 0';
                 return null;
               },
-              labelText: 'How many birds did you start with?',
+              labelText: 'Initial count from hatchery Or other sources',
               hintText: 'e.g., 100, 500, 1000',
             ),
             const SizedBox(height: 20),
 
+            // ── Current bird count ─────────────────────────────────────
             ReusableInput(
-              topLabel: 'Current Bird Count',
+              topLabel: 'Current bird count',
               controller: _birdsAliveController,
               keyboardType: TextInputType.number,
+              onChanged: (_) => setState(() {}),
               validator: (value) {
-                if (value == null || value.isEmpty) return 'Please enter current count';
-                if (int.tryParse(value) == null) return 'Enter a valid number';
+                if (value == null || value.isEmpty) return 'Please enter number of birds alive';
+                if (int.tryParse(value) == null) return 'Please enter a valid number';
                 final alive = int.parse(value);
                 final initial = int.tryParse(_initialQuantityController.text) ?? 0;
-                if (alive > initial) return 'Cannot exceed initial count';
+                if (alive > initial) return 'Birds alive cannot exceed initial count';
                 return null;
               },
-              labelText: 'How many birds are alive right now?',
+              labelText: 'Current count at the moment',
               hintText: 'e.g., 100',
             ),
             const SizedBox(height: 20),
 
+            // ── Feeding Time ───────────────────────────────────────────
             ReusableDropdown<String>(
               topLabel: 'Feeding Time',
               value: _selectedFeedingTimeCategory,
@@ -882,9 +1198,9 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                   .toList(),
               onChanged: (v) => setState(() => _selectedFeedingTimeCategory = v),
               validator: (v) =>
-                  (v == null || v.isEmpty) ? 'Please select feeding time' : null,
+                  (v == null || v.isEmpty) ? 'Please select feeding time category' : null,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
 
             if (_selectedFeedingTimeCategory != null) ...[
               Text(
@@ -895,61 +1211,61 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                     ),
               ),
               const SizedBox(height: 8),
-              ..._feedingTimeOptions[_selectedFeedingTimeCategory]!.map((time) {
-                final sel = _selectedFeedingTimes[_selectedFeedingTimeCategory]!
-                    .contains(time);
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        if (sel) {
-                          _selectedFeedingTimes[_selectedFeedingTimeCategory]!
-                              .remove(time);
-                        } else {
-                          _selectedFeedingTimes[_selectedFeedingTimeCategory]!
-                              .add(time);
-                        }
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: sel ? Colors.green.shade50 : Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: sel ? Colors.green : Colors.grey.shade300,
-                          width: sel ? 2 : 1,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            sel ? Icons.check_circle : Icons.radio_button_unchecked,
-                            color: sel ? Colors.green : Colors.grey,
+              Column(
+                children: _feedingTimeOptions[_selectedFeedingTimeCategory]!.map((time) {
+                  final isSelected = _selectedFeedingTimes[_selectedFeedingTimeCategory]!
+                      .contains(time);
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          if (isSelected) {
+                            _selectedFeedingTimes[_selectedFeedingTimeCategory]!.remove(time);
+                          } else {
+                            _selectedFeedingTimes[_selectedFeedingTimeCategory]!.add(time);
+                          }
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isSelected ? Colors.green.shade50 : Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isSelected ? Colors.green : Colors.grey.shade300,
+                            width: isSelected ? 2 : 1,
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              time,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                color: sel
-                                    ? Colors.green.shade800
-                                    : Colors.grey.shade800,
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+                              color: isSelected ? Colors.green : Colors.grey,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                time,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  color: isSelected
+                                      ? Colors.green.shade800
+                                      : Colors.grey.shade800,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                );
-              }),
+                  );
+                }).toList(),
+              ),
               if (_selectedFeedingTimes[_selectedFeedingTimeCategory]!.isNotEmpty) ...[
-                const SizedBox(height: 4),
+                const SizedBox(height: 16),
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Colors.green.shade50,
                     borderRadius: BorderRadius.circular(12),
@@ -958,18 +1274,17 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Selected:',
+                        'Selected Feeding Times:',
                         style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 8),
                       Wrap(
-                        spacing: 6,
+                        spacing: 8,
                         runSpacing: 4,
                         children: _selectedFeedingTimes[_selectedFeedingTimeCategory]!
                             .map((t) => Chip(
-                                  label: Text(t, style: const TextStyle(color: Colors.white, fontSize: 12)),
+                                  label: Text(t, style: const TextStyle(color: Colors.white)),
                                   backgroundColor: Colors.green,
-                                  visualDensity: VisualDensity.compact,
                                 ))
                             .toList(),
                       ),
@@ -977,10 +1292,49 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                   ),
                 ),
               ],
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
             ],
 
-            const SizedBox(height: 16),
+            // ── Average weight (optional) ──────────────────────────────
+            ReusableDecimalInput(
+              topLabel: 'Average weight (kg)  Per bird(Optional)',
+              controller: _currentWeightController,
+              labelText: 'Current average weight',
+              hintText: 'e.g., 0.0',
+              suffixText: 'Max 10',
+            ),
+            const SizedBox(height: 20),
+
+            // ── Expected weight (optional) ─────────────────────────────
+            ReusableDecimalInput(
+              topLabel: 'Expected weight (kg)  Per bird(Optional)',
+              controller: _expectedWeightController,
+              validator: (value) {
+                if (value == null || value.isEmpty) return null;
+                final expected = double.tryParse(value);
+                if (expected == null) return 'Please enter a valid number or leave empty';
+                final current =
+                    double.tryParse(_currentWeightController.text) ?? 0.0;
+                if (expected < current) {
+                  return 'Expected weight should be greater than current weight';
+                }
+                return null;
+              },
+              labelText: 'Expected average weight at removal/sale',
+              hintText: 'e.g., 2.5',
+              suffixText: 'Max 10',
+            ),
+            const SizedBox(height: 20),
+
+            // ── Notes (optional) ───────────────────────────────────────
+            ReusableInput(
+              topLabel: 'Notes (Optional)',
+              controller: _notesController,
+              maxLines: 3,
+              labelText: 'Notes',
+              hintText: 'Enter any additional notes about this batch',
+            ),
+            const SizedBox(height: 32),
 
             _buildActionButton(
               label: 'Create Batch & Finish',
@@ -1280,6 +1634,12 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
     _hatchController.dispose();
     _initialQuantityController.dispose();
     _birdsAliveController.dispose();
+    _currentWeightController.dispose();
+    _expectedWeightController.dispose();
+    _notesController.dispose();
+    _chickCostController.dispose();
+    _chickAgeController.dispose();
+    _hatchSourceController.dispose();
     super.dispose();
   }
 }

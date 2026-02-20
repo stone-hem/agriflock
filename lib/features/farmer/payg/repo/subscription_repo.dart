@@ -75,6 +75,40 @@ class SubscriptionRepository {
     }
   }
 
+  /// Get AI-recommended subscription plan based on farm usage
+  Future<Result<PlanRecommendationResponse>> getRecommendedPlan() async {
+    try {
+      final response = await apiClient.get('/app-subscriptions/recommend');
+      final jsonResponse = jsonDecode(response.body);
+      LogUtil.info('Get Recommended Plan API Response: $jsonResponse');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return Success(
+          PlanRecommendationResponse.fromJson(
+            jsonResponse as Map<String, dynamic>,
+          ),
+        );
+      } else {
+        return Failure(
+          message: jsonResponse is Map
+              ? (jsonResponse['message'] ?? 'Failed to fetch recommendation')
+              : 'Failed to fetch recommendation',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in getRecommendedPlan: $e');
+      return const Failure(
+        message: 'No internet connection. Pull down to retry.',
+        statusCode: 0,
+      );
+    } catch (e) {
+      LogUtil.error('Error in getRecommendedPlan: $e');
+      return Failure(message: e.toString());
+    }
+  }
+
   /// Get user's subscription history
   Future<Result<SubscriptionPlansResponse>> getSubscriptionHistory({
     int page = 1,
