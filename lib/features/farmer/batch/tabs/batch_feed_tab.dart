@@ -260,7 +260,7 @@ class _BatchFeedTabState extends State<BatchFeedTab> {
           child: FloatingActionButton.extended(
             onPressed: () async {
               final result =
-              await context.push('/batches/${widget.batch.id}/feed');
+              await context.push('/batches/${widget.batch.id}/feed', extra: widget.batch.birdTypeId);
               if (result == true) {
                 _loadDashboard();
               }

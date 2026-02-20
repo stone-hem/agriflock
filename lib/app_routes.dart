@@ -478,14 +478,16 @@ class AppRoutes {
               path: ':id/feed',
               builder: (context, state) {
                 final batchId = state.pathParameters['id']!;
-                return LogFeedingScreen(batchId: batchId);
+                final breedId = state.extra as String?;
+                return LogFeedingScreen(batchId: batchId, breedId: breedId);
               },
             ),
             GoRoute(
               path: ':id/record-vaccination',
               builder: (context, state) {
                 final batchId = state.pathParameters['id']!;
-                return VaccinationRecordScreen(batchId: batchId);
+                final breedId = state.extra as String?;
+                return VaccinationRecordScreen(batchId: batchId, breedId: breedId);
               },
             ),
             GoRoute(

@@ -6,7 +6,6 @@ import 'package:agriflock360/features/farmer/batch/model/batch_list_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/batch_mgt_repo.dart';
 import 'package:agriflock360/features/farmer/expense/model/expense_category.dart';
 import 'package:agriflock360/features/farmer/expense/repo/categories_repository.dart';
-import 'package:agriflock360/features/farmer/expense/repo/expenditure_repository.dart';
 import 'package:agriflock360/features/farmer/record/repo/recording_repo.dart';
 import 'package:agriflock360/features/farmer/record//views/use_batch_selection_view.dart';
 import 'package:agriflock360/features/farmer/record/views/use_category_selection_view.dart';
@@ -62,7 +61,7 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
   void initState() {
     super.initState();
     _loadBatches();
-    _loadCategories();
+    // Categories are loaded after batch selection so breed_id can be passed.
   }
 
   Future<void> _loadBatches() async {
@@ -92,11 +91,11 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
     }
   }
 
-  Future<void> _loadCategories() async {
+  Future<void> _loadCategories({String? breedId}) async {
     setState(() => _isLoadingCategories = true);
 
     try {
-      final result = await _categoriesRepository.getCategories();
+      final result = await _categoriesRepository.getCategories(breedId: breedId);
 
       switch (result) {
         case Success<List<InventoryCategory>>(data: final categories):
@@ -314,6 +313,8 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
                   isLoadingBatches: _isLoadingBatches,
                   onBatchSelected: (batch) {
                     setState(() => _selectedBatch = batch);
+                    // Fetch categories filtered by this batch's breed
+                    _loadCategories(breedId: batch.birdTypeId);
                     _nextPage();
                   },
                 ),

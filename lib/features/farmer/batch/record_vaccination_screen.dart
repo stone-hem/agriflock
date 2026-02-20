@@ -18,12 +18,14 @@ class VaccinationRecordScreen extends StatefulWidget {
   final String batchId;
   final String? farmId;
   final String? houseId;
+  final String? breedId;
 
   const VaccinationRecordScreen({
     super.key,
     required this.batchId,
     this.farmId,
     this.houseId,
+    this.breedId,
   });
 
   @override
@@ -93,7 +95,7 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> {
     });
 
     try {
-      final result = await _categoriesRepository.getCategories();
+      final result = await _categoriesRepository.getCategories(breedId: widget.breedId);
 
       switch (result) {
         case Success<List<InventoryCategory>>(data: final categories):

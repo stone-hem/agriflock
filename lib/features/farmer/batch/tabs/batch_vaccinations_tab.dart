@@ -263,7 +263,7 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
           child: FloatingActionButton.extended(
             onPressed: () async {
               final result =
-              await context.push('/batches/${widget.batch.id}/record-vaccination');
+              await context.push('/batches/${widget.batch.id}/record-vaccination', extra: widget.batch.birdTypeId);
               if (result == true) {
                 _onRefresh();
               }

@@ -8,16 +8,26 @@ import 'package:http/http.dart' as http;
 
 class CategoriesRepository {
   /// Get all inventory categories
-  Future<Result<List<InventoryCategory>>> getCategories() async {
+  Future<Result<List<InventoryCategory>>> getCategories({
+    String? breedId,
+  }) async {
     try {
-      final response = await apiClient.get('/category-items/all');
+      final response = await apiClient.get(
+        '/category-items/all',
+        queryParameters: {
+          if (breedId != null && breedId.isNotEmpty) 'breed_id': breedId,
+        },
+      );
       final jsonResponse = jsonDecode(response.body);
       LogUtil.info('Get Categories API Response: $jsonResponse');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         // Direct array response - parse as List<InventoryCategory>
         final categories = (jsonResponse as List)
-            .map((item) => InventoryCategory.fromJson(item as Map<String, dynamic>))
+            .map(
+              (item) =>
+                  InventoryCategory.fromJson(item as Map<String, dynamic>),
+            )
             .toList();
 
         return Success(categories);
@@ -35,10 +45,7 @@ class CategoriesRepository {
       }
     } on SocketException catch (e) {
       LogUtil.error('Network error in getCategories: $e');
-      return const Failure(
-        message: 'No internet connection',
-        statusCode: 0,
-      );
+      return const Failure(message: 'No internet connection', statusCode: 0);
     } on FormatException catch (e) {
       LogUtil.error('Format error in getCategories: $e');
       return Failure(

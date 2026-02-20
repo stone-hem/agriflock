@@ -57,10 +57,13 @@ class _BatchDetailsScreenState extends State<BatchDetailsScreen>
                 );
               },
             ),
-            const SizedBox(width: 12),
-            Text(widget.batch.batchNumber),
+            const SizedBox(width: 8),
+            SizedBox(
+              width: MediaQuery.sizeOf(context).width*0.5,
+                child: Text(widget.batch.batchNumber,overflow: TextOverflow.ellipsis,)),
           ],
         ),
+        centerTitle: false,
         backgroundColor: Colors.transparent,
         elevation: 0,
         bottom: PreferredSize(
