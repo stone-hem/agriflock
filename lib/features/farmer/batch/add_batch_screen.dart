@@ -317,7 +317,6 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                 },
                 title: 'Batch Photo (Optional)',
                 description: 'Upload a photo of your batch',
-                primaryColor: Colors.green,
               ),
               const SizedBox(height: 32),
               // Bird Type Selection
@@ -335,9 +334,6 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Colors.green,
-                        ),
                       ),
                     ),
                     const SizedBox(width: 12),

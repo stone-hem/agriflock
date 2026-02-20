@@ -493,136 +493,155 @@ class _FarmCard extends StatelessWidget {
         onTap: () => context.push('/batches', extra: farm),
         borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
+          padding: const EdgeInsets.all(12),
+          child: Column(
             children: [
-              // Farm Image
-              Container(
-                width: 80,
-                height: 100,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  image: DecorationImage(
-                    image: NetworkImage(imageUrl),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-
-              // Farm Details
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      farm.farmName,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+              Row(
+                children: [
+                  // Farm Image
+                  Container(
+                    width: 80,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      image: DecorationImage(
+                        image: NetworkImage(imageUrl),
+                        fit: BoxFit.cover,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    if (farm.location != null)
-                      SizedBox(
-                        width: 150,
-                        child: Text(
-                          farm.location!,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 14,
+                  ),
+                  const SizedBox(width: 16),
+
+                  // Farm Details
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          farm.farmName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
                           ),
                         ),
-                      ),
-                    const SizedBox(height: 2),
-                    if (farm.description != null)
-                      SizedBox(
-                        width: 150,
-                        child: Text(
-                          farm.description!,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 14,
+                        const SizedBox(height: 4),
+                        if (farm.location != null)
+                          SizedBox(
+                            width: 150,
+                            child: Text(
+                              farm.location!,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 14,
+                              ),
+                            ),
                           ),
+                        const SizedBox(height: 2),
+                        if (farm.description != null)
+                          SizedBox(
+                            width: 150,
+                            child: Text(
+                              farm.description!,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            if (farm.totalBirds != null)
+                              _FarmStat(
+                                icon: Icons.groups_outlined,
+                                value: '${farm.totalBirds}',
+                                label: 'Birds',
+                              ),
+                            const SizedBox(width: 2),
+                            if (farm.batchCount != null)
+                              _FarmStat(
+                                icon: Icons.egg_outlined,
+                                value: '${farm.batchCount}',
+                                label: 'Batches',
+                              ),
+                          ],
+                        ),
+
+
+                      ],
+                    ),
+                  ),
+
+                  // Action Menu
+                  PopupMenuButton<String>(
+                    icon: Icon(Icons.more_vert, color: Colors.grey.shade500),
+                    onSelected: (value) {
+                      _handleMenuAction(value, context);
+                    },
+                    itemBuilder: (BuildContext context) => [
+                      const PopupMenuItem<String>(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit_outlined, size: 20),
+                            SizedBox(width: 8),
+                            Text('Edit Farm'),
+                          ],
                         ),
                       ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        if (farm.totalBirds != null)
-                          _FarmStat(
-                            icon: Icons.groups_outlined,
-                            value: '${farm.totalBirds}',
-                            label: 'Birds',
-                          ),
-                        const SizedBox(width: 2),
-                        if (farm.batchCount != null)
-                          _FarmStat(
-                            icon: Icons.egg_outlined,
-                            value: '${farm.batchCount}',
-                            label: 'Batches',
-                          ),
-                      ],
-                    ),
-
-                    // Instead of the ElevatedButton.icon, use this:
-                    FilledButton.icon(
-                      onPressed: () {
-                        AddEditHouseDialog.show(
-                          context: context,
-                          farm: farm,
-                          onSuccess: () =>
-                              context.push(AppRoutes.batches, extra: farm),
-                        );
-                      },
-                      icon: Icon(Icons.add_home, size: 18),
-
-                      label: Text('Add House'),
-                    ),
-                  ],
-                ),
+                      const PopupMenuItem<String>(
+                        value: 'view_batches',
+                        child: Row(
+                          children: [
+                            Icon(Icons.visibility_outlined, size: 20),
+                            SizedBox(width: 8),
+                            Text('View Houses'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem<String>(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete_outline,
+                                size: 20, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('Delete Farm',
+                                style: TextStyle(color: Colors.red)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
+              Row(
+                children: [
+                  FilledButton.icon(
+                    onPressed: () {
+                      AddEditHouseDialog.show(
+                        context: context,
+                        farm: farm,
+                        onSuccess: () =>
+                            context.push(AppRoutes.batches, extra: farm),
+                      );
+                    },
+                    icon: Icon(Icons.add_home, size: 18),
 
-              // Action Menu
-              PopupMenuButton<String>(
-                icon: Icon(Icons.more_vert, color: Colors.grey.shade500),
-                onSelected: (value) {
-                  _handleMenuAction(value, context);
-                },
-                itemBuilder: (BuildContext context) => [
-                  const PopupMenuItem<String>(
-                    value: 'edit',
-                    child: Row(
-                      children: [
-                        Icon(Icons.edit_outlined, size: 20),
-                        SizedBox(width: 8),
-                        Text('Edit Farm'),
-                      ],
-                    ),
+                    label: Text('Add House'),
                   ),
-                  const PopupMenuItem<String>(
-                    value: 'view_batches',
-                    child: Row(
-                      children: [
-                        Icon(Icons.visibility_outlined, size: 20),
-                        SizedBox(width: 8),
-                        Text('View Houses'),
-                      ],
+                  SizedBox(width: 4,),
+                  FilledButton.icon(
+                    onPressed: () =>context.push('/batches', extra: farm),
+                    icon: Icon(Icons.arrow_forward, size: 18),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      foregroundColor: Colors.white,
                     ),
-                  ),
-                  const PopupMenuItem<String>(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        Icon(Icons.delete_outline,
-                            size: 20, color: Colors.red),
-                        SizedBox(width: 8),
-                        Text('Delete Farm',
-                            style: TextStyle(color: Colors.red)),
-                      ],
-                    ),
+
+                    label: Text('View Houses'),
                   ),
                 ],
               ),

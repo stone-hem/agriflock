@@ -51,6 +51,37 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
 
   final QuotationRepository _repository = QuotationRepository();
 
+  // Unit price controllers keyed by material index
+  final Map<int, TextEditingController> _unitPriceControllers = {};
+
+  void _initUnitPriceControllers(HousingQuotationData data) {
+    for (final c in _unitPriceControllers.values) c.dispose();
+    _unitPriceControllers.clear();
+    for (int i = 0; i < data.materials.length; i++) {
+      _unitPriceControllers[i] = TextEditingController(
+        text: data.materials[i].unitPrice.toStringAsFixed(2),
+      );
+    }
+  }
+
+  double get _computedSubtotal {
+    if (_quotationData == null) return 0;
+    double total = 0;
+    for (int i = 0; i < _quotationData!.materials.length; i++) {
+      final price = double.tryParse(_unitPriceControllers[i]?.text ?? '') ??
+          _quotationData!.materials[i].unitPrice;
+      total += price * _quotationData!.materials[i].quantity;
+    }
+    return total;
+  }
+
+  double get _computedLabourCost {
+    final pct = double.tryParse(_quotationData?.laborPercentage ?? '0') ?? 0;
+    return _computedSubtotal * pct / 100;
+  }
+
+  double get _computedGrandTotal => _computedSubtotal + _computedLabourCost;
+
   Future<void> _fetchQuotation(int birdCapacity) async {
     setState(() {
       _isLoading = true;
@@ -62,9 +93,11 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
 
     switch(result) {
       case Success<HousingQuotationData>():
+        _initUnitPriceControllers(result.data);
         setState(() {
           _isLoading = false;
-        });        _quotationData = result.data;
+          _quotationData = result.data;
+        });
       case Failure<HousingQuotationData>():
         setState(() {
           _isLoading = false;
@@ -75,6 +108,12 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
     }
 
 
+  }
+
+  @override
+  void dispose() {
+    for (final c in _unitPriceControllers.values) c.dispose();
+    super.dispose();
   }
 
   @override
@@ -428,8 +467,8 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
               scrollDirection: Axis.horizontal,
               child: DataTable(
                 columnSpacing: 24,
-                dataRowMaxHeight: 40,
-                dataRowMinHeight: 40,
+                dataRowMaxHeight: 52,
+                dataRowMinHeight: 52,
                 headingRowHeight: 40,
                 columns: const [
                   DataColumn(
@@ -480,6 +519,11 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
                   ..._quotationData!.materials.asMap().entries.map((entry) {
                     final index = entry.key + 1;
                     final material = entry.value;
+                    final price = double.tryParse(
+                          _unitPriceControllers[entry.key]?.text ?? '',
+                        ) ??
+                        material.unitPrice;
+                    final rowTotal = price * material.quantity;
                     return DataRow(
                       cells: [
                         DataCell(Text(index.toString(), style: const TextStyle(fontSize: 11))),
@@ -501,9 +545,19 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
                         ),
                         DataCell(Text(material.unit, style: const TextStyle(fontSize: 11))),
                         DataCell(
-                          Text(
-                            _formatNumber(material.unitPrice),
-                            style: const TextStyle(fontSize: 11),
+                          SizedBox(
+                            width: 80,
+                            child: TextField(
+                              controller: _unitPriceControllers[entry.key],
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              style: const TextStyle(fontSize: 11),
+                              decoration: const InputDecoration(
+                                isDense: true,
+                                contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                                border: OutlineInputBorder(),
+                              ),
+                              onChanged: (_) => setState(() {}),
+                            ),
                           ),
                         ),
                         DataCell(
@@ -514,7 +568,7 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
                         ),
                         DataCell(
                           Text(
-                            _formatNumber(material.totalCost),
+                            _formatNumber(rowTotal),
                             style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
                           ),
                         ),
@@ -546,7 +600,7 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
                         Container(
                           color: Colors.blue.withOpacity(0.1),
                           child: Text(
-                            _formatNumber(_quotationData!.materialsSubtotal),
+                            _formatNumber(_computedSubtotal),
                             style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
@@ -582,7 +636,7 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
                         Container(
                           color: Colors.orange.withOpacity(0.1),
                           child: Text(
-                            _formatNumber(_quotationData!.laborCost),
+                            _formatNumber(_computedLabourCost),
                             style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
@@ -618,7 +672,7 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
                         Container(
                           color: Colors.green.withOpacity(0.1),
                           child: Text(
-                            _formatNumber(_quotationData!.grandTotal),
+                            _formatNumber(_computedGrandTotal),
                             style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,

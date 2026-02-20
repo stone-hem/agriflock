@@ -1,4 +1,3 @@
-import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/features/farmer/batch/repo/batch_house_repo.dart';
 import 'package:agriflock360/features/farmer/quotation/models/production_quotation_model.dart';
 import 'package:agriflock360/features/farmer/quotation/repo/quotation_repository.dart';
@@ -30,6 +29,20 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
   ProductionQuotationData? _quotationData;
   BirdType? _selectedBreed;
   int? _selectedCapacity;
+
+  // Unit price controllers keyed by flat item index in breakdown.items
+  final Map<String, TextEditingController> _unitPriceControllers = {};
+
+  void _initProductionControllers(ProductionQuotationData data) {
+    for (final c in _unitPriceControllers.values) c.dispose();
+    _unitPriceControllers.clear();
+    for (int i = 0; i < data.breakdown.items.length; i++) {
+      final price = double.tryParse(data.breakdown.items[i].unitPrice) ?? 0.0;
+      _unitPriceControllers['$i'] = TextEditingController(
+        text: price.toStringAsFixed(2),
+      );
+    }
+  }
 
   // STATIC CAPACITY OPTIONS (same for all breeds)
   final List<ProductionCapacity> _capacities = [
@@ -102,6 +115,7 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
 
       switch (result) {
         case Success(data: final quotation):
+          _initProductionControllers(quotation);
           setState(() {
             _quotationData = quotation;
             _isGeneratingQuotation = false;
@@ -139,6 +153,12 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
     if (type.contains('broiler')) return Colors.red.shade400;
     if (type.contains('layer')) return Colors.orange.shade400;
     return Colors.green.shade400; // kienyeji or other
+  }
+
+  @override
+  void dispose() {
+    for (final c in _unitPriceControllers.values) c.dispose();
+    super.dispose();
   }
 
   @override
@@ -351,7 +371,7 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
                 Text(
                   breed.name,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 11,
                     fontWeight: FontWeight.bold,
                     color: color,
                   ),
@@ -752,8 +772,24 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
   }
 
   Widget _buildDetailedItemsTable() {
-    final itemsByCategory = _quotationData!.getItemsGroupedByCategory();
-    LogUtil.warning(itemsByCategory['feed']!.first.toJson());
+    final allItems = _quotationData!.breakdown.items;
+
+    // Build category groups preserving flat indices for controller lookup
+    final Map<String, List<(int, BreakdownItem)>> itemsByCategory = {};
+    for (int i = 0; i < allItems.length; i++) {
+      final category = allItems[i].category;
+      itemsByCategory.putIfAbsent(category, () => []);
+      itemsByCategory[category]!.add((i, allItems[i]));
+    }
+
+    // Compute grand total from all items using current controller values
+    double grandTotal = 0;
+    for (int i = 0; i < allItems.length; i++) {
+      final price = double.tryParse(_unitPriceControllers['$i']?.text ?? '') ??
+          double.tryParse(allItems[i].unitPrice) ??
+          0;
+      grandTotal += price * allItems[i].quantity;
+    }
 
     return Card(
       elevation: 0,
@@ -768,16 +804,100 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
           children: [
             Text(
               'PRODUCTION QUOTATION for ${_quotationData!.quantity} birds',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
                 color: Colors.teal,
               ),
             ),
-            TextButton.icon(onPressed: null, label: Text('Scroll to the right or left to see the whole table.'), icon: Icon(Icons.arrow_forward_ios),),
-
+            TextButton.icon(
+              onPressed: null,
+              label: const Text('Scroll to the right or left to see the whole table.'),
+              icon: const Icon(Icons.arrow_forward_ios),
+            ),
             const SizedBox(height: 16),
             ...itemsByCategory.entries.map((categoryEntry) {
+              double categorySubtotal = 0;
+              final List<DataRow> rows = [];
+
+              for (final (idx, item) in categoryEntry.value) {
+                final price =
+                    double.tryParse(_unitPriceControllers['$idx']?.text ?? '') ??
+                        double.tryParse(item.unitPrice) ??
+                        0;
+                final rowTotal = price * item.quantity;
+                categorySubtotal += rowTotal;
+
+                rows.add(DataRow(cells: [
+                  DataCell(Container(
+                    constraints: const BoxConstraints(minWidth: 150),
+                    child: Text(item.name),
+                  )),
+                  DataCell(Container(
+                    constraints: const BoxConstraints(minWidth: 80),
+                    child: Text(item.unit),
+                  )),
+                  DataCell(Container(
+                    constraints: const BoxConstraints(minWidth: 50),
+                    child: Text('${item.quantity}'),
+                  )),
+                  DataCell(
+                    SizedBox(
+                      width: 100,
+                      child: TextField(
+                        controller: _unitPriceControllers['$idx'],
+                        keyboardType:
+                            const TextInputType.numberWithOptions(decimal: true),
+                        style: const TextStyle(fontSize: 12),
+                        decoration: const InputDecoration(
+                          isDense: true,
+                          contentPadding:
+                              EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (_) => setState(() {}),
+                      ),
+                    ),
+                  ),
+                  DataCell(Container(
+                    constraints: const BoxConstraints(minWidth: 100),
+                    child: Text(
+                      _formatCurrency(rowTotal),
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  )),
+                ]));
+              }
+
+              // Subtotal row for this category
+              rows.add(DataRow(cells: [
+                DataCell(Container(
+                  color: Colors.teal.withOpacity(0.08),
+                  constraints: const BoxConstraints(minWidth: 150),
+                  child: const Text(
+                    'SUB TOTAL',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.teal,
+                    ),
+                  ),
+                )),
+                const DataCell(Text('')),
+                const DataCell(Text('')),
+                const DataCell(Text('')),
+                DataCell(Container(
+                  color: Colors.teal.withOpacity(0.08),
+                  constraints: const BoxConstraints(minWidth: 100),
+                  child: Text(
+                    _formatCurrency(categorySubtotal),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.teal,
+                    ),
+                  ),
+                )),
+              ]));
+
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -797,8 +917,8 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
                     child: DataTable(
                       columnSpacing: 16,
                       horizontalMargin: 16,
-                      dataRowMinHeight: 40,
-                      dataRowMaxHeight: 40,
+                      dataRowMinHeight: 52,
+                      dataRowMaxHeight: 52,
                       columns: const [
                         DataColumn(label: Text('Item')),
                         DataColumn(label: Text('Particulars')),
@@ -806,36 +926,44 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
                         DataColumn(label: Text('Unit Price')),
                         DataColumn(label: Text('Total')),
                       ],
-                      rows: categoryEntry.value.map((item) {
-                        return DataRow(cells: [
-                          DataCell(Container(
-                            constraints: const BoxConstraints(minWidth: 150),
-                            child: Text(item.name),
-                          )),
-                          DataCell(Container(
-                            constraints: const BoxConstraints(minWidth: 100),
-                            child: Text(item.unit),
-                          )),
-                          DataCell(Container(
-                            constraints: const BoxConstraints(minWidth: 100),
-                            child: Text('${item.quantity}'),
-                          )),
-                          DataCell(Container(
-                            constraints: const BoxConstraints(minWidth: 100),
-                            child: Text('KSh ${item.unitPrice}'),
-                          )),
-                          DataCell(Container(
-                            constraints: const BoxConstraints(minWidth: 100),
-                            child: Text(_formatCurrency(item.total)),
-                          )),
-                        ]);
-                      }).toList(),
+                      rows: rows,
                     ),
                   ),
                   const SizedBox(height: 16),
                 ],
               );
             }),
+
+            // Grand Total
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green.withOpacity(0.3)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'GRAND TOTAL',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                    ),
+                  ),
+                  Text(
+                    'KSh ${_formatCurrency(grandTotal)}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
