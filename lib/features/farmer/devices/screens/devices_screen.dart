@@ -3,6 +3,8 @@ import 'package:agriflock360/features/farmer/devices/repository/devices_repo.dar
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+const _telemetryRoute = '/my-devices/telemetry';
+
 class DevicesScreen extends StatefulWidget {
   const DevicesScreen({super.key});
 
@@ -474,6 +476,30 @@ class _DeviceCard extends StatelessWidget {
                 ),
               ),
             ],
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: Builder(
+                builder: (context) => ElevatedButton.icon(
+                  onPressed: () => context.push(
+                    _telemetryRoute,
+                    extra: device,
+                  ),
+                  icon: const Icon(Icons.sensors, size: 16),
+                  label: const Text('View Live Data'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green.shade700,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                    elevation: 0,
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),

@@ -4,6 +4,7 @@ import 'package:agriflock360/core/utils/shared_prefs.dart';
 import 'package:agriflock360/features/auth/quiz/repo/onboarding_repository.dart';
 import 'package:agriflock360/features/auth/quiz/shared/user_type_selection.dart';
 import 'package:agriflock360/features/auth/quiz/steps/farmer_details_step.dart';
+import 'package:agriflock360/features/auth/quiz/steps/farmer_bird_type_step.dart';
 import 'package:agriflock360/features/auth/quiz/steps/vet_personal_info_step.dart';
 import 'package:agriflock360/features/auth/quiz/steps/vet_professional_step.dart';
 import 'package:agriflock360/features/auth/quiz/steps/vet_documents_step.dart';
@@ -45,8 +46,11 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
   // Farmer data
   final TextEditingController _chickenNumberController = TextEditingController();
   final TextEditingController _farmerExperienceController = TextEditingController();
+  final TextEditingController _houseCapacityController = TextEditingController();
   final FocusNode _chickenNumberFocus = FocusNode();
   final FocusNode _farmerExperienceFocus = FocusNode();
+  final FocusNode _houseCapacityFocus = FocusNode();
+  String? _selectedBirdTypeId;
 
   // Vet data
   final TextEditingController _dobController = TextEditingController();
@@ -80,7 +84,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
 
   int get _totalPages {
     if (_selectedUserType == 'vet') return 6;
-    return 4; // farmer or not selected
+    return 5; // farmer or not selected
   }
 
   List<String> get _pageTitles {
@@ -97,13 +101,14 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     return [
       'Choose Your Role',
       'Farm Details',
+      'Poultry Details',
       'Select Location',
       'Congratulations!',
     ];
   }
 
   // Get the index for location page based on user type
-  int get _locationPageIndex => _selectedUserType == 'vet' ? 4 : 2;
+  int get _locationPageIndex => _selectedUserType == 'vet' ? 4 : 3;
 
   @override
   void initState() {
@@ -171,8 +176,10 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     _scrollController.dispose();
     _chickenNumberController.dispose();
     _farmerExperienceController.dispose();
+    _houseCapacityController.dispose();
     _chickenNumberFocus.dispose();
     _farmerExperienceFocus.dispose();
+    _houseCapacityFocus.dispose();
     _dobController.dispose();
     _vetExperienceController.dispose();
     _vetProfileController.dispose();
@@ -240,6 +247,8 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         longitude: _longitude!,
         yearsOfExperience: int.tryParse(_farmerExperienceController.text) ?? 0,
         numberOfChickens: int.tryParse(_chickenNumberController.text) ?? 0,
+        poultryTypeId: _selectedBirdTypeId,
+        chickenHouseCapacity: int.tryParse(_houseCapacityController.text),
       );
 
       if (result['success'] == true) {
@@ -330,6 +339,14 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     }
     if (_farmerExperienceController.text.isEmpty) {
       ToastUtil.showError("Please enter your years of experience");
+      return false;
+    }
+    if (_selectedBirdTypeId == null) {
+      ToastUtil.showError("Please select the main bird type");
+      return false;
+    }
+    if (_houseCapacityController.text.isEmpty) {
+      ToastUtil.showError("Please enter your chicken house capacity");
       return false;
     }
     return true;
@@ -434,8 +451,10 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
       case 1:
         return true; // Farm details - allow continue, validate on submit
       case 2:
-        return _selectedAddress != null && _latitude != null && _longitude != null;
+        return _selectedBirdTypeId != null && _houseCapacityController.text.isNotEmpty;
       case 3:
+        return _selectedAddress != null && _latitude != null && _longitude != null;
+      case 4:
         return true;
       default:
         return false;
@@ -582,6 +601,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     return [
       _buildRoleSelectionPage(),
       _buildFarmerDetailsPage(),
+      _buildFarmerBirdTypePage(),
       _buildLocationPage(),
       _buildCongratulationsPage(),
     ];
@@ -614,6 +634,19 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
       experienceController: _farmerExperienceController,
       chickenNumberFocus: _chickenNumberFocus,
       experienceFocus: _farmerExperienceFocus,
+    );
+  }
+
+  Widget _buildFarmerBirdTypePage() {
+    return FarmerBirdTypeStep(
+      houseCapacityController: _houseCapacityController,
+      houseCapacityFocus: _houseCapacityFocus,
+      selectedBirdTypeId: _selectedBirdTypeId,
+      onBirdTypeSelected: (String id) {
+        setState(() {
+          _selectedBirdTypeId = id;
+        });
+      },
     );
   }
 

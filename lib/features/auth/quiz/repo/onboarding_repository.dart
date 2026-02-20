@@ -12,19 +12,25 @@ class OnboardingRepository {
     required double longitude,
     required int yearsOfExperience,
     required int numberOfChickens,
+    String? poultryTypeId,
+    int? chickenHouseCapacity,
   }) async {
     try {
+      final body = <String, dynamic>{
+        'location': {
+          'address': address,
+          'latitude': latitude,
+          'longitude': longitude,
+        },
+        'years_of_experience': yearsOfExperience,
+        'current_number_of_chickens': numberOfChickens,
+      };
+      if (poultryTypeId != null) body['poultry_type_id'] = poultryTypeId;
+      if (chickenHouseCapacity != null) body['chicken_house_capacity'] = chickenHouseCapacity;
+
       final response = await apiClient.post(
         '/auth/farmer-register',
-        body: {
-          'location': {
-            'address': address,
-            'latitude': latitude,
-            'longitude': longitude,
-          },
-          'years_of_experience': yearsOfExperience,
-          'current_number_of_chickens': numberOfChickens,
-        },
+        body: body,
         headers: {'Authorization': 'Bearer $token'},
       );
 

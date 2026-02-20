@@ -37,6 +37,8 @@ import 'package:agriflock360/features/farmer/profile/models/profile_model.dart';
 import 'package:agriflock360/features/farmer/profile/profile_screen.dart';
 import 'package:agriflock360/features/farmer/profile/settings_screen.dart';
 import 'package:agriflock360/features/farmer/devices/screens/devices_screen.dart';
+import 'package:agriflock360/features/farmer/devices/screens/device_telemetry_screen.dart';
+import 'package:agriflock360/features/farmer/devices/models/device_model.dart';
 import 'package:agriflock360/features/farmer/profile/update_profile_screen.dart';
 import 'package:agriflock360/features/farmer/onboarding/onboarding_setup_screen.dart';
 import 'package:agriflock360/features/farmer/quotation/quotation_screen.dart';
@@ -612,6 +614,20 @@ class AppRoutes {
         GoRoute(
           path: '/my-devices',
           builder: (context, state) => const DevicesScreen(),
+          routes: [
+            GoRoute(
+              path: 'telemetry',
+              builder: (context, state) {
+                if (state.extra is! DeviceItem) {
+                  return const ErrorScreen(
+                    title: 'Device not found',
+                    message: 'Could not load device. Please go back and try again.',
+                  );
+                }
+                return DeviceTelemetryScreen(device: state.extra as DeviceItem);
+              },
+            ),
+          ],
         ),
         GoRoute(
           path: activity,
