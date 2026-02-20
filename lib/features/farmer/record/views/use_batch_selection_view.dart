@@ -132,7 +132,7 @@ class UseBatchSelectionView extends StatelessWidget {
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                batch.batchName,
+                                batch.batchNumber,
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,

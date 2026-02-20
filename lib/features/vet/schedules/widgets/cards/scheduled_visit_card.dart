@@ -8,12 +8,14 @@ class ScheduledVisitCard extends StatefulWidget {
   final Visit visit;
   final VisitsRepository repository;
   final VoidCallback onActionCompleted;
+  final void Function(String targetStatus)? onStatusChanged;
 
   const ScheduledVisitCard({
     super.key,
     required this.visit,
     required this.repository,
     required this.onActionCompleted,
+    this.onStatusChanged,
   });
 
   @override
@@ -58,6 +60,7 @@ class _ScheduledVisitCardState extends State<ScheduledVisitCard> {
             ),
           );
           widget.onActionCompleted();
+          widget.onStatusChanged?.call(VisitStatus.inProgress.value);
           setState(() => _isProcessing = false);
         },
         failure: (message, _, __) {
@@ -93,6 +96,7 @@ class _ScheduledVisitCardState extends State<ScheduledVisitCard> {
             ),
           );
           widget.onActionCompleted();
+          widget.onStatusChanged?.call(VisitStatus.cancelled.value);
           setState(() => _isProcessing = false);
         },
         failure: (message, _, __) {

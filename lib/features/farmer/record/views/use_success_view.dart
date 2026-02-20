@@ -124,7 +124,7 @@ class UseSuccessView extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  batch.batchName,
+                  batch.batchNumber,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,

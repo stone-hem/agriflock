@@ -254,7 +254,7 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        batch.batchName,
+                        batch.batchNumber,
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -449,7 +449,7 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
       builder: (context) => AlertDialog(
         title: const Text('Restore Batch'),
         content: Text(
-          'Are you sure you want to restore "${batch.batchName}" to active batches?',
+          'Are you sure you want to restore "${batch.batchNumber}" to active batches?',
         ),
         actions: [
           TextButton(
@@ -475,7 +475,7 @@ class _CompletedBatchesScreenState extends State<CompletedBatchesScreen> {
       builder: (context) => AlertDialog(
         title: const Text('Delete Batch'),
         content: Text(
-          'Are you sure you want to permanently delete "${batch.batchName}"? This action cannot be undone.',
+          'Are you sure you want to permanently delete "${batch.batchNumber}"? This action cannot be undone.',
         ),
         actions: [
           TextButton(

@@ -10,12 +10,14 @@ class VisitCard extends StatelessWidget {
   final Visit visit;
   final VisitsRepository repository;
   final VoidCallback onActionCompleted;
+  final void Function(String targetStatus)? onStatusChanged;
 
   const VisitCard({
     super.key,
     required this.visit,
     required this.repository,
     required this.onActionCompleted,
+    this.onStatusChanged,
   });
 
   @override
@@ -27,6 +29,7 @@ class VisitCard extends StatelessWidget {
           visit: visit,
           repository: repository,
           onActionCompleted: onActionCompleted,
+          onStatusChanged: onStatusChanged,
         );
 
       case 'scheduled':
@@ -35,6 +38,7 @@ class VisitCard extends StatelessWidget {
           visit: visit,
           repository: repository,
           onActionCompleted: onActionCompleted,
+          onStatusChanged: onStatusChanged,
         );
 
       case 'in_progress':
@@ -42,6 +46,7 @@ class VisitCard extends StatelessWidget {
           visit: visit,
           repository: repository,
           onActionCompleted: onActionCompleted,
+          onStatusChanged: onStatusChanged,
         );
 
       case 'completed':
@@ -54,6 +59,7 @@ class VisitCard extends StatelessWidget {
           visit: visit,
           repository: repository,
           onActionCompleted: onActionCompleted,
+          onStatusChanged: onStatusChanged,
         );
     }
   }

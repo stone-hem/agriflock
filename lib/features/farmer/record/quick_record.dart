@@ -398,7 +398,7 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
       case 0:
         return 'Quick recording for a batch';
       case 1:
-        return _selectedBatch?.batchName ?? 'Select Category';
+        return _selectedBatch?.batchNumber ?? 'Select Category';
       case 2:
         return _selectedCategory?.name ?? 'Item Details';
       case 3:

@@ -290,7 +290,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               (b) => b.id == batchId,
           orElse: () => BatchModel(
             id: '',
-            batchName: '',
+            batchNumber: '',
             initialQuantity: 0,
             birdsAlive: 0,
             age: 0,
@@ -610,7 +610,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
 
               return CheckboxListTile(
                 title: Text(
-                  batch.batchName,
+                  batch.batchNumber,
                   style: const TextStyle(
                     fontWeight: FontWeight.w500,
                   ),
@@ -664,7 +664,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                           (b) => b.id == batchId,
                     );
                     return Chip(
-                      label: Text(batch.batchName),
+                      label: Text(batch.batchNumber),
                       deleteIcon: const Icon(Icons.close, size: 16),
                       onDeleted: () {
                         _onBatchSelected(batchId, false);

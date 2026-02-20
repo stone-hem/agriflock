@@ -28,7 +28,6 @@ class AddBatchScreen extends StatefulWidget {
 
 class _AddBatchScreenState extends State<AddBatchScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
   final _hatchController = TextEditingController();
   final _initialQuantityController = TextEditingController();
   final _birdsAliveController = TextEditingController();
@@ -321,21 +320,6 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                 primaryColor: Colors.green,
               ),
               const SizedBox(height: 32),
-
-              // Batch Name
-              ReusableInput(
-                topLabel: 'Batch Name',
-                controller: _nameController,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter batch name';
-                  }
-                  return null;
-                },
-                labelText: 'Name',
-                hintText: 'e.g., Spring Broiler Batch 2024',
-              ),
-              const SizedBox(height: 20),
               // Bird Type Selection
               _isLoadingBirdTypes
                   ? Container(
@@ -1068,7 +1052,6 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
 
       final batchData = {
         'house_id': widget.house.id,
-        'batch_name': _nameController.text.trim(),
         'bird_type_id': _selectedBirdTypeId,
         'batch_type': _selectedBatchType,
         'initial_count': int.parse(_initialQuantityController.text.trim()),
@@ -1102,13 +1085,16 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
       );
 
       switch (result) {
-        case Success():
+        case Success<BatchModel>(data: final batch):
           ToastUtil.showSuccess('Batch created successfully!');
           if (context.mounted) {
-            context.pushReplacement('/batches', extra: widget.farm);
+            context.pushReplacement(
+              '/batches/details',
+              extra: {'farm': widget.farm, 'batch': batch},
+            );
           }
 
-        case Failure(:final response, :final message):
+        case Failure<BatchModel>(:final response, :final message):
           if (response != null) {
             ApiErrorHandler.handle(response);
           } else {
@@ -1128,7 +1114,6 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
 
   @override
   void dispose() {
-    _nameController.dispose();
     _hatchController.dispose();
     _initialQuantityController.dispose();
     _birdsAliveController.dispose();

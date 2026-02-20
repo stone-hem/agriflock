@@ -413,7 +413,7 @@ class _BatchCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        batch.batchName,
+                        batch.batchNumber,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,

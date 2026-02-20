@@ -175,7 +175,7 @@ class _BatchOverviewState extends State<BatchOverview> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                _batchData!.batch.name,
+                                _batchData!.batch.batchNumber,
                                 style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,

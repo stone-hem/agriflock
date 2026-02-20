@@ -58,7 +58,7 @@ class _BatchDetailsScreenState extends State<BatchDetailsScreen>
               },
             ),
             const SizedBox(width: 12),
-            Text(widget.batch.batchName),
+            Text(widget.batch.batchNumber),
           ],
         ),
         backgroundColor: Colors.transparent,

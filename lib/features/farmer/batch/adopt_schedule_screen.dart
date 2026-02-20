@@ -49,7 +49,7 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Select items to adopt - ${widget.batch.batchName}'),
+        title: Text('Select items to adopt - ${widget.batch.batchNumber}'),
         centerTitle: false,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -103,7 +103,7 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Batch: ${widget.batch.batchName}',
+                            'Batch: ${widget.batch.batchNumber}',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,

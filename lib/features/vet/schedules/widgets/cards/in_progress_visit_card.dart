@@ -7,12 +7,14 @@ class InProgressVisitCard extends StatefulWidget {
   final Visit visit;
   final VisitsRepository repository;
   final VoidCallback onActionCompleted;
+  final void Function(String targetStatus)? onStatusChanged;
 
   const InProgressVisitCard({
     super.key,
     required this.visit,
     required this.repository,
     required this.onActionCompleted,
+    this.onStatusChanged,
   });
 
   @override
@@ -43,6 +45,7 @@ class _InProgressVisitCardState extends State<InProgressVisitCard> {
             ),
           );
           widget.onActionCompleted();
+          widget.onStatusChanged?.call(VisitStatus.completed.value);
           setState(() => _isProcessing = false);
         },
         failure: (message, _, __) {

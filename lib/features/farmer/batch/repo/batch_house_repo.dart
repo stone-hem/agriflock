@@ -82,7 +82,7 @@ class BatchHouseRepository {
     }
   }
 
-  Future<Result> createBatch(
+  Future<Result<BatchModel>> createBatch(
     String farmId,
     Map<String, dynamic> batchData, {
     File? photoFile,
@@ -102,8 +102,6 @@ class BatchHouseRepository {
           }
         });
 
-
-
         final multipartFile = await http.MultipartFile.fromPath(
           'batch_avatar',
           photoFile.path,
@@ -119,7 +117,8 @@ class BatchHouseRepository {
         final jsonResponse = jsonDecode(response.body);
 
         if (response.statusCode >= 200 && response.statusCode < 300) {
-          return Success(null);
+          final batch = _parseBatchFromJson(jsonResponse);
+          return Success(batch);
         } else {
           LogUtil.error('Failed to create batch: $jsonResponse');
           return Failure(
@@ -139,7 +138,8 @@ class BatchHouseRepository {
 
         if (response.statusCode >= 200 && response.statusCode < 300) {
           LogUtil.success(response.body);
-          return Success(null);
+          final batch = _parseBatchFromJson(jsonResponse);
+          return Success(batch);
         } else {
           LogUtil.error('Failed to create batch: ${response.body}');
           return Failure(
@@ -166,6 +166,22 @@ class BatchHouseRepository {
 
       return Failure(message: e.toString());
     }
+  }
+
+  BatchModel _parseBatchFromJson(dynamic jsonResponse) {
+    Map<String, dynamic> batchJson;
+    if (jsonResponse is Map<String, dynamic>) {
+      if (jsonResponse['data'] != null) {
+        batchJson = jsonResponse['data'] as Map<String, dynamic>;
+      } else if (jsonResponse['batch'] != null) {
+        batchJson = jsonResponse['batch'] as Map<String, dynamic>;
+      } else {
+        batchJson = jsonResponse;
+      }
+    } else {
+      batchJson = {};
+    }
+    return BatchModel.fromJson(batchJson);
   }
 
   Future<Result> updateBatch(

@@ -109,7 +109,7 @@ class _RecordWeightScreenState extends State<RecordWeightScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            widget.batch.batchName,
+                            widget.batch.batchNumber,
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,

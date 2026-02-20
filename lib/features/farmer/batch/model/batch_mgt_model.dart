@@ -1,5 +1,4 @@
-import 'dart:convert';
-import 'package:agriflock360/core/utils/type_safe_utils.dart'; // Adjust the import path as needed
+import 'package:agriflock360/core/utils/type_safe_utils.dart';
 
 class BatchMgtResponse {
   final BatchInfo batch;
@@ -37,7 +36,7 @@ class BatchMgtResponse {
 
 class BatchInfo {
   final String id;
-  final String name;
+  final String batchNumber;
   final String breed;
   final String status;
   final String statusLabel;
@@ -52,7 +51,7 @@ class BatchInfo {
 
   const BatchInfo({
     required this.id,
-    required this.name,
+    required this.batchNumber,
     required this.breed,
     required this.status,
     required this.statusLabel,
@@ -69,7 +68,7 @@ class BatchInfo {
   factory BatchInfo.fromJson(Map<String, dynamic> json) {
     return BatchInfo(
       id: TypeUtils.toStringSafe(json['id']),
-      name: TypeUtils.toStringSafe(json['name']),
+      batchNumber: TypeUtils.toStringSafe(json['batch_number']??json['name']),
       breed: TypeUtils.toStringSafe(json['breed']),
       status: TypeUtils.toStringSafe(json['status']),
       statusLabel: TypeUtils.toStringSafe(json['statusLabel']),
@@ -87,7 +86,7 @@ class BatchInfo {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'name': name,
+      'batch_number': batchNumber,
       'breed': breed,
       'status': status,
       'statusLabel': statusLabel,

@@ -3,7 +3,7 @@ import 'package:agriflock360/core/utils/type_safe_utils.dart'; // Adjust the imp
 
 class BatchModel {
   final String id;
-  final String batchName;
+  final String batchNumber;
   final String? houseId;
   final String birdTypeId;
   final String? houseName;
@@ -25,7 +25,7 @@ class BatchModel {
 
   const BatchModel({
     required this.id,
-    required this.batchName,
+    required this.batchNumber,
     this.houseId,
     required this.birdTypeId,
     this.houseName,
@@ -80,7 +80,7 @@ class BatchModel {
 
     return BatchModel(
       id: TypeUtils.toStringSafe(json['id']),
-      batchName: TypeUtils.toStringSafe(json['batch_name'] ?? json['name'], defaultValue: ''),
+      batchNumber: TypeUtils.toStringSafe(json['batch_number'] ?? json['batch_name'], defaultValue: ''),
       houseId: TypeUtils.toNullableStringSafe(json['house_id']),
       birdTypeId: TypeUtils.toStringSafe(json['bird_type_id'], defaultValue: ''),
       houseName: TypeUtils.toNullableStringSafe(json['house_name']),
@@ -105,7 +105,7 @@ class BatchModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'batch_name': batchName,
+      'batch_name': batchNumber,
       'house_id': houseId,
       'bird_type_id': birdTypeId,
       'breed': breed,
@@ -195,7 +195,7 @@ class BatchModel {
   }) {
     return BatchModel(
       id: id ?? this.id,
-      batchName: batchName ?? this.batchName,
+      batchNumber: batchName ?? this.batchNumber,
       houseId: houseId ?? this.houseId,
       birdTypeId: birdTypeId ?? this.birdTypeId,
       houseName: houseName ?? this.houseName,

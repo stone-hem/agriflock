@@ -70,7 +70,7 @@ class BatchListItem {
   final String? deviceId;
   final dynamic device;
   final String? breed;
-  final String batchName;
+  final String batchNumber;
   final String birdTypeId;
   final String batchType;
   final BirdType? birdType;
@@ -117,7 +117,7 @@ class BatchListItem {
     this.deviceId,
     this.device,
     this.breed,
-    required this.batchName,
+    required this.batchNumber,
     required this.birdTypeId,
     required this.batchType,
     this.birdType,
@@ -171,7 +171,7 @@ class BatchListItem {
       deviceId: TypeUtils.toNullableStringSafe(json['device_id']),
       device: TypeUtils.toMapSafe(json['device']), // or however device is typed
       breed: TypeUtils.toNullableStringSafe(json['breed']),
-      batchName: TypeUtils.toStringSafe(json['batch_name']),
+      batchNumber: TypeUtils.toStringSafe(json['batch_number']),
       birdTypeId: TypeUtils.toStringSafe(json['bird_type_id']),
       batchType: TypeUtils.toStringSafe(json['batch_type']),
       birdType: birdTypeMap != null ? BirdType.fromJson(birdTypeMap) : null,
@@ -221,7 +221,6 @@ class BatchListItem {
     'device_id': deviceId,
     'device': device,
     'breed': breed,
-    'batch_name': batchName,
     'bird_type_id': birdTypeId,
     'batch_type': batchType,
     'bird_type': birdType?.toJson(),

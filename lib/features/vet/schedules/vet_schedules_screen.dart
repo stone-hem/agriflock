@@ -67,6 +67,13 @@ class _VetSchedulesScreenState extends State<VetSchedulesScreen> {
     });
   }
 
+  void _onVisitMovedToStatus(String targetStatus) {
+    setState(() {
+      _selectedStatus = targetStatus;
+    });
+    _loadVisitStats();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -211,6 +218,7 @@ class _VetSchedulesScreenState extends State<VetSchedulesScreen> {
               status: _selectedStatus,
               repository: _repository,
               onVisitUpdated: _loadVisitStats,
+              onStatusChanged: _onVisitMovedToStatus,
             ),
           ),
         ],

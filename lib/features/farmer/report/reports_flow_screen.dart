@@ -641,7 +641,7 @@ class _ReportsFlowScreenState extends State<ReportsFlowScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      batch.batchName,
+                      batch.batchNumber,
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,

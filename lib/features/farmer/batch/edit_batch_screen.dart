@@ -3,8 +3,6 @@ import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/date_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
-import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
-import 'package:agriflock360/core/widgets/photo_upload.dart';
 import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
@@ -32,7 +30,6 @@ class EditBatchScreen extends StatefulWidget {
 
 class _EditBatchScreenState extends State<EditBatchScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
   final _hatchController = TextEditingController();
   final _initialQuantityController = TextEditingController();
   final _birdsAliveController = TextEditingController();
@@ -112,7 +109,6 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
     // Initialize with existing batch data
     final batch = widget.batch;
 
-    _nameController.text = batch.batchName;
     _selectedBirdTypeId = batch.birdTypeId;
     _selectedBatchType = batch.type;
     _hatchDate = batch.startDate;
@@ -254,27 +250,6 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Batch Name
-              Text(
-                'Batch Name',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
-              ReusableInput(
-                controller: _nameController,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter batch name';
-                  }
-                  return null;
-                },
-                labelText: 'Name',
-                hintText: 'e.g., Spring Broiler Batch 2024',
-              ),
-              const SizedBox(height: 20),
 
               // Bird Type Selection
               Text(
@@ -444,205 +419,6 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
                 hintText: 'e.g., 980',
               ),
               const SizedBox(height: 20),
-              //
-              // // Current Average Weight
-              // Text(
-              //   'Average weight (kg)',
-              //   style: Theme.of(context).textTheme.titleMedium!.copyWith(
-              //     fontWeight: FontWeight.bold,
-              //     color: Colors.grey.shade800,
-              //   ),
-              // ),
-              // const SizedBox(height: 8),
-              // ReusableInput(
-              //   controller: _currentWeightController,
-              //   keyboardType: TextInputType.number,
-              //   validator: (value) {
-              //     if (value == null || value.isEmpty) {
-              //       return 'Please enter current average weight';
-              //     }
-              //     if (double.tryParse(value) == null) {
-              //       return 'Please enter a valid weight';
-              //     }
-              //     return null;
-              //   },
-              //   labelText: 'Current average weight',
-              //   hintText: 'e.g., 1.5',
-              // ),
-              // const SizedBox(height: 20),
-              //
-              // // Expected Average Weight
-              // Text(
-              //   'Expected Average Weight (kg)',
-              //   style: Theme.of(context).textTheme.titleMedium!.copyWith(
-              //     fontWeight: FontWeight.bold,
-              //     color: Colors.grey.shade800,
-              //   ),
-              // ),
-              // const SizedBox(height: 8),
-              // ReusableInput(
-              //   controller: _expectedWeightController,
-              //   keyboardType: TextInputType.number,
-              //   validator: (value) {
-              //     if (value == null || value.isEmpty) {
-              //       return 'Please enter expected average weight';
-              //     }
-              //     if (double.tryParse(value) == null) {
-              //       return 'Please enter a valid weight';
-              //     }
-              //     final expected = double.parse(value);
-              //     final current = double.tryParse(_currentWeightController.text) ?? 0.0;
-              //     if (expected < current) {
-              //       return 'Expected weight should be greater than current weight';
-              //     }
-              //     return null;
-              //   },
-              //   labelText: 'Expected average weight at removal/sale',
-              //   hintText: 'e.g., 2.5',
-              // ),
-              // const SizedBox(height: 20),
-              //
-              // // Feeding Time Selection
-              // Text(
-              //   'Feeding Time',
-              //   style: Theme.of(context).textTheme.titleMedium!.copyWith(
-              //     fontWeight: FontWeight.bold,
-              //     color: Colors.grey.shade800,
-              //   ),
-              // ),
-              // const SizedBox(height: 8),
-              //
-              // // Feeding Time Category Selection
-              // ReusableDropdown<String>(
-              //   value: _selectedFeedingTimeCategory,
-              //   hintText: 'Select feeding time category',
-              //   items: _feedingTimeOptions.keys.map((String category) {
-              //     return DropdownMenuItem<String>(
-              //       value: category,
-              //       child: Text(category),
-              //     );
-              //   }).toList(),
-              //   onChanged: (String? newValue) {
-              //     setState(() {
-              //       _selectedFeedingTimeCategory = newValue;
-              //       // Clear previous selections when category changes
-              //       if (newValue != null && newValue != _selectedFeedingTimeCategory) {
-              //         _selectedFeedingTimes[_selectedFeedingTimeCategory ?? 'Day']?.clear();
-              //       }
-              //     });
-              //   },
-              //   validator: (value) {
-              //     if (value == null || value.isEmpty) {
-              //       return 'Please select feeding time category';
-              //     }
-              //     return null;
-              //   },
-              // ),
-              // const SizedBox(height: 16),
-
-              // Specific Feeding Times Selection within Category
-              // if (_selectedFeedingTimeCategory != null) ...[
-              //   Text(
-              //     'Select Specific Feeding Times:',
-              //     style: Theme.of(context).textTheme.titleMedium!.copyWith(
-              //       fontWeight: FontWeight.bold,
-              //       color: Colors.grey.shade800,
-              //     ),
-              //   ),
-              //   const SizedBox(height: 8),
-              //
-              //   // Display all options for the selected category
-              //   Column(
-              //     children: _feedingTimeOptions[_selectedFeedingTimeCategory]!
-              //         .map((time) {
-              //       bool isSelected = _selectedFeedingTimes[_selectedFeedingTimeCategory]!.contains(time);
-              //
-              //       return Padding(
-              //         padding: const EdgeInsets.only(bottom: 8),
-              //         child: GestureDetector(
-              //           onTap: () {
-              //             setState(() {
-              //               if (isSelected) {
-              //                 _selectedFeedingTimes[_selectedFeedingTimeCategory]!.remove(time);
-              //               } else {
-              //                 _selectedFeedingTimes[_selectedFeedingTimeCategory]!.add(time);
-              //               }
-              //             });
-              //           },
-              //           child: Container(
-              //             padding: const EdgeInsets.all(12),
-              //             decoration: BoxDecoration(
-              //               color: isSelected ? Colors.green.shade50 : Colors.grey.shade50,
-              //               borderRadius: BorderRadius.circular(12),
-              //               border: Border.all(
-              //                 color: isSelected ? Colors.green : Colors.grey.shade300,
-              //                 width: isSelected ? 2 : 1,
-              //               ),
-              //             ),
-              //             child: Row(
-              //               children: [
-              //                 Icon(
-              //                   isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
-              //                   color: isSelected ? Colors.green : Colors.grey,
-              //                 ),
-              //                 const SizedBox(width: 12),
-              //                 Expanded(
-              //                   child: Text(
-              //                     time,
-              //                     style: TextStyle(
-              //                       fontWeight: FontWeight.w500,
-              //                       color: isSelected ? Colors.green.shade800 : Colors.grey.shade800,
-              //                     ),
-              //                   ),
-              //                 ),
-              //               ],
-              //             ),
-              //           ),
-              //         ),
-              //       );
-              //     }).toList(),
-              //   ),
-              //
-              //   // Show selected times summary
-              //   if (_selectedFeedingTimes[_selectedFeedingTimeCategory]!.isNotEmpty) ...[
-              //     const SizedBox(height: 16),
-              //     Container(
-              //       padding: const EdgeInsets.all(16),
-              //       decoration: BoxDecoration(
-              //         color: Colors.green.shade50,
-              //         borderRadius: BorderRadius.circular(12),
-              //         border: Border.all(color: Colors.green.shade100),
-              //       ),
-              //       child: Column(
-              //         crossAxisAlignment: CrossAxisAlignment.start,
-              //         children: [
-              //           Text(
-              //             'Selected Feeding Times:',
-              //             style: const TextStyle(
-              //               fontWeight: FontWeight.bold,
-              //               color: Colors.green,
-              //             ),
-              //           ),
-              //           const SizedBox(height: 8),
-              //           Wrap(
-              //             spacing: 8,
-              //             runSpacing: 4,
-              //             children: _selectedFeedingTimes[_selectedFeedingTimeCategory]!
-              //                 .map((time) => Chip(
-              //               label: Text(
-              //                 time,
-              //                 style: const TextStyle(color: Colors.white),
-              //               ),
-              //               backgroundColor: Colors.green,
-              //             ))
-              //                 .toList(),
-              //           ),
-              //         ],
-              //       ),
-              //     ),
-              //   ],
-              //   const SizedBox(height: 16),
-              // ],
 
               // Notes
               Text(
@@ -756,17 +532,8 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
 
       final batchData = {
         'house_id': widget.house.id,
-        'batch_name': _nameController.text.trim(),
         'bird_type_id': _selectedBirdTypeId,
-        // 'batch_type': _selectedBatchType,
-        // 'initial_count': int.parse(_initialQuantityController.text.trim()),
         'current_count': int.parse(_birdsAliveController.text.trim()),
-        // 'hatch_date': DateUtil.toISO8601(_hatchDate!),
-        // 'birds_alive': int.parse(_birdsAliveController.text.trim()),
-        // 'current_weight': double.parse(_currentWeightController.text.trim()),
-        // 'expected_weight': double.parse(_expectedWeightController.text.trim()),
-        // 'feeding_time': _selectedFeedingTimeCategory,
-        // 'feeding_schedule': selectedFeedingTimes.join(','),
         'notes': _notesController.text.trim().isNotEmpty
             ? _notesController.text.trim()
             : null,
@@ -808,7 +575,6 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
 
   @override
   void dispose() {
-    _nameController.dispose();
     _initialQuantityController.dispose();
     _birdsAliveController.dispose();
     _currentWeightController.dispose();

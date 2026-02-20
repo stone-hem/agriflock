@@ -10,12 +10,14 @@ class VisitsListView extends StatefulWidget {
   final String status;
   final VisitsRepository repository;
   final VoidCallback onVisitUpdated;
+  final void Function(String targetStatus)? onStatusChanged;
 
   const VisitsListView({
     super.key,
     required this.status,
     required this.repository,
     required this.onVisitUpdated,
+    this.onStatusChanged,
   });
 
   @override
@@ -85,6 +87,10 @@ class _VisitsListViewState extends State<VisitsListView>
     widget.onVisitUpdated();
   }
 
+  void _onVisitStatusChanged(String targetStatus) {
+    widget.onStatusChanged?.call(targetStatus);
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -151,6 +157,7 @@ class _VisitsListViewState extends State<VisitsListView>
             visit: _visits[index],
             repository: widget.repository,
             onActionCompleted: _onVisitActionCompleted,
+            onStatusChanged: _onVisitStatusChanged,
           );
         },
       ),

@@ -37,6 +37,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
 
   // User type selection
   String? _selectedUserType;
+  bool _termsAccepted = false;
 
   // Location data (for both farmer and vet)
   String? _selectedAddress;
@@ -83,7 +84,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
   // Vet steps: Role -> Personal Info -> Professional -> Documents -> Location -> Congratulations (6 steps)
 
   int get _totalPages {
-    if (_selectedUserType == 'vet') return 6;
+    if (_selectedUserType == 'vet') return 7;
     return 5; // farmer or not selected
   }
 
@@ -91,6 +92,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     if (_selectedUserType == 'vet') {
       return [
         'Choose Your Role',
+        'Terms & Conditions',
         'Personal Information',
         'Professional Details',
         'Document Verification',
@@ -108,7 +110,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
   }
 
   // Get the index for location page based on user type
-  int get _locationPageIndex => _selectedUserType == 'vet' ? 4 : 3;
+  int get _locationPageIndex => _selectedUserType == 'vet' ? 5 : 3;
 
   @override
   void initState() {
@@ -463,24 +465,26 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
 
   bool _canProceedVet() {
     switch (_currentPage) {
-      case 0:
+      case 0: // Role selection
         return _selectedUserType != null;
-      case 1: // Personal Info
+      case 1: // Terms & Conditions
+        return _termsAccepted;
+      case 2: // Personal Info
         return _dobController.text.isNotEmpty &&
             _selectedGender != null &&
             _vetNationalIdController.text.isNotEmpty;
-      case 2: // Professional
+      case 3: // Professional
         return _selectedEducationLevel != null &&
             _vetFieldOfStudyController.text.isNotEmpty &&
             _vetExperienceController.text.isNotEmpty &&
             _vetProfileController.text.isNotEmpty;
-      case 3: // Documents
+      case 4: // Documents
         return _uploadedCertificates.isNotEmpty &&
             _idPhotoFile != null &&
             _selfieFile != null;
-      case 4: // Location
+      case 5: // Location
         return _selectedAddress != null && _latitude != null && _longitude != null;
-      case 5: // Congratulations
+      case 6: // Congratulations
         return true;
       default:
         return false;
@@ -535,7 +539,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
       actions: [
         FilledButton(
           style: FilledButton.styleFrom(
-            foregroundColor: Colors.red,
+            foregroundColor: Colors.white,
             backgroundColor: Colors.red,
           ),
           onPressed: () => context.go(AppRoutes.login),
@@ -588,6 +592,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     if (_selectedUserType == 'vet') {
       return [
         _buildRoleSelectionPage(),
+        _buildVetTermsPage(),
         _buildVetPersonalInfoPage(),
         _buildVetProfessionalPage(),
         _buildVetDocumentsPage(),
@@ -610,18 +615,9 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     return UserTypeSelection(
       selectedUserType: _selectedUserType,
       onUserTypeSelected: (String userType) async {
-        if (userType == 'vet') {
-          final accepted = await TermsUtil.showVetTermsDialog(context);
-          if (!accepted) {
-            ToastUtil.showError(
-              'You must accept the Terms & Code of Conduct to register as an Extension Officer',
-            );
-            return;
-          }
-        }
-
         setState(() {
           _selectedUserType = userType;
+          _termsAccepted = false;
         });
       },
     );
@@ -646,6 +642,138 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
           _selectedBirdTypeId = id;
         });
       },
+    );
+  }
+
+  Widget _buildVetTermsPage() {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.gavel, color: primaryGreen, size: 28),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Terms & Code of Conduct',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'As an Extension Officer on AgriFlock 360, you agree to:',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 12),
+                _TermsItem(
+                  icon: Icons.verified_user,
+                  text: 'Provide accurate, honest, and professional advice to farmers.',
+                ),
+                _TermsItem(
+                  icon: Icons.privacy_tip,
+                  text: 'Maintain strict confidentiality of all farmer data and records.',
+                ),
+                _TermsItem(
+                  icon: Icons.schedule,
+                  text: 'Honor accepted visit appointments and notify farmers promptly if unable to attend.',
+                ),
+                _TermsItem(
+                  icon: Icons.workspace_premium,
+                  text: 'Uphold the highest standards of professional conduct at all times.',
+                ),
+                _TermsItem(
+                  icon: Icons.report_problem,
+                  text: 'Report any conflicts of interest or ethical concerns to the platform administrators.',
+                ),
+                _TermsItem(
+                  icon: Icons.block,
+                  text: 'Not engage in any form of fraudulent or misleading activity.',
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _termsAccepted = !_termsAccepted;
+              });
+            },
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Checkbox(
+                  value: _termsAccepted,
+                  onChanged: (value) {
+                    setState(() {
+                      _termsAccepted = value ?? false;
+                    });
+                  },
+                  activeColor: primaryGreen,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 12),
+                    child: Text(
+                      'I have read and agree to the Terms & Code of Conduct for Extension Officers on AgriFlock 360.',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.black87,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (!_termsAccepted)
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: Text(
+                'You must accept the terms to proceed.',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.red.shade600,
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -822,6 +950,33 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TermsItem extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _TermsItem({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: Colors.green.shade600),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 13, color: Colors.black87, height: 1.4),
             ),
           ),
         ],

@@ -116,7 +116,7 @@ class _QuickBatchesListScreenState extends State<QuickBatchesListScreen> {
         );
         final BatchModel batchCopy = BatchModel(
           id: batch.id,
-          batchName: batch.batchName,
+          batchNumber: batch.batchNumber,
           birdTypeId: batch.birdTypeId,
           breed: batch.breed ?? 'Not Provided',
           type: '',
@@ -164,7 +164,7 @@ class _QuickBatchesListScreenState extends State<QuickBatchesListScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    batch.batchName,
+                    batch.batchNumber,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,

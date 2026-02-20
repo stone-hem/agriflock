@@ -50,11 +50,53 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
 
   @override
   Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+
+        // Breakpoints
+        if (width >= 900) {
+          // Large tablet / desktop — 3-column grid
+          return _buildGrid(crossAxisCount: 3);
+        } else if (width >= 600) {
+          // Tablet — 2-column grid
+          return _buildGrid(crossAxisCount: 2);
+        } else {
+          // Mobile — original carousel
+          return _buildCarousel(context);
+        }
+      },
+    );
+  }
+
+  // ─── Grid layout (tablet / desktop) ───────────────────────────────────────
+
+  Widget _buildGrid({required int crossAxisCount}) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        // Let cards size themselves — childAspectRatio controls the height.
+        // Adjust this value if cards feel too tall/short on your target devices.
+        childAspectRatio: 0.72,
+      ),
+      itemCount: widget.batches.length,
+      itemBuilder: (context, index) {
+        return _buildBatchCard(widget.batches[index]);
+      },
+    );
+  }
+
+  // ─── Carousel layout (mobile) ──────────────────────────────────────────────
+
+  Widget _buildCarousel(BuildContext context) {
     final screenHeight = MediaQuery.sizeOf(context).height;
 
     return Column(
       children: [
-        // PageView
         SizedBox(
           height: screenHeight * 0.33,
           child: PageView.builder(
@@ -124,10 +166,11 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
     );
   }
 
+  // ─── Shared card ───────────────────────────────────────────────────────────
+
   Widget _buildBatchCard(BatchHomeData batch) {
     final isLayers = batch.birdType.toLowerCase() == 'layers';
 
-    // Color scheme based on bird type
     final primaryColor = isLayers ? Colors.amber : Colors.blue;
     final accentColor = isLayers ? Colors.orange : Colors.indigo;
 
@@ -138,7 +181,9 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
           end: Alignment.bottomRight,
           colors: [
             Colors.white,
-            isLayers ? Colors.amber.shade50.withOpacity(0.3) : Colors.blue.shade50.withOpacity(0.3),
+            isLayers
+                ? Colors.amber.shade50.withOpacity(0.3)
+                : Colors.blue.shade50.withOpacity(0.3),
           ],
         ),
         borderRadius: BorderRadius.circular(12),
@@ -157,10 +202,10 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(14),
         child: Column(
-          crossAxisAlignment: .start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Compact Header with gradient accent
+            // Header
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
@@ -173,11 +218,11 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
-                crossAxisAlignment: .start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: Column(
-                      crossAxisAlignment: .start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -244,7 +289,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Column(
-                      crossAxisAlignment: .end,
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
                           'Age',
@@ -270,14 +315,13 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
 
             const SizedBox(height: 8),
 
-            // Compact Stats Grid
+            // Stats Grid
             Row(
-              crossAxisAlignment: .start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Left Column
                 Expanded(
                   child: Column(
-                    mainAxisSize: .min,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       _buildInfoRow(
                         'Total Birds',
@@ -314,10 +358,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                     ],
                   ),
                 ),
-
                 const SizedBox(width: 10),
-
-                // Right Column
                 Expanded(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -364,11 +405,12 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
               ],
             ),
 
-            // Compact Vaccination Info
+            // Vaccination Info
             if (batch.vaccination.vaccinesDone.isNotEmpty)
               Container(
                 margin: const EdgeInsets.only(top: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                padding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [Colors.green.shade50, Colors.teal.shade50],
@@ -407,14 +449,15 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
               },
               style: TextButton.styleFrom(
                 foregroundColor: primaryColor.shade700,
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               ),
               label: const Text(
                 'View Details',
                 style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
               ),
-              icon: Icon(Icons.arrow_forward, size: 16),
-            )
+              icon: const Icon(Icons.arrow_forward, size: 16),
+            ),
           ],
         ),
       ),
@@ -430,35 +473,28 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
       }) {
     return Row(
       children: [
-        Icon(
-          icon,
-          size: 14,
-          color: iconColor,
-        ),
+        Icon(icon, size: 14, color: iconColor),
         const SizedBox(width: 6),
         Expanded(
           child: Column(
-            crossAxisAlignment: .start,
-            mainAxisSize: .min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 label,
-                style: TextStyle(
-                  color: Colors.grey.shade500,
-                  fontSize: 10,
-                ),
+                style: TextStyle(color: Colors.grey.shade500, fontSize: 10),
                 maxLines: 1,
-                overflow: .ellipsis,
+                overflow: TextOverflow.ellipsis,
               ),
               Text(
                 value,
                 style: TextStyle(
                   color: valueColor ?? Colors.grey.shade800,
                   fontSize: 13,
-                  fontWeight: .w600,
+                  fontWeight: FontWeight.w600,
                 ),
                 maxLines: 1,
-                overflow: .ellipsis,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),

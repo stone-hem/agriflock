@@ -212,7 +212,7 @@ class _BatchSelectionViewState extends State<BatchSelectionView> {
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Text(
-                                        batch.batchName,
+                                        batch.batchNumber,
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold,

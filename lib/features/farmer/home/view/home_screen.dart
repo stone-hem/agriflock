@@ -772,40 +772,54 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildQuickActionsGrid() {
     return GridView.extent(
-      maxCrossAxisExtent: 250, // controls responsiveness
+      maxCrossAxisExtent: 130,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 10,
-      crossAxisSpacing: 10,
-      childAspectRatio: 1.2,
+      crossAxisSpacing: 4,
+      childAspectRatio: 0.72,
       children: [
         _buildQuickActionCard(
           icon: Icons.receipt_long,
-          title: 'Expenditures',
-          subtitle: 'Review Your expenses and costs in details',
+          title: 'Expenses',
+          subtitle: 'Review and add expenses',
           color: Colors.red,
           onTap: () => context.push('/my-expenditures'),
         ),
         _buildQuickActionCard(
           icon: Icons.edit_note,
-          title: 'Quick Daily Record',
-          subtitle: 'Feed, vaccine or medication',
+          title: 'Daily Record',
+          subtitle: 'Record Feed, Vaccination, Medication, Mortality, Weight, Product',
           color: Colors.green,
           onTap: () => context.push('/quick-recording'),
         ),
         _buildQuickActionCard(
           icon: Icons.pets,
           title: 'My Batches',
-          subtitle: 'View all your batches',
+          subtitle: 'All your batches',
           color: Colors.orange,
           onTap: () => context.push('/quick-batches'),
         ),
         _buildQuickActionCard(
           icon: Icons.assessment,
           title: 'Reports',
-          subtitle: 'View batch or farm reports',
+          subtitle: 'Batch & farm reports',
           color: Colors.blue,
           onTap: () => context.push('/reports'),
+        ),
+        _buildQuickActionCard(
+          icon: Icons.devices,
+          title: 'My Devices',
+          subtitle: 'Monitor devices',
+          color: Colors.teal,
+          onTap: () => context.push('/my-devices'),
+        ),
+        _buildQuickActionCard(
+          icon: Icons.medical_services_outlined,
+          title: 'Book Vets',
+          subtitle: 'Find and book Extension officers',
+          color: Colors.purple,
+          onTap: () => context.push('/all-vets'),
         ),
       ],
     );
@@ -821,7 +835,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -836,7 +850,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             Container(
               padding: const EdgeInsets.all(8),
@@ -844,20 +858,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(icon, color: color, size: 20),
+              child: Icon(icon, color: color, size: 18),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             Text(
               title,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 11.5,
                 fontWeight: FontWeight.w600,
                 color: Colors.grey.shade800,
               ),
             ),
             Text(
               subtitle,
-              style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+              style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
             ),
           ],
         ),

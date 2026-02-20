@@ -573,7 +573,8 @@ class _FarmCard extends StatelessWidget {
                         AddEditHouseDialog.show(
                           context: context,
                           farm: farm,
-                          onSuccess: onEdited,
+                          onSuccess: () =>
+                              context.push(AppRoutes.batches, extra: farm),
                         );
                       },
                       icon: Icon(Icons.add_home, size: 18),

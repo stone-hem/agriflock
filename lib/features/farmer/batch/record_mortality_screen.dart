@@ -272,7 +272,7 @@ class _RecordMortalityScreenState extends State<RecordMortalityScreen> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
-                                    batch.batchName,
+                                    batch.batchNumber,
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -332,7 +332,7 @@ class _RecordMortalityScreenState extends State<RecordMortalityScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              widget.batch!.batchName,
+                              widget.batch!.batchNumber,
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,

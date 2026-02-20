@@ -94,7 +94,7 @@ class UseCategorySelectionView extends StatelessWidget {
                   const Icon(Icons.pets, color: Colors.green, size: 18),
                   const SizedBox(width: 8),
                   Text(
-                    batch.batchName,
+                    batch.batchNumber,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,

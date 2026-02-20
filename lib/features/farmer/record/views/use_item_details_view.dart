@@ -201,7 +201,7 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                   Icon(Icons.pets, color: categoryColor, size: 16),
                   const SizedBox(width: 8),
                   Text(
-                    widget.batch.batchName,
+                    widget.batch.batchNumber,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,

@@ -7,12 +7,14 @@ class PendingVisitCard extends StatefulWidget {
   final Visit visit;
   final VisitsRepository repository;
   final VoidCallback onActionCompleted;
+  final void Function(String targetStatus)? onStatusChanged;
 
   const PendingVisitCard({
     super.key,
     required this.visit,
     required this.repository,
     required this.onActionCompleted,
+    this.onStatusChanged,
   });
 
   @override
@@ -69,6 +71,7 @@ class _PendingVisitCardState extends State<PendingVisitCard> {
             ),
           );
           widget.onActionCompleted();
+          widget.onStatusChanged?.call(VisitStatus.accepted.value);
           setState(() => _isProcessing = false);
         },
         failure: (message, _, __) {
@@ -104,6 +107,7 @@ class _PendingVisitCardState extends State<PendingVisitCard> {
             ),
           );
           widget.onActionCompleted();
+          widget.onStatusChanged?.call(VisitStatus.declined.value);
           setState(() => _isProcessing = false);
         },
         failure: (message, _, __) {

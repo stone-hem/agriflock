@@ -485,7 +485,7 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
                           value: batch.id,
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Text(batch.batchName),
+                            child: Text(batch.batchNumber),
                           ),
                         );
                       }).toList(),
@@ -598,7 +598,7 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
       final batch = _availableBatches.firstWhere((b) => b.id == _selectedBatch);
       filters.add(
         Chip(
-          label: Text('Batch: ${batch.batchName}'),
+          label: Text('Batch: ${batch.batchNumber}'),
           deleteIcon: const Icon(Icons.close, size: 16),
           onDeleted: () {
             setState(() {
@@ -882,9 +882,9 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
           onPressed: () => context.pop(),
         ),
         actions: [
-          IconButton(
+          TextButton.icon(
             icon: const Icon(Icons.filter_list),
-            onPressed: _showFilterBottomSheet,
+            onPressed: _showFilterBottomSheet, label: Text('Filters'),
           ),
         ],
       ),
