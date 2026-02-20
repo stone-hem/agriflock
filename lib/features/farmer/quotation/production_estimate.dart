@@ -36,13 +36,49 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
   void _initProductionControllers(ProductionQuotationData data) {
     for (final c in _unitPriceControllers.values) c.dispose();
     _unitPriceControllers.clear();
-    for (int i = 0; i < data.breakdown.items.length; i++) {
-      final price = double.tryParse(data.breakdown.items[i].unitPrice) ?? 0.0;
+    final items = data.breakdown?.items ?? [];
+    for (int i = 0; i < items.length; i++) {
+      final price = double.tryParse(items[i].unitPrice) ?? 0.0;
       _unitPriceControllers['$i'] = TextEditingController(
         text: price.toStringAsFixed(2),
       );
     }
   }
+
+  /// Initialises controllers for the two-stage layers breakdown.
+  /// Keys: "s1_0", "s1_1", … for stage 1; "s2_0", "s2_1", … for stage 2.
+  void _initLayersControllers(ProductionQuotationData data) {
+    for (final c in _unitPriceControllers.values) c.dispose();
+    _unitPriceControllers.clear();
+    final lb = data.layersBreakdown;
+    if (lb == null) return;
+    for (int i = 0; i < lb.stage1.items.length; i++) {
+      final price = double.tryParse(lb.stage1.items[i].unitPrice) ?? 0.0;
+      _unitPriceControllers['s1_$i'] = TextEditingController(
+        text: price.toStringAsFixed(2),
+      );
+    }
+    for (int i = 0; i < lb.stage2.items.length; i++) {
+      final price = double.tryParse(lb.stage2.items[i].unitPrice) ?? 0.0;
+      _unitPriceControllers['s2_$i'] = TextEditingController(
+        text: price.toStringAsFixed(2),
+      );
+    }
+  }
+
+  // ── Layers helpers ──────────────────────────────────────────────────────
+
+  /// True when the selected breed is the egg-laying layers breed.
+  bool get _isLayersBreed =>
+      _selectedBreed?.name.toLowerCase().contains('laying') ?? false;
+
+  /// Scale factor applied to all quantities / totals in the layers tables.
+  /// Base API call always uses 128 birds; user's selected capacity scales the display.
+  double get _layersScaleFactor =>
+      _selectedCapacity != null ? _selectedCapacity! / 128.0 : 1.0;
+
+  // Layers dropdown options (each is double the previous, starting from 128)
+  static const List<int> _layersQuantities = [128, 256, 512, 1024, 2048];
 
   // STATIC CAPACITY OPTIONS (same for all breeds)
   final List<ProductionCapacity> _capacities = [
@@ -108,14 +144,22 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
         _isGeneratingQuotation = true;
       });
 
-      final result = await _quotationRepository.productionQuotation(
-        breedId: _selectedBreed!.id,  // Use the UUID from API
-        quantity: _selectedCapacity!,
+      // Layers breed always fetches the base 128-bird quotation; the display
+    // is then scaled by _layersScaleFactor based on the dropdown selection.
+    final effectiveQuantity = _isLayersBreed ? 128 : _selectedCapacity!;
+
+    final result = await _quotationRepository.productionQuotation(
+        breedId: _selectedBreed!.id,
+        quantity: effectiveQuantity,
       );
 
       switch (result) {
         case Success(data: final quotation):
-          _initProductionControllers(quotation);
+          if (quotation.isLayersBreed) {
+            _initLayersControllers(quotation);
+          } else {
+            _initProductionControllers(quotation);
+          }
           setState(() {
             _quotationData = quotation;
             _isGeneratingQuotation = false;
@@ -266,7 +310,9 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Choose your target number of birds:',
+                    _isLayersBreed
+                        ? 'Base estimate uses 128 birds. Select a size to scale the quotation:'
+                        : 'Choose your target number of birds:',
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey.shade600,
@@ -274,22 +320,57 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
                   ),
                   const SizedBox(height: 12),
 
-                  // Capacity Grid (static options)
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 1.2,
+                  // ── Layers breed: dropdown multiplier ──────────────────
+                  if (_isLayersBreed) ...[
+                    DropdownButtonFormField<int>(
+                      initialValue: _selectedCapacity,
+                      decoration: InputDecoration(
+                        labelText: 'Flock Size',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
+                      ),
+                      hint: const Text('Select flock size'),
+                      items: _layersQuantities.map((qty) {
+                        final factor = qty ~/ 128;
+                        final label = factor == 1
+                            ? '$qty Birds (Base)'
+                            : '$qty Birds (×$factor)';
+                        return DropdownMenuItem<int>(
+                          value: qty,
+                          child: Text(label),
+                        );
+                      }).toList(),
+                      onChanged: _isGeneratingQuotation
+                          ? null
+                          : (value) {
+                              if (value == null) return;
+                              setState(() => _selectedCapacity = value);
+                              // Fetch from API only on the first selection
+                              if (_quotationData == null) _generateQuotation();
+                            },
                     ),
-                    itemCount: _capacities.length,
-                    itemBuilder: (context, index) {
-                      final capacity = _capacities[index];
-                      return _buildCapacityCard(capacity);
-                    },
-                  ),
+                  ] else ...[
+                    // ── Other breeds: capacity card grid ─────────────────
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        childAspectRatio: 1.2,
+                      ),
+                      itemCount: _capacities.length,
+                      itemBuilder: (context, index) {
+                        final capacity = _capacities[index];
+                        return _buildCapacityCard(capacity);
+                      },
+                    ),
+                  ],
                   const SizedBox(height: 20),
 
                   // Loading indicator when generating
@@ -472,26 +553,356 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
   // ========== QUOTATION TABLES SECTION ==========
   Widget _buildQuotationTables() {
     if (_quotationData == null) return Container();
+    if (_quotationData!.isLayersBreed) return _buildLayersQuotationTables();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [_buildDetailedItemsTable()],
+    );
+  }
+
+  // ========== LAYERS (LAYING EGGS) TABLES ==========
+
+  /// Builds a single stage table (Stage 1 or Stage 2) for layers quotations.
+  /// [stageKey] is the controller prefix: "s1" or "s2".
+  /// [stageName] is the display title.
+  /// [stageItems] is the list of items from the API for that stage.
+  /// [factor] is the display scale factor (selectedQty / 128).
+  Widget _buildLayersStageTable(
+    String stageKey,
+    String stageName,
+    List<BreakdownItem> stageItems,
+    double factor,
+  ) {
+    double stageSubtotal = 0;
+    final List<DataRow> rows = [];
+
+    for (int i = 0; i < stageItems.length; i++) {
+      final item = stageItems[i];
+      final controller = _unitPriceControllers['${stageKey}_$i'];
+      final price =
+          double.tryParse(controller?.text ?? '') ??
+          double.tryParse(item.unitPrice) ??
+          0.0;
+      final scaledQty = (item.quantity * factor).round();
+      final rowTotal = price * scaledQty;
+      stageSubtotal += rowTotal;
+
+      rows.add(DataRow(cells: [
+        DataCell(Container(
+          constraints: const BoxConstraints(minWidth: 150),
+          child: Text(item.name, style: const TextStyle(fontSize: 12)),
+        )),
+        DataCell(Container(
+          constraints: const BoxConstraints(minWidth: 70),
+          child: Text(item.unit, style: const TextStyle(fontSize: 12)),
+        )),
+        DataCell(Container(
+          constraints: const BoxConstraints(minWidth: 50),
+          child: Text('$scaledQty', style: const TextStyle(fontSize: 12)),
+        )),
+        DataCell(SizedBox(
+          width: 100,
+          child: TextField(
+            controller: controller,
+            keyboardType:
+                const TextInputType.numberWithOptions(decimal: true),
+            style: const TextStyle(fontSize: 12),
+            decoration: const InputDecoration(
+              isDense: true,
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+              border: OutlineInputBorder(),
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+        )),
+        DataCell(Container(
+          constraints: const BoxConstraints(minWidth: 100),
+          child: Text(
+            _formatCurrency(rowTotal),
+            style: const TextStyle(
+                fontSize: 12, fontWeight: FontWeight.w600),
+          ),
+        )),
+      ]));
+    }
+
+    // Subtotal row
+    rows.add(DataRow(cells: [
+      DataCell(Container(
+        color: Colors.teal.withOpacity(0.08),
+        constraints: const BoxConstraints(minWidth: 150),
+        child: const Text('SUB TOTAL',
+            style: TextStyle(
+                fontWeight: FontWeight.bold, color: Colors.teal)),
+      )),
+      const DataCell(Text('')),
+      const DataCell(Text('')),
+      const DataCell(Text('')),
+      DataCell(Container(
+        color: Colors.teal.withOpacity(0.08),
+        constraints: const BoxConstraints(minWidth: 100),
+        child: Text(
+          _formatCurrency(stageSubtotal),
+          style: const TextStyle(
+              fontWeight: FontWeight.bold, color: Colors.teal),
+        ),
+      )),
+    ]));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-
-        // // Basic Information Table
-        // _buildBasicInfoTable(),
-        // const SizedBox(height: 20),
-        //
-        // // Financial Summary Table
-        // _buildFinancialSummaryTable(),
-        // const SizedBox(height: 20),
-        //
-        // // Category-wise Breakdown
-        // _buildCategoryBreakdownTable(),
-        // const SizedBox(height: 20),
-
-        // Detailed Items Table
-        _buildDetailedItemsTable(),
+        Text(
+          stageName,
+          style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87),
+        ),
+        const SizedBox(height: 8),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: DataTable(
+            columnSpacing: 16,
+            horizontalMargin: 16,
+            dataRowMinHeight: 52,
+            dataRowMaxHeight: 52,
+            columns: const [
+              DataColumn(label: Text('Item')),
+              DataColumn(label: Text('Unit')),
+              DataColumn(label: Text('Qty')),
+              DataColumn(label: Text('Unit Price (KSh)')),
+              DataColumn(label: Text('Total (KSh)')),
+            ],
+            rows: rows,
+          ),
+        ),
       ],
+    );
+  }
+
+  Widget _buildLayersQuotationTables() {
+    final data = _quotationData!;
+    final lb = data.layersBreakdown!;
+    final factor = _layersScaleFactor;
+    final scaledQty = (_selectedCapacity ?? 128);
+
+    // Grand total = sum of all row totals across both stages
+    double grand = 0;
+    for (int i = 0; i < lb.stage1.items.length; i++) {
+      final p = double.tryParse(
+              _unitPriceControllers['s1_$i']?.text ?? '') ??
+          double.tryParse(lb.stage1.items[i].unitPrice) ??
+          0.0;
+      grand += p * (lb.stage1.items[i].quantity * factor).round();
+    }
+    for (int i = 0; i < lb.stage2.items.length; i++) {
+      final p = double.tryParse(
+              _unitPriceControllers['s2_$i']?.text ?? '') ??
+          double.tryParse(lb.stage2.items[i].unitPrice) ??
+          0.0;
+      grand += p * (lb.stage2.items[i].quantity * factor).round();
+    }
+
+    // Analysis — scale quantities/investments; per-unit figures stay fixed
+    final analysis = lb.analysis;
+    final scaledInvestment = analysis.totalInvestment * factor;
+    final scaledTrays = (analysis.traysAt70LayRate * factor).round();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.teal,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.layers, color: Colors.white, size: 24),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'LAYERS PRODUCTION QUOTATION',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      '$scaledQty birds  •  scale ×${factor == factor.roundToDouble() ? factor.toInt() : factor}',
+                      style: TextStyle(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        TextButton.icon(
+          onPressed: null,
+          icon: const Icon(Icons.arrow_forward_ios, size: 14),
+          label: const Text(
+              'Scroll left or right to see the full table.'),
+        ),
+
+        // Stage 1
+        Card(
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: Colors.teal.withOpacity(0.2)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: _buildLayersStageTable(
+              's1',
+              'Stage 1 — Rearing Phase (0–20 weeks)',
+              lb.stage1.items,
+              factor,
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Stage 2
+        Card(
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: Colors.teal.withOpacity(0.2)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: _buildLayersStageTable(
+              's2',
+              'Stage 2 — Laying Phase (20–80 weeks)',
+              lb.stage2.items,
+              factor,
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Grand Total
+        Container(
+          padding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: Colors.green.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border:
+                Border.all(color: Colors.green.withOpacity(0.3)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'GRAND TOTAL',
+                style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green),
+              ),
+              Text(
+                'KSh ${_formatCurrency(grand)}',
+                style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        // Analysis
+        Card(
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: Colors.blue.withOpacity(0.2)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.analytics_outlined,
+                        color: Colors.blue, size: 20),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'INVESTMENT ANALYSIS',
+                      style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _analysisRow('Total Investment',
+                    'KSh ${_formatCurrency(scaledInvestment)}'),
+                _analysisRow('Trays at 70% Lay Rate',
+                    '$scaledTrays trays'),
+                _analysisRow('Cost per Egg',
+                    'KSh ${analysis.costPerEgg.toStringAsFixed(2)}',
+                    note: 'fixed'),
+                _analysisRow('Break-even Cost per Tray',
+                    'KSh ${_formatCurrency(analysis.breakEvenCostPerTray)}',
+                    note: 'fixed'),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _analysisRow(String label, String value, {String? note}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label,
+              style: TextStyle(
+                  fontSize: 13, color: Colors.grey.shade700)),
+          Row(
+            children: [
+              Text(value,
+                  style: const TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w600)),
+              if (note != null) ...[
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(note,
+                      style: TextStyle(
+                          fontSize: 10, color: Colors.grey.shade600)),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -706,7 +1117,7 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
 
   Widget _buildCategoryBreakdownTable() {
     final breakdown = _quotationData!.breakdown;
-    final categories = breakdown.getTotalCostsByCategory();
+    final categories = breakdown?.getTotalCostsByCategory() ?? {};
 
     return Card(
       elevation: 0,
@@ -772,7 +1183,7 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen> {
   }
 
   Widget _buildDetailedItemsTable() {
-    final allItems = _quotationData!.breakdown.items;
+    final allItems = _quotationData!.breakdown?.items ?? [];
 
     // Build category groups preserving flat indices for controller lookup
     final Map<String, List<(int, BreakdownItem)>> itemsByCategory = {};

@@ -47,7 +47,6 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
 
   // ── Step 3: Batch form ─────────────────────────────────
   final _batchFormKey = GlobalKey<FormState>();
-  final _batchNameController = TextEditingController();
   final _hatchController = TextEditingController();
   final _initialQuantityController = TextEditingController();
   final _birdsAliveController = TextEditingController();
@@ -383,7 +382,6 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
 
       final batchData = <String, dynamic>{
         'house_id': _createdHouseId,
-        'batch_name': _batchNameController.text.trim(),
         'bird_type_id': _selectedBirdTypeId,
         'batch_type': _selectedBatchType,
         'initial_count': int.parse(_initialQuantityController.text.trim()),
@@ -445,7 +443,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         setState(() {
-          _createdBatchName = _batchNameController.text.trim();
+          _createdBatchName = 'New Batch';
           _isCreatingBatch = false;
         });
 
@@ -858,19 +856,6 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
               primaryColor: Colors.green,
             ),
             const SizedBox(height: 32),
-
-            // Batch Name
-            ReusableInput(
-              topLabel: 'Batch Name',
-              controller: _batchNameController,
-              validator: (value) {
-                if (value == null || value.isEmpty) return 'Please enter batch name';
-                return null;
-              },
-              labelText: 'Name',
-              hintText: 'e.g., Spring Broiler Batch 2024',
-            ),
-            const SizedBox(height: 20),
 
             // Bird Type
             _isLoadingBirdTypes
@@ -1630,7 +1615,6 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
     _houseNameController.dispose();
     _houseCapacityController.dispose();
     _houseDescriptionController.dispose();
-    _batchNameController.dispose();
     _hatchController.dispose();
     _initialQuantityController.dispose();
     _birdsAliveController.dispose();
