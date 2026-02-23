@@ -450,7 +450,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     _buildSubscriptionCTA()
                   else ...[
                     Text(
-                      'Batch(es) Overview Report',
+                      'Daily Flock Summary',
                       style: Theme.of(context).textTheme.titleMedium!
                           .copyWith(
                         fontWeight: FontWeight.bold,

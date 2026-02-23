@@ -48,13 +48,16 @@ class BatchHomeData {
   final int totalBirds;
   final int birdsPlaced;
   final String reportBy;
-  final String ageDays; // Keep as String to handle both formats
+  final String ageDays;
   final int ageWeeks;
   final ProductionStage productionStage;
   final int mortality;
   final String mortalityRate;
+  final double productionCostPerBird;  // ADD THIS
+  final String expenditureCurrency;     // ADD THIS
   final int foodInStoreBags;
   final int foodInStoreKg;
+  final double totalExpectedFoodPerDayKg;  // ADD THIS
   final double expectedFoodPerBirdPerDayG;
   final double totalActualFoodPerDayKg;
   final double actualFoodPerBirdPerDayG;
@@ -64,6 +67,8 @@ class BatchHomeData {
   final int? totalEggProduction;
   final int? productionPercentage;
   final double? eggCost;
+  final double? productionCostPerEgg;   // ADD THIS
+  final String? othersProduction;        // ADD THIS
 
   BatchHomeData({
     required this.batchId,
@@ -80,8 +85,11 @@ class BatchHomeData {
     required this.productionStage,
     required this.mortality,
     required this.mortalityRate,
+    required this.productionCostPerBird,  // ADD THIS
+    required this.expenditureCurrency,    // ADD THIS
     required this.foodInStoreBags,
     required this.foodInStoreKg,
+    required this.totalExpectedFoodPerDayKg,  // ADD THIS
     required this.expectedFoodPerBirdPerDayG,
     required this.totalActualFoodPerDayKg,
     required this.actualFoodPerBirdPerDayG,
@@ -91,10 +99,9 @@ class BatchHomeData {
     this.totalEggProduction,
     this.productionPercentage,
     this.eggCost,
+    this.productionCostPerEgg,  // ADD THIS
+    this.othersProduction,      // ADD THIS
   });
-
-  // Helper getter to get age days as int when needed
-  int get ageDaysAsInt => TypeUtils.toIntSafe(ageDays);
 
   factory BatchHomeData.fromJson(Map<String, dynamic> json) {
     final productionStageMap = TypeUtils.toMapSafe(json['production_stage']);
@@ -115,8 +122,11 @@ class BatchHomeData {
       productionStage: ProductionStage.fromJson(productionStageMap ?? {}),
       mortality: TypeUtils.toIntSafe(json['mortality']),
       mortalityRate: TypeUtils.toStringSafe(json['mortality_rate'], defaultValue: '0%'),
+      productionCostPerBird: TypeUtils.toDoubleSafe(json['production_cost_per_bird']), // ADD THIS
+      expenditureCurrency: TypeUtils.toStringSafe(json['expenditure_currency']), // ADD THIS
       foodInStoreBags: TypeUtils.toIntSafe(json['food_in_store_bags']),
       foodInStoreKg: TypeUtils.toIntSafe(json['food_in_store_kg']),
+      totalExpectedFoodPerDayKg: TypeUtils.toDoubleSafe(json['total_expected_food_per_day_kg']), // ADD THIS
       expectedFoodPerBirdPerDayG: TypeUtils.toDoubleSafe(json['expected_food_per_bird_per_day_g']),
       totalActualFoodPerDayKg: TypeUtils.toDoubleSafe(json['total_actual_food_per_day_kg']),
       actualFoodPerBirdPerDayG: TypeUtils.toDoubleSafe(json['actual_food_per_bird_per_day_g']),
@@ -126,6 +136,8 @@ class BatchHomeData {
       totalEggProduction: TypeUtils.toNullableIntSafe(json['total_egg_production']),
       productionPercentage: TypeUtils.toNullableIntSafe(json['production_percentage']),
       eggCost: TypeUtils.toNullableDoubleSafe(json['egg_cost']),
+      productionCostPerEgg: TypeUtils.toNullableDoubleSafe(json['production_cost_per_egg']), // ADD THIS
+      othersProduction: TypeUtils.toNullableStringSafe(json['others_production']), // ADD THIS
     );
   }
 
@@ -145,8 +157,11 @@ class BatchHomeData {
       'production_stage': productionStage.toJson(),
       'mortality': mortality,
       'mortality_rate': mortalityRate,
+      'production_cost_per_bird': productionCostPerBird, // ADD THIS
+      'expenditure_currency': expenditureCurrency, // ADD THIS
       'food_in_store_bags': foodInStoreBags,
       'food_in_store_kg': foodInStoreKg,
+      'total_expected_food_per_day_kg': totalExpectedFoodPerDayKg, // ADD THIS
       'expected_food_per_bird_per_day_g': expectedFoodPerBirdPerDayG,
       'total_actual_food_per_day_kg': totalActualFoodPerDayKg,
       'actual_food_per_bird_per_day_g': actualFoodPerBirdPerDayG,
@@ -156,10 +171,11 @@ class BatchHomeData {
       'total_egg_production': totalEggProduction,
       'production_percentage': productionPercentage,
       'egg_cost': eggCost,
+      'production_cost_per_egg': productionCostPerEgg, // ADD THIS
+      'others_production': othersProduction, // ADD THIS
     };
   }
 
-  // Helper method to parse age_days - handle both String and int
   static String _parseAgeDays(dynamic value) {
     if (value == null) return '0';
     if (value is String) return value;
@@ -232,8 +248,8 @@ class ExpectedMilestone {
 }
 
 class Vaccination {
-  final List<String> vaccinesDone;
-  final List<String> vaccinesUpcoming;
+  final List<Vaccine> vaccinesDone;      // Changed from List<String>
+  final List<Vaccine> vaccinesUpcoming;  // Changed from List<String>
 
   Vaccination({
     required this.vaccinesDone,
@@ -242,24 +258,56 @@ class Vaccination {
 
   factory Vaccination.fromJson(Map<String, dynamic> json) {
     return Vaccination(
-      vaccinesDone: _parseStringList(json['vaccines_done']),
-      vaccinesUpcoming: _parseStringList(json['vaccines_upcoming']),
+      vaccinesDone: _parseVaccineList(json['vaccines_done']),
+      vaccinesUpcoming: _parseVaccineList(json['vaccines_upcoming']),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'vaccines_done': vaccinesDone,
-      'vaccines_upcoming': vaccinesUpcoming,
+      'vaccines_done': vaccinesDone.map((v) => v.toJson()).toList(),
+      'vaccines_upcoming': vaccinesUpcoming.map((v) => v.toJson()).toList(),
     };
   }
 
-  // Helper method to safely parse string lists
-  static List<String> _parseStringList(dynamic value) {
+  static List<Vaccine> _parseVaccineList(dynamic value) {
     if (value == null) return [];
     if (value is List) {
-      return value.map((item) => TypeUtils.toStringSafe(item)).toList();
+      return value.map((item) {
+        if (item is Map<String, dynamic>) {
+          return Vaccine.fromJson(item);
+        }
+        return Vaccine(name: item.toString()); // Fallback for string items
+      }).toList();
     }
     return [];
+  }
+}
+
+class Vaccine {
+  final String name;
+  final String? dueDate;
+  final int? dayDue;
+
+  Vaccine({
+    required this.name,
+    this.dueDate,
+    this.dayDue,
+  });
+
+  factory Vaccine.fromJson(Map<String, dynamic> json) {
+    return Vaccine(
+      name: TypeUtils.toStringSafe(json['name']),
+      dueDate: TypeUtils.toNullableStringSafe(json['due_date']),
+      dayDue: TypeUtils.toNullableIntSafe(json['day_due']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'due_date': dueDate,
+      'day_due': dayDue,
+    };
   }
 }

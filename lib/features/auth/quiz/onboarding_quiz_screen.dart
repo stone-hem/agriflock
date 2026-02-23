@@ -675,53 +675,124 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade200),
+
+          // Section 1
+          _TermsSection(
+            sectionNumber: '1',
+            title: 'Role Definition',
+            child: const _TermsBodyText(
+              'Extension officers using AgriFlock 360 are independent professionals who offer poultry advisory, vaccination, and technical services to farmers through the AgriFlock 360 platform. AgriFlock 360 is a technology marketplace and does not employ extension officers.',
             ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'As an Extension Officer on AgriFlock 360, you agree to:',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                    color: Colors.black87,
-                  ),
-                ),
-                SizedBox(height: 12),
-                _TermsItem(
-                  icon: Icons.verified_user,
-                  text: 'Provide accurate, honest, and professional advice to farmers.',
-                ),
-                _TermsItem(
-                  icon: Icons.privacy_tip,
-                  text: 'Maintain strict confidentiality of all farmer data and records.',
-                ),
-                _TermsItem(
-                  icon: Icons.schedule,
-                  text: 'Honor accepted visit appointments and notify farmers promptly if unable to attend.',
-                ),
-                _TermsItem(
-                  icon: Icons.workspace_premium,
-                  text: 'Uphold the highest standards of professional conduct at all times.',
-                ),
-                _TermsItem(
-                  icon: Icons.report_problem,
-                  text: 'Report any conflicts of interest or ethical concerns to the platform administrators.',
-                ),
-                _TermsItem(
-                  icon: Icons.block,
-                  text: 'Not engage in any form of fraudulent or misleading activity.',
-                ),
+          ),
+
+          // Section 2
+          _TermsSection(
+            sectionNumber: '2',
+            title: 'Eligibility & Onboarding Requirements',
+            child: Column(
+              children: const [
+                _TermsItem(icon: Icons.check_circle_outline, text: 'Must be an active poultry extension officer (government, NGO, private, or cooperative).'),
+                _TermsItem(icon: Icons.check_circle_outline, text: 'Must own a smartphone capable of running the AgriFlock 360 app.'),
+                _TermsItem(icon: Icons.check_circle_outline, text: 'Must provide accurate personal and professional information.'),
+                _TermsItem(icon: Icons.check_circle_outline, text: 'Must complete basic onboarding and module activation.'),
               ],
             ),
           ),
+
+          // Section 3
+          _TermsSection(
+            sectionNumber: '3',
+            title: 'Professional Conduct',
+            child: Column(
+              children: const [
+                _TermsItem(icon: Icons.verified_user, text: 'Act ethically and professionally at all times.'),
+                _TermsItem(icon: Icons.science, text: 'Provide accurate, science-based advice.'),
+                _TermsItem(icon: Icons.badge, text: 'Do not misrepresent qualifications.'),
+                _TermsItem(icon: Icons.privacy_tip, text: 'Respect farmers\' property, birds, and privacy.'),
+              ],
+            ),
+          ),
+
+          // Section 4
+          _TermsSection(
+            sectionNumber: '4',
+            title: 'Service Delivery Standards',
+            child: Column(
+              children: const [
+                _TermsItem(icon: Icons.fact_check, text: 'Confirm flock details before service.'),
+                _TermsItem(icon: Icons.vaccines, text: 'Use approved vaccines and methods.'),
+                _TermsItem(icon: Icons.app_registration, text: 'Record all services accurately in the app.'),
+                _TermsItem(icon: Icons.health_and_safety, text: 'Follow poultry welfare and biosecurity standards.'),
+              ],
+            ),
+          ),
+
+          // Section 5
+          _TermsSection(
+            sectionNumber: '5',
+            title: 'Payments & Earnings',
+            child: Column(
+              children: const [
+                _TermsItem(icon: Icons.price_change, text: 'Extension officers set or agree on service price within platform guidelines.'),
+                _TermsItem(icon: Icons.account_balance_wallet, text: 'Officers earn 80% per completed job.'),
+                _TermsItem(icon: Icons.percent, text: 'AgriFlock 360 earns 20% as platform commission.'),
+                _TermsItem(icon: Icons.mobile_friendly, text: 'Payments must be mobile money (logged in-app).'),
+              ],
+            ),
+          ),
+
+          // Section 6
+          _TermsSection(
+            sectionNumber: '6',
+            title: 'Ratings & Accountability',
+            child: Column(
+              children: const [
+                _TermsItem(icon: Icons.star_rate, text: 'Farmers rate services after completion.'),
+                _TermsItem(icon: Icons.trending_down, text: 'Consistently low ratings may result in reduced visibility, suspension, or removal.'),
+                _TermsItem(icon: Icons.report_problem, text: 'False reporting or malpractice leads to immediate suspension.'),
+              ],
+            ),
+          ),
+
+          // Section 7
+          _TermsSection(
+            sectionNumber: '7',
+            title: 'Non-Exclusivity',
+            child: const _TermsBodyText(
+              'Extension officers are free to work outside AgriFlock 360. However, all services conducted via the platform must be logged for transparency and accountability.',
+            ),
+          ),
+
+          // Section 8
+          _TermsSection(
+            sectionNumber: '8',
+            title: 'Liability Disclaimer',
+            child: const _TermsBodyText(
+              'AgriFlock 360 is not responsible for the quality of physical services delivered. Extension officers are solely responsible for services provided, subject to platform monitoring.',
+            ),
+          ),
+
+          // Section 9
+          _TermsSection(
+            sectionNumber: '9',
+            title: 'Termination',
+            child: const _TermsBodyText(
+              'AgriFlock 360 reserves the right to suspend or terminate access for violations of these terms or unethical conduct.',
+            ),
+          ),
+
+          // Section 10
+          _TermsSection(
+            sectionNumber: '10',
+            title: 'Agreement',
+            child: const _TermsBodyText(
+              'By activating the Extension Module, the officer agrees to abide by these Terms & Code of Conduct.',
+            ),
+          ),
+
           const SizedBox(height: 20),
+
+          // Checkbox Agreement
           GestureDetector(
             onTap: () {
               setState(() {
@@ -772,6 +843,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
                 ),
               ),
             ),
+          const SizedBox(height: 24),
         ],
       ),
     );
@@ -958,6 +1030,85 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
   }
 }
 
+class _TermsSection extends StatelessWidget {
+  final String sectionNumber;
+  final String title;
+  final Widget child;
+
+  const _TermsSection({
+    required this.sectionNumber,
+    required this.title,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  sectionNumber,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class _TermsBodyText extends StatelessWidget {
+  final String text;
+  const _TermsBodyText(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: const TextStyle(
+        fontSize: 13,
+        color: Colors.black54,
+        height: 1.5,
+      ),
+    );
+  }
+}
+
 class _TermsItem extends StatelessWidget {
   final IconData icon;
   final String text;
@@ -967,7 +1118,7 @@ class _TermsItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -1,8 +1,6 @@
 import 'package:agriflock360/core/utils/date_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
-import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/core/widgets/expense/expense_marquee_banner.dart';
-import 'package:agriflock360/features/farmer/batch/model/batch_list_model.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_mgt_model.dart';
 import 'package:agriflock360/features/farmer/batch/repo/batch_mgt_repo.dart';
 import 'package:agriflock360/features/farmer/report/models/batch_report_model.dart';
@@ -306,6 +304,28 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                   ), label: Text('Select Date range'),
                 ),
               ),
+
+
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 40,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  physics: const ClampingScrollPhysics(),
+                  children: [
+                    _buildPeriodChip('Daily', 'daily'),
+                    const SizedBox(width: 8),
+                    _buildPeriodChip('Weekly', 'weekly'),
+                    const SizedBox(width: 8),
+                    _buildPeriodChip('Monthly', 'monthly'),
+                    const SizedBox(width: 8),
+                    _buildPeriodChip('Yearly', 'yearly'),
+                    const SizedBox(width: 8),
+                    _buildPeriodChip('All Time', 'all_time'),
+                  ],
+                ),
+              ),
               const SizedBox(height: 12),
               Container(
                 margin: EdgeInsets.only(left: 20),
@@ -330,28 +350,8 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                   ],
                 ),
               ),
+              const SizedBox(height: 12),
 
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 40,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  physics: const ClampingScrollPhysics(),
-                  children: [
-                    _buildPeriodChip('Daily', 'daily'),
-                    const SizedBox(width: 8),
-                    _buildPeriodChip('Weekly', 'weekly'),
-                    const SizedBox(width: 8),
-                    _buildPeriodChip('Monthly', 'monthly'),
-                    const SizedBox(width: 8),
-                    _buildPeriodChip('Yearly', 'yearly'),
-                    const SizedBox(width: 8),
-                    _buildPeriodChip('All Time', 'all_time'),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
             ],
           ),
         ),
@@ -368,10 +368,10 @@ class _BatchReportScreenState extends State<BatchReportScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.green : Colors.grey.shade100,
+          color: isSelected ? Theme.of(context).primaryColor : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? Colors.black87 : Colors.grey.shade300,
+            color: isSelected ? Colors.green : Colors.grey.shade300,
           ),
         ),
         child: Text(
