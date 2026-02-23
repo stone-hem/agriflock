@@ -84,9 +84,9 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
 
   double _listHeight(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
-    if (w >= 900) return 660;
-    if (w >= 600) return 620;
-    return 580;
+    if (w >= 900) return 600;
+    if (w >= 600) return 580;
+    return 480;
   }
 
   // ── Star widget ──
@@ -280,26 +280,26 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                     ),
                     _info(Icons.group, 'Total Ratings', '${vet.totalRatingsCount}', Colors.blue.shade500),
                     _info(Icons.location_on, 'Location', address, Colors.red.shade400, maxLines: 2),
-                    if (coverage.isNotEmpty)
-                      _info(Icons.map, 'Coverage Areas', coverage, Colors.cyan.shade700),
-                    if (specs.isNotEmpty)
-                      _infoCustom(
-                        icon: Icons.medical_services, iconColor: Colors.indigo.shade500, label: 'Specializations',
-                        child: Wrap(
-                          spacing: 4, runSpacing: 4,
-                          children: specs.take(3).map((s) => Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.indigo.shade50,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.indigo.shade200),
-                            ),
-                            child: Text(s, style: TextStyle(fontSize: 10, color: Colors.indigo.shade700, fontWeight: FontWeight.w500)),
-                          )).toList(),
-                        ),
-                      ),
-                    if (vet.licenseNumber != null && vet.licenseNumber!.isNotEmpty)
-                      _info(Icons.credit_card, 'License No.', vet.licenseNumber!, Colors.blueGrey.shade600),
+                    // if (coverage.isNotEmpty)
+                    //   _info(Icons.map, 'Coverage Areas', coverage, Colors.cyan.shade700),
+                    // if (specs.isNotEmpty)
+                    //   _infoCustom(
+                    //     icon: Icons.medical_services, iconColor: Colors.indigo.shade500, label: 'Specializations',
+                    //     child: Wrap(
+                    //       spacing: 4, runSpacing: 4,
+                    //       children: specs.take(3).map((s) => Container(
+                    //         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    //         decoration: BoxDecoration(
+                    //           color: Colors.indigo.shade50,
+                    //           borderRadius: BorderRadius.circular(8),
+                    //           border: Border.all(color: Colors.indigo.shade200),
+                    //         ),
+                    //         child: Text(s, style: TextStyle(fontSize: 10, color: Colors.indigo.shade700, fontWeight: FontWeight.w500)),
+                    //       )).toList(),
+                    //     ),
+                    //   ),
+                    // if (vet.licenseNumber != null && vet.licenseNumber!.isNotEmpty)
+                    //   _info(Icons.credit_card, 'License No.', vet.licenseNumber!, Colors.blueGrey.shade600),
                     if (vet.profileBio.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(vet.profileBio,

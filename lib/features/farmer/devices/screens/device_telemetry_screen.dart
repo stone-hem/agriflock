@@ -29,7 +29,7 @@ class _DeviceTelemetryScreenState extends State<DeviceTelemetryScreen> {
   void initState() {
     super.initState();
     _service = DeviceTelemetryService(
-      deviceId: widget.device.deviceId,
+      deviceId: widget.device.id,
       storage: secureStorage,
     );
     _connect();
@@ -249,7 +249,7 @@ class _DeviceTelemetryScreenState extends State<DeviceTelemetryScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  widget.device.deviceId,
+                  widget.device.deviceImei,
                   style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
                 ),
                 if (widget.device.location != null) ...[

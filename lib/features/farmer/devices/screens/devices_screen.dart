@@ -389,7 +389,7 @@ class _DeviceCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        device.deviceId,
+                        device.deviceImei,
                         style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                       ),
                     ],
@@ -440,17 +440,20 @@ class _DeviceCard extends StatelessWidget {
                   'Last seen: ${device.formattedLastSeen}',
                   style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
                 ),
-                if (device.mqttTopicPrefix != null) ...[
-                  const Spacer(),
-                  Icon(Icons.cloud_outlined, size: 14, color: Colors.grey.shade400),
-                  const SizedBox(width: 4),
-                  Text(
-                    device.mqttTopicPrefix!,
-                    style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
-                  ),
-                ],
               ],
             ),
+
+            if (device.mqttTopicPrefix != null) ...[
+             Row(children: [
+               Icon(Icons.cloud_outlined, size: 14, color: Colors.grey.shade400),
+               const SizedBox(width: 4),
+               Text(
+                 device.mqttTopicPrefix!,
+                 style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+               ),
+             ],)
+            ],
+
 
             if (device.notes != null && device.notes!.isNotEmpty) ...[
               const SizedBox(height: 8),

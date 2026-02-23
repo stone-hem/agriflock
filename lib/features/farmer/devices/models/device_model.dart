@@ -55,7 +55,7 @@ class DeviceStatus {
 
 class DeviceItem {
   final String id;
-  final String deviceId;
+  final String deviceImei;
   final String deviceName;
   final String deviceType;
   final String? brooderId;
@@ -79,7 +79,7 @@ class DeviceItem {
 
   DeviceItem({
     required this.id,
-    required this.deviceId,
+    required this.deviceImei,
     required this.deviceName,
     required this.deviceType,
     this.brooderId,
@@ -106,7 +106,7 @@ class DeviceItem {
     final statusMap = TypeUtils.toMapSafe(json['device_status']);
     return DeviceItem(
       id: TypeUtils.toStringSafe(json['id']),
-      deviceId: TypeUtils.toStringSafe(json['device_id']),
+      deviceImei: TypeUtils.toStringSafe(json['device_imei']),
       deviceName: TypeUtils.toStringSafe(json['device_name']),
       deviceType: TypeUtils.toStringSafe(json['device_type']),
       brooderId: TypeUtils.toNullableStringSafe(json['brooder_id']),
@@ -132,7 +132,7 @@ class DeviceItem {
 
   Map<String, dynamic> toJson() => {
     'id': id,
-    'device_id': deviceId,
+    'device_imei': deviceImei,
     'device_name': deviceName,
     'device_type': deviceType,
     'brooder_id': brooderId,
