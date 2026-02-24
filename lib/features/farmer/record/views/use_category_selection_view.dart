@@ -105,12 +105,17 @@ class UseCategorySelectionView extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                '${batch.currentCount} birds • Day ${batch.ageInDays}',
+                '${batch.currentCount} birds •  ${batch.ageInDays} days old  /  '
+                    '${((batch.ageInDays / 7) % 1 > 0.5)
+                    ? (batch.ageInDays / 7).ceil()
+                    : (batch.ageInDays / 7).floor()} weeks',
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey.shade700,
                 ),
               ),
+
+
             ],
           ),
         ),

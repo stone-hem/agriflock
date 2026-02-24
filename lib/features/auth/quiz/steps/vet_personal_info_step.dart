@@ -48,7 +48,7 @@ class VetPersonalInfoStep extends StatelessWidget {
           // Date of Birth Picker
           CustomDateTextField(
             controller: dobController,
-            label: 'Date of Birth *Required',
+            label: 'Date of Birth*',
             icon: Icons.calendar_today,
             returnFormat: DateReturnFormat.isoString,
             required: true,

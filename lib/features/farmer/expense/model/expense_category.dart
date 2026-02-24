@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:agriflock360/core/utils/type_safe_utils.dart';
 
 class InventoryCategory {
@@ -16,6 +15,7 @@ class InventoryCategory {
     required this.useFromStore,
     required this.metadata,
     required this.categoryItems,
+
   });
 
   factory InventoryCategory.fromJson(Map<String, dynamic> json) {
@@ -53,6 +53,9 @@ class CategoryItem {
   final dynamic components;
   final bool useFromStore;
   final num quantityInStore;
+  final bool isSuggestedForAge;
+  final String suggestionContext;
+
 
   CategoryItem({
     required this.id,
@@ -61,6 +64,8 @@ class CategoryItem {
     required this.components,
     required this.useFromStore,
     required this.quantityInStore,
+    required this.isSuggestedForAge,
+    required this.suggestionContext,
   });
 
   factory CategoryItem.fromJson(Map<String, dynamic> json) {
@@ -71,6 +76,8 @@ class CategoryItem {
       components: json['components'], // Keep as dynamic
       useFromStore: TypeUtils.toBoolSafe(json['use_from_store']),
       quantityInStore: json['quantity_in_store'] as num? ?? 0,
+      isSuggestedForAge: TypeUtils.toBoolSafe(json['is_suggested_for_age'] ?? false),
+      suggestionContext: TypeUtils.toStringSafe(json['suggestion_context'] ?? 'No context provided'),
     );
   }
 
@@ -82,6 +89,8 @@ class CategoryItem {
       'components': components,
       'use_from_store': useFromStore,
       'quantity_in_store': quantityInStore,
+      'is_suggested_for_age': isSuggestedForAge,
+      'suggestion_context': suggestionContext,
     };
   }
 }

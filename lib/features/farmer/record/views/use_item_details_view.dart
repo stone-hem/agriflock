@@ -220,12 +220,30 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
               ),
               const SizedBox(height: 4),
               Text(
-                widget.category.name,
+                '${widget.batch.ageInDays} days old  /  '
+                    '${((widget.batch.ageInDays / 7) % 1 > 0.5)
+                    ? (widget.batch.ageInDays / 7).ceil()
+                    : (widget.batch.ageInDays / 7).floor()} weeks',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: categoryColor,
                 ),
+              ),
+              Row(
+                children: [
+                  Text(
+                    widget.category.name,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: categoryColor,
+                    ),
+                  ),
+                  SizedBox(width: 5,),
+
+
+                ],
               ),
             ],
           ),
@@ -326,69 +344,219 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.grey.shade200),
+                                border: Border.all(
+                                  color: item.isSuggestedForAge
+                                      ? const Color(0xFF2E7D32).withOpacity(0.3)
+                                      : Colors.grey.shade200,
+                                  width: item.isSuggestedForAge ? 1.5 : 1,
+                                ),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.05),
                                     blurRadius: 10,
                                     offset: const Offset(0, 2),
                                   ),
+                                  if (item.isSuggestedForAge)
+                                    BoxShadow(
+                                      color: const Color(0xFF2E7D32).withOpacity(0.1),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
                                 ],
                               ),
                               child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: categoryColor.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Icon(
-                                      _getItemIcon(item.categoryItemName),
-                                      size: 24,
-                                      color: categoryColor,
-                                    ),
+                                  // Icon with suggestion indicator
+                                  Stack(
+                                    clipBehavior: Clip.none,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: categoryColor.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+                                        child: Icon(
+                                          _getItemIcon(item.categoryItemName),
+                                          size: 24,
+                                          color: categoryColor,
+                                        ),
+                                      ),
+                                      if (item.isSuggestedForAge)
+                                        Positioned(
+                                          top: -4,
+                                          right: -4,
+                                          child: Container(
+                                            padding: const EdgeInsets.all(2),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFF2E7D32),
+                                              shape: BoxShape.circle,
+                                              border: Border.all(color: Colors.white, width: 1.5),
+                                            ),
+                                            child: const Icon(
+                                              Icons.thumb_up,
+                                              size: 10,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                   const SizedBox(width: 16),
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(
-                                          item.categoryItemName,
-                                          style: TextStyle(
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.grey.shade800,
-                                          ),
-                                        ),
-                                        Text(
-                                          'Quantity in Store : ${item.quantityInStore}',
-                                          style: TextStyle(
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.grey.shade800,
-                                          ),
-                                        ),
-                                        if (item.description.isNotEmpty)
-                                          Padding(
-                                            padding: const EdgeInsets.only(top: 4),
-                                            child: Text(
-                                              item.description,
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.grey.shade600,
+                                        // Title and suggested chip
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                item.categoryItemName,
+                                                style: TextStyle(
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.grey.shade800,
+                                                ),
                                               ),
                                             ),
+                                            if (item.isSuggestedForAge)
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(
+                                                  horizontal: 8,
+                                                  vertical: 4,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: const Color(0xFF2E7D32).withOpacity(0.1),
+                                                  borderRadius: BorderRadius.circular(16),
+                                                  border: Border.all(
+                                                    color: const Color(0xFF2E7D32).withOpacity(0.3),
+                                                  ),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    const Icon(
+                                                      Icons.thumb_up,
+                                                      size: 12,
+                                                      color: Color(0xFF2E7D32),
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                      'Suggested',
+                                                      style: TextStyle(
+                                                        fontSize: 10,
+                                                        fontWeight: FontWeight.w600,
+                                                        color: const Color(0xFF2E7D32),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        // Quantity in store
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 4,
                                           ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey.shade50,
+                                            borderRadius: BorderRadius.circular(16),
+                                            border: Border.all(color: Colors.grey.shade200),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                Icons.inventory_2,
+                                                size: 12,
+                                                color: Colors.grey.shade600,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                'In Store: ${item.quantityInStore}',
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: Colors.grey.shade700,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        // Description
+                                        if (item.description.isNotEmpty)
+                                          Text(
+                                            item.description,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey.shade600,
+                                              height: 1.4,
+                                            ),
+                                          ),
+                                        // Suggestion context chip (if suggested)
+                                        if (item.isSuggestedForAge && item.suggestionContext.isNotEmpty) ...[
+                                          const SizedBox(height: 8),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 4,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFF2E7D32).withOpacity(0.05),
+                                              borderRadius: BorderRadius.circular(16),
+                                              border: Border.all(
+                                                color: const Color(0xFF2E7D32).withOpacity(0.2),
+                                              ),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  Icons.info_outline,
+                                                  size: 12,
+                                                  color: const Color(0xFF2E7D32).withOpacity(0.7),
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Expanded(
+                                                  child: Text(
+                                                    item.suggestionContext,
+                                                    style: TextStyle(
+                                                      fontSize: 11,
+                                                      fontWeight: FontWeight.w500,
+                                                      color: const Color(0xFF2E7D32).withOpacity(0.8),
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
                                       ],
                                     ),
                                   ),
-                                  Icon(
-                                    Icons.chevron_right,
-                                    color: Colors.grey.shade400,
+                                  const SizedBox(width: 8),
+                                  // Arrow icon
+                                  Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade100,
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Icon(
+                                      Icons.chevron_right,
+                                      size: 20,
+                                      color: Colors.grey.shade600,
+                                    ),
                                   ),
                                 ],
                               ),

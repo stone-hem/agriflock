@@ -4,7 +4,6 @@ import 'package:agriflock360/core/utils/shared_prefs.dart';
 import 'package:agriflock360/features/auth/quiz/repo/onboarding_repository.dart';
 import 'package:agriflock360/features/auth/quiz/shared/user_type_selection.dart';
 import 'package:agriflock360/features/auth/quiz/steps/farmer_details_step.dart';
-import 'package:agriflock360/features/auth/quiz/steps/farmer_bird_type_step.dart';
 import 'package:agriflock360/features/auth/quiz/steps/vet_personal_info_step.dart';
 import 'package:agriflock360/features/auth/quiz/steps/vet_professional_step.dart';
 import 'package:agriflock360/features/auth/quiz/steps/vet_documents_step.dart';
@@ -12,7 +11,6 @@ import 'package:agriflock360/features/auth/quiz/steps/congratulations_step.dart'
 import 'package:agriflock360/core/widgets/location_picker_step.dart';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
-import 'package:agriflock360/features/auth/quiz/utils/terms_util.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
