@@ -175,7 +175,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.light(
-              primary: Colors.black87,
+              primary: Colors.green.shade700,
               onPrimary: Colors.white,
               surface: Colors.white,
               onSurface: Colors.black87,
@@ -196,7 +196,6 @@ class _BatchReportScreenState extends State<BatchReportScreen>
       _loadReport();
     }
   }
-
 
   FinancialPeriodStats _getSelectedFinancialStats() {
     if (_financialData == null) {
@@ -258,9 +257,10 @@ class _BatchReportScreenState extends State<BatchReportScreen>
         ),
         bottom: TabBar(
           controller: _tabController,
-          labelColor: Colors.black87,
+          labelColor: Colors.green.shade700,
           unselectedLabelColor: Colors.grey.shade600,
           indicatorColor: Colors.green,
+          indicatorWeight: 3,
           tabs: const [
             Tab(text: 'Production Report'),
             Tab(text: 'Financial Report'),
@@ -288,70 +288,98 @@ class _BatchReportScreenState extends State<BatchReportScreen>
         // Fixed Filter Section
         Container(
           color: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 8),
           child: Column(
-            crossAxisAlignment: .start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 12),
-              Align(
-                alignment: .topRight,
-                child: FilledButton.icon(
-                  onPressed: _showDateRangePicker,
-                  icon: const Icon(Icons.edit_calendar, size: 20),
-                  style: IconButton.styleFrom(
-                    padding: const EdgeInsets.all(8),
-                    minimumSize: const Size(36, 36),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ), label: Text('Select Date range'),
-                ),
-              ),
-
-
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 40,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  physics: const ClampingScrollPhysics(),
-                  children: [
-                    _buildPeriodChip('Daily', 'daily'),
-                    const SizedBox(width: 8),
-                    _buildPeriodChip('Weekly', 'weekly'),
-                    const SizedBox(width: 8),
-                    _buildPeriodChip('Monthly', 'monthly'),
-                    const SizedBox(width: 8),
-                    _buildPeriodChip('Yearly', 'yearly'),
-                    const SizedBox(width: 8),
-                    _buildPeriodChip('All Time', 'all_time'),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                margin: EdgeInsets.only(left: 20),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.shade300),
-                ),
+              // Date Range and Period Chips Row
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.date_range, size: 16, color: Colors.grey.shade700),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        physics: const BouncingScrollPhysics(),
+                        child: Row(
+                          children: [
+                            _buildPeriodChip('Daily', 'daily'),
+                            const SizedBox(width: 8),
+                            _buildPeriodChip('Weekly', 'weekly'),
+                            const SizedBox(width: 8),
+                            _buildPeriodChip('Monthly', 'monthly'),
+                            const SizedBox(width: 8),
+                            _buildPeriodChip('Yearly', 'yearly'),
+                            const SizedBox(width: 8),
+                            _buildPeriodChip('All Time', 'all_time'),
+                          ],
+                        ),
+                      ),
+                    ),
                     const SizedBox(width: 8),
-                    Text(
-                      'Period ${DateUtil.toShortDateWithDay(_startDate)} - ${DateUtil.toShortDateWithDay(_endDate)}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.green.shade200),
+                      ),
+                      child: IconButton(
+                        onPressed: _showDateRangePicker,
+                        icon: Icon(Icons.edit_calendar, color: Colors.green.shade700, size: 20),
+                        tooltip: 'Select Date Range',
                       ),
                     ),
                   ],
                 ),
               ),
+
               const SizedBox(height: 12),
 
+              // Selected Date Range Display
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.grey.shade100, Colors.grey.shade50],
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.date_range, size: 16, color: Colors.green.shade700),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '${DateUtil.toShortDateWithDay(_startDate)} - ${DateUtil.toShortDateWithDay(_endDate)}',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade100,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          _selectedPeriod.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green.shade700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
             ],
           ),
         ),
@@ -368,11 +396,25 @@ class _BatchReportScreenState extends State<BatchReportScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? Theme.of(context).primaryColor : Colors.grey.shade100,
+          gradient: isSelected
+              ? LinearGradient(
+            colors: [Colors.green.shade600, Colors.green.shade400],
+          )
+              : null,
+          color: isSelected ? null : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? Colors.green : Colors.grey.shade300,
+            color: isSelected ? Colors.green.shade700 : Colors.grey.shade300,
           ),
+          boxShadow: isSelected
+              ? [
+            BoxShadow(
+              color: Colors.green.shade200,
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            )
+          ]
+              : null,
         ),
         child: Text(
           label,
@@ -404,7 +446,14 @@ class _BatchReportScreenState extends State<BatchReportScreen>
             const SizedBox(height: 16),
             Text('Error: $_reportError', textAlign: TextAlign.center),
             const SizedBox(height: 16),
-            ElevatedButton(onPressed: _loadReport, child: const Text('Retry')),
+            ElevatedButton(
+              onPressed: _loadReport,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Retry'),
+            ),
           ],
         ),
       );
@@ -423,7 +472,10 @@ class _BatchReportScreenState extends State<BatchReportScreen>
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.grey.shade700),
             ),
             const SizedBox(height: 8),
-            Text('Try adjusting the date range or period', style: TextStyle(fontSize: 14, color: Colors.grey.shade500)),
+            Text('Try adjusting the date range or period',
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
       );
@@ -460,43 +512,55 @@ class _BatchReportScreenState extends State<BatchReportScreen>
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Date Header
+            // Date Header with Gradient
             Padding(
               padding: EdgeInsets.only(bottom: 12, top: index == 0 ? 0 : 16),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.green,
-                      borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.green.shade600, Colors.green.shade400],
+                  ),
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.green.shade200,
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.calendar_today, size: 14, color: Colors.white),
-                        const SizedBox(width: 8),
-                        Text(
-                          DateUtil.toShortDateWithDay(reportDate),
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.calendar_today, size: 16, color: Colors.white),
+                    const SizedBox(width: 8),
+                    Text(
+                      DateUtil.toShortDateWithDay(reportDate),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${dateReports.length}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '(${dateReports.length} ${dateReports.length == 1 ? 'report' : 'reports'})',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             // Report Cards for this date
@@ -511,38 +575,151 @@ class _BatchReportScreenState extends State<BatchReportScreen>
   }
 
   Widget _buildReportCard(BatchReportData report) {
+    final isLayers = report.birdType.toLowerCase().contains('layers');
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white,
+            isLayers ? Colors.amber.shade50 : Colors.blue.shade50,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isLayers ? Colors.amber.shade200 : Colors.blue.shade200,
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+            color: (isLayers ? Colors.amber : Colors.blue).withOpacity(0.1),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Batch Header
-          _buildBatchHeader(report),
-          const Divider(height: 1),
+          // Batch Header with Gradient
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  isLayers ? Colors.amber.shade100 : Colors.blue.shade100,
+                  isLayers ? Colors.orange.shade100 : Colors.indigo.shade100,
+                ],
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(14),
+                topRight: Radius.circular(14),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 4,
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    isLayers ? Icons.egg : Icons.pets,
+                    color: isLayers ? Colors.amber.shade700 : Colors.blue.shade700,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        report.batchNumber,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        '${report.farmName} - ${report.houseName}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Text(
+                        '${report.ageDays} days',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: isLayers ? Colors.amber.shade800 : Colors.blue.shade800,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${report.totalBirds} birds',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
 
           // Report Sections
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
+                // Mortality Section
                 _buildMortalityCard(report.mortality),
                 const SizedBox(height: 12),
+
+                // Feed Section
                 _buildFeedCard(report.feed),
                 const SizedBox(height: 12),
+
+                // Weight Info Row
+                // if (report.expectedWeight != null || report.actualWeight != null)
+                //   _buildWeightCard(report),
+
+                const SizedBox(height: 12),
+
+                // Vaccination Section
                 _buildVaccinationCard(report.vaccination),
                 const SizedBox(height: 12),
+
+                // Medication Section
                 _buildMedicationCard(report.medication),
+
+                // Egg Production for Layers
                 if (report.eggProduction != null && report.eggProduction!.totalEggsCollected > 0) ...[
                   const SizedBox(height: 12),
                   _buildEggProductionCard(report.eggProduction!),
@@ -555,141 +732,377 @@ class _BatchReportScreenState extends State<BatchReportScreen>
     );
   }
 
-  Widget _buildBatchHeader(BatchReportData report) {
+  Widget _buildMortalityCard(BatchMortality mortality) {
+    final hasMortality = mortality.total24hrs > 0;
+
     return Container(
-      padding: const EdgeInsets.all(16),
-      child: Row(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: hasMortality
+              ? [Colors.red.shade50, Colors.orange.shade50]
+              : [Colors.green.shade50, Colors.blue.shade50],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: hasMortality ? Colors.red.shade200 : Colors.green.shade200,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.assessment, color: Colors.grey.shade700),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  report.batchNumber,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  '${report.farmName} - ${report.houseName}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          Row(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${report.ageDays} days',
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-                ),
+              Icon(
+                hasMortality ? Icons.warning_amber : Icons.check_circle,
+                color: hasMortality ? Colors.red.shade700 : Colors.green.shade700,
+                size: 16,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(width: 8),
               Text(
-                '${report.totalBirds} birds',
-                style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                'Mortality',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: hasMortality ? Colors.red.shade800 : Colors.green.shade800,
+                ),
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatChip(
+                  'Day',
+                  '${mortality.day}',
+                  icon: Icons.wb_sunny,
+                  color: Colors.orange,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildStatChip(
+                  'Night',
+                  '${mortality.night}',
+                  icon: Icons.nightlight_round,
+                  color: Colors.indigo,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildStatChip(
+                  '24hrs',
+                  '${mortality.total24hrs}',
+                  icon: Icons.access_time,
+                  color: hasMortality ? Colors.red : Colors.green,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Total: ${mortality.cumulativeTotal} | Alive: ${mortality.birdsRemaining}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade800,
+                    ),
+                  ),
+                ),
+                if (mortality.reason.isNotEmpty)
+                  Flexible(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        mortality.reason,
+                        style: TextStyle(
+                          fontSize: 9,
+                          color: Colors.grey.shade700,
+                          fontStyle: FontStyle.italic,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMortalityCard(BatchMortality mortality) {
-    return _buildSimpleCard(
-      title: 'Mortality',
-      icon: Icons.warning_amber,
-      iconColor: mortality.total24hrs > 0 ? Colors.orange : Colors.grey.shade700,
-      stats: [
-        _StatData('Day', '${mortality.day}'),
-        _StatData('Night', '${mortality.night}'),
-        _StatData('24hrs', '${mortality.total24hrs}'),
-        _StatData('Total', '${mortality.cumulativeTotal}'),
-        _StatData('Alive', '${mortality.birdsRemaining}'),
-      ],
-      footer: mortality.reason.isNotEmpty
-          ? Text(
-        'Reason: ${mortality.reason}',
-        style: TextStyle(fontSize: 11, color: Colors.grey.shade600, fontStyle: FontStyle.italic),
-      )
-          : null,
+  Widget _buildFeedCard(BatchFeed feed) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.brown.shade50, Colors.orange.shade50],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.brown.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.fastfood, color: Colors.brown.shade700, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                'Feed',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.brown.shade800,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.brown.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  feed.feedType,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.brown.shade800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatChip(
+                  'Consumed',
+                  '${feed.bagsConsumed} kg',
+                  icon: Icons.restaurant,
+                  color: Colors.orange,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildStatChip(
+                  'In Store',
+                  '${feed.balanceInStore} kg',
+                  icon: Icons.inventory,
+                  color: Colors.brown,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.access_time, size: 12, color: Colors.grey.shade600),
+                const SizedBox(width: 4),
+                Text(
+                  'Day: ${feed.bagsConsumedDay} kg | Night: ${feed.bagsConsumedNight} kg',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.grey.shade700,
+                  ),
+                ),
+                const Spacer(),
+                if (feed.feedVariance.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: feed.feedVariance.toLowerCase().contains('above')
+                          ? Colors.orange.shade100
+                          : Colors.green.shade100,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      feed.feedVariance,
+                      style: TextStyle(
+                        fontSize: 9,
+                        color: feed.feedVariance.toLowerCase().contains('above')
+                            ? Colors.orange.shade800
+                            : Colors.green.shade800,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildFeedCard(BatchFeed feed) {
-    return _buildSimpleCard(
-      title: 'Feed',
-      icon: Icons.fastfood,
-      iconColor: Colors.grey.shade700,
-      stats: [
-        _StatData('Consumed', '${feed.bagsConsumed} kgs'),
-        _StatData('Day', '${feed.bagsConsumedDay} kgs'),
-        _StatData('Night', '${feed.bagsConsumedNight} kgs'),
-        _StatData('Total', '${feed.totalBagsConsumed} kgs'),
-        _StatData('In Store', '${feed.balanceInStore} kgs'),
-      ],
-      footer: Row(
+  Widget _buildWeightCard(BatchReportData report) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.purple.shade50, Colors.indigo.shade50],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.purple.shade200),
+      ),
+      child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              feed.feedType,
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
-            ),
-          ),
-          const SizedBox(width: 8),
-          if (feed.feedVariance.isNotEmpty)
-            Flexible(
-              child: Text(
-                feed.feedVariance,
-                style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
+          // Expanded(
+          //   child: _buildStatChip(
+          //     'Expected',
+          //     '${report.expectedWeight?.toStringAsFixed(2) ?? '0.00'} kg',
+          //     icon: Icons.monitor_weight,
+          //     color: Colors.purple,
+          //   ),
+          // ),
+          // const SizedBox(width: 8),
+          // Expanded(
+          //   child: _buildStatChip(
+          //     'Actual',
+          //     '${report.actualWeight?.toStringAsFixed(2) ?? '0.00'} kg',
+          //     icon: Icons.scale,
+          //     color: Colors.indigo,
+          //   ),
+          // ),
         ],
       ),
     );
   }
 
   Widget _buildVaccinationCard(BatchVaccination vaccination) {
-    return _buildSimpleCard(
-      title: 'Vaccination',
-      icon: Icons.vaccines,
-      iconColor: Colors.grey.shade700,
-      stats: [
-        _StatData('Completed', '${vaccination.vaccinesDone.length}'),
-        _StatData('Upcoming', '${vaccination.vaccinesUpcoming.length}'),
-      ],
-      footer: Column(
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.blue.shade50, Colors.cyan.shade50],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue.shade200),
+      ),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (vaccination.vaccinesDone.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            _buildVaccineChips('Completed', vaccination.vaccinesDone, Colors.green.shade50),
-          ],
-          if (vaccination.vaccinesUpcoming.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            _buildVaccineChips('Upcoming', vaccination.vaccinesUpcoming, Colors.orange.shade50),
-          ],
+          Row(
+            children: [
+              Icon(Icons.vaccines, color: Colors.blue.shade700, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                'Vaccination',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue.shade800,
+                ),
+              ),
+              const Spacer(),
+              Row(
+                children: [
+                  _buildStatusDot(Colors.green, vaccination.vaccinesDone.length),
+                  const SizedBox(width: 4),
+                  _buildStatusDot(Colors.orange, vaccination.vaccinesUpcoming.length),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Column(
+            children: [
+              if (vaccination.vaccinesDone.isNotEmpty)
+                ...vaccination.vaccinesDone.map((v) => Container(
+                  margin: const EdgeInsets.only(right: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade100,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.green.shade300),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.check, color: Colors.green, size: 10),
+                      const SizedBox(width: 2),
+                      Flexible(
+                        child: Text(
+                          v.toString(),
+                          style: TextStyle(
+                            fontSize: 9,
+                            color: Colors.green.shade800,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                )),
+              if (vaccination.vaccinesUpcoming.isNotEmpty && vaccination.vaccinesDone.isNotEmpty)
+                const SizedBox(width: 4),
+              if (vaccination.vaccinesUpcoming.isNotEmpty)
+                ...vaccination.vaccinesUpcoming.map((v) => Container(
+                  margin: const EdgeInsets.only(bottom: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade100,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.orange.shade300),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.access_time, color: Colors.orange, size: 10),
+                      const SizedBox(width: 2),
+                      Flexible(
+                        child: Text(
+                          v.toString(),
+                          style: TextStyle(
+                            fontSize: 9,
+                            color: Colors.orange.shade800,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                )),
+              if (vaccination.vaccinesDone.length + vaccination.vaccinesUpcoming.length > 5)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    '+${vaccination.vaccinesDone.length + vaccination.vaccinesUpcoming.length - 5} more',
+                    style: TextStyle(
+                      fontSize: 9,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                ),
+            ],
+          )
         ],
       ),
     );
@@ -697,25 +1110,42 @@ class _BatchReportScreenState extends State<BatchReportScreen>
 
   Widget _buildMedicationCard(BatchMedication medication) {
     final inUse = medication.inUse;
-    return _buildSimpleCard(
-      title: 'Medication',
-      icon: Icons.medical_services,
-      iconColor: inUse.isNotEmpty ? Colors.blue.shade700 : Colors.grey.shade700,
-      stats: [
-        _StatData('In Use', '${inUse.length}'),
-        _StatData('Available', '${medication.medicationsAvailable.length}'),
-      ],
-      footer: inUse.isNotEmpty
-          ? Column(
+    if (inUse.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.teal.shade50, Colors.green.shade50],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.teal.shade200),
+      ),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: inUse.map((med) {
-          return Container(
-            margin: const EdgeInsets.only(top: 8),
+        children: [
+          Row(
+            children: [
+              Icon(Icons.medical_services, color: Colors.teal.shade700, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                'Medication',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.teal.shade800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ...inUse.take(2).map((med) => Container(
+            margin: const EdgeInsets.only(bottom: 6),
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.blue.shade50,
+              color: Colors.white.withOpacity(0.7),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.blue.shade100),
+              border: Border.all(color: Colors.teal.shade100),
             ),
             child: Row(
               children: [
@@ -726,192 +1156,256 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                       Text(
                         med.medicineName,
                         style: const TextStyle(
-                          fontSize: 12,
+                          fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Dosage: ${med.dosage}',
+                        '${med.dosage} - ${med.quantityUsed} ${med.unit}',
                         style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.grey.shade700,
+                          fontSize: 9,
+                          color: Colors.grey.shade600,
                         ),
                       ),
                     ],
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(6),
+                    color: Colors.teal.shade100,
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    '${med.quantityUsed} ${med.unit}',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                    'In Use',
+                    style: TextStyle(
+                      fontSize: 8,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.teal.shade800,
                     ),
                   ),
                 ),
               ],
             ),
-          );
-        }).toList(),
-      )
-          : null,
+          )),
+          if (inUse.length > 2)
+            Center(
+              child: Text(
+                '+${inUse.length - 2} more medications',
+                style: TextStyle(
+                  fontSize: 9,
+                  color: Colors.grey.shade600,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
   Widget _buildEggProductionCard(EggProduction production) {
-    return _buildSimpleCard(
-      title: 'Egg Production',
-      icon: Icons.egg,
-      iconColor: Colors.amber.shade700,
-      stats: [
-        _StatData('Trays', '${production.traysCollected}'),
-        _StatData('Eggs', '${production.totalEggsCollected}'),
-        _StatData('Good', '${production.goodEggs}'),
-        _StatData('Rate', '${production.productionPercentage.toStringAsFixed(1)}%'),
-        _StatData('Value', '$_currency ${production.totalValue.toStringAsFixed(0)}'),
-      ],
-      footer: production.partialBroken + production.completeBroken + production.smallDeformed > 0
-          ? Wrap(
-        spacing: 6,
-        runSpacing: 6,
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.amber.shade100, Colors.orange.shade100],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.amber.shade300),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (production.partialBroken > 0)
-            _buildDefectChip('Partial Broken', production.partialBroken),
-          if (production.completeBroken > 0)
-            _buildDefectChip('Complete Broken', production.completeBroken),
-          if (production.smallDeformed > 0)
-            _buildDefectChip('Small/Deformed', production.smallDeformed),
+          Row(
+            children: [
+              Icon(Icons.egg, color: Colors.amber.shade800, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                'Egg Production',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.amber.shade800,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${production.productionPercentage.toStringAsFixed(1)}%',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.amber.shade800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatChip(
+                  'Trays',
+                  '${production.traysCollected}',
+                  icon: Icons.inbox,
+                  color: Colors.brown,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildStatChip(
+                  'Eggs',
+                  '${production.totalEggsCollected}',
+                  icon: Icons.circle,
+                  color: Colors.amber,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Good: ${production.goodEggs}',
+                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 2),
+                      Wrap(
+                        spacing: 4,
+                        runSpacing: 2,
+                        children: [
+                          if (production.partialBroken > 0)
+                            _buildDefectChip('Partial', production.partialBroken, Colors.orange),
+                          if (production.completeBroken > 0)
+                            _buildDefectChip('Broken', production.completeBroken, Colors.red),
+                          if (production.smallDeformed > 0)
+                            _buildDefectChip('Small', production.smallDeformed, Colors.purple),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'Value',
+                      style: TextStyle(fontSize: 9, color: Colors.grey.shade600),
+                    ),
+                    Text(
+                      '$_currency ${production.totalValue.toStringAsFixed(0)}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green.shade700,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ],
-      )
-          : null,
+      ),
     );
   }
 
-  Widget _buildDefectChip(String label, int count) {
+  Widget _buildDefectChip(String label, int count, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.red.shade50,
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.red.shade100),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Text(
         '$label: $count',
         style: TextStyle(
-          fontSize: 10,
-          color: Colors.red.shade700,
+          fontSize: 8,
+          color: color,
           fontWeight: FontWeight.w500,
         ),
       ),
     );
   }
 
-  Widget _buildSimpleCard({
-    required String title,
-    required IconData icon,
-    required Color iconColor,
-    required List<_StatData> stats,
-    Widget? footer,
-  }) {
+  Widget _buildStatusDot(Color color, int count) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.shade200),
+        color: color.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: iconColor, size: 18),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: stats.map((stat) => _buildStatChip(stat.label, stat.value)).toList(),
-          ),
-          if (footer != null) ...[
-            const SizedBox(height: 8),
-            footer,
-          ],
-        ],
+      child: Text(
+        '$count',
+        style: TextStyle(
+          fontSize: 9,
+          color: color,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
 
-  Widget _buildStatChip(String label, String value) {
+  Widget _buildStatChip(String label, String value, {required IconData icon, required Color color}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
-      child: Column(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            value,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-            overflow: TextOverflow.ellipsis,
-          ),
-          Text(
-            label,
-            style: TextStyle(fontSize: 9, color: Colors.grey.shade600),
-            overflow: TextOverflow.ellipsis,
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 8,
+                    color: Colors.grey.shade600,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildVaccineChips(String label, List<dynamic> vaccines, Color bgColor) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 4),
-        Wrap(
-          spacing: 4,
-          runSpacing: 4,
-          children: vaccines.take(5).map((vaccine) {
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: bgColor,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: bgColor.withOpacity(0.3)),
-              ),
-              child: Text(
-                vaccine.toString(),
-                style: const TextStyle(fontSize: 10),
-                overflow: TextOverflow.ellipsis,
-              ),
-            );
-          }).toList(),
-        ),
-      ],
     );
   }
 
@@ -937,6 +1431,10 @@ class _BatchReportScreenState extends State<BatchReportScreen>
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _loadFinancialData,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                ),
                 child: const Text('Retry'),
               ),
             ],
@@ -954,13 +1452,26 @@ class _BatchReportScreenState extends State<BatchReportScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Financial Overview',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.green.shade600, Colors.green.shade400],
+              ),
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: const Text(
+              'Financial Overview',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
           ),
           const SizedBox(height: 16),
 
-          // Period Selection Buttons
+          // Period Selection
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -979,64 +1490,8 @@ class _BatchReportScreenState extends State<BatchReportScreen>
           ),
           const SizedBox(height: 16),
 
-          // Selected Period Stats Card
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: Colors.grey.shade300),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  // Period Header with net profit/loss
-                  Row(
-                    children: [
-                      Icon(Icons.calendar_today, size: 20, color: Colors.grey.shade700),
-                      const SizedBox(width: 12),
-                      Text(
-                        _getFinancialPeriodLabel(_selectedFinancialPeriod),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: _getSelectedFinancialStats().netProfit >= 0
-                              ? Colors.green.withOpacity(0.1)
-                              : Colors.red.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          _getSelectedFinancialStats().netProfit >= 0
-                              ? 'Profit: $_currency ${_getSelectedFinancialStats().netProfit.toStringAsFixed(2)}'
-                              : 'Loss: $_currency ${_getSelectedFinancialStats().netProfit.abs().toStringAsFixed(2)}',
-                          style: TextStyle(
-                            color: _getSelectedFinancialStats().netProfit >= 0
-                                ? Colors.green
-                                : Colors.red,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Cost Breakdown
-                  _buildFinancialCostBreakdown(),
-                  const SizedBox(height: 16),
-
-                  // Income vs Expenditure Summary
-                  _buildFinancialIncomeExpenditureSummary(),
-                ],
-              ),
-            ),
-          ),
+          // Main Financial Card
+          _buildFinancialMainCard(),
         ],
       ),
     );
@@ -1044,201 +1499,336 @@ class _BatchReportScreenState extends State<BatchReportScreen>
 
   Widget _buildFinancialPeriodButton(String period, String label) {
     final isSelected = _selectedFinancialPeriod == period;
-    return OutlinedButton(
+    return ElevatedButton(
       onPressed: () {
         setState(() {
           _selectedFinancialPeriod = period;
         });
       },
-      style: OutlinedButton.styleFrom(
-        backgroundColor: isSelected ? Colors.black87 : Colors.transparent,
-        foregroundColor: isSelected ? Colors.white : Colors.grey.shade600,
-        side: BorderSide(color: isSelected ? Colors.black87 : Colors.grey.shade300),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isSelected ? Colors.green.shade600 : Colors.grey.shade100,
+        foregroundColor: isSelected ? Colors.white : Colors.grey.shade700,
+        elevation: isSelected ? 2 : 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(
+            color: isSelected ? Colors.green.shade700 : Colors.grey.shade300,
+          ),
+        ),
       ),
       child: Text(label),
     );
   }
 
-  Widget _buildFinancialCostBreakdown() {
+  Widget _buildFinancialMainCard() {
     final stats = _getSelectedFinancialStats();
     final totalExpenditure = stats.totalExpenditure;
 
-    if (totalExpenditure == 0) {
-      return const Text(
-        'No expenses recorded for this period',
-        style: TextStyle(color: Colors.grey),
-      );
-    }
-
-    return ExpansionTile(
-      title: const Text(
-        'Cost Breakdown',
-        style: TextStyle(fontWeight: FontWeight.w600),
-      ),
-      initiallyExpanded: true,
-      children: [
-        const SizedBox(height: 8),
-        _buildFinancialCostItemRow(
-          label: 'Feeding Cost',
-          amount: stats.feedingCost,
-          percentage: totalExpenditure > 0 ? (stats.feedingCost / totalExpenditure * 100) : 0,
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Colors.white, Colors.grey.shade50],
         ),
-        _buildFinancialCostItemRow(
-          label: 'Vaccination Cost',
-          amount: stats.vaccinationCost,
-          percentage: totalExpenditure > 0 ? (stats.vaccinationCost / totalExpenditure * 100) : 0,
-        ),
-        _buildFinancialCostItemRow(
-          label: 'Inventory Cost',
-          amount: stats.inventoryCost,
-          percentage: totalExpenditure > 0 ? (stats.inventoryCost / totalExpenditure * 100) : 0,
-        ),
-        const Divider(height: 24),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Total Expenditure',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            Text(
-              '$_currency ${totalExpenditure.toStringAsFixed(2)}',
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFinancialCostItemRow({
-    required String label,
-    required double amount,
-    required double percentage,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
-              Text(
-                '$_currency ${amount.toStringAsFixed(2)}',
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          LinearProgressIndicator(
-            value: percentage / 100,
-            backgroundColor: Colors.grey.shade200,
-            color: Colors.grey.shade700,
-            minHeight: 4,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${percentage.toStringAsFixed(1)}% of total expenditure',
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.green.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.green.withOpacity(0.1),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildFinancialIncomeExpenditureSummary() {
-    final stats = _getSelectedFinancialStats();
-
-    return Card(
-      elevation: 0,
-      color: Colors.grey.shade50,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade300),
-      ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildFinancialSummaryItem(
-                  label: 'Income',
-                  value: '$_currency ${stats.productIncome.toStringAsFixed(2)}',
-                  icon: Icons.arrow_upward,
-                  color: Colors.green,
+            // Period Header with Profit/Loss
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    stats.netProfit >= 0 ? Colors.green.shade50 : Colors.red.shade50,
+                    Colors.white,
+                  ],
                 ),
-                Container(
-                  width: 1,
-                  height: 40,
-                  color: Colors.grey.shade300,
-                ),
-                _buildFinancialSummaryItem(
-                  label: 'Expenditure',
-                  value: '$_currency ${stats.totalExpenditure.toStringAsFixed(2)}',
-                  icon: Icons.arrow_downward,
-                  color: Colors.red,
-                ),
-              ],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 4,
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      stats.netProfit >= 0 ? Icons.trending_up : Icons.trending_down,
+                      color: stats.netProfit >= 0 ? Colors.green : Colors.red,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _getFinancialPeriodLabel(_selectedFinancialPeriod),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          stats.netProfit >= 0 ? 'Profit' : 'Loss',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: stats.netProfit >= 0 ? Colors.green : Colors.red,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '$_currency ${stats.netProfit.abs().toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: stats.netProfit >= 0 ? Colors.green : Colors.red,
+                        ),
+                      ),
+                      Text(
+                        'Net ${stats.netProfit >= 0 ? 'Profit' : 'Loss'}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 12),
+
+            const SizedBox(height: 20),
+
+            // Income vs Expenditure
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  stats.netProfit >= 0 ? Icons.trending_up : Icons.trending_down,
-                  size: 20,
-                  color: stats.netProfit >= 0 ? Colors.green : Colors.red,
+                Expanded(
+                  child: _buildFinancialStatCard(
+                    label: 'Income',
+                    value: '$_currency ${stats.productIncome.toStringAsFixed(2)}',
+                    icon: Icons.arrow_upward,
+                    color: Colors.green,
+                  ),
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  stats.netProfit >= 0 ? 'Net Profit' : 'Net Loss',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: stats.netProfit >= 0 ? Colors.green : Colors.red,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildFinancialStatCard(
+                    label: 'Expenditure',
+                    value: '$_currency ${stats.totalExpenditure.toStringAsFixed(2)}',
+                    icon: Icons.arrow_downward,
+                    color: Colors.red,
                   ),
                 ),
               ],
             ),
+
+            const SizedBox(height: 20),
+
+            // Cost Breakdown
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.pie_chart, size: 16, color: Colors.grey.shade700),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Cost Breakdown',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey.shade800,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _buildCostBar(
+                    label: 'Feeding',
+                    amount: stats.feedingCost,
+                    percentage: totalExpenditure > 0 ? stats.feedingCost / totalExpenditure : 0,
+                    color: Colors.orange,
+                  ),
+                  const SizedBox(height: 8),
+                  _buildCostBar(
+                    label: 'Vaccination',
+                    amount: stats.vaccinationCost,
+                    percentage: totalExpenditure > 0 ? stats.vaccinationCost / totalExpenditure : 0,
+                    color: Colors.blue,
+                  ),
+                  const SizedBox(height: 8),
+                  _buildCostBar(
+                    label: 'Inventory',
+                    amount: stats.inventoryCost,
+                    percentage: totalExpenditure > 0 ? stats.inventoryCost / totalExpenditure : 0,
+                    color: Colors.purple,
+                  ),
+                  const SizedBox(height: 12),
+                  const Divider(),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Total Expenditure',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '$_currency ${totalExpenditure.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildFinancialSummaryItem({
+  Widget _buildFinancialStatCard({
     required String label,
     required String value,
     required IconData icon,
     required Color color,
   }) {
-    return Expanded(
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [color.withOpacity(0.1), Colors.white],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
       child: Column(
         children: [
-          Icon(icon, size: 20, color: color),
+          Icon(icon, color: color, size: 20),
           const SizedBox(height: 4),
           Text(
             label,
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey.shade600,
+            ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Text(
             value,
             style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
               color: color,
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCostBar({
+    required String label,
+    required double amount,
+    required double percentage,
+    required Color color,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+            ),
+            Text(
+              '$_currency ${amount.toStringAsFixed(2)}',
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Stack(
+          children: [
+            Container(
+              height: 8,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            FractionallySizedBox(
+              widthFactor: percentage,
+              child: Container(
+                height: 8,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [color, color.withOpacity(0.7)],
+                  ),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        Text(
+          '${(percentage * 100).toStringAsFixed(1)}% of total',
+          style: TextStyle(
+            fontSize: 9,
+            color: Colors.grey.shade600,
+          ),
+        ),
+      ],
     );
   }
 
@@ -1249,11 +1839,4 @@ class _BatchReportScreenState extends State<BatchReportScreen>
     _endDateController.dispose();
     super.dispose();
   }
-}
-
-class _StatData {
-  final String label;
-  final String value;
-
-  _StatData(this.label, this.value);
 }
