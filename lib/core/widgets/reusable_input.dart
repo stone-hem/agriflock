@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class ReusableInput extends StatelessWidget {
   final TextEditingController? controller;
@@ -26,6 +27,8 @@ class ReusableInput extends StatelessWidget {
   final TextInputAction? textInputAction;
   final void Function(String)? onChanged;
   final void Function(String)? onFieldSubmitted;
+  final List<TextInputFormatter>? inputFormatters;
+
 
   const ReusableInput({
     super.key,
@@ -50,7 +53,7 @@ class ReusableInput extends StatelessWidget {
     this.onChanged,
     this.onFieldSubmitted,
     this.topLabel, this.prefixText,
-    this.initialValue, this.focusNode, this.prefixIcon,
+    this.initialValue, this.focusNode, this.prefixIcon, this.inputFormatters,
   });
 
   @override
@@ -83,6 +86,7 @@ class ReusableInput extends StatelessWidget {
           obscureText: obscureText,
           keyboardType: keyboardType,
           validator: validator,
+          inputFormatters: inputFormatters,
           onTap: onTap,
           readOnly: readOnly,
           enabled: enabled,

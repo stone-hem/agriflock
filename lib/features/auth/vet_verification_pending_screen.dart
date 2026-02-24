@@ -1,5 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:agriflock360/app_routes.dart';
+import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock360/core/utils/toast_util.dart';
+import 'package:agriflock360/features/auth/repo/manual_auth_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -14,78 +18,63 @@ class VetVerificationPendingScreen extends StatefulWidget {
 class _VetVerificationPendingScreenState
     extends State<VetVerificationPendingScreen> {
   static const List<Map<String, IconData>> _messages = [
-    {
-      'icon': Icons.monetization_on_outlined,
-    },
-    {
-      'icon': Icons.people_outline,
-    },
-    {
-      'icon': Icons.dashboard_outlined,
-    },
-    {
-      'icon': Icons.visibility_outlined,
-    },
-    {
-      'icon': Icons.notifications_active_outlined,
-    },
-    {
-      'icon': Icons.account_balance_wallet_outlined,
-    },
-    {
-      'icon': Icons.star_outline,
-    },
-    {
-      'icon': Icons.groups_outlined,
-    },
+    {'icon': Icons.monetization_on_outlined},
+    {'icon': Icons.people_outline},
+    {'icon': Icons.dashboard_outlined},
+    {'icon': Icons.visibility_outlined},
+    {'icon': Icons.notifications_active_outlined},
+    {'icon': Icons.account_balance_wallet_outlined},
+    {'icon': Icons.star_outline},
+    {'icon': Icons.groups_outlined},
   ];
 
   static const List<Map<String, String>> _messageTexts = [
     {
       'title': 'Earn on Your Schedule',
       'body':
-          'Once verified, you can set your own availability and consultation fees. Work when it suits you and earn on your terms.',
+      'Once verified, you can set your own availability and consultation fees. Work when it suits you and earn on your terms.',
     },
     {
       'title': 'Connect with Farmers',
       'body':
-          'AgriFlock360 connects you with thousands of poultry farmers who need your veterinary expertise in their area.',
+      'AgriFlock360 connects you with thousands of poultry farmers who need your veterinary expertise in their area.',
     },
     {
       'title': 'Manage Your Practice',
       'body':
-          'Access a full dashboard to manage appointments, track payments, and view your earnings analytics in real-time.',
+      'Access a full dashboard to manage appointments, track payments, and view your earnings analytics in real-time.',
     },
     {
       'title': 'Grow Your Reach',
       'body':
-          'Verified vets get priority listing and increased visibility to farmers in their region. More visibility means more clients.',
+      'Verified vets get priority listing and increased visibility to farmers in their region. More visibility means more clients.',
     },
     {
       'title': 'Consultation Requests',
       'body':
-          'Receive consultation requests directly from poultry farmers in your area. Accept or decline at your convenience.',
+      'Receive consultation requests directly from poultry farmers in your area. Accept or decline at your convenience.',
     },
     {
       'title': 'Track Your Earnings',
       'body':
-          'View detailed payment history, pending payments, and earnings reports all in one place. Stay on top of your finances.',
+      'View detailed payment history, pending payments, and earnings reports all in one place. Stay on top of your finances.',
     },
     {
       'title': 'Build Your Reputation',
       'body':
-          'Farmers can rate and review your services, helping you build a strong professional reputation on the platform.',
+      'Farmers can rate and review your services, helping you build a strong professional reputation on the platform.',
     },
     {
       'title': 'Professional Network',
       'body':
-          'Join a community of verified veterinary professionals dedicated to improving poultry health outcomes across the region.',
+      'Join a community of verified veterinary professionals dedicated to improving poultry health outcomes across the region.',
     },
   ];
 
   late PageController _pageController;
   int _currentPage = 0;
   Timer? _timer;
+  bool _isCheckingStatus = false; // <-- loading state for the button
 
   @override
   void initState() {
@@ -104,6 +93,59 @@ class _VetVerificationPendingScreenState
         curve: Curves.easeInOut,
       );
     });
+  }
+
+  /// Calls the status endpoint and reacts to the result
+  Future<void> _checkVerificationStatus() async {
+    setState(() => _isCheckingStatus = true);
+
+    // TODO: adjust this import path to match your project structure
+    final result = await ManualAuthRepository().getVetStatus(); // <-- adjust to your actual repo/service call
+
+    if (!mounted) return;
+    setState(() => _isCheckingStatus = false);
+
+    switch (result) {
+      case Success():
+        ToastUtil.showSuccess('Your account was successfully verified! Login to continue');
+        context.go('/login');
+
+        break;
+
+      case Failure(:final message):
+        final isStillPending = result.statusCode == 403 || result.statusCode == 202;
+
+        _showStatusSnackBar(
+          message: isStillPending
+              ? 'Your account is still under review. Please check back later.'
+              : message ?? 'Something went wrong. Please try again.',
+          isError: true,
+        );
+        break;
+    }
+  }
+
+  void _showStatusSnackBar({required String message, required bool isError}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              isError ? Icons.info_outline : Icons.check_circle_outline,
+              color: Colors.white,
+              size: 20,
+            ),
+            const SizedBox(width: 10),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: isError ? Colors.orange.shade700 : Colors.green.shade700,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 4),
+      ),
+    );
   }
 
   @override
@@ -143,9 +185,9 @@ class _VetVerificationPendingScreenState
               Text(
                 'Verification in Progress',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey.shade800,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade800,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
@@ -205,8 +247,7 @@ class _VetVerificationPendingScreenState
                         itemCount: _messageTexts.length,
                         itemBuilder: (context, index) {
                           final msg = _messageTexts[index];
-                          final iconData =
-                              _messages[index].values.first;
+                          final iconData = _messages[index].values.first;
                           return _buildMessageCard(
                             msg['title']!,
                             msg['body']!,
@@ -222,7 +263,7 @@ class _VetVerificationPendingScreenState
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(
                         _messageTexts.length,
-                        (index) => AnimatedContainer(
+                            (index) => AnimatedContainer(
                           duration: const Duration(milliseconds: 300),
                           margin: const EdgeInsets.symmetric(horizontal: 3),
                           height: 8,
@@ -241,12 +282,48 @@ class _VetVerificationPendingScreenState
               ),
               const SizedBox(height: 24),
 
+              // ── CHECK STATUS BUTTON ──────────────────────────────────────
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: _isCheckingStatus ? null : _checkVerificationStatus,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green.shade700,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: Colors.green.shade200,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: _isCheckingStatus
+                      ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: Colors.white,
+                    ),
+                  )
+                      : const Text(
+                    'Check Verification Status',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              // ────────────────────────────────────────────────────────────
+
               // Back to Login button
               SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: OutlinedButton(
-                  onPressed: () => context.go(AppRoutes.login),
+                  onPressed: _isCheckingStatus ? null : () => context.go(AppRoutes.login),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.green.shade700,
                     side: BorderSide(color: Colors.green.shade300),
@@ -286,11 +363,7 @@ class _VetVerificationPendingScreenState
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  icon,
-                  color: Colors.green.shade600,
-                  size: 32,
-                ),
+                Icon(icon, color: Colors.green.shade600, size: 32),
                 const SizedBox(height: 16),
                 Text(
                   title,

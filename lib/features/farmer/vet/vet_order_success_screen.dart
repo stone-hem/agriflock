@@ -100,7 +100,6 @@ class VetOrderSuccessScreen extends StatelessWidget {
                         _buildDetailRow('Priority:', order.priorityLevel),
                         _buildDetailRow('Preferred Date:', order.preferredDate),
                         _buildDetailRow('Preferred Time:', order.preferredTime),
-                        _buildDetailRow('Reason:', order.reasonForVisit),
                       ],
                     ),
                   ),

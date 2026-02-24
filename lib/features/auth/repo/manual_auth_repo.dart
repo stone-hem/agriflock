@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:agriflock360/core/model/user_model.dart';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/log_util.dart';
 import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/main.dart';
+import 'package:http/http.dart' as http;
 
 class ManualAuthRepository {
   /// Extract a readable error message from API error response data.
@@ -332,6 +334,41 @@ class ManualAuthRepository {
       LogUtil.error(e.toString());
       ApiErrorHandler.handle(e);
       rethrow;
+    }
+  }
+
+  Future<Result> getVetStatus() async {
+    try {
+      final response = await apiClient.get('/extension-officers/status');
+
+      if (response.statusCode == 200) {
+        final jsonResponse = jsonDecode(response.body);
+        LogUtil.info('Vet status: $jsonResponse');
+
+        return Success(true);
+      } else {
+        LogUtil.error('Network error checking status: ${response.body}');
+        return Failure(
+          message: 'Failed checking status',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error checking status: $e');
+      return const Failure(message: 'No internet connection', statusCode: 0);
+    } catch (e) {
+      LogUtil.error('Error checking status: $e');
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed checking status',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+
+      return Failure(message: e.toString());
     }
   }
 

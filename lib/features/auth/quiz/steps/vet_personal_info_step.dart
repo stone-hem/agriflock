@@ -67,7 +67,7 @@ class VetPersonalInfoStep extends StatelessWidget {
           // National ID
           AuthTextField(
             controller: nationalIdController,
-            labelText: 'National ID *Required',
+            labelText: 'National ID number*',
             hintText: 'Enter your national ID',
             icon: Icons.badge,
             focusNode: nationalIdFocus,

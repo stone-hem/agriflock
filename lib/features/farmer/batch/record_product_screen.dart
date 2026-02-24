@@ -452,7 +452,6 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
                     label: 'Date',
                     icon: Icons.calendar_today,
                     required: true,
-                    initialDate: DateTime.now(),
                     minYear: DateTime.now().year - 1,
                     returnFormat: DateReturnFormat.isoString,
                     maxYear: DateTime.now().year,

@@ -1,7 +1,11 @@
+import 'package:agriflock360/core/utils/api_error_handler.dart';
+import 'package:agriflock360/core/utils/result.dart';
 import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_list_model.dart';
+import 'package:agriflock360/features/farmer/record/repo/recording_repo.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 class RecordWeightScreen extends StatefulWidget {
@@ -18,9 +22,10 @@ class RecordWeightScreen extends StatefulWidget {
 
 class _RecordWeightScreenState extends State<RecordWeightScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _recordingRepo = RecordingRepo();
 
-  final _sampleCountController = TextEditingController();
-  final _sampleAverageKgsController = TextEditingController();
+
+  final _averageKgsController = TextEditingController();
   final _notesController = TextEditingController();
   final _dateController = TextEditingController();
 
@@ -42,19 +47,30 @@ class _RecordWeightScreenState extends State<RecordWeightScreen> {
       }
 
       final recordData = {
-        'batch_id': widget.batch.id,
-        'sample_count': int.parse(_sampleCountController.text),
-        'sample_average_kgs': double.parse(_sampleAverageKgsController.text),
-        'date': sampleDate.toUtc().toIso8601String(),
+        'average_weight_kgs': double.parse(_averageKgsController.text),
+        'sample_date': sampleDate.toUtc().toIso8601String(),
         if (_notesController.text.isNotEmpty) 'notes': _notesController.text,
       };
 
-      // TODO: Complete with actual API call
-      await Future.delayed(const Duration(seconds: 1));
 
-      if (mounted) {
-        context.pop(true);
+      final result = await _recordingRepo.recordWeight(recordData, widget.batch.id);
+
+      switch(result) {
+        case Success<dynamic>():
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Weight record saved successfully!'),
+              ),
+            );
+            context.pop(true);
+          }
+        case Failure<dynamic>(message: final error):
+          ApiErrorHandler.handle(error);
+          break;
       }
+
+
     } catch (e) {
       // TODO: Handle error
     } finally {
@@ -147,34 +163,12 @@ class _RecordWeightScreenState extends State<RecordWeightScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Sample Count
-              ReusableInput(
-                topLabel: 'Sample Count',
-                icon: Icons.numbers,
-                controller: _sampleCountController,
-                keyboardType: TextInputType.number,
-                hintText: 'Number of birds sampled',
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter sample count';
-                  }
-                  if (int.tryParse(value) == null) {
-                    return 'Please enter a valid number';
-                  }
-                  if (int.parse(value) <= 0) {
-                    return 'Sample count must be greater than 0';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
 
               // Sample Date
               CustomDateTextField(
                 label: 'Sample Date',
                 icon: Icons.calendar_today,
                 required: true,
-                initialDate: DateTime.now(),
                 minYear: DateTime.now().year - 1,
                 maxYear: DateTime.now().year,
                 returnFormat: DateReturnFormat.isoString,
@@ -186,9 +180,12 @@ class _RecordWeightScreenState extends State<RecordWeightScreen> {
               ReusableInput(
                 topLabel: 'Sample Average (Kgs)',
                 icon: Icons.monitor_weight,
-                controller: _sampleAverageKgsController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                controller: _averageKgsController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true,signed: false),
                 hintText: 'Average weight in kgs',
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                ],
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter average weight';
@@ -262,8 +259,7 @@ class _RecordWeightScreenState extends State<RecordWeightScreen> {
 
   @override
   void dispose() {
-    _sampleCountController.dispose();
-    _sampleAverageKgsController.dispose();
+    _averageKgsController.dispose();
     _notesController.dispose();
     _dateController.dispose();
     super.dispose();

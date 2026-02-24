@@ -20,8 +20,6 @@ class Visit {
   final String priorityLevel;
   final String preferredDate;
   final String preferredTime;
-  final String reasonForVisit;
-  final String? additionalNotes;
   final double serviceFee;
   final double mileageFee;
   final double distanceKm;
@@ -59,8 +57,6 @@ class Visit {
     required this.priorityLevel,
     required this.preferredDate,
     required this.preferredTime,
-    required this.reasonForVisit,
-    required this.additionalNotes,
     required this.serviceFee,
     required this.mileageFee,
     required this.distanceKm,
@@ -115,8 +111,6 @@ class Visit {
       priorityLevel: TypeUtils.toStringSafe(json['priority_level']),
       preferredDate: TypeUtils.toStringSafe(json['preferred_date']),
       preferredTime: TypeUtils.toStringSafe(json['preferred_time']),
-      reasonForVisit: TypeUtils.toStringSafe(json['reason_for_visit']),
-      additionalNotes: TypeUtils.toNullableStringSafe(json['additional_notes']),
       serviceFee: TypeUtils.toDoubleSafe(json['serviceFee']),
       mileageFee: TypeUtils.toDoubleSafe(json['mileageFee']),
       distanceKm: TypeUtils.toDoubleSafe(json['distanceKm']),
@@ -157,8 +151,6 @@ class Visit {
       'priority_level': priorityLevel,
       'preferred_date': preferredDate,
       'preferred_time': preferredTime,
-      'reason_for_visit': reasonForVisit,
-      'additional_notes': additionalNotes,
       'serviceFee': serviceFee,
       'mileageFee': mileageFee,
       'distanceKm': distanceKm,

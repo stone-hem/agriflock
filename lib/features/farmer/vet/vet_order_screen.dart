@@ -26,7 +26,6 @@ class VetOrderScreen extends StatefulWidget {
 class _VetOrderScreenState extends State<VetOrderScreen> {
   final VetFarmerRepository _vetRepository = VetFarmerRepository();
   final _formKey = GlobalKey<FormState>();
-  final _reasonController = TextEditingController();
 
   // Selection states
   String? _selectedFarm;
@@ -316,7 +315,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
           .split('T')
           .first,
       preferredTime: '09:00',
-      reasonForVisit: _reasonController.text,
       termsAgreed: false,
       participantsCount: hasPerPersonService ? _numberOfPeople : null,
     );
@@ -1092,29 +1090,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Reason for Visit
-              Text(
-                'Reason for Visit',
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade800,
-                ),
-              ),
-              const SizedBox(height: 8),
-              ReusableInput(
-                controller: _reasonController,
-                labelText: 'Reason',
-                hintText: 'Describe the reason for the veterinary visit...',
-                maxLines: 3,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please describe the reason for visit';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
-
               // Get Estimate Button
               SizedBox(
                 width: double.infinity,
@@ -1341,7 +1316,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
 
   @override
   void dispose() {
-    _reasonController.dispose();
     _birdsCountController.dispose();
     _numberOfPeopleController.dispose();
     super.dispose();

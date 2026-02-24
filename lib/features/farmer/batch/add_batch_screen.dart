@@ -445,7 +445,6 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                   label: 'Date of Hatching',
                   icon: Icons.calendar_today,
                   required: true,
-                  initialDate: DateTime.now(),
                   minYear: DateTime.now().year - 1,
                   returnFormat: DateReturnFormat.isoString,
                   maxYear: DateTime.now().year,

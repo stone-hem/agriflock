@@ -45,14 +45,8 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
   double? _longitude;
 
   // Farmer data
-  final TextEditingController _chickenNumberController = TextEditingController();
   final TextEditingController _farmerExperienceController = TextEditingController();
-  final TextEditingController _houseCapacityController = TextEditingController();
-  final FocusNode _chickenNumberFocus = FocusNode();
   final FocusNode _farmerExperienceFocus = FocusNode();
-  final FocusNode _houseCapacityFocus = FocusNode();
-  String? _selectedBirdTypeId;
-
   // Vet data
   final TextEditingController _dobController = TextEditingController();
   final TextEditingController _vetExperienceController = TextEditingController();
@@ -134,27 +128,23 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
   }
 
   void _setupFocusListeners() {
-    _chickenNumberFocus.addListener(() {
-      if (_chickenNumberFocus.hasFocus) {
-        _scrollToPosition(100);
-      }
-    });
+
 
     _farmerExperienceFocus.addListener(() {
       if (_farmerExperienceFocus.hasFocus) {
-        _scrollToPosition(200);
+        _scrollToPosition(100);
       }
     });
 
     _vetExperienceFocus.addListener(() {
       if (_vetExperienceFocus.hasFocus) {
-        _scrollToPosition(300);
+        _scrollToPosition(200);
       }
     });
 
     _vetProfileFocus.addListener(() {
       if (_vetProfileFocus.hasFocus) {
-        _scrollToPosition(400);
+        _scrollToPosition(300);
       }
     });
   }
@@ -176,12 +166,8 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     _pageController.removeListener(_onPageChanged);
     _pageController.dispose();
     _scrollController.dispose();
-    _chickenNumberController.dispose();
     _farmerExperienceController.dispose();
-    _houseCapacityController.dispose();
-    _chickenNumberFocus.dispose();
     _farmerExperienceFocus.dispose();
-    _houseCapacityFocus.dispose();
     _dobController.dispose();
     _vetExperienceController.dispose();
     _vetProfileController.dispose();
@@ -248,9 +234,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         latitude: _latitude!,
         longitude: _longitude!,
         yearsOfExperience: int.tryParse(_farmerExperienceController.text) ?? 0,
-        numberOfChickens: int.tryParse(_chickenNumberController.text) ?? 0,
-        poultryTypeId: _selectedBirdTypeId,
-        chickenHouseCapacity: int.tryParse(_houseCapacityController.text),
       );
 
       if (result['success'] == true) {
@@ -335,20 +318,8 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
       ToastUtil.showError("Please select a location");
       return false;
     }
-    if (_chickenNumberController.text.isEmpty) {
-      ToastUtil.showError("Please enter the number of chickens");
-      return false;
-    }
     if (_farmerExperienceController.text.isEmpty) {
       ToastUtil.showError("Please enter your years of experience");
-      return false;
-    }
-    if (_selectedBirdTypeId == null) {
-      ToastUtil.showError("Please select the main bird type");
-      return false;
-    }
-    if (_houseCapacityController.text.isEmpty) {
-      ToastUtil.showError("Please enter your chicken house capacity");
       return false;
     }
     return true;
@@ -453,10 +424,8 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
       case 1:
         return true; // Farm details - allow continue, validate on submit
       case 2:
-        return _selectedBirdTypeId != null && _houseCapacityController.text.isNotEmpty;
-      case 3:
         return _selectedAddress != null && _latitude != null && _longitude != null;
-      case 4:
+      case 3:
         return true;
       default:
         return false;
@@ -605,7 +574,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     return [
       _buildRoleSelectionPage(),
       _buildFarmerDetailsPage(),
-      _buildFarmerBirdTypePage(),
       _buildLocationPage(),
       _buildCongratulationsPage(),
     ];
@@ -625,25 +593,11 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
 
   Widget _buildFarmerDetailsPage() {
     return FarmerDetailsStep(
-      chickenNumberController: _chickenNumberController,
       experienceController: _farmerExperienceController,
-      chickenNumberFocus: _chickenNumberFocus,
       experienceFocus: _farmerExperienceFocus,
     );
   }
 
-  Widget _buildFarmerBirdTypePage() {
-    return FarmerBirdTypeStep(
-      houseCapacityController: _houseCapacityController,
-      houseCapacityFocus: _houseCapacityFocus,
-      selectedBirdTypeId: _selectedBirdTypeId,
-      onBirdTypeSelected: (String id) {
-        setState(() {
-          _selectedBirdTypeId = id;
-        });
-      },
-    );
-  }
 
   Widget _buildVetTermsPage() {
     return SingleChildScrollView(
@@ -925,7 +879,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     return CongratulationsStep(
       selectedUserType: _selectedUserType,
       selectedAddress: _selectedAddress,
-      chickenNumber: _chickenNumberController.text,
       farmerExperience: _farmerExperienceController.text,
       educationLevel: _selectedEducationLevel,
       professionalSummary: _vetProfileController.text,

@@ -358,47 +358,6 @@ class _PendingVisitCardState extends State<PendingVisitCard> {
                   accentColor: Colors.orange,
                 ),
                 const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Reason for Visit:',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.grey.shade700,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        widget.visit.reasonForVisit,
-                        style: TextStyle(
-                          color: Colors.grey.shade700,
-                          fontSize: 14,
-                          height: 1.5,
-                        ),
-                      ),
-                      if (widget.visit.additionalNotes != null && widget.visit.additionalNotes!.isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          'Notes: ${widget.visit.additionalNotes}',
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 13,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
                 Row(
                   children: [
                     Icon(Icons.attach_money, size: 16, color: Colors.green.shade700),

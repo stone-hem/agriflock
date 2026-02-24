@@ -10,8 +10,6 @@ class VetOrderRequest {
   final String priorityLevel;
   final String preferredDate;
   final String preferredTime;
-  final String reasonForVisit;
-  final String? additionalNotes;
   final bool termsAgreed;
   final int? participantsCount;
 
@@ -25,8 +23,6 @@ class VetOrderRequest {
     required this.priorityLevel,
     required this.preferredDate,
     required this.preferredTime,
-    required this.reasonForVisit,
-    this.additionalNotes,
     required this.termsAgreed, this.participantsCount,
   });
 
@@ -40,8 +36,6 @@ class VetOrderRequest {
       'priority_level': priorityLevel,
       'preferred_date': preferredDate,
       'preferred_time': preferredTime,
-      'reason_for_visit': reasonForVisit,
-      'additional_notes': additionalNotes,
       'terms_agreed': termsAgreed,
       'participants_count': participantsCount,
     };
@@ -51,15 +45,13 @@ class VetOrderRequest {
 class VetEstimateRequest {
   final String vetId;
   final List<String>? houseIds;
-  final List<String>? batchIds; // Changed from single batchId to list
-  final List<String> serviceIds; // Changed from single serviceId to list
+  final List<String>? batchIds;
+  final List<String> serviceIds;
   final int? participantsCount;
   final int birdsCount;
   final String priorityLevel;
   final String preferredDate;
   final String preferredTime;
-  final String reasonForVisit;
-  final String? additionalNotes;
   final bool termsAgreed;
 
   VetEstimateRequest({
@@ -71,8 +63,6 @@ class VetEstimateRequest {
     required this.priorityLevel,
     required this.preferredDate,
     required this.preferredTime,
-    required this.reasonForVisit,
-    this.additionalNotes,
     required this.termsAgreed, this.participantsCount,
   });
 
@@ -86,8 +76,6 @@ class VetEstimateRequest {
       'priority_level': priorityLevel,
       'preferred_date': preferredDate,
       'preferred_time': preferredTime,
-      'reason_for_visit': reasonForVisit,
-      'additional_notes': additionalNotes,
       'terms_agreed': termsAgreed,
       'participants_count': participantsCount,
     };

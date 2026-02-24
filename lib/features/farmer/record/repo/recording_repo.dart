@@ -138,5 +138,49 @@ class RecordingRepo {
     }
   }
 
+  /// Create medication record
+  /// Payload: batch_id, house_id, category_id, category_item_id, quantity, unit,
+  /// date, dosage, administration_method, reason, birds_treated,
+  /// treatment_duration_days, withdrawal_period_days, cost, supplier, notes
+  Future<Result> recordWeight(
+      Map<String, dynamic> request,
+      String batchId,
+      ) async {
+    try {
+      final response = await apiClient.post(
+        '/batches/$batchId/weight-samples/weight',
+        body: request,
+      );
+
+      final jsonResponse = jsonDecode(response.body);
+      LogUtil.info('Weight Record API Response: $jsonResponse');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return Success(null);
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to  record weight',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in recordWeight: $e');
+      return const Failure(message: 'No internet connection', statusCode: 0);
+    } catch (e) {
+      LogUtil.error('Error in recordWeight: $e');
+
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to record weight',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+
+      return Failure(message: e.toString());
+    }
+  }
+
 
 }

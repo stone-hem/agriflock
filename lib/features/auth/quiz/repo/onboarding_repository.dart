@@ -10,10 +10,7 @@ class OnboardingRepository {
     required String address,
     required double latitude,
     required double longitude,
-    required int yearsOfExperience,
-    required int numberOfChickens,
-    String? poultryTypeId,
-    int? chickenHouseCapacity,
+    required int yearsOfExperience
   }) async {
     try {
       final body = <String, dynamic>{
@@ -23,10 +20,7 @@ class OnboardingRepository {
           'longitude': longitude,
         },
         'years_of_experience': yearsOfExperience,
-        'current_number_of_chickens': numberOfChickens,
       };
-      if (poultryTypeId != null) body['poultry_type_id'] = poultryTypeId;
-      if (chickenHouseCapacity != null) body['chicken_house_capacity'] = chickenHouseCapacity;
 
       final response = await apiClient.post(
         '/auth/farmer-register',

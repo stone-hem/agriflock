@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:agriflock360/app_routes.dart';
 import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/utils/date_util.dart';
 import 'package:agriflock360/core/utils/log_util.dart';
@@ -55,7 +56,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
   String? _selectedBatchType;
   String? _selectedFeedingTimeCategory;
   File? _batchPhotoFile;
-  bool _isOwnHatch = true;
+  bool _isOwnHatch = false;
   bool _hasChickCost = false;
   String _currency = '';
   final _currentWeightController = TextEditingController();
@@ -918,18 +919,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
             const SizedBox(height: 8),
             Row(
               children: [
-                Expanded(
-                  child: ChoiceChip(
-                    label: const Text('Own Hatch'),
-                    selected: _isOwnHatch,
-                    onSelected: (_) => _switchHatchSource(true),
-                    selectedColor: Colors.green,
-                    labelStyle: TextStyle(
-                      color: _isOwnHatch ? Colors.white : Colors.grey.shade800,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
+
                 Expanded(
                   child: ChoiceChip(
                     label: const Text('Purchased Chicks'),
@@ -938,6 +928,19 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                     selectedColor: Colors.blue,
                     labelStyle: TextStyle(
                       color: !_isOwnHatch ? Colors.white : Colors.grey.shade800,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+
+                Expanded(
+                  child: ChoiceChip(
+                    label: const Text('Own Hatch'),
+                    selected: _isOwnHatch,
+                    onSelected: (_) => _switchHatchSource(true),
+                    selectedColor: Colors.green,
+                    labelStyle: TextStyle(
+                      color: _isOwnHatch ? Colors.white : Colors.grey.shade800,
                     ),
                   ),
                 ),
@@ -951,7 +954,6 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                 label: 'Date of Hatching',
                 icon: Icons.calendar_today,
                 required: true,
-                initialDate: DateTime.now(),
                 minYear: DateTime.now().year - 1,
                 maxYear: DateTime.now().year,
                 returnFormat: DateReturnFormat.isoString,
@@ -1438,7 +1440,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => context.go('/farms'),
+                onPressed: () => context.go(AppRoutes.home),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
                   foregroundColor: Colors.white,
