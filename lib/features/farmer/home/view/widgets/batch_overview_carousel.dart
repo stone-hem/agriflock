@@ -97,7 +97,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
     return Column(
       children: [
         SizedBox(
-          height: screenHeight * 0.42, // Increased height for more content
+          height: screenHeight * 0.48, // Increased height for even more content
           child: PageView.builder(
             controller: _pageController,
             onPageChanged: (index) {
@@ -177,6 +177,14 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
         ? ((batch.mortality / batch.totalBirds) * 100).toStringAsFixed(1)
         : '0';
 
+    // Calculate total egg trays
+    final totalEggTrays = batch.totalEggProduction != null
+        ? (batch.totalEggProduction! / 30).floor()
+        : 0;
+    final remainingEggs = batch.totalEggProduction != null
+        ? batch.totalEggProduction! % 30
+        : 0;
+
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -208,7 +216,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header
+            // Header with batch name format as requested
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
@@ -268,12 +276,14 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          batch.batchNumber,
+                          batch.batchNumber, // This will show format like "Kienyeji Batch – 9 Feb 2026"
                           style: TextStyle(
                             color: primaryColor.shade900,
-                            fontSize: 18,
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         Text(
                           '${batch.farmName} • ${batch.houseName}',
@@ -385,6 +395,107 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
 
             const SizedBox(height: 8),
 
+            // Feed Details from new feed object
+            if (batch.feed != null) ...[
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.brown.shade50,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: Colors.brown.shade300),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildInfoRow(
+                            'Bags consumed',
+                            '${batch.feed!.totalBagsConsumed} (Day: ${batch.feed!.bagsConsumedDay}, Night: ${batch.feed!.bagsConsumedNight})',
+                            Icons.restaurant,
+                            Colors.orange.shade700,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _buildInfoRow(
+                            'Variance',
+                            batch.feed!.feedVariance,
+                            Icons.trending_flat,
+                            batch.feed!.feedVariance.toLowerCase().contains('above')
+                                ? Colors.orange
+                                : Colors.green,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+
+            // Feeding Plan from new feeding_plan object
+            if (batch.feedingPlan != null) ...[
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.teal.shade50,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: Colors.teal.shade300),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildInfoRow(
+                            'Feeding stage',
+                            batch.feedingPlan!.stageName,
+                            Icons.timeline_outlined,
+                            Colors.teal,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _buildInfoRow(
+                            'Feed type',
+                            batch.feedingPlan!.feedTypeInUse,
+                            Icons.local_dining_outlined,
+                            Colors.teal.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildInfoRow(
+                            'Times/day',
+                            '${batch.feedingPlan!.timesPerDay} (${batch.feedingPlan!.feedingTimes.slots.join(', ')})',
+                            Icons.access_time,
+                            Colors.teal.shade700,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _buildInfoRow(
+                            'Expected/week',
+                            '${batch.feedingPlan!.expectedFeedPerWeekBags} bags',
+                            Icons.calendar_today,
+                            Colors.teal.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+
             // Second Row - Weight Info
             Container(
               padding: const EdgeInsets.all(8),
@@ -426,7 +537,26 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
 
             const SizedBox(height: 8),
 
-            // Layers Specific Info
+            // Total Meat Production (for non-layers)
+            if (!isLayers && batch.totalMeatProduction != null) ...[
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.purple.shade50,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: Colors.purple.shade300),
+                ),
+                child: _buildInfoRow(
+                  'Total meat production',
+                  '${batch.totalMeatProduction!.toStringAsFixed(1)} kgs',
+                  Icons.food_bank_outlined,
+                  Colors.purple,
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+
+            // Layers Specific Info with tray calculation
             if (isLayers) ...[
               Container(
                 padding: const EdgeInsets.all(8),
@@ -442,7 +572,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                         Expanded(
                           child: _buildInfoRow(
                             'Total egg collected',
-                            '${batch.totalEggProduction ?? 0}',
+                            '${batch.totalEggProduction ?? 0} pcs',
                             Icons.egg_outlined,
                             Colors.amber.shade700,
                           ),
@@ -463,19 +593,19 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                       children: [
                         Expanded(
                           child: _buildInfoRow(
-                            'Production cost/egg',
-                            'KES ${batch.productionCostPerEgg?.toStringAsFixed(2) ?? '0.00'}',
-                            Icons.attach_money,
-                            Colors.green.shade700,
+                            'Egg trays',
+                            '$totalEggTrays trays $remainingEggs pcs',
+                            Icons.inbox_outlined,
+                            Colors.amber.shade700,
                           ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: _buildInfoRow(
-                            'Egg cost',
-                            'KES ${batch.eggCost?.toStringAsFixed(2) ?? '0.00'}',
-                            Icons.price_check_outlined,
-                            Colors.orange.shade700,
+                            'Production cost/egg',
+                            'KES ${batch.productionCostPerEgg?.toStringAsFixed(2) ?? '0.00'}',
+                            Icons.attach_money,
+                            Colors.green.shade700,
                           ),
                         ),
                       ],
@@ -506,7 +636,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                 ),
               ),
 
-            // Vaccination Info - Simplified as requested (just numbers/status)
+            // Vaccination Info - Enhanced with more details as requested
             Container(
               margin: const EdgeInsets.only(top: 8),
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
@@ -532,120 +662,113 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: [
+                      // Count of vaccines done (Green ✓)
+                      _buildVaccineStatusChip(
+                        icon: Icons.check_circle,
+                        color: Colors.green,
+                        label: '${batch.vaccination.vaccinesDone.length} done',
+                      ),
+                      // Count of vaccines due today (Yellow)
+                      _buildVaccineStatusChip(
+                        icon: Icons.warning_amber,
+                        color: Colors.amber,
+                        label: '${batch.vaccination.vaccinesUpcoming.where((v) => v.dayDue == int.parse(batch.ageDays)).length} due today',
+                      ),
+
+                      // Count of upcoming (Stay ○)
+                      _buildVaccineStatusChip(
+                        icon: Icons.access_time,
+                        color: Colors.blue,
+                        label: '${batch.vaccination.vaccinesUpcoming.where((v) => v.dayDue != int.parse(batch.ageDays)).length} upcoming',
+                      ),
+
+                      // Count of not done (Red ✗) - Calculate based on schedule
+                      _buildVaccineStatusChip(
+                        icon: Icons.cancel,
+                        color: Colors.red,
+                        label: '${batch.vaccination.vaccinesUpcoming.where((v) => v.dayDue! < int.parse(batch.ageDays)).length} overdue',
+                      ),
+                    ],
+                  ),
+
+                  // Show next 2 upcoming vaccines as requested
+                  if (batch.vaccination.vaccinesUpcoming.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    const Divider(height: 1, thickness: 1),
+                    const SizedBox(height: 6),
+                    Row(
                       children: [
-                        // Count of vaccines done (Green ✓)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.green.shade100,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.green.shade400),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.check_circle, color: Colors.green, size: 12),
-                              const SizedBox(width: 2),
-                              Text(
-                                '${batch.vaccination.vaccinesDone.length} done',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.green.shade800,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                        Icon(Icons.event_note, size: 12, color: Colors.grey.shade600),
                         const SizedBox(width: 4),
-                        // Count of vaccines due today (Yellow)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.amber.shade100,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.amber.shade400),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.warning_amber, color: Colors.amber, size: 12),
-                              const SizedBox(width: 2),
-                              Text(
-                                '${batch.vaccination.vaccinesUpcoming.where((v) => v.dayDue == batch.ageDays).length} due today',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.amber.shade800,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        // Count of upcoming (Stay ○)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade100,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.blue.shade400),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.access_time, color: Colors.blue, size: 12),
-                              const SizedBox(width: 2),
-                              Text(
-                                '${batch.vaccination.vaccinesUpcoming.where((v) => v.dayDue != batch.ageDays).length} upcoming',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.blue.shade800,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        // Count of not done (Red ✗)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.red.shade100,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.red.shade400),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.cancel, color: Colors.red, size: 12),
-                              const SizedBox(width: 2),
-                              Text(
-                                '0 not done',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.red.shade800,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
+                        Text(
+                          'Next vaccines:',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade700,
                           ),
                         ),
                       ],
                     ),
-                  ),
+                    const SizedBox(height: 4),
+                    ...batch.vaccination.vaccinesUpcoming
+                        .where((v) => v.dayDue! >= int.parse(batch.ageDays))
+                        .take(2)
+                        .map((v) => Padding(
+                      padding: const EdgeInsets.only(bottom: 2),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 4,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: v.dayDue == batch.ageDays
+                                  ? Colors.amber
+                                  : Colors.blue,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              '${v.name} (Day ${v.dayDue})',
+                              style: TextStyle(
+                                fontSize: 9,
+                                color: Colors.grey.shade800,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (v.dayDue == batch.ageDays)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                              decoration: BoxDecoration(
+                                color: Colors.amber.shade100,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                'Due today',
+                                style: TextStyle(fontSize: 7, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ))
+                        .toList(),
+                  ],
                 ],
               ),
             ),
 
             const SizedBox(height: 8),
 
-            // View Details Button
+            // View Details Button with tap for detailed reports
             TextButton.icon(
               onPressed: () {
                 context.push('/batch-report', extra: batch.batchId);
@@ -666,6 +789,36 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildVaccineStatusChip({
+    required IconData icon,
+    required Color color,
+    required String label,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 10),
+          const SizedBox(width: 2),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 9,
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }

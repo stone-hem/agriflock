@@ -53,22 +53,25 @@ class BatchHomeData {
   final ProductionStage productionStage;
   final int mortality;
   final String mortalityRate;
-  final double productionCostPerBird;  // ADD THIS
-  final String expenditureCurrency;     // ADD THIS
+  final double productionCostPerBird;
+  final String expenditureCurrency;
   final int foodInStoreBags;
   final int foodInStoreKg;
-  final double totalExpectedFoodPerDayKg;  // ADD THIS
+  final double totalExpectedFoodPerDayKg;
   final double expectedFoodPerBirdPerDayG;
   final double totalActualFoodPerDayKg;
   final double actualFoodPerBirdPerDayG;
   final double? expectedWeight;
   final double? actualWeight;
   final Vaccination vaccination;
+  final Feed? feed;                       // NEW: Feed object
+  final FeedingPlan? feedingPlan;         // NEW: Feeding plan object
+  final double? totalMeatProduction;       // NEW: Total meat production
   final int? totalEggProduction;
   final int? productionPercentage;
   final double? eggCost;
-  final double? productionCostPerEgg;   // ADD THIS
-  final String? othersProduction;        // ADD THIS
+  final double? productionCostPerEgg;
+  final String? othersProduction;
 
   BatchHomeData({
     required this.batchId,
@@ -85,27 +88,32 @@ class BatchHomeData {
     required this.productionStage,
     required this.mortality,
     required this.mortalityRate,
-    required this.productionCostPerBird,  // ADD THIS
-    required this.expenditureCurrency,    // ADD THIS
+    required this.productionCostPerBird,
+    required this.expenditureCurrency,
     required this.foodInStoreBags,
     required this.foodInStoreKg,
-    required this.totalExpectedFoodPerDayKg,  // ADD THIS
+    required this.totalExpectedFoodPerDayKg,
     required this.expectedFoodPerBirdPerDayG,
     required this.totalActualFoodPerDayKg,
     required this.actualFoodPerBirdPerDayG,
     this.expectedWeight,
     this.actualWeight,
     required this.vaccination,
+    this.feed,                             // NEW
+    this.feedingPlan,                       // NEW
+    this.totalMeatProduction,                // NEW
     this.totalEggProduction,
     this.productionPercentage,
     this.eggCost,
-    this.productionCostPerEgg,  // ADD THIS
-    this.othersProduction,      // ADD THIS
+    this.productionCostPerEgg,
+    this.othersProduction,
   });
 
   factory BatchHomeData.fromJson(Map<String, dynamic> json) {
     final productionStageMap = TypeUtils.toMapSafe(json['production_stage']);
     final vaccinationMap = TypeUtils.toMapSafe(json['vaccination']);
+    final feedMap = TypeUtils.toMapSafe(json['feed']);                 // NEW
+    final feedingPlanMap = TypeUtils.toMapSafe(json['feeding_plan']); // NEW
 
     return BatchHomeData(
       batchId: TypeUtils.toStringSafe(json['batch_id']),
@@ -122,22 +130,25 @@ class BatchHomeData {
       productionStage: ProductionStage.fromJson(productionStageMap ?? {}),
       mortality: TypeUtils.toIntSafe(json['mortality']),
       mortalityRate: TypeUtils.toStringSafe(json['mortality_rate'], defaultValue: '0%'),
-      productionCostPerBird: TypeUtils.toDoubleSafe(json['production_cost_per_bird']), // ADD THIS
-      expenditureCurrency: TypeUtils.toStringSafe(json['expenditure_currency']), // ADD THIS
+      productionCostPerBird: TypeUtils.toDoubleSafe(json['production_cost_per_bird']),
+      expenditureCurrency: TypeUtils.toStringSafe(json['expenditure_currency']),
       foodInStoreBags: TypeUtils.toIntSafe(json['food_in_store_bags']),
       foodInStoreKg: TypeUtils.toIntSafe(json['food_in_store_kg']),
-      totalExpectedFoodPerDayKg: TypeUtils.toDoubleSafe(json['total_expected_food_per_day_kg']), // ADD THIS
+      totalExpectedFoodPerDayKg: TypeUtils.toDoubleSafe(json['total_expected_food_per_day_kg']),
       expectedFoodPerBirdPerDayG: TypeUtils.toDoubleSafe(json['expected_food_per_bird_per_day_g']),
       totalActualFoodPerDayKg: TypeUtils.toDoubleSafe(json['total_actual_food_per_day_kg']),
       actualFoodPerBirdPerDayG: TypeUtils.toDoubleSafe(json['actual_food_per_bird_per_day_g']),
       expectedWeight: TypeUtils.toNullableDoubleSafe(json['expected_weight']),
       actualWeight: TypeUtils.toNullableDoubleSafe(json['actual_weight']),
       vaccination: Vaccination.fromJson(vaccinationMap ?? {}),
+      feed: feedMap != null ? Feed.fromJson(feedMap) : null,                 // NEW
+      feedingPlan: feedingPlanMap != null ? FeedingPlan.fromJson(feedingPlanMap) : null, // NEW
+      totalMeatProduction: TypeUtils.toNullableDoubleSafe(json['total_meat_production']), // NEW
       totalEggProduction: TypeUtils.toNullableIntSafe(json['total_egg_production']),
       productionPercentage: TypeUtils.toNullableIntSafe(json['production_percentage']),
       eggCost: TypeUtils.toNullableDoubleSafe(json['egg_cost']),
-      productionCostPerEgg: TypeUtils.toNullableDoubleSafe(json['production_cost_per_egg']), // ADD THIS
-      othersProduction: TypeUtils.toNullableStringSafe(json['others_production']), // ADD THIS
+      productionCostPerEgg: TypeUtils.toNullableDoubleSafe(json['production_cost_per_egg']),
+      othersProduction: TypeUtils.toNullableStringSafe(json['others_production']),
     );
   }
 
@@ -157,22 +168,25 @@ class BatchHomeData {
       'production_stage': productionStage.toJson(),
       'mortality': mortality,
       'mortality_rate': mortalityRate,
-      'production_cost_per_bird': productionCostPerBird, // ADD THIS
-      'expenditure_currency': expenditureCurrency, // ADD THIS
+      'production_cost_per_bird': productionCostPerBird,
+      'expenditure_currency': expenditureCurrency,
       'food_in_store_bags': foodInStoreBags,
       'food_in_store_kg': foodInStoreKg,
-      'total_expected_food_per_day_kg': totalExpectedFoodPerDayKg, // ADD THIS
+      'total_expected_food_per_day_kg': totalExpectedFoodPerDayKg,
       'expected_food_per_bird_per_day_g': expectedFoodPerBirdPerDayG,
       'total_actual_food_per_day_kg': totalActualFoodPerDayKg,
       'actual_food_per_bird_per_day_g': actualFoodPerBirdPerDayG,
       'expected_weight': expectedWeight,
       'actual_weight': actualWeight,
       'vaccination': vaccination.toJson(),
+      'feed': feed?.toJson(),                 // NEW
+      'feeding_plan': feedingPlan?.toJson(),   // NEW
+      'total_meat_production': totalMeatProduction, // NEW
       'total_egg_production': totalEggProduction,
       'production_percentage': productionPercentage,
       'egg_cost': eggCost,
-      'production_cost_per_egg': productionCostPerEgg, // ADD THIS
-      'others_production': othersProduction, // ADD THIS
+      'production_cost_per_egg': productionCostPerEgg,
+      'others_production': othersProduction,
     };
   }
 
@@ -182,6 +196,131 @@ class BatchHomeData {
     if (value is int) return value.toString();
     if (value is double) return value.toInt().toString();
     return '0';
+  }
+}
+
+// NEW: Feed class
+class Feed {
+  final int bagsConsumed;
+  final int bagsConsumedDay;
+  final int bagsConsumedNight;
+  final int totalBagsConsumed;
+  final int balanceInStore;
+  final String feedType;
+  final String feedVariance;
+
+  Feed({
+    required this.bagsConsumed,
+    required this.bagsConsumedDay,
+    required this.bagsConsumedNight,
+    required this.totalBagsConsumed,
+    required this.balanceInStore,
+    required this.feedType,
+    required this.feedVariance,
+  });
+
+  factory Feed.fromJson(Map<String, dynamic> json) {
+    return Feed(
+      bagsConsumed: TypeUtils.toIntSafe(json['bags_consumed']),
+      bagsConsumedDay: TypeUtils.toIntSafe(json['bags_consumed_day']),
+      bagsConsumedNight: TypeUtils.toIntSafe(json['bags_consumed_night']),
+      totalBagsConsumed: TypeUtils.toIntSafe(json['total_bags_consumed']),
+      balanceInStore: TypeUtils.toIntSafe(json['balance_in_store']),
+      feedType: TypeUtils.toStringSafe(json['feed_type']),
+      feedVariance: TypeUtils.toStringSafe(json['feed_variance']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'bags_consumed': bagsConsumed,
+      'bags_consumed_day': bagsConsumedDay,
+      'bags_consumed_night': bagsConsumedNight,
+      'total_bags_consumed': totalBagsConsumed,
+      'balance_in_store': balanceInStore,
+      'feed_type': feedType,
+      'feed_variance': feedVariance,
+    };
+  }
+}
+
+// NEW: FeedingPlan class
+class FeedingPlan {
+  final double expectedFeedPerDayKg;
+  final int feedPerBirdPerDayGrams;
+  final int expectedFeedPerWeekBags;
+  final String expectedAvgWeight;
+  final String feedTypeInUse;
+  final String stageName;
+  final int timesPerDay;
+  final FeedingTimes feedingTimes;
+
+  FeedingPlan({
+    required this.expectedFeedPerDayKg,
+    required this.feedPerBirdPerDayGrams,
+    required this.expectedFeedPerWeekBags,
+    required this.expectedAvgWeight,
+    required this.feedTypeInUse,
+    required this.stageName,
+    required this.timesPerDay,
+    required this.feedingTimes,
+  });
+
+  factory FeedingPlan.fromJson(Map<String, dynamic> json) {
+    final feedingTimesMap = TypeUtils.toMapSafe(json['feeding_times']);
+
+    return FeedingPlan(
+      expectedFeedPerDayKg: TypeUtils.toDoubleSafe(json['expected_feed_per_day_kg']),
+      feedPerBirdPerDayGrams: TypeUtils.toIntSafe(json['feed_per_bird_per_day_grams']),
+      expectedFeedPerWeekBags: TypeUtils.toIntSafe(json['expected_feed_per_week_bags']),
+      expectedAvgWeight: TypeUtils.toStringSafe(json['expected_avg_weight']),
+      feedTypeInUse: TypeUtils.toStringSafe(json['feed_type_in_use']),
+      stageName: TypeUtils.toStringSafe(json['stage_name']),
+      timesPerDay: TypeUtils.toIntSafe(json['times_per_day']),
+      feedingTimes: FeedingTimes.fromJson(feedingTimesMap ?? {}),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'expected_feed_per_day_kg': expectedFeedPerDayKg,
+      'feed_per_bird_per_day_grams': feedPerBirdPerDayGrams,
+      'expected_feed_per_week_bags': expectedFeedPerWeekBags,
+      'expected_avg_weight': expectedAvgWeight,
+      'feed_type_in_use': feedTypeInUse,
+      'stage_name': stageName,
+      'times_per_day': timesPerDay,
+      'feeding_times': feedingTimes.toJson(),
+    };
+  }
+}
+
+// NEW: FeedingTimes class
+class FeedingTimes {
+  final List<String> slots;
+
+  FeedingTimes({
+    required this.slots,
+  });
+
+  factory FeedingTimes.fromJson(Map<String, dynamic> json) {
+    return FeedingTimes(
+      slots: _parseStringList(json['slots']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'slots': slots,
+    };
+  }
+
+  static List<String> _parseStringList(dynamic value) {
+    if (value == null) return [];
+    if (value is List) {
+      return value.map((item) => TypeUtils.toStringSafe(item)).toList();
+    }
+    return [];
   }
 }
 
@@ -248,8 +387,8 @@ class ExpectedMilestone {
 }
 
 class Vaccination {
-  final List<Vaccine> vaccinesDone;      // Changed from List<String>
-  final List<Vaccine> vaccinesUpcoming;  // Changed from List<String>
+  final List<Vaccine> vaccinesDone;
+  final List<Vaccine> vaccinesUpcoming;
 
   Vaccination({
     required this.vaccinesDone,
@@ -277,7 +416,7 @@ class Vaccination {
         if (item is Map<String, dynamic>) {
           return Vaccine.fromJson(item);
         }
-        return Vaccine(name: item.toString()); // Fallback for string items
+        return Vaccine(name: item.toString());
       }).toList();
     }
     return [];
