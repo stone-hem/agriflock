@@ -20,7 +20,7 @@ class SecureStorage {
   static const String _nameKey = 'user_name';
   static const String _tokenExpiryKey = 'token_expiry';
   static const String _currencyKey = 'currency';
-  static const String _isFreeSubscription = 'is_free_subscription';
+  static const String _subscriptionState = 'subscription_state';
 
 
   // Token operations
@@ -185,15 +185,15 @@ class SecureStorage {
 
   //save subscription state
   Future<void> saveSubscriptionState(String subscriptionState) async {
-    await _storage.write(key: _isFreeSubscription, value: subscriptionState);
+    await _storage.write(key: _subscriptionState, value: subscriptionState);
   }
 
   //get currency
   Future<String> getSubscriptionState() async {
     try{
-      return await _storage.read(key: _isFreeSubscription)??'true';
+      return await _storage.read(key: _subscriptionState)??'no_subscription_plan';
     }catch(e){
-      return 'true';
+      return 'no_subscription_plan';
     }
 
   }

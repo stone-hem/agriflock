@@ -134,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _batchesError = error;
             _isBatchesLoading = false;
             if (cond == 'no_subscription_plan') {
-               secureStorage.saveSubscriptionState('true');
+               secureStorage.saveSubscriptionState('no_subscription_plan');
               _hasNoSubscription = true;
             }
           });

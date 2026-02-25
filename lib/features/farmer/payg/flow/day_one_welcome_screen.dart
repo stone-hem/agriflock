@@ -262,7 +262,7 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
               TextButton.icon(
                 icon: Icon(Icons.arrow_forward),
                   onPressed: () async {
-                    await secureStorage.saveSubscriptionState('true');
+                    await secureStorage.saveSubscriptionState('no_subscription_plan');
                     if (!mounted) return;
                     context.go(AppRoutes.home);
                   },

@@ -52,7 +52,7 @@ class _ShellScaffoldState extends State<ShellScaffold> {
     ),
   ];
 
-  static const List<NavConfig> _farmerSubscribedNavConfigs = [
+  static const List<NavConfig> _farmerUnSubscribedNavConfigs = [
     NavConfig(
       icon: Icons.format_quote_outlined,
       selectedIcon: Icons.format_quote,
@@ -109,8 +109,8 @@ class _ShellScaffoldState extends State<ShellScaffold> {
   Future<void> _loadUserRole() async {
     try {
       final User? userData = await secureStorage.getUserData();
-      final String? subscriptionState = await secureStorage.getSubscriptionState();
-      final bool isSubscribed = subscriptionState == 'true';
+      final String subscriptionState = await secureStorage.getSubscriptionState();
+      final bool isNotSubscribed = subscriptionState == 'no_subscription_plan';
 
       if (!mounted) return;
 
@@ -120,7 +120,7 @@ class _ShellScaffoldState extends State<ShellScaffold> {
         if (_userRole == 'extension_officer') {
           _navConfigs = _vetNavConfigs;
         } else {
-          _navConfigs = isSubscribed ? _farmerSubscribedNavConfigs : _farmerNavConfigs;
+          _navConfigs = isNotSubscribed ? _farmerUnSubscribedNavConfigs : _farmerNavConfigs;
         }
 
         _isLoading = false;
