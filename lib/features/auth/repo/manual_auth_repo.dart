@@ -52,7 +52,12 @@ class ManualAuthRepository {
           expiresInSeconds: loginResponse.expiresIn,
           currency: loginResponse.currency ?? 'USD',
         );
-
+        if(loginResponse.cond=='no_subscription_plan'){
+        secureStorage.saveSubscriptionState('no_subscription_plan');
+        }
+        if(loginResponse.cond=='no_subscription_plan'){
+          secureStorage.saveSubscriptionState('no_subscription_plan');
+        }
         return Success(loginResponse);
       } else {
         final errorData = jsonDecode(response.body) as Map<String, dynamic>;

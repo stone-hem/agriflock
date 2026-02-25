@@ -7,6 +7,7 @@ class LoginResponse {
   final int expiresIn;
   final User user;
   final String? currency;
+  final String? cond;
 
   LoginResponse({
     required this.accessToken,
@@ -15,6 +16,7 @@ class LoginResponse {
     required this.expiresIn,
     required this.user,
     this.currency,
+    this.cond,
   });
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
@@ -27,6 +29,7 @@ class LoginResponse {
       expiresIn: TypeUtils.toIntSafe(json['expires_in']),
       user: User.fromJson(userMap ?? {}),
       currency: TypeUtils.toNullableStringSafe(json['currency']),
+      cond: TypeUtils.toNullableStringSafe(json['cond']),
     );
   }
 
@@ -38,6 +41,7 @@ class LoginResponse {
       'expires_in': expiresIn,
       'user': user.toJson(),
       'currency': currency,
+      'cond': cond,
     };
   }
 }
@@ -153,6 +157,7 @@ class User {
       currentNumberOfChickens: json['current_number_of_chickens'], // Keep as num
       preferredAgrovetName: TypeUtils.toNullableStringSafe(json['preferred_agrovet_name']),
       preferredFeedCompany: TypeUtils.toNullableStringSafe(json['preferred_feed_company']),
+
     );
   }
 
