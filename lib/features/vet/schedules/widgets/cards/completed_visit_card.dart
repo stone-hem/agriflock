@@ -2,6 +2,7 @@ import 'package:agriflock360/core/utils/date_util.dart';
 import 'package:agriflock360/features/vet/schedules/models/visit_model.dart';
 import 'package:agriflock360/features/vet/schedules/widgets/visit_details_section.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class CompletedVisitCard extends StatelessWidget {
   final Visit visit;
@@ -285,6 +286,9 @@ class CompletedVisitCard extends StatelessWidget {
                     ],
                   ),
                 ],
+                const SizedBox(height: 8),
+                if (visit.completedAt != null) ...[
+                  TextButton.icon(onPressed: ()=>context.push('/vet-visit-form'), label: Text('complete Visit form'),icon: Icon(Icons.arrow_forward),)]
               ],
             ),
           ),

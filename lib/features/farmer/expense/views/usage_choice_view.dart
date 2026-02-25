@@ -278,8 +278,8 @@ class UsageChoiceView extends StatelessWidget {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(
-                              Icons.check_circle,
-                              color: Colors.green.shade700,
+                              Icons.now_widgets_outlined,
+                              color: Theme.of(context).primaryColor,
                               size: 28,
                             ),
                           ),

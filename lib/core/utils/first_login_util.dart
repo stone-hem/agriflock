@@ -71,6 +71,12 @@ class FirstLoginUtil {
       return '/day1/welcome-msg-page';
     }
 
+    final subscriptionState = await secureStorage.getSubscriptionState();
+    final isSubscribed = subscriptionState == 'no_subscription_plan';
+    if (isSubscribed) {
+      return AppRoutes.browseVets; // non subscribed farmers land  vets
+    }
+
     return AppRoutes.home;
   }
 }

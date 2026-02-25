@@ -65,6 +65,7 @@ import 'package:agriflock360/features/vet/payments/vet_payments_screen.dart';
 import 'package:agriflock360/features/vet/payments/vet_service_payments_screen.dart';
 import 'package:agriflock360/features/vet/profile/vet_profile_screen.dart';
 import 'package:agriflock360/features/vet/schedules/vet_schedules_screen.dart';
+import 'package:agriflock360/features/vet/schedules/widgets/vet_visit_form.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'core/utils/secure_storage.dart';
@@ -204,7 +205,7 @@ class AppRoutes {
     final subscriptionState = await secureStorage.getSubscriptionState();
     final isSubscribed = subscriptionState == 'no_subscription_plan';
     if (isSubscribed) {
-      return browseVets; // non subscribed farmers land on Quotation
+      return browseVets; // non subscribed farmers land on vets
     }
 
     return home;
@@ -753,6 +754,13 @@ class AppRoutes {
               ],
             },
           ),
+        ),
+
+        GoRoute(
+          path: '/vet-visit-form',
+          builder: (context, state) {
+            return VetVisitFormPage();
+          },
         ),
       ],
     );
