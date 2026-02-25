@@ -45,4 +45,49 @@ class MarketDisclaimerWidget extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildDisclaimer() {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey.withOpacity(0.2)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.warning, color: Colors.orange, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'DISCLAIMER',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '• Prices are estimates and may vary based on location and market conditions\n'
+                  '• Mortality rates and production figures are industry averages\n'
+                  '• Consult with agricultural experts for specific farm conditions\n'
+                  '• Equipment costs are one-time expenses\n'
+                  '• Revenue projections are based on current market prices',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade700,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

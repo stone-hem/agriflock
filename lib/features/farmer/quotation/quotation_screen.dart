@@ -450,7 +450,7 @@ class _QuotationScreenState extends State<QuotationScreen>
         controller: _tabController,
         children: const [
           PoultryHouseQuotationScreen(),
-          CalculatorScreen(),
+          ProductionEstimateScreen(),
         ],
       )
           : _buildProfileCompletionScreen(),
