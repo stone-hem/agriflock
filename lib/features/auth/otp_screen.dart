@@ -56,7 +56,7 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Back Button
               Container(
@@ -156,150 +156,153 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
               const SizedBox(height: 40),
 
               // OTP Card
-              Card(
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
-                  side: BorderSide(color: Colors.grey.shade200),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      // OTP Input Fields (6 digits)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: List.generate(
-                          6,
-                              (index) => SizedBox(
-                            width: MediaQuery.sizeOf(context).width * 0.12,
-                            height: 60,
-                            child: TextField(
-                              controller: _otpControllers[index],
-                              focusNode: _focusNodes[index],
-                              textAlign: TextAlign.center,
-                              keyboardType: TextInputType.number,
-                              maxLength: 1,
-                              style:  TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).primaryColor,
-                              ),
-                              decoration: InputDecoration(
-                                counterText: '',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: Colors.grey.shade300,
-                                  ),
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: 600),
+                child: Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                    side: BorderSide(color: Colors.grey.shade200),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        // OTP Input Fields (6 digits)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: List.generate(
+                            6,
+                                (index) => SizedBox(
+                              width: MediaQuery.sizeOf(context).width * 0.12,
+                              height: 60,
+                              child: TextField(
+                                controller: _otpControllers[index],
+                                focusNode: _focusNodes[index],
+                                textAlign: TextAlign.center,
+                                keyboardType: TextInputType.number,
+                                maxLength: 1,
+                                style:  TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).primaryColor,
                                 ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(
-                                    color: Colors.green,
-                                    width: 2,
+                                decoration: InputDecoration(
+                                  counterText: '',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: Colors.grey.shade300,
+                                    ),
                                   ),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: Colors.grey.shade300,
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(
+                                      color: Colors.green,
+                                      width: 2,
+                                    ),
                                   ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: Colors.grey.shade300,
+                                    ),
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.grey.shade50,
+                                  contentPadding: EdgeInsets.zero,
                                 ),
-                                filled: true,
-                                fillColor: Colors.grey.shade50,
-                                contentPadding: EdgeInsets.zero,
-                              ),
-                              onChanged: (value) {
-                                // Move to next field when a digit is entered
-                                if (value.length == 1 && index < 5) {
-                                  _focusNodes[index + 1].requestFocus();
-                                } else if (value.isEmpty && index > 0) {
-                                  _focusNodes[index - 1].requestFocus();
-                                }
+                                onChanged: (value) {
+                                  // Move to next field when a digit is entered
+                                  if (value.length == 1 && index < 5) {
+                                    _focusNodes[index + 1].requestFocus();
+                                  } else if (value.isEmpty && index > 0) {
+                                    _focusNodes[index - 1].requestFocus();
+                                  }
 
-                                // Auto verify if all fields are filled
-                                if (index == 5 && value.isNotEmpty && _otpCode.length == 6) {
-                                  _verifyOTP();
-                                }
-                              },
+                                  // Auto verify if all fields are filled
+                                  if (index == 5 && value.isNotEmpty && _otpCode.length == 6) {
+                                    _verifyOTP();
+                                  }
+                                },
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 32),
+                        const SizedBox(height: 32),
 
-                      // Resend OTP
-                      Center(
-                        child: Column(
-                          children: [
-                            Text(
-                              "Didn't receive the code?",
-                              style: TextStyle(
-                                color: Colors.grey.shade600,
-                                fontSize: 14,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            _canResend
-                                ? TextButton(
-                              onPressed: _resendOTP,
-                              style: TextButton.styleFrom(
-                                foregroundColor: Theme.of(context).primaryColor,
-                              ),
-                              child: const Text(
-                                'Resend Code',
+                        // Resend OTP
+                        Center(
+                          child: Column(
+                            children: [
+                              Text(
+                                "Didn't receive the code?",
                                 style: TextStyle(
-                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey.shade600,
                                   fontSize: 14,
                                 ),
                               ),
-                            )
-                                : Text(
-                              'Resend in $_countdown seconds',
-                              style: TextStyle(
-                                color: Colors.grey.shade500,
-                                fontSize: 14,
+                              const SizedBox(height: 4),
+                              _canResend
+                                  ? TextButton(
+                                onPressed: _resendOTP,
+                                style: TextButton.styleFrom(
+                                  foregroundColor: Theme.of(context).primaryColor,
+                                ),
+                                child: const Text(
+                                  'Resend Code',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              )
+                                  : Text(
+                                'Resend in $_countdown seconds',
+                                style: TextStyle(
+                                  color: Colors.grey.shade500,
+                                  fontSize: 14,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 24),
+                        const SizedBox(height: 24),
 
-                      // Verify Button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton(
-                          onPressed: _isLoading || _otpCode.length != 6
-                              ? null
-                              : _verifyOTP,
-                          child: _isLoading
-                              ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          )
-                              : const Text(
-                            'Verify Email',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                        // Verify Button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 56,
+                          child: ElevatedButton(
+                            onPressed: _isLoading || _otpCode.length != 6
+                                ? null
+                                : _verifyOTP,
+                            child: _isLoading
+                                ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                                : const Text(
+                              'Verify Email',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
+                        const SizedBox(height: 16),
 
-                      TextButton(
-                          onPressed: () => context.go('/login'),
-                          child: const Text('Go back to login')
-                      )
-                    ],
+                        TextButton(
+                            onPressed: () => context.go('/login'),
+                            child: const Text('Go back to login')
+                        )
+                      ],
+                    ),
                   ),
                 ),
               ),

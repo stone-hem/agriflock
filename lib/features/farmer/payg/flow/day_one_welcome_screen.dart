@@ -170,9 +170,9 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
                   Text(
-                    'Choose a plan to get started.',
+                    'Choose a plan to get started (All plans are free for 60 days) ',
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.white.withValues(alpha: 0.9),
