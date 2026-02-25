@@ -223,7 +223,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                       _showTermsError = false;
                                     });
                                   },
-                                  activeColor: Colors.green,
+                                  activeColor: Theme.of(context).primaryColor,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(4),
                                   ),

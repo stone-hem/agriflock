@@ -25,7 +25,7 @@ class RoleCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: isSelected ? Colors.green : Colors.grey.shade300,
+          color: isSelected ? Theme.of(context).primaryColor : Colors.grey.shade300,
           width: isSelected ? 2 : 1,
         ),
       ),
@@ -41,13 +41,13 @@ class RoleCard extends StatelessWidget {
                 height: 50,
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? Colors.green.withValues(alpha: 0.1)
+                      ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
                       : Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   icon,
-                  color: isSelected ? Colors.green : Colors.grey.shade600,
+                  color: isSelected ? Theme.of(context).primaryColor : Colors.grey.shade600,
                   size: 28,
                 ),
               ),
@@ -61,7 +61,7 @@ class RoleCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: isSelected ? Colors.green : Colors.black87,
+                        color: isSelected ? Theme.of(context).primaryColor : Colors.black87,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -76,9 +76,9 @@ class RoleCard extends StatelessWidget {
                 ),
               ),
               if (isSelected)
-                const Icon(
+                 Icon(
                   Icons.check_circle,
-                  color: Colors.green,
+                  color: Theme.of(context).primaryColor,
                 ),
             ],
           ),

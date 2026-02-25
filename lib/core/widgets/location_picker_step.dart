@@ -221,7 +221,7 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('Current location detected successfully!'),
+              content: const Text('Current location detected successfully!',style: TextStyle(color: Colors.white),),
               backgroundColor: _primaryColor,
               behavior: SnackBarBehavior.floating,
             ),

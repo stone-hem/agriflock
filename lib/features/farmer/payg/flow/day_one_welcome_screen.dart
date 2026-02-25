@@ -1,6 +1,8 @@
+import 'package:agriflock360/app_routes.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/features/farmer/payg/models/subscription_plans_model.dart';
 import 'package:agriflock360/features/farmer/payg/repo/subscription_repo.dart';
+import 'package:agriflock360/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -47,7 +49,7 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
   Color _planColor(String planType) {
     switch (planType.toUpperCase()) {
       case 'FREE_TRIAL':
-        return Colors.green;
+        return Theme.of(context).primaryColor;
       case 'SILVER':
         return const Color(0xFF5C7CFA);
       case 'GOLD':
@@ -125,7 +127,7 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green,
+      backgroundColor: Theme.of(context).primaryColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -135,8 +137,8 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
               child: Column(
                 children: [
                   Container(
-                    width: 70,
-                    height: 70,
+                    width: 100,
+                    height: 100,
                     decoration: const BoxDecoration(
                       color: Colors.white,
                       shape: BoxShape.circle,
@@ -148,7 +150,7 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
                       height: 50,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
-                          color: Colors.green,
+                          color: Theme.of(context).primaryColor,
                           child: const Icon(
                             Icons.image,
                             size: 100,
@@ -256,6 +258,16 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
           child: Column(
             children: [
               _buildContinueButton(),
+              const SizedBox(height: 12),
+              TextButton.icon(
+                icon: Icon(Icons.arrow_forward),
+                  onPressed: () async {
+                    await secureStorage.saveSubscriptionState('true');
+                    if (!mounted) return;
+                    context.go(AppRoutes.home);
+                  },
+                  label: Text('Skip for now ')
+              )
             ],
           ),
         ),
@@ -265,7 +277,7 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
 
   Widget _buildContinueButton() {
     final plan = _selectedPlan;
-    final buttonColor = plan != null ? _planColor(plan.planType) : Colors.green;
+    final buttonColor = plan != null ? _planColor(plan.planType) : Theme.of(context).primaryColor;
 
     return SizedBox(
       width: double.infinity,

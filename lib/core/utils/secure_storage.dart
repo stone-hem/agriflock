@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:agriflock360/core/model/user_model.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
@@ -18,7 +20,7 @@ class SecureStorage {
   static const String _nameKey = 'user_name';
   static const String _tokenExpiryKey = 'token_expiry';
   static const String _currencyKey = 'currency';
-
+  static const String _isFreeSubscription = 'is_free_subscription';
 
 
   // Token operations
@@ -180,6 +182,22 @@ class SecureStorage {
     }
 
   }
+
+  //save subscription state
+  Future<void> saveSubscriptionState(String subscriptionState) async {
+    await _storage.write(key: _isFreeSubscription, value: subscriptionState);
+  }
+
+  //get currency
+  Future<String> getSubscriptionState() async {
+    try{
+      return await _storage.read(key: _isFreeSubscription)??'true';
+    }catch(e){
+      return 'true';
+    }
+
+  }
+
 
   // Save complete login response
   Future<void> saveLoginData({

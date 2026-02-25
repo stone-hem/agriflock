@@ -18,7 +18,7 @@ class FarmerDetailsStep extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Tell us about your farm',
+            'Tell us about yourself',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,

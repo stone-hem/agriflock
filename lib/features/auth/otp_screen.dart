@@ -125,7 +125,7 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
                     children: [
                       Icon(
                         Icons.email_outlined,
-                        color: Colors.green.shade700,
+                        color: Theme.of(context).primaryColor,
                         size: 16,
                       ),
                       const SizedBox(width: 8),
@@ -133,7 +133,7 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
                         widget.email,
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.green.shade700,
+                          color: Theme.of(context).primaryColor,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -180,10 +180,10 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
                               textAlign: TextAlign.center,
                               keyboardType: TextInputType.number,
                               maxLength: 1,
-                              style: const TextStyle(
+                              style:  TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.green,
+                                color: Theme.of(context).primaryColor,
                               ),
                               decoration: InputDecoration(
                                 counterText: '',
@@ -245,7 +245,7 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
                                 ? TextButton(
                               onPressed: _resendOTP,
                               style: TextButton.styleFrom(
-                                foregroundColor: Colors.green.shade600,
+                                foregroundColor: Theme.of(context).primaryColor,
                               ),
                               child: const Text(
                                 'Resend Code',
@@ -338,6 +338,7 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
           if (tempToken != null) {
             context.go(
               '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(tempToken)}',
+              extra: widget.email,
             );
           } else {
             context.go('/login');

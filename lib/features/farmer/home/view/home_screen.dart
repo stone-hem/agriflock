@@ -52,12 +52,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Constants for day thresholds (free plan = 90 days)
   static const int VALUE_CONFIRMATION_START_DAY = 5;
-  static const int VALUE_CONFIRMATION_END_DAY = 30;
-  static const int FUTURE_FRAMING_DAY = 63;
-  static const int FUTURE_FRAMING_END_DAY = 81;
-  static const int DECISION_MODAL_DAY = 81;
-  static const int TRANSITION_DAY = 91;
-  static const int FREE_PLAN_TOTAL_DAYS = 90;
+  static const int VALUE_CONFIRMATION_END_DAY = 20;
+  static const int FUTURE_FRAMING_DAY = 30;
+  static const int FUTURE_FRAMING_END_DAY = 33;
+  static const int DECISION_MODAL_DAY = 42;
+  static const int TRANSITION_DAY = 52;
+  static const int FREE_PLAN_TOTAL_DAYS = 60;
 
   @override
   void initState() {
@@ -134,6 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _batchesError = error;
             _isBatchesLoading = false;
             if (cond == 'no_subscription_plan') {
+               secureStorage.saveSubscriptionState('true');
               _hasNoSubscription = true;
             }
           });

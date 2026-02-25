@@ -477,14 +477,14 @@ class _CountryPhoneInputState extends State<CountryPhoneInput> {
                     Text(
                       _selectedCountry.dialCode,
                       style: TextStyle(
-                        color: Colors.green.shade600,
+                        color:Theme.of(context).primaryColor,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(width: 4),
                     Icon(
                       Icons.arrow_drop_down,
-                      color: Colors.green.shade600,
+                      color: Theme.of(context).primaryColor,
                     ),
                   ],
                 ),
@@ -509,7 +509,7 @@ class _CountryPhoneInputState extends State<CountryPhoneInput> {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
-            color: Colors.green.shade600,
+            color: Theme.of(context).primaryColor,
             width: 2,
           ),
         ),
@@ -628,7 +628,7 @@ class _CountryPickerSheetState extends State<CountryPickerSheet> {
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: Colors.green.shade600,
+                          color: Theme.of(context).primaryColor,
                           width: 2,
                         ),
                       ),

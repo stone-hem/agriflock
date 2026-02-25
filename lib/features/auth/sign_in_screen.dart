@@ -11,7 +11,8 @@ import 'package:go_router/go_router.dart';
 import '../../main.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final String? identifier;
+  const LoginScreen({super.key, this.identifier});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -24,6 +25,15 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   final _manualAuthRepo = ManualAuthRepository();
+
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.identifier != null) {
+      _identifierController.text = widget.identifier!;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -92,6 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           controller: _identifierController,
                           labelText: 'Email/Phone Number',
                           hintText: 'Enter your email/phone number',
+                          readOnly: widget.identifier != null,
                           icon: Icons.email_outlined,
                           keyboardType: TextInputType.text,
                           validator: (value) {
@@ -309,6 +320,7 @@ class _LoginScreenState extends State<LoginScreen> {
         final tempToken = failure.data?['tempToken'] as String? ?? '';
         context.push(
           '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(tempToken)}',
+          extra: _identifierController.text.trim(),
         );
       case 'account_inactive':
         final email = failure.data?['email'] as String? ??

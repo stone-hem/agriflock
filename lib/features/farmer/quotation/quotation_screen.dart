@@ -4,6 +4,7 @@ import 'package:agriflock360/core/widgets/alert_button.dart';
 import 'package:agriflock360/core/widgets/expense/expense_marquee_banner.dart';
 import 'package:agriflock360/features/farmer/profile/models/profile_model.dart';
 import 'package:agriflock360/features/farmer/profile/repo/profile_repository.dart';
+import 'package:agriflock360/features/farmer/quotation/calculator.dart';
 import 'package:agriflock360/features/farmer/quotation/poultry_house_quotation.dart';
 import 'package:agriflock360/features/farmer/quotation/production_estimate.dart';
 import 'package:flutter/material.dart';
@@ -86,7 +87,7 @@ class _QuotationScreenState extends State<QuotationScreen>
 
   double _calculateProfileCompletion(ProfileData profile) {
     int completedFields = 0;
-    int totalFields = 5;
+    int totalFields = 3;
 
     // Check national ID
     if (profile.nationalId != null && profile.nationalId!.isNotEmpty) {
@@ -102,17 +103,6 @@ class _QuotationScreenState extends State<QuotationScreen>
     if (profile.gender != null && profile.gender!.isNotEmpty) {
       completedFields++;
     }
-
-    // Check poultry type
-    if (profile.poultryTypeId != null && profile.poultryTypeId!.isNotEmpty) {
-      completedFields++;
-    }
-
-    // Check chicken house capacity
-    if (profile.chickenHouseCapacity != null) {
-      completedFields++;
-    }
-
 
     return (completedFields / totalFields) * 100;
   }
@@ -460,7 +450,7 @@ class _QuotationScreenState extends State<QuotationScreen>
         controller: _tabController,
         children: const [
           PoultryHouseQuotationScreen(),
-          ProductionEstimateScreen(),
+          CalculatorScreen(),
         ],
       )
           : _buildProfileCompletionScreen(),

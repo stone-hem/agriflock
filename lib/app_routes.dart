@@ -199,6 +199,14 @@ class AppRoutes {
     if (user?.role.name.toLowerCase() == 'extension_officer') {
       return vetHome;
     }
+
+    // Farmer: check subscription state
+    final subscriptionState = await secureStorage.getSubscriptionState();
+    final isSubscribed = subscriptionState == 'true';
+    if (isSubscribed) {
+      return quotation; // subscribed farmers land on Quotation
+    }
+
     return home;
   }
 
@@ -270,7 +278,11 @@ class AppRoutes {
           path: welcome,
           builder: (context, state) => const OnboardingScreen(),
         ),
-        GoRoute(path: login, builder: (context, state) => const LoginScreen()),
+        GoRoute(path: login, builder: (context, state) {
+          final identifier=state.extra as String?;
+
+          return LoginScreen(identifier:identifier);
+        }),
         GoRoute(
           path: signup,
           builder: (context, state) => const SignupScreen(),
@@ -279,6 +291,7 @@ class AppRoutes {
           path: onboardingQuiz,
           builder: (context, state) {
             final temptToken = state.uri.queryParameters['tempToken'];
+            final identifier=state.extra as String;
 
             if (temptToken == null || temptToken.isEmpty) {
               return const Scaffold(
@@ -286,7 +299,8 @@ class AppRoutes {
               );
             }
             final decodedToken = Uri.decodeComponent(temptToken);
-            return OnboardingQuestionsScreen(token: decodedToken);
+
+            return OnboardingQuestionsScreen(token: decodedToken,identifier:identifier);
           },
         ),
         GoRoute(

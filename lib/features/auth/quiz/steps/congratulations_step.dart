@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 class CongratulationsStep extends StatelessWidget {
   final String? selectedUserType;
   final String? selectedAddress;
+  final String identifier;
 
   // Farmer fields
   final String? chickenNumber;
@@ -21,7 +22,6 @@ class CongratulationsStep extends StatelessWidget {
   final List<PlatformFile>? certificates;
   final List<PlatformFile>? additionalDocuments;
 
-  static const Color primaryGreen = Colors.green;
 
   const CongratulationsStep({
     super.key,
@@ -37,7 +37,7 @@ class CongratulationsStep extends StatelessWidget {
     this.idPhotoFile,
     this.selfieFile,
     this.certificates,
-    this.additionalDocuments,
+    this.additionalDocuments, required this.identifier,
   });
 
   bool get isFarmer => selectedUserType == 'farmer';
@@ -52,31 +52,31 @@ class CongratulationsStep extends StatelessWidget {
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: primaryGreen.withValues(alpha: 0.1),
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child:  Icon(
               Icons.check_circle,
               size: 60,
-              color: primaryGreen,
+              color: Theme.of(context).primaryColor,
             ),
           ),
           const SizedBox(height: 32),
-          const Text(
+           Text(
             'Congratulations!',
             style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.bold,
-              color: primaryGreen,
+              color: Theme.of(context).primaryColor,
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
           Text(
             isFarmer
-                ? 'Your farm account has been created successfully! '
+                ? 'Your farm account ($identifier)has been created successfully! '
                     'You can now start managing your poultry farm.'
-                : 'Your veterinary account registration is complete! '
+                : 'Your veterinary account ($identifier) registration is complete! '
                     'Your documents have been submitted for admin verification.',
             style: const TextStyle(
               fontSize: 18,
@@ -98,12 +98,12 @@ class CongratulationsStep extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                   Text(
                     'Account Summary',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: primaryGreen,
+                      color: Theme.of(context).primaryColor,
                     ),
                   ),
                   const SizedBox(height: 16),

@@ -18,7 +18,8 @@ import 'dart:io';
 
 class OnboardingQuestionsScreen extends StatefulWidget {
   final String token;
-  const OnboardingQuestionsScreen({super.key, required this.token});
+  final String identifier;
+  const OnboardingQuestionsScreen({super.key, required this.token, required this.identifier});
 
   @override
   State<OnboardingQuestionsScreen> createState() => _OnboardingQuestionsScreenState();
@@ -68,8 +69,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
   File? _idPhotoFile;
   File? _selfieFile;
 
-  // Colors
-  static const Color primaryGreen = Colors.green;
 
   // Step configurations
   // Farmer steps: Role -> Farm Details -> Location -> Congratulations (4 steps)
@@ -77,7 +76,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
 
   int get _totalPages {
     if (_selectedUserType == 'vet') return 7;
-    return 5; // farmer or not selected
+    return 4; // farmer or not selected
   }
 
   List<String> get _pageTitles {
@@ -94,16 +93,14 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     }
     return [
       'Choose Your Role',
-      'Farm Details',
-      'Poultry Details',
+      'My Personal Details',
       'Select Location',
       'Congratulations!',
     ];
   }
 
   // Get the index for location page based on user type
-  int get _locationPageIndex => _selectedUserType == 'vet' ? 5 : 3;
-
+  int get _locationPageIndex => _selectedUserType == 'vet' ? 5 : 2;
   @override
   void initState() {
     super.initState();
@@ -361,7 +358,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
 
   void _finalizeOnboarding() {
     if (_selectedUserType == 'farmer') {
-      context.go('/login');
+      context.go('/login', extra: widget.identifier);
     } else if (_selectedUserType == 'vet') {
       _showVerificationMessage();
     }
@@ -376,7 +373,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-          icon: const Icon(Icons.verified_user, color: primaryGreen),
+          icon:  Icon(Icons.verified_user, color: Theme.of(context).primaryColor),
           title: const Text('Verification Required'),
           content: const Text(
             'Your details have been sent to the admin for verification. '
@@ -388,11 +385,11 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                context.go('/login');
+                context.go('/login', extra: widget.identifier);
               },
-              child: const Text(
+              child:  Text(
                 'Continue to Login',
-                style: TextStyle(color: primaryGreen),
+                style: TextStyle(color: Theme.of(context).primaryColor),
               ),
             ),
           ],
@@ -491,6 +488,8 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
   }
 
   AppBar _buildAppBar() {
+    final isLastPage = _currentPage == _totalPages - 1; // Check if on congratulations page
+
     return AppBar(
       elevation: 0,
       title: Text(
@@ -504,17 +503,19 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
       automaticallyImplyLeading: false,
       centerTitle: false,
       actions: [
-        FilledButton(
-          style: FilledButton.styleFrom(
-            foregroundColor: Colors.white,
-            backgroundColor: Colors.red,
+        // Only show cancel button if not on the last page (congratulations)
+        if (!isLastPage)
+          FilledButton(
+            style: FilledButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: Colors.red,
+            ),
+            onPressed: () => context.go(AppRoutes.login, extra: widget.identifier),
+            child: const Text(
+              "Cancel Onboarding",
+            ),
           ),
-          onPressed: () => context.go(AppRoutes.login),
-          child: const Text(
-            "Cancel Onboarding",
-          ),
-        ),
-        const SizedBox(width: 5),
+        if (!isLastPage) const SizedBox(width: 5),
       ],
     );
   }
@@ -527,7 +528,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
           LinearProgressIndicator(
             value: (_currentPage + 1) / _totalPages,
             backgroundColor: Colors.grey.shade300,
-            valueColor: const AlwaysStoppedAnimation<Color>(primaryGreen),
+            valueColor:  AlwaysStoppedAnimation<Color>(Theme.of(context).primaryColor),
           ),
           const SizedBox(height: 12),
           Row(
@@ -542,8 +543,8 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
               ),
               Text(
                 _currentPage < _pageTitles.length ? _pageTitles[_currentPage] : '',
-                style: const TextStyle(
-                  color: primaryGreen,
+                style:  TextStyle(
+                  color: Theme.of(context).primaryColor,
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
@@ -611,7 +612,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
                   color: Colors.green.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.gavel, color: primaryGreen, size: 28),
+                child:  Icon(Icons.gavel, color: Theme.of(context).primaryColor, size: 28),
               ),
               const SizedBox(width: 12),
               const Expanded(
@@ -761,7 +762,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
                       _termsAccepted = value ?? false;
                     });
                   },
-                  activeColor: primaryGreen,
+                  activeColor: Theme.of(context).primaryColor,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(4),
                   ),
@@ -875,6 +876,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
 
   Widget _buildCongratulationsPage() {
     return CongratulationsStep(
+      identifier:widget.identifier,
       selectedUserType: _selectedUserType,
       selectedAddress: _selectedAddress,
       farmerExperience: _farmerExperienceController.text,
@@ -892,7 +894,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
 
   Widget _buildBottomNavigation(bool keyboardVisible) {
     final isFirstPage = _currentPage == 0;
-    final isLastPage = _currentPage == _totalPages - 1;
+    final isLastPage = _currentPage == _totalPages - 1; // This is the congratulations page
     final isLocationPage = _currentPage == _locationPageIndex;
 
     return Container(
@@ -914,13 +916,14 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
       ),
       child: Row(
         children: [
+          // Only show back button if not on first page AND not on last page (congratulations)
           if (!isFirstPage && !isLastPage)
             Expanded(
               child: OutlinedButton(
                 onPressed: _isSubmitting ? null : _goToPreviousPage,
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: primaryGreen,
-                  side: const BorderSide(color: primaryGreen),
+                  foregroundColor: Theme.of(context).primaryColor,
+                  side: BorderSide(color: Theme.of(context).primaryColor),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -935,17 +938,17 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
             child: ElevatedButton(
               onPressed: (_canProceedToNext() && !_isSubmitting)
                   ? () {
-                      if (isLastPage) {
-                        _finalizeOnboarding();
-                      } else if (isLocationPage) {
-                        _completeOnboarding();
-                      } else {
-                        _goToNextPage();
-                      }
-                    }
+                if (isLastPage) {
+                  _finalizeOnboarding();
+                } else if (isLocationPage) {
+                  _completeOnboarding();
+                } else {
+                  _goToNextPage();
+                }
+              }
                   : null,
               style: ElevatedButton.styleFrom(
-                backgroundColor: primaryGreen,
+                backgroundColor: Theme.of(context).primaryColor,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
@@ -955,24 +958,24 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
               ),
               child: _isSubmitting
                   ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
                   : Text(
-                      isLocationPage
-                          ? 'Submit'
-                          : isLastPage
-                              ? 'Get Started'
-                              : 'Continue',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                isLocationPage
+                    ? 'Submit'
+                    : isLastPage
+                    ? 'Get Started'
+                    : 'Continue',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ),
         ],
@@ -1073,7 +1076,7 @@ class _TermsItem extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: Colors.green.shade600),
+          Icon(icon, size: 18, color: Theme.of(context).primaryColor),
           const SizedBox(width: 10),
           Expanded(
             child: Text(

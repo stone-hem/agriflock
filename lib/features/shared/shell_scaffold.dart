@@ -1,6 +1,7 @@
 import 'package:agriflock360/core/model/user_model.dart';
 import 'package:agriflock360/core/utils/secure_storage.dart';
 import 'package:agriflock360/features/shared/nav_destination_item.dart';
+import 'package:agriflock360/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -17,7 +18,6 @@ class _ShellScaffoldState extends State<ShellScaffold> {
   String? _userRole;
   bool _isLoading = true;
   late List<NavConfig> _navConfigs;
-  final SecureStorage _secureStorage = SecureStorage();
 
   static const List<NavConfig> _farmerNavConfigs = [
     NavConfig(
@@ -32,6 +32,27 @@ class _ShellScaffoldState extends State<ShellScaffold> {
       label: 'Farms',
       route: '/farms',
     ),
+    NavConfig(
+      icon: Icons.format_quote_outlined,
+      selectedIcon: Icons.format_quote,
+      label: 'Quotation',
+      route: '/quotation',
+    ),
+    NavConfig(
+      icon: Icons.people_outline,
+      selectedIcon: Icons.people,
+      label: 'Vets',
+      route: '/browse-vets',
+    ),
+    NavConfig(
+      icon: Icons.person_outlined,
+      selectedIcon: Icons.person,
+      label: 'Profile',
+      route: '/farmer-profile',
+    ),
+  ];
+
+  static const List<NavConfig> _farmerSubscribedNavConfigs = [
     NavConfig(
       icon: Icons.format_quote_outlined,
       selectedIcon: Icons.format_quote,
@@ -87,14 +108,21 @@ class _ShellScaffoldState extends State<ShellScaffold> {
 
   Future<void> _loadUserRole() async {
     try {
-      final User? userData = await _secureStorage.getUserData();
+      final User? userData = await secureStorage.getUserData();
+      final String? subscriptionState = await secureStorage.getSubscriptionState();
+      final bool isSubscribed = subscriptionState == 'true';
+
       if (!mounted) return;
 
       setState(() {
         _userRole = userData?.role.name.toLowerCase() ?? 'farmer';
-        _navConfigs = _userRole == 'extension_officer'
-            ? _vetNavConfigs
-            : _farmerNavConfigs;
+
+        if (_userRole == 'extension_officer') {
+          _navConfigs = _vetNavConfigs;
+        } else {
+          _navConfigs = isSubscribed ? _farmerSubscribedNavConfigs : _farmerNavConfigs;
+        }
+
         _isLoading = false;
       });
     } catch (e) {
@@ -194,7 +222,8 @@ class _ShellScaffoldState extends State<ShellScaffold> {
       },
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isTablet = constraints.maxWidth >= 600 || constraints.maxHeight < 500;
+          final isTablet =
+              constraints.maxWidth >= 600 || constraints.maxHeight < 500;
 
           return Scaffold(
             body: Row(
@@ -213,7 +242,6 @@ class _ShellScaffoldState extends State<ShellScaffold> {
                     ),
                     child: Column(
                       children: [
-                        // Logo header — pinned, never scrolls away
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 16.0),
                           child: Image.asset(
@@ -221,7 +249,7 @@ class _ShellScaffoldState extends State<ShellScaffold> {
                             width: 40,
                             height: 40,
                             errorBuilder: (context, error, stackTrace) {
-                              return  Icon(
+                              return Icon(
                                 Icons.agriculture,
                                 size: 40,
                                 color: Theme.of(context).primaryColor,
@@ -229,11 +257,11 @@ class _ShellScaffoldState extends State<ShellScaffold> {
                             },
                           ),
                         ),
-                        // Nav items — scrollable downward so they never overflow
                         Expanded(
                           child: SingleChildScrollView(
                             child: Column(
-                              children: _navConfigs.asMap().entries.map((entry) {
+                              children:
+                              _navConfigs.asMap().entries.map((entry) {
                                 final index = entry.key;
                                 final config = entry.value;
                                 final isSelected = selectedIndex == index;
@@ -246,16 +274,19 @@ class _ShellScaffoldState extends State<ShellScaffold> {
                                       horizontal: 8.0,
                                     ),
                                     child: AnimatedContainer(
-                                      duration: const Duration(milliseconds: 200),
+                                      duration:
+                                      const Duration(milliseconds: 200),
                                       width: 56,
                                       padding: const EdgeInsets.symmetric(
                                         vertical: 8.0,
                                       ),
                                       decoration: BoxDecoration(
                                         color: isSelected
-                                            ? Colors.green.withValues(alpha: 0.15)
+                                            ? Colors.green
+                                            .withValues(alpha: 0.15)
                                             : Colors.transparent,
-                                        borderRadius: BorderRadius.circular(16),
+                                        borderRadius:
+                                        BorderRadius.circular(16),
                                       ),
                                       child: Column(
                                         mainAxisSize: MainAxisSize.min,
@@ -278,7 +309,8 @@ class _ShellScaffoldState extends State<ShellScaffold> {
                                                   ? FontWeight.w600
                                                   : FontWeight.normal,
                                               color: isSelected
-                                                  ? Theme.of(context).primaryColor
+                                                  ? Theme.of(context)
+                                                  .primaryColor
                                                   : Colors.grey.shade600,
                                             ),
                                             textAlign: TextAlign.center,
@@ -321,7 +353,9 @@ class _ShellScaffoldState extends State<ShellScaffold> {
               child: NavigationBar(
                 selectedIndex: selectedIndex,
                 onDestinationSelected: _onItemTapped,
-                indicatorColor: Theme.of(context).primaryColor.withValues(alpha: 0.15),
+                indicatorColor: Theme.of(context)
+                    .primaryColor
+                    .withValues(alpha: 0.15),
                 backgroundColor: Colors.transparent,
                 elevation: 0,
                 height: 72,
