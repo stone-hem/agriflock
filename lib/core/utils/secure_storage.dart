@@ -168,6 +168,19 @@ class SecureStorage {
     await _storage.deleteAll();
   }
 
+  Future<void> clearOnLogout() async {
+    await _storage.delete(key: _tokenKey);
+    await _storage.delete(key: _sessionKey);
+    await _storage.delete(key: _refreshTokenKey);
+    await _storage.delete(key: _userKey);
+    await _storage.delete(key: _userIdKey);
+    await _storage.delete(key: _emailKey);
+    await _storage.delete(key: _nameKey);
+    await _storage.delete(key: _tokenExpiryKey);
+    await _storage.delete(key: _subscriptionState);
+    await _storage.delete(key: _currencyKey);
+  }
+
   //save currency
   Future<void> saveCurrency(String currency) async {
     await _storage.write(key: _currencyKey, value: currency);
