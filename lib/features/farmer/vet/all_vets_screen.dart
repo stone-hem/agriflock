@@ -271,22 +271,7 @@ class _AllVetsScreenState extends State<AllVetsScreen> {
                     Colors.red.shade400, maxLines: 2),
                 if (coverage.isNotEmpty)
                   _info(Icons.map, 'Coverage Areas', coverage, Colors.cyan.shade700),
-                if (specs.isNotEmpty)
-                  _infoCustom(
-                    icon: Icons.medical_services, iconColor: Colors.indigo.shade500, label: 'Specializations',
-                    child: Wrap(
-                      spacing: 4, runSpacing: 4,
-                      children: specs.take(4).map((s) => Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.indigo.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.indigo.shade200),
-                        ),
-                        child: Text(s, style: TextStyle(fontSize: 10, color: Colors.indigo.shade700, fontWeight: FontWeight.w500)),
-                      )).toList(),
-                    ),
-                  ),
+
                 if (vet.coverageAreas != null && vet.coverageAreas!.subCounties.isNotEmpty)
                   _info(Icons.location_city, 'Sub-counties',
                       vet.coverageAreas!.subCounties.take(3).join(', '), Colors.blueGrey.shade600),
