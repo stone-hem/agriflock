@@ -221,7 +221,6 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _kCream,
       body: SafeArea(
         child: Column(
           children: [
@@ -405,34 +404,9 @@ class _LayersTabState extends State<_LayersTab> {
         sliver: SliverList(
           delegate: SliverChildListDelegate([
 
-            // Header
-            Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: primaryColor.withOpacity(0.2)),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Row(children: [
-                    Icon(Icons.egg_alt, color: primaryColor, size: 32),
-                    const SizedBox(width: 12),
-                    const Expanded(child: Text('Layers Production Quotation',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
-                  ]),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Select your laying breed and flock size to get a full two-stage production cost estimate.',
-                    style: TextStyle(fontSize: 14, color: Colors.grey.shade600, height: 1.5),
-                  ),
-                ]),
-              ),
-            ),
-            const SizedBox(height: 16),
 
             // Breed selection
-            Text('Select Laying Breed',
+            Text('Select to continue',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey.shade800)),
             const SizedBox(height: 8),
 
@@ -814,8 +788,6 @@ class _FrontendCalculatorPageState extends State<_FrontendCalculatorPage> {
         const SizedBox(height: 12),
         _profitSection(r),
         const SizedBox(height: 12),
-        _equipmentSection(r),
-        const SizedBox(height: 12),
         const _DisclaimerWidget(),
         const SizedBox(height: 20),
         _footer(),
@@ -924,43 +896,10 @@ class _FrontendCalculatorPageState extends State<_FrontendCalculatorPage> {
     ]);
   }
 
-  Widget _equipmentSection(_CalcResult r) => Container(
-    padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(color: const Color(0xFFFFFDF5),
-        borderRadius: BorderRadius.circular(18), border: Border.all(color: _kBorder, width: 1.5)),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      _secTitle('🔧 Equipment Ratio Guide'),
-      Text('For $birds birds (${r.units} unit${r.units > 1 ? "s" : ""} of 50) you need at minimum:',
-          style: const TextStyle(fontSize: 13)),
-      const SizedBox(height: 12),
-      Row(children: [
-        _equipCard('🥣', '${r.units}', 'Feeder(s)\n10 kg capacity'),
-        const SizedBox(width: 12),
-        _equipCard('💧', '${r.units}', 'Drinker(s)\n10 L capacity'),
-      ]),
-      const SizedBox(height: 10),
-      const Text('Feeder & drinker costs are not included in the quotation above — see the disclaimer below.',
-          style: TextStyle(fontSize: 11, color: _kMuted, fontStyle: FontStyle.italic)),
-    ]),
-  );
 
-  Widget _equipCard(String icon, String count, String label) => Expanded(
-    child: Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: _kCream, borderRadius: BorderRadius.circular(12)),
-      child: Column(children: [
-        Text(icon, style: const TextStyle(fontSize: 28)),
-        const SizedBox(height: 4),
-        Text(count, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: _kGreen900)),
-        const SizedBox(height: 4),
-        Text(label, textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 11, color: Color(0xFF777777))),
-      ]),
-    ),
-  );
 
   Widget _footer() => const Text(
-    'Powered by AgriFlock 360 & ePoultry · Tenekaland Holdings\nFor planning purposes only.',
+    'Powered by AgriFlock 360 & ePoultry',
     textAlign: TextAlign.center, style: TextStyle(fontSize: 10, color: Color(0xFFBBBBBB)),
   );
 
