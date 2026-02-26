@@ -76,6 +76,7 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
     if (plan.isFreeTrial) {
       // Free trial: subscribe and go to farm setup
       final result = await _repo.subscribeToPlan(plan.id);
+      await secureStorage.saveSubscriptionState('has_subscription_plan');
       if (!mounted) return;
 
       result.when(

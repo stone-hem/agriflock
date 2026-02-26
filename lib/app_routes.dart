@@ -23,7 +23,7 @@ import 'package:agriflock360/features/farmer/inventory/inventory_screen.dart';
 import 'package:agriflock360/features/farmer/more/notifications_screen.dart';
 import 'package:agriflock360/features/farmer/more/recent_activity_screen.dart';
 import 'package:agriflock360/features/farmer/payg/flow/plan_transition_screen.dart';
-import 'package:agriflock360/features/farmer/payg/flow/day_one_welcome_screen.dart';
+import 'package:agriflock360/features/farmer/payg/day_one_welcome_screen.dart';
 import 'package:agriflock360/features/farmer/payg/payg_dashboard.dart';
 import 'package:agriflock360/features/farmer/payg/payment_history_screen.dart';
 import 'package:agriflock360/features/farmer/payg/payment_screen.dart';
