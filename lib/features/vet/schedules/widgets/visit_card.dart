@@ -59,7 +59,7 @@ class VisitCard extends StatelessWidget {
           onStatusChanged: onStatusChanged,
         );
 
-      case 'completed':
+      case 'paid':
       case 'declined':
       case 'cancelled':
         return CompletedVisitCard(visit: visit);

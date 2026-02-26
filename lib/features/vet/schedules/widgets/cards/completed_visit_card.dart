@@ -288,7 +288,7 @@ class CompletedVisitCard extends StatelessWidget {
                 ],
                 const SizedBox(height: 8),
                 if (visit.completedAt != null) ...[
-                  TextButton.icon(onPressed: ()=>context.push('/vet-visit-form'), label: Text('complete Visit form'),icon: Icon(Icons.arrow_forward),)]
+                  TextButton.icon(onPressed: ()=>context.push('/vet-visit-form'), label: Text('Complete Visit form'),icon: Icon(Icons.arrow_forward),)]
               ],
             ),
           ),
