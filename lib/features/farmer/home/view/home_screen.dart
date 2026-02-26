@@ -137,6 +137,13 @@ class _HomeScreenState extends State<HomeScreen> {
                secureStorage.saveSubscriptionState('no_subscription_plan');
               _hasNoSubscription = true;
             }
+            if (cond == 'expired_subscription_plan') {
+              secureStorage.saveSubscriptionState('expired_subscription_plan');
+              _hasNoSubscription = true;
+            }
+            secureStorage.saveSubscriptionState('has_subscription_plan');
+            _hasNoSubscription = false;
+
           });
           break;
       }

@@ -110,7 +110,7 @@ class _ShellScaffoldState extends State<ShellScaffold> {
     try {
       final User? userData = await secureStorage.getUserData();
       final String subscriptionState = await secureStorage.getSubscriptionState();
-      final bool isNotSubscribed = subscriptionState == 'no_subscription_plan';
+      final bool isNotSubscribed = subscriptionState == 'no_subscription_plan' || subscriptionState == 'expired_subscription_plan';
 
       if (!mounted) return;
 

@@ -55,8 +55,11 @@ class ManualAuthRepository {
         if(loginResponse.cond=='no_subscription_plan'){
         secureStorage.saveSubscriptionState('no_subscription_plan');
         }
-        if(loginResponse.cond=='no_subscription_plan'){
-          secureStorage.saveSubscriptionState('no_subscription_plan');
+        if(loginResponse.cond=='expired_subscription_plan'){
+          secureStorage.saveSubscriptionState('expired_subscription_plan');
+        }
+        if(loginResponse.cond=='has_subscription_plan') {
+          secureStorage.saveSubscriptionState('has_subscription_plan');
         }
         return Success(loginResponse);
       } else {

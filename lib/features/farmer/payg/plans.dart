@@ -1,3 +1,4 @@
+import 'package:agriflock360/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -549,7 +550,9 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
       if (!mounted) return;
 
       result.when(
-        success: (_) {
+        success: (_) async {
+          await secureStorage.saveSubscriptionState('has_active_plan');
+          if (!mounted) return;
           context.go('/home');
         },
         failure: (message, _, __) {

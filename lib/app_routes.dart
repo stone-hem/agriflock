@@ -203,7 +203,7 @@ class AppRoutes {
 
     // Farmer: check subscription state
     final subscriptionState = await secureStorage.getSubscriptionState();
-    final isSubscribed = subscriptionState == 'no_subscription_plan';
+    final isSubscribed = subscriptionState == 'no_subscription_plan' || subscriptionState == 'expired_subscription_plan';
     if (isSubscribed) {
       return browseVets; // non subscribed farmers land on vets
     }
