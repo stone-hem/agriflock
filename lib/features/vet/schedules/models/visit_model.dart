@@ -381,6 +381,7 @@ class VisitListResponse {
 enum VisitStatus {
   pending('pending'),
   inProgress('in_progress'),
+  pendingPayments('pending_payments'),
   completed('completed'),
   accepted('accepted'),
   declined('declined'),
@@ -403,6 +404,8 @@ enum VisitStatus {
         return 'Pending';
       case VisitStatus.inProgress:
         return 'In Progress';
+        case VisitStatus.pendingPayments:
+        return 'Pending Payments';
       case VisitStatus.completed:
         return 'Completed';
       case VisitStatus.accepted:
@@ -437,6 +440,7 @@ enum VisitStatus {
         return [VisitStatus.inProgress, VisitStatus.cancelled];
       case VisitStatus.inProgress:
         return [VisitStatus.completed, VisitStatus.cancelled];
+        case VisitStatus.pendingPayments:
       case VisitStatus.completed:
       case VisitStatus.declined:
       case VisitStatus.cancelled:

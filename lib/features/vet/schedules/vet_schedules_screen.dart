@@ -179,6 +179,15 @@ class _VetSchedulesScreenState extends State<VetSchedulesScreen> {
                   ),
                   const SizedBox(width: 8),
                   StatusChip(
+                    label: 'Pending Payments',
+                    count: _visitStats?.pendingPayments ?? 0,
+                    status: VisitStatus.pendingPayments.value,
+                    color: Theme.of(context).primaryColor,
+                    isSelected: _selectedStatus == VisitStatus.pendingPayments.value,
+                    onTap: _onStatusChanged,
+                  ),
+                  const SizedBox(width: 8),
+                  StatusChip(
                     label: 'Completed',
                     count: _visitStats?.completed ?? 0,
                     status: VisitStatus.completed.value,

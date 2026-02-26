@@ -3,6 +3,7 @@ import 'package:agriflock360/core/utils/type_safe_utils.dart';
 class VisitStats {
   final int pending;
   final int inProgress;
+  final int pendingPayments;
   final int completed;
   final int accepted;
   final int declined;
@@ -12,6 +13,7 @@ class VisitStats {
   VisitStats({
     required this.pending,
     required this.inProgress,
+    required this.pendingPayments,
     required this.completed,
     required this.accepted,
     required this.declined,
@@ -23,6 +25,7 @@ class VisitStats {
     return VisitStats(
       pending: TypeUtils.toIntSafe(json['pending']),
       inProgress: TypeUtils.toIntSafe(json['in_progress']),
+      pendingPayments: TypeUtils.toIntSafe(json['pending_payments']),
       completed: TypeUtils.toIntSafe(json['completed']),
       accepted: TypeUtils.toIntSafe(json['accepted']),
       declined: TypeUtils.toIntSafe(json['declined']),
@@ -35,6 +38,7 @@ class VisitStats {
     return {
       'pending': pending,
       'in_progress': inProgress,
+      'pending_payments': pendingPayments,
       'completed': completed,
       'accepted': accepted,
       'declined': declined,
@@ -51,6 +55,8 @@ class VisitStats {
       case 'in_progress':
       case 'in progress':
         return inProgress;
+      case 'pending_payments':
+        return pendingPayments;
       case 'completed':
         return completed;
       case 'accepted':
@@ -80,6 +86,7 @@ class VisitStats {
     return {
       'pending': pending,
       'in_progress': inProgress,
+      'pending_payments': pendingPayments,
       'completed': completed,
       'accepted': accepted,
       'declined': declined,
