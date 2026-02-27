@@ -318,9 +318,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           'Profile completed successfully!',
         );
 
-        // Navigate to quotation
         if (context.mounted) {
-          context.go(AppRoutes.quotation);
+          context.pop(true);
         }
       } else {
         ApiErrorHandler.handle(response);
@@ -578,7 +577,6 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                 label: 'Date of Birth *',
                 icon: Icons.calendar_today,
                 required: true,
-                initialDate: DateTime.now().subtract(const Duration(days: 365 * 10)),
                 returnFormat: DateReturnFormat.isoString,
                 minYear: DateTime.now().year - 100,
                 maxYear: DateTime.now().year - 10,
@@ -602,9 +600,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
               ReusableInput(
                 controller: _preferredAgrovetController,
                 focusNode: _preferredAgrovetFocus,
-                topLabel: 'Preferred Agrovet *',
-                labelText: 'Preferred Agrovet *',
-                hintText: 'Enter your preferred agrovet',
+                topLabel: 'Preferred Nearest Agrovet *',
+                labelText: 'Preferred Nearest Agrovet *',
+                hintText: 'Enter your preferred nearest agrovet',
                 icon: Icons.store,
               ),
               const SizedBox(height: 20),
@@ -622,38 +620,24 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: DropdownButtonFormField<String>(
-                      value: _selectedFeedCompany,
-                      hint: const Text('Select feed company'),
-                      icon: const Icon(Icons.arrow_drop_down),
-                      elevation: 16,
-                      style: const TextStyle(color: Colors.black87, fontSize: 16),
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      ),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _selectedFeedCompany = newValue;
-                          _showOtherFeedCompany = newValue == 'Others';
-                          if (!_showOtherFeedCompany) {
-                            _otherFeedCompanyController.clear();
-                          }
-                        });
-                      },
-                      items: _feedCompanyOptions.map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                    ),
+                  ReusableDropdown<String>(
+                    value: _selectedFeedCompany,
+                    hintText: 'Select feed company',
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _selectedFeedCompany = newValue;
+                        _showOtherFeedCompany = newValue == 'Others';
+                        if (!_showOtherFeedCompany) {
+                          _otherFeedCompanyController.clear();
+                        }
+                      });
+                    },
+                    items: _feedCompanyOptions.map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
                   ),
                   if (_showOtherFeedCompany) ...[
                     const SizedBox(height: 12),
@@ -686,41 +670,25 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Preferred Hatchery Company *',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: ReusableDropdown<String>(
-                      value: _selectedHatcheryCompany,
-                      hintText: 'Select hatchery company',
-                      icon:Icons.arrow_drop_down,
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _selectedHatcheryCompany = newValue;
-                          _showOtherHatchery = newValue == 'Others';
-                          if (!_showOtherHatchery) {
-                            _otherHatcheryController.clear();
-                          }
-                        });
-                      },
-                      items: _feedCompanyOptions.map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                    ),
+                  ReusableDropdown<String>(
+                    value: _selectedHatcheryCompany,
+                    hintText: 'Select hatchery company',
+                    topLabel: 'Preferred Hatchery Company *',
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _selectedHatcheryCompany = newValue;
+                        _showOtherHatchery = newValue == 'Others';
+                        if (!_showOtherHatchery) {
+                          _otherHatcheryController.clear();
+                        }
+                      });
+                    },
+                    items: _feedCompanyOptions.map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
                   ),
                   if (_showOtherHatchery) ...[
                     const SizedBox(height: 12),

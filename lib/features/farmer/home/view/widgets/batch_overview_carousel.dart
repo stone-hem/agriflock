@@ -255,26 +255,6 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                           ),
                         ),
                         const SizedBox(height: 3),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(color: accentColor.shade300),
-                          ),
-                          child: Text(
-                            batch.productionStage.stage,
-                            style: TextStyle(
-                              color: accentColor.shade700,
-                              fontSize: 9,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
                         Text(
                           batch.batchNumber, // This will show format like "Kienyeji Batch – 9 Feb 2026"
                           style: TextStyle(
@@ -410,7 +390,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                       children: [
                         Expanded(
                           child: _buildInfoRow(
-                            'Bags consumed',
+                            'Bags consumed (50 Kgs)',
                             '${batch.feed!.totalBagsConsumed} (Day: ${batch.feed!.bagsConsumedDay}, Night: ${batch.feed!.bagsConsumedNight})',
                             Icons.restaurant,
                             Colors.orange.shade700,
