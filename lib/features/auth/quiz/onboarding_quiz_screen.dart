@@ -76,7 +76,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
 
   int get _totalPages {
     if (_selectedUserType == 'vet') return 7;
-    return 4; // farmer or not selected
+    return 3; // farmer or not selected
   }
 
   List<String> get _pageTitles {
@@ -94,13 +94,12 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     return [
       'Choose Your Role',
       'My Personal Details',
-      'Select Location',
       'Congratulations!',
     ];
   }
 
-  // Get the index for location page based on user type
-  int get _locationPageIndex => _selectedUserType == 'vet' ? 5 : 2;
+  // Index of the page where submission is triggered
+  int get _submitPageIndex => _selectedUserType == 'vet' ? 5 : 1;
   @override
   void initState() {
     super.initState();
@@ -225,9 +224,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     try {
       final result = await _repository.submitFarmerOnboarding(
         token: widget.token,
-        address: _selectedAddress!,
-        latitude: _latitude!,
-        longitude: _longitude!,
         yearsOfExperience: int.tryParse(_farmerExperienceController.text) ?? 0,
       );
 
@@ -309,10 +305,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
   }
 
   bool _validateFarmerFields() {
-    if (_selectedAddress == null || _latitude == null || _longitude == null) {
-      ToastUtil.showError("Please select a location");
-      return false;
-    }
     if (_farmerExperienceController.text.isEmpty) {
       ToastUtil.showError("Please enter your years of experience");
       return false;
@@ -419,9 +411,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
       case 1:
         return true; // Farm details - allow continue, validate on submit
       case 2:
-        return _selectedAddress != null && _latitude != null && _longitude != null;
-      case 3:
-        return true;
+        return true; // Congratulations
       default:
         return false;
     }
@@ -573,7 +563,6 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     return [
       _buildRoleSelectionPage(),
       _buildFarmerDetailsPage(),
-      _buildLocationPage(),
       _buildCongratulationsPage(),
     ];
   }
@@ -895,7 +884,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
   Widget _buildBottomNavigation(bool keyboardVisible) {
     final isFirstPage = _currentPage == 0;
     final isLastPage = _currentPage == _totalPages - 1; // This is the congratulations page
-    final isLocationPage = _currentPage == _locationPageIndex;
+    final isSubmitPage = _currentPage == _submitPageIndex;
 
     return Container(
       padding: EdgeInsets.only(
@@ -940,7 +929,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
                   ? () {
                 if (isLastPage) {
                   _finalizeOnboarding();
-                } else if (isLocationPage) {
+                } else if (isSubmitPage) {
                   _completeOnboarding();
                 } else {
                   _goToNextPage();
@@ -966,7 +955,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
                 ),
               )
                   : Text(
-                isLocationPage
+                isSubmitPage
                     ? 'Submit'
                     : isLastPage
                     ? 'Get Started'

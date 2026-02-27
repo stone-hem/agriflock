@@ -7,18 +7,10 @@ import '../../../../main.dart';
 class OnboardingRepository {
   Future<Map<String, dynamic>> submitFarmerOnboarding({
     required String token,
-    required String address,
-    required double latitude,
-    required double longitude,
-    required int yearsOfExperience
+    required int yearsOfExperience,
   }) async {
     try {
       final body = <String, dynamic>{
-        'location': {
-          'address': address,
-          'latitude': latitude,
-          'longitude': longitude,
-        },
         'years_of_experience': yearsOfExperience,
       };
 

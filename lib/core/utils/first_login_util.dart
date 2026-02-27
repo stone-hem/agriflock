@@ -68,7 +68,7 @@ class FirstLoginUtil {
     }
 
     if (isFirstLogin(user)) {
-      return '/day1/welcome-msg-page';
+      return '/welcome-day1';
     }
 
     final subscriptionState = await secureStorage.getSubscriptionState();

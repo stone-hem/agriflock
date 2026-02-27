@@ -145,7 +145,7 @@ class _ExperienceSelectionScreenState
                         selectedIndex: _selectedOption,
                         accentColor: Colors.blue,
                         icon: Icons.devices_rounded,
-                        title: 'Extension Services + Devices Only',
+                        title: 'Extension Services or  Devices Only',
                         description:
                             'Access vet & extension services, quotations, and device monitoring without full farm setup. Ideal if you mainly need advisory services.',
                         bullets: const [

@@ -57,7 +57,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
   String? _selectedFeedingTimeCategory;
   File? _batchPhotoFile;
   bool _isOwnHatch = false;
-  bool _hasChickCost = false;
+  bool _hasChickCost = true;
   String _currency = '';
   final _currentWeightController = TextEditingController();
   final _expectedWeightController = TextEditingController();
@@ -109,7 +109,6 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
     _houseNameController.text = 'House 1';
     _hatchController.text = DateUtil.toReadableDate(DateTime.now());
     _chickCostController.text = '0';
-    _chickAgeController.text = '0';
     _loadBirdTypes();
     _loadCurrency();
   }
@@ -125,7 +124,6 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
       _isOwnHatch = isOwnHatch;
       if (wasOwnHatch != isOwnHatch) {
         if (isOwnHatch) {
-          _chickAgeController.text = '0';
           _hatchSourceController.clear();
           _hatchController.text = DateUtil.toReadableDate(DateTime.now());
         } else {
@@ -665,6 +663,8 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
               selectedAddress: _selectedAddress,
               latitude: _latitude,
               longitude: _longitude,
+              title: 'Select Location',
+              text: 'Search and Select your farm location',
               onLocationSelected: (String address, double lat, double lng) {
                 setState(() {
                   _selectedAddress = address;
@@ -982,7 +982,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
               ),
               const SizedBox(height: 20),
               ReusableInput(
-                topLabel: 'Hatchery/Source (Optional)',
+                topLabel: 'Hatchery/Source',
                 controller: _hatchSourceController,
                 labelText: 'Where did you purchase the chicks?',
                 hintText: 'e.g., XYZ Hatchery, Local Market, Farm Name',
@@ -1110,6 +1110,15 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                           color: Colors.green.shade700,
                         ),
                       ),
+                      Text(
+                        _chickCostController.text.isNotEmpty
+                            ? 'Remember to add other expenses after batch placement to get the accurate financial report'
+                            : '',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green.shade700,
+                        ),
+                      ),
                     ] else ...[
                       Container(
                         padding: const EdgeInsets.all(12),
@@ -1167,10 +1176,10 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                 if (int.tryParse(value) == null) return 'Please enter a valid number';
                 final alive = int.parse(value);
                 final initial = int.tryParse(_initialQuantityController.text) ?? 0;
-                if (alive > initial) return 'Birds alive cannot exceed initial count';
+                if (alive > initial) return 'Current bird count cannot exceed initial bird';
                 return null;
               },
-              labelText: 'Current count at the moment',
+              labelText: 'Current count during placement',
               hintText: 'e.g., 100',
             ),
             const SizedBox(height: 20),
@@ -1436,11 +1445,33 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
               ),
             ),
             const SizedBox(height: 32),
-
+            Text('Did you by other expenses'),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => context.go(AppRoutes.home),
+                onPressed: () => context.push('/record-expenditure'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 52),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 2,
+                ),
+                child: const Text(
+                  'Add more expenses',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text('Or '),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => context.push(AppRoutes.home),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
                   foregroundColor: Colors.white,
@@ -1451,7 +1482,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                   elevation: 2,
                 ),
                 child: const Text(
-                  'Go to Dashboard',
+                  'Go to the dashboard',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
