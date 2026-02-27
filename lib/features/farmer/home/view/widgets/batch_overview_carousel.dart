@@ -309,21 +309,38 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
             const SizedBox(height: 8),
 
             // Stats Grid - Main Info
-            Row(
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildInfoRow(
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: _buildInfoRow(
                         'Number of birds',
                         '${batch.totalBirds}',
                         Icons.pets_outlined,
                         primaryColor,
                       ),
-                      const SizedBox(height: 6),
-                      _buildInfoRow(
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _buildInfoRow(
+                        'Total feeds in store',
+                        '${batch.foodInStoreKg} kgs ${batch.foodInStoreBags} bags',
+                        Icons.inventory_2_outlined,
+                        Colors.brown,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: _buildInfoRow(
                         'Mortality',
                         '${batch.mortality} birds – $mortalityPercent%',
                         Icons.warning_amber_outlined,
@@ -332,43 +349,40 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                             ? Colors.red.shade700
                             : Colors.grey.shade700,
                       ),
-                      const SizedBox(height: 6),
-                      _buildInfoRow(
-                        'Production cost/bird',
-                        'KES ${batch.productionCostPerBird.toStringAsFixed(0)}',
-                        Icons.attach_money_outlined,
-                        Colors.green,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildInfoRow(
-                        'Total feeds in store',
-                        '${batch.foodInStoreKg} kgs ${batch.foodInStoreBags} bags',
-                        Icons.inventory_2_outlined,
-                        Colors.brown,
-                      ),
-                      const SizedBox(height: 6),
-                      _buildInfoRow(
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _buildInfoRow(
                         'Expected avg feeding',
                         '${batch.expectedFoodPerBirdPerDayG.toStringAsFixed(0)}g/bird = ${batch.totalExpectedFoodPerDayKg.toStringAsFixed(1)} kgs',
                         Icons.restaurant_outlined,
                         Colors.orange,
                       ),
-                      const SizedBox(height: 6),
-                      _buildInfoRow(
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: _buildInfoRow(
+                        'Production cost/bird',
+                        'KES ${batch.productionCostPerBird.toStringAsFixed(0)}',
+                        Icons.attach_money_outlined,
+                        Colors.green,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _buildInfoRow(
                         'Actual consumed',
                         '${batch.actualFoodPerBirdPerDayG.toStringAsFixed(0)}g/bird = ${batch.totalActualFoodPerDayKg.toStringAsFixed(1)} kgs',
                         Icons.restaurant_menu_outlined,
                         Colors.teal,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -385,31 +399,23 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                   border: Border.all(color: Colors.brown.shade300),
                 ),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildInfoRow(
-                            'Bags consumed (50 Kgs)',
-                            '${batch.feed!.totalBagsConsumed} (Day: ${batch.feed!.bagsConsumedDay}, Night: ${batch.feed!.bagsConsumedNight})',
-                            Icons.restaurant,
-                            Colors.orange.shade700,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _buildInfoRow(
-                            'Variance',
-                            batch.feed!.feedVariance,
-                            Icons.trending_flat,
-                            batch.feed!.feedVariance.toLowerCase().contains('above')
-                                ? Colors.orange
-                                : Colors.green,
-                          ),
-                        ),
-                      ],
+                    _buildInfoRow(
+                      'Bags consumed (50 Kgs)',
+                      '${batch.feed!.totalBagsConsumed} (Day: ${batch.feed!.bagsConsumedDay}, Night: ${batch.feed!.bagsConsumedNight})',
+                      Icons.restaurant,
+                      Colors.orange.shade700,
                     ),
-
+                    const SizedBox(height: 8),
+                    _buildInfoRow(
+                      'Variance',
+                      batch.feed!.feedVariance,
+                      Icons.trending_flat,
+                      batch.feed!.feedVariance.toLowerCase().contains('above')
+                          ? Colors.orange
+                          : Colors.green,
+                    ),
                   ],
                 ),
               ),
@@ -426,49 +432,34 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                   border: Border.all(color: Colors.teal.shade300),
                 ),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildInfoRow(
-                            'Feeding stage',
-                            batch.feedingPlan!.stageName,
-                            Icons.timeline_outlined,
-                            Colors.teal,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _buildInfoRow(
-                            'Feed type',
-                            batch.feedingPlan!.feedTypeInUse,
-                            Icons.local_dining_outlined,
-                            Colors.teal.shade700,
-                          ),
-                        ),
-                      ],
+                    _buildInfoRow(
+                      'Feeding stage',
+                      batch.feedingPlan!.stageName,
+                      Icons.timeline_outlined,
+                      Colors.teal,
                     ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildInfoRow(
-                            'Times/day',
-                            '${batch.feedingPlan!.timesPerDay} (${batch.feedingPlan!.feedingTimes.slots.join(', ')})',
-                            Icons.access_time,
-                            Colors.teal.shade700,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _buildInfoRow(
-                            'Expected/week',
-                            '${batch.feedingPlan!.expectedFeedPerWeekBags} bags',
-                            Icons.calendar_today,
-                            Colors.teal.shade700,
-                          ),
-                        ),
-                      ],
+                    const SizedBox(height: 8),
+                    _buildInfoRow(
+                      'Feed type',
+                      batch.feedingPlan!.feedTypeInUse,
+                      Icons.local_dining_outlined,
+                      Colors.teal.shade700,
+                    ),
+                    const SizedBox(height: 8),
+                    _buildInfoRow(
+                      'Times/day',
+                      '${batch.feedingPlan!.timesPerDay} (${batch.feedingPlan!.feedingTimes.slots.join(', ')})',
+                      Icons.access_time,
+                      Colors.teal.shade700,
+                    ),
+                    const SizedBox(height: 8),
+                    _buildInfoRow(
+                      'Expected/week',
+                      '${batch.feedingPlan!.expectedFeedPerWeekBags} bags',
+                      Icons.calendar_today,
+                      Colors.teal.shade700,
                     ),
                   ],
                 ),
@@ -636,7 +627,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                         'Vaccination Status',
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
-                          fontSize: 11,
+                          fontSize: 13,
                           color: Colors.grey.shade800,
                         ),
                       ),
@@ -688,7 +679,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                         Text(
                           'Next vaccines:',
                           style: TextStyle(
-                            fontSize: 10,
+                            fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: Colors.grey.shade700,
                           ),
@@ -718,10 +709,10 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                             child: Text(
                               '${v.name} (Day ${v.dayDue})',
                               style: TextStyle(
-                                fontSize: 9,
+                                fontSize: 11,
                                 color: Colors.grey.shade800,
                               ),
-                              maxLines: 1,
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -734,7 +725,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                               ),
                               child: const Text(
                                 'Due today',
-                                style: TextStyle(fontSize: 7, fontWeight: FontWeight.bold),
+                                style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
                               ),
                             ),
                         ],
@@ -788,12 +779,12 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 10),
-          const SizedBox(width: 2),
+          Icon(icon, color: Colors.white, size: 12),
+          const SizedBox(width: 4),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 9,
+            style: const TextStyle(
+              fontSize: 11,
               color: Colors.white,
               fontWeight: FontWeight.w600,
             ),
@@ -811,8 +802,12 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
         Color? valueColor,
       }) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 14, color: iconColor),
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: Icon(icon, size: 15, color: iconColor),
+        ),
         const SizedBox(width: 6),
         Expanded(
           child: Column(
@@ -821,7 +816,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
             children: [
               Text(
                 label,
-                style: TextStyle(color: Colors.grey.shade500, fontSize: 9),
+                style: TextStyle(color: Colors.grey.shade700, fontSize: 11),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -829,10 +824,10 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                 value,
                 style: TextStyle(
                   color: valueColor ?? Colors.grey.shade800,
-                  fontSize: 11,
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
             ],

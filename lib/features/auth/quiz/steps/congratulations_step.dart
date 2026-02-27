@@ -108,11 +108,10 @@ class CongratulationsStep extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   _buildSummaryItem('Role', isFarmer ? 'Farmer' : 'Veterinary Doctor'),
-                  _buildSummaryItem('Location', selectedAddress ?? 'Not provided'),
                   if (isFarmer) ...[
-                    _buildSummaryItem('Chicken Number', chickenNumber ?? ''),
                     _buildSummaryItem('Experience', '${farmerExperience ?? ''} years'),
                   ] else ...[
+                    _buildSummaryItem('Location', selectedAddress ?? 'Not provided'),
                     _buildSummaryItem('Highest Education', educationLevel ?? 'Not provided'),
                     _buildSummaryItem('Professional Summary', professionalSummary ?? ''),
                     _buildSummaryItem(

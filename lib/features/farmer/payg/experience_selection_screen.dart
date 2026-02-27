@@ -29,7 +29,7 @@ class _ExperienceSelectionScreenState
       // Extension Services + Devices Only → save state & go home
       await secureStorage.saveSubscriptionState('no_subscription_plan');
       if (!mounted) return;
-      context.go(AppRoutes.home);
+      context.go(AppRoutes.browseVets);
     }
 
     if (mounted) setState(() => _isContinuing = false);
