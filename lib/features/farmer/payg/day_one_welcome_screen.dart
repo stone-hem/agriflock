@@ -1,4 +1,3 @@
-import 'package:agriflock360/app_routes.dart';
 import 'package:agriflock360/core/utils/toast_util.dart';
 import 'package:agriflock360/features/farmer/payg/models/subscription_plans_model.dart';
 import 'package:agriflock360/features/farmer/payg/repo/subscription_repo.dart';
@@ -147,14 +146,14 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
                     child:  Image.asset(
                       'assets/logos/Logo_0725.png',
                       fit: BoxFit.cover,
-                      width: 50,
-                      height: 50,
+                      width: 40,
+                      height: 40,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
                           color: Theme.of(context).primaryColor,
                           child: const Icon(
                             Icons.image,
-                            size: 100,
+                            size: 40,
                             color: Colors.white54,
                           ),
                         );
@@ -256,21 +255,7 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
         // ── Bottom buttons ───────────────────────────────────
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-          child: Column(
-            children: [
-              _buildContinueButton(),
-              const SizedBox(height: 12),
-              TextButton.icon(
-                icon: Icon(Icons.arrow_forward),
-                  onPressed: () async {
-                    await secureStorage.saveSubscriptionState('no_subscription_plan');
-                    if (!mounted) return;
-                    context.go(AppRoutes.home);
-                  },
-                  label: Text('Skip for now ')
-              )
-            ],
-          ),
+          child: _buildContinueButton(),
         ),
       ],
     );

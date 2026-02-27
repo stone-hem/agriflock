@@ -1,6 +1,33 @@
 import 'package:agriflock360/core/utils/type_safe_utils.dart';
 
 
+class BirdTypeEntry {
+  final String birdTypeId;
+  final String birdTypeName;
+  final int count;
+  final int ageValue;
+  final String ageUnit; // 'days' or 'weeks'
+  final double mortalityRate;
+
+  BirdTypeEntry({
+    required this.birdTypeId,
+    required this.birdTypeName,
+    required this.count,
+    required this.ageValue,
+    required this.ageUnit,
+    required this.mortalityRate,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'bird_type_id': birdTypeId,
+        'bird_type_name': birdTypeName,
+        'count': count,
+        'age_value': ageValue,
+        'age_unit': ageUnit,
+        'mortality_rate': mortalityRate,
+      };
+}
+
 class VetOrderRequest {
   final String vetId;
   final List<String>? houseIds;
@@ -12,7 +39,8 @@ class VetOrderRequest {
   final String preferredTime;
   final bool termsAgreed;
   final int? participantsCount;
-
+  final String? paymentMode;
+  final List<BirdTypeEntry>? birdTypeDetails;
 
   VetOrderRequest({
     required this.vetId,
@@ -23,7 +51,10 @@ class VetOrderRequest {
     required this.priorityLevel,
     required this.preferredDate,
     required this.preferredTime,
-    required this.termsAgreed, this.participantsCount,
+    required this.termsAgreed,
+    this.participantsCount,
+    this.paymentMode,
+    this.birdTypeDetails,
   });
 
   Map<String, dynamic> toJson() {
@@ -38,6 +69,10 @@ class VetOrderRequest {
       'preferred_time': preferredTime,
       'terms_agreed': termsAgreed,
       'participants_count': participantsCount,
+      if (paymentMode != null) 'payment_mode': paymentMode,
+      if (birdTypeDetails != null)
+        'bird_type_details':
+            birdTypeDetails!.map((e) => e.toJson()).toList(),
     };
   }
 }
@@ -53,6 +88,8 @@ class VetEstimateRequest {
   final String preferredDate;
   final String preferredTime;
   final bool termsAgreed;
+  final String? paymentMode;
+  final List<BirdTypeEntry>? birdTypeDetails;
 
   VetEstimateRequest({
     required this.vetId,
@@ -63,7 +100,10 @@ class VetEstimateRequest {
     required this.priorityLevel,
     required this.preferredDate,
     required this.preferredTime,
-    required this.termsAgreed, this.participantsCount,
+    required this.termsAgreed,
+    this.participantsCount,
+    this.paymentMode,
+    this.birdTypeDetails,
   });
 
   Map<String, dynamic> toJson() {
@@ -78,6 +118,10 @@ class VetEstimateRequest {
       'preferred_time': preferredTime,
       'terms_agreed': termsAgreed,
       'participants_count': participantsCount,
+      if (paymentMode != null) 'payment_mode': paymentMode,
+      if (birdTypeDetails != null)
+        'bird_type_details':
+            birdTypeDetails!.map((e) => e.toJson()).toList(),
     };
   }
 }

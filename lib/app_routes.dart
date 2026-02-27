@@ -22,6 +22,7 @@ import 'package:agriflock360/features/farmer/home/view/home_screen.dart';
 import 'package:agriflock360/features/farmer/inventory/inventory_screen.dart';
 import 'package:agriflock360/features/farmer/more/notifications_screen.dart';
 import 'package:agriflock360/features/farmer/more/recent_activity_screen.dart';
+import 'package:agriflock360/features/farmer/payg/experience_selection_screen.dart';
 import 'package:agriflock360/features/farmer/payg/flow/plan_transition_screen.dart';
 import 'package:agriflock360/features/farmer/payg/day_one_welcome_screen.dart';
 import 'package:agriflock360/features/farmer/payg/payg_dashboard.dart';
@@ -102,6 +103,7 @@ class AppRoutes {
   static const String quotation = '/quotation';
   static const String browseVets = '/browse-vets';
   static const String farmerProfile = '/farmer-profile';
+  static const String farmerDevices = '/farmer-devices';
 
   // Shell tab routes - Vet
   static const String vetHome = '/vet-home';
@@ -147,6 +149,7 @@ class AppRoutes {
     quotation,
     browseVets,
     farmerProfile,
+    farmerDevices,
     vetHome,
     vetSchedules,
     vetPaymentsTab,
@@ -382,6 +385,13 @@ class AppRoutes {
               pageBuilder: (context, state) => _fadeTransition(
                 state,
                 const ProfileScreen(),
+              ),
+            ),
+            GoRoute(
+              path: farmerDevices,
+              pageBuilder: (context, state) => _fadeTransition(
+                state,
+                const DevicesScreen(),
               ),
             ),
 
@@ -631,20 +641,19 @@ class AppRoutes {
         GoRoute(
           path: '/my-devices',
           builder: (context, state) => const DevicesScreen(),
-          routes: [
-            GoRoute(
-              path: 'telemetry',
-              builder: (context, state) {
-                if (state.extra is! DeviceItem) {
-                  return const ErrorScreen(
-                    title: 'Device not found',
-                    message: 'Could not load device. Please go back and try again.',
-                  );
-                }
-                return DeviceTelemetryScreen(device: state.extra as DeviceItem);
-              },
-            ),
-          ],
+        ),
+        GoRoute(
+          path: '/my-devices/telemetry',
+          parentNavigatorKey: navigatorKey,
+          builder: (context, state) {
+            if (state.extra is! DeviceItem) {
+              return const ErrorScreen(
+                title: 'Device not found',
+                message: 'Could not load device. Please go back and try again.',
+              );
+            }
+            return DeviceTelemetryScreen(device: state.extra as DeviceItem);
+          },
         ),
         GoRoute(
           path: activity,
@@ -714,7 +723,7 @@ class AppRoutes {
         ),
         GoRoute(
           path: '/welcome-day1',
-          builder: (context, state) => const Day1WelcomeScreen(),
+          builder: (context, state) => const ExperienceSelectionScreen(),
         ),
         GoRoute(
           path: '/plan-transition',

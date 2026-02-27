@@ -2,6 +2,7 @@ import 'package:agriflock360/core/utils/api_error_handler.dart';
 import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock360/core/widgets/reusable_input.dart';
 import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
+import 'package:agriflock360/features/farmer/batch/model/bird_type.dart';
 import 'package:agriflock360/features/farmer/batch/repo/batch_house_repo.dart';
 import 'package:agriflock360/features/farmer/farm/repositories/farm_repository.dart';
 import 'package:agriflock360/features/farmer/vet/models/vet_farmer_model.dart';
@@ -42,6 +43,24 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
   final _numberOfPeopleController = TextEditingController();
   int? _numberOfPeople;
 
+  // Bird types (for manual mode)
+  List<BirdType> _birdTypes = [];
+  bool _isLoadingBirdTypes = false;
+  final Set<String> _selectedBirdTypeIds = {};
+  // Shared flock detail fields (apply to all selected bird types)
+  final _birdAgeController = TextEditingController();
+  final _birdMortalityController = TextEditingController();
+  String _birdAgeUnit = 'days';
+
+  // Payment mode (both modes)
+  String? _selectedPaymentMode;
+  static const List<String> _paymentModes = [
+    'M-Pesa',
+    'Cash',
+    'Card',
+    'Bank Transfer',
+  ];
+
   // Estimate state
   bool _isLoadingEstimate = false;
 
@@ -76,6 +95,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
     super.initState();
     _loadFarms();
     _loadServiceTypes();
+    _loadBirdTypes();
   }
 
   Future<void> _loadFarms() async {
@@ -143,6 +163,51 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
         _servicesError = 'Failed to load service types: $e';
       });
     }
+  }
+
+  Future<void> _loadBirdTypes() async {
+    setState(() => _isLoadingBirdTypes = true);
+    final result = await _batchHouseRepository.getBirdTypes();
+    if (!mounted) return;
+    switch (result) {
+      case Success<List<BirdType>>(data: final types):
+        setState(() {
+          _birdTypes = types;
+          _isLoadingBirdTypes = false;
+        });
+        break;
+      case Failure(message: final error):
+        setState(() => _isLoadingBirdTypes = false);
+        ApiErrorHandler.handle(error);
+        break;
+    }
+  }
+
+  void _toggleBirdType(BirdType type, bool selected) {
+    setState(() {
+      if (selected) {
+        _selectedBirdTypeIds.add(type.id);
+      } else {
+        _selectedBirdTypeIds.remove(type.id);
+      }
+    });
+  }
+
+  List<BirdTypeEntry> _buildBirdTypeEntries() {
+    final count = int.tryParse(_birdsCountController.text) ?? 0;
+    final age = int.tryParse(_birdAgeController.text) ?? 0;
+    final mortality = double.tryParse(_birdMortalityController.text) ?? 0;
+    return _selectedBirdTypeIds.map((id) {
+      final type = _birdTypes.firstWhere((t) => t.id == id);
+      return BirdTypeEntry(
+        birdTypeId: id,
+        birdTypeName: type.name,
+        count: count,
+        ageValue: age,
+        ageUnit: _birdAgeUnit,
+        mortalityRate: mortality,
+      );
+    }).toList();
   }
 
   Future<void> _loadHousesForSelectedFarm() async {
@@ -245,6 +310,17 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
       return;
     }
 
+    if (_selectedPaymentMode == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a mode of payment'),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
     // If no farm details provided, birds count is required
     if (!_hasFarmDetails && (_manualBirdsCount == null || _manualBirdsCount! <= 0)) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -302,6 +378,11 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
       birdsCount = _manualBirdsCount ?? 0;
     }
 
+    final birdTypeEntries =
+        !_hasFarmDetails && _selectedBirdTypeIds.isNotEmpty
+            ? _buildBirdTypeEntries()
+            : null;
+
     final request = VetEstimateRequest(
       vetId: widget.vet.id,
       houseIds: _selectedHouse != null ? [_selectedHouse!] : null,
@@ -317,6 +398,8 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
       preferredTime: '09:00',
       termsAgreed: false,
       participantsCount: hasPerPersonService ? _numberOfPeople : null,
+      paymentMode: _selectedPaymentMode,
+      birdTypeDetails: birdTypeEntries,
     );
 
     final result = await _vetRepository.getVetOrderEstimate(request);
@@ -427,6 +510,176 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
         color: Colors.grey.shade50,
       ),
       child: Text(message),
+    );
+  }
+
+  Widget _buildBirdTypeSection() {
+    if (_isLoadingBirdTypes) {
+      return _buildLoadingIndicator('Loading bird types...');
+    }
+    if (_birdTypes.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Type of Birds (Select all that apply)',
+          style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade800,
+              ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.white,
+          ),
+          child: Column(
+            children: _birdTypes.map((type) {
+              final isSelected = _selectedBirdTypeIds.contains(type.id);
+              return CheckboxListTile(
+                title: Text(type.name,
+                    style: const TextStyle(fontWeight: FontWeight.w500)),
+                value: isSelected,
+                onChanged: (v) => _toggleBirdType(type, v ?? false),
+                controlAffinity: ListTileControlAffinity.leading,
+                secondary: Icon(Icons.pets,
+                    color: isSelected ? Colors.green : Colors.grey),
+              );
+            }).toList(),
+          ),
+        ),
+
+        // Shared flock detail fields — shown once when any type is selected
+        if (_selectedBirdTypeIds.isNotEmpty) ...[
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.green.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.green.shade100),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Flock Details',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                    color: Colors.green.shade800,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                ReusableInput(
+                  controller: _birdMortalityController,
+                  labelText: 'Mortality Rate (%)',
+                  hintText: 'e.g. 2.5',
+                  keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      child: ReusableInput(
+                        controller: _birdAgeController,
+                        labelText: 'Age',
+                        hintText:
+                            _birdAgeUnit == 'days' ? 'e.g. 14' : 'e.g. 3',
+                        keyboardType: TextInputType.number,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Unit',
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600)),
+                        const SizedBox(height: 4),
+                        ToggleButtons(
+                          isSelected: [
+                            _birdAgeUnit == 'days',
+                            _birdAgeUnit == 'weeks',
+                          ],
+                          onPressed: (index) {
+                            setState(() {
+                              _birdAgeUnit =
+                                  index == 0 ? 'days' : 'weeks';
+                            });
+                          },
+                          borderRadius: BorderRadius.circular(8),
+                          selectedColor: Colors.white,
+                          fillColor: Colors.green,
+                          color: Colors.grey.shade600,
+                          constraints: const BoxConstraints(
+                              minHeight: 36, minWidth: 56),
+                          children: const [
+                            Text('Days', style: TextStyle(fontSize: 12)),
+                            Text('Weeks',
+                                style: TextStyle(fontSize: 12)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildPaymentModeSection() {
+    return ReusableDropdown<String>(
+      topLabel: 'Mode of Payment',
+      value: _selectedPaymentMode,
+      hintText: 'Select payment method',
+      icon: Icons.payment,
+      isExpanded: true,
+      items: _paymentModes.map((mode) {
+        IconData icon;
+        switch (mode) {
+          case 'M-Pesa':
+            icon = Icons.phone_android;
+            break;
+          case 'Card':
+            icon = Icons.credit_card;
+            break;
+          case 'Bank Transfer':
+            icon = Icons.account_balance;
+            break;
+          default:
+            icon = Icons.money;
+        }
+        return DropdownMenuItem<String>(
+          value: mode,
+          child: Row(
+            children: [
+              Icon(icon, size: 18, color: Colors.grey.shade600),
+              const SizedBox(width: 10),
+              Text(mode),
+            ],
+          ),
+        );
+      }).toList(),
+      onChanged: (v) => setState(() => _selectedPaymentMode = v),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please select a payment method';
+        }
+        return null;
+      },
     );
   }
 
@@ -1036,6 +1289,10 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               _buildServiceSelection(),
               const SizedBox(height: 20),
 
+              // Mode of Payment
+              _buildPaymentModeSection(),
+              const SizedBox(height: 20),
+
               // Priority Level
               ReusableDropdown<String>(
                 topLabel: 'Priority Level',
@@ -1183,7 +1440,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
           _buildBatchSelection(),
         ],
 
-        // Manual birds count — only shown when no farm is selected
+        // Manual birds count + bird type details — only shown when no farm is selected
         if (_selectedFarm == null) ...[
           const SizedBox(height: 12),
           Container(
@@ -1200,7 +1457,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'No farm set up yet? Just enter how many birds you have.',
+                    'No farm set up yet? Provide your flock details below.',
                     style: TextStyle(fontSize: 12.5, color: Colors.orange.shade800),
                   ),
                 ),
@@ -1210,7 +1467,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
           const SizedBox(height: 12),
           ReusableInput(
             controller: _birdsCountController,
-            labelText: 'Number of Birds',
+            labelText: 'Total Number of Birds',
             hintText: 'Enter total number of birds',
             keyboardType: TextInputType.number,
             onChanged: (value) {
@@ -1219,7 +1476,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               });
             },
             validator: (value) {
-              // Only validate if no farm details are provided
               if (!_hasFarmDetails) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter the number of birds';
@@ -1231,6 +1487,8 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               return null;
             },
           ),
+          const SizedBox(height: 16),
+          _buildBirdTypeSection(),
         ],
       ],
     );
@@ -1318,6 +1576,8 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
   void dispose() {
     _birdsCountController.dispose();
     _numberOfPeopleController.dispose();
+    _birdAgeController.dispose();
+    _birdMortalityController.dispose();
     super.dispose();
   }
 }

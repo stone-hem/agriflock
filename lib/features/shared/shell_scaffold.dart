@@ -33,16 +33,16 @@ class _ShellScaffoldState extends State<ShellScaffold> {
       route: '/farms',
     ),
     NavConfig(
-      icon: Icons.format_quote_outlined,
-      selectedIcon: Icons.format_quote,
-      label: 'Quotation',
-      route: '/quotation',
-    ),
-    NavConfig(
       icon: Icons.people_outline,
       selectedIcon: Icons.people,
       label: 'Vets',
       route: '/browse-vets',
+    ),
+    NavConfig(
+      icon: Icons.format_quote_outlined,
+      selectedIcon: Icons.format_quote,
+      label: 'Quotation',
+      route: '/quotation',
     ),
     NavConfig(
       icon: Icons.person_outlined,
@@ -54,16 +54,16 @@ class _ShellScaffoldState extends State<ShellScaffold> {
 
   static const List<NavConfig> _farmerUnSubscribedNavConfigs = [
     NavConfig(
-      icon: Icons.format_quote_outlined,
-      selectedIcon: Icons.format_quote,
-      label: 'Quotation',
-      route: '/quotation',
-    ),
-    NavConfig(
       icon: Icons.people_outline,
       selectedIcon: Icons.people,
       label: 'Vets',
       route: '/browse-vets',
+    ),
+    NavConfig(
+      icon: Icons.devices_outlined,
+      selectedIcon: Icons.devices,
+      label: 'Devices',
+      route: '/farmer-devices',
     ),
     NavConfig(
       icon: Icons.person_outlined,
