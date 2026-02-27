@@ -29,6 +29,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final DashboardRepository _repository = DashboardRepository();
+  final ScrollController _scrollController = ScrollController();
 
   DashboardSummary? _summary;
   FinancialOverview? _financialOverview;
@@ -71,6 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -445,6 +447,7 @@ class _HomeScreenState extends State<HomeScreen> {
           RefreshIndicator(
             onRefresh: _onRefresh,
             child: SingleChildScrollView(
+              controller: _scrollController,
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -534,7 +537,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         )
                       else
-                        BatchOverviewCarousel(batches: _batches),
+                        BatchOverviewCarousel(batches: _batches, outerScrollController: _scrollController),
                     if (!_isBatchesLoading && _batchesError == null) ...[
                       const SizedBox(height: 16),
                       Text(

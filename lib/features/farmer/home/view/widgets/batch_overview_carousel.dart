@@ -4,10 +4,12 @@ import 'package:go_router/go_router.dart';
 
 class BatchOverviewCarousel extends StatefulWidget {
   final List<BatchHomeData> batches;
+  final ScrollController? outerScrollController;
 
   const BatchOverviewCarousel({
     super.key,
     required this.batches,
+    this.outerScrollController,
   });
 
   @override
@@ -210,8 +212,22 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
           ),
         ],
       ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(14),
+      child: NotificationListener<OverscrollNotification>(
+        onNotification: (notification) {
+          final outer = widget.outerScrollController;
+          if (outer != null && outer.hasClients) {
+            final delta = notification.overscroll;
+            final newOffset = (outer.offset + delta).clamp(
+              outer.position.minScrollExtent,
+              outer.position.maxScrollExtent,
+            );
+            outer.jumpTo(newOffset);
+          }
+          return false;
+        },
+        child: SingleChildScrollView(
+          physics: const ClampingScrollPhysics(),
+          padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -759,6 +775,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
               icon: const Icon(Icons.arrow_forward, size: 16),
             ),
           ],
+        ),
         ),
       ),
     );

@@ -275,8 +275,6 @@ class _AllVetsScreenState extends State<AllVetsScreen> {
                 if (vet.coverageAreas != null && vet.coverageAreas!.subCounties.isNotEmpty)
                   _info(Icons.location_city, 'Sub-counties',
                       vet.coverageAreas!.subCounties.take(3).join(', '), Colors.blueGrey.shade600),
-                if (vet.licenseNumber != null && vet.licenseNumber!.isNotEmpty)
-                  _info(Icons.credit_card, 'License No.', vet.licenseNumber!, Colors.blueGrey.shade500),
                 if (vet.profileBio.isNotEmpty) ...[
                   const SizedBox(height: 2),
                   Text(vet.profileBio,

@@ -45,7 +45,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
   File? _batchPhotoFile;
   bool _isLoading = false;
   bool _isLoadingBirdTypes = false;
-  bool _hasChickCost = false;
+  bool _hasChickCost = true;
   bool _isOwnHatch = true;
 
   List<BirdType> _birdTypes = [];
@@ -134,10 +134,6 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
   }
 
   void _initializeForm() {
-    // Initialize chick cost as 0
-    _chickCostController.text = '0';
-    _chickAgeController.text = '0';
-
     // Set initial hatch date to today for both modes
     _hatchController.text = DateUtil.toReadableDate(DateTime.now());
   }
@@ -151,7 +147,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
       if (wasOwnHatch != isOwnHatch) {
         if (isOwnHatch) {
           // Switching to own hatch
-          _chickAgeController.text = '0';
+          _chickAgeController.clear();
           _hatchSourceController.clear();
           _hatchController.text = DateUtil.toReadableDate(DateTime.now());
         } else {
@@ -1055,8 +1051,8 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
         'birds_alive': int.parse(_birdsAliveController.text.trim()),
         'current_weight': _currentWeightController.text.isNotEmpty?double.parse(_currentWeightController.text.trim()):null,
         'expected_weight': _expectedWeightController.text.isNotEmpty?double.parse(_expectedWeightController.text.trim()):null,
-        'purchase_cost': double.parse(_chickCostController.text.trim()),
-        'age_at_purchase': int.parse(_chickAgeController.text.trim()),
+        'purchase_cost': double.tryParse(_chickCostController.text.trim()) ?? 0,
+        'age_at_purchase': _isOwnHatch ? 0 : (int.tryParse(_chickAgeController.text.trim()) ?? 0),
         'hatchery_source': !_isOwnHatch && _hatchSourceController.text.isNotEmpty
             ? _hatchSourceController.text.trim()
             : null, // Optional hatch source
@@ -1069,7 +1065,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
             : null,
       };
 
-      if( double.parse(_chickCostController.text.trim())==0){
+      if ((double.tryParse(_chickCostController.text.trim()) ?? 0) == 0) {
         batchData.remove('purchase_cost');
       }
 
