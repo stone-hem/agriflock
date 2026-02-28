@@ -58,25 +58,6 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Back Button
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => context.go('/login'),
-                  color: Colors.grey.shade700,
-                ),
-              ),
               const SizedBox(height: 20),
 
               // Logo
@@ -102,7 +83,7 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
               // Header
               Center(
                 child: Text(
-                  'Verify Email',
+                  'Verify Phone Number',
                   style: Theme.of(context).textTheme.headlineLarge!.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Colors.grey.shade800,
