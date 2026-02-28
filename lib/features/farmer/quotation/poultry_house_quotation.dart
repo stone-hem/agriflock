@@ -1,9 +1,9 @@
-import 'package:agriflock360/features/farmer/quotation/models/housing_quotation_model.dart';
-import 'package:agriflock360/features/farmer/quotation/repo/quotation_repository.dart';
-import 'package:agriflock360/features/farmer/quotation/widgets/image_with_desc.dart';
-import 'package:agriflock360/features/farmer/quotation/widgets/market_disclaimer.dart';
+import 'package:agriflock/features/farmer/quotation/models/housing_quotation_model.dart';
+import 'package:agriflock/features/farmer/quotation/repo/quotation_repository.dart';
+import 'package:agriflock/features/farmer/quotation/widgets/image_with_desc.dart';
+import 'package:agriflock/features/farmer/quotation/widgets/market_disclaimer.dart';
 import 'package:flutter/material.dart';
-import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock/core/utils/result.dart';
 
 class PoultryHouseQuotationScreen extends StatefulWidget {
   const PoultryHouseQuotationScreen({super.key});
@@ -376,7 +376,7 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
             ],
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 12),
 
 
         // Material Table
@@ -463,6 +463,8 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
             ),
             const SizedBox(height: 16),
             TextButton.icon(onPressed: null, label: Text('Scroll to the right or left to see the whole table.'), icon: Icon(Icons.arrow_forward_ios),),
+            Text('The Unit Price can be manually edited to suit your needs'),
+
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: DataTable(

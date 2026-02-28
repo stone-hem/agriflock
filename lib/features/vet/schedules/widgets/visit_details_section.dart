@@ -1,4 +1,4 @@
-import 'package:agriflock360/features/vet/schedules/models/visit_model.dart';
+import 'package:agriflock/features/vet/schedules/models/visit_model.dart';
 import 'package:flutter/material.dart';
 
 /// A shared widget that displays comprehensive visit details

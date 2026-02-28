@@ -1,5 +1,5 @@
-import 'package:agriflock360/core/utils/result.dart';
-import 'package:agriflock360/core/utils/type_safe_utils.dart';
+import 'package:agriflock/core/utils/result.dart';
+import 'package:agriflock/core/utils/type_safe_utils.dart';
 import 'dart:convert';
 
 class InventoryCategory {

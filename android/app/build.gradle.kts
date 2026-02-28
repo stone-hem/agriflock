@@ -16,8 +16,9 @@ import java.util.Properties
             implementation(platform("com.google.firebase:firebase-bom:34.7.0"))
         }
 
+
 android {
-    namespace = "com.mglobal.agriflock360"
+    namespace = "com.mglobal.agriflock"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -32,7 +33,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.mglobal.agriflock360"
+        applicationId = "com.mglobal.agriflock"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -68,8 +69,7 @@ android {
                 "proguard-rules.pro"
             )
         }
-    }
-}
+    }}
 
 flutter {
     source = "../.."

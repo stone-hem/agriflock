@@ -1,10 +1,10 @@
-import 'package:agriflock360/core/utils/date_util.dart';
-import 'package:agriflock360/core/utils/result.dart';
-import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
-import 'package:agriflock360/features/farmer/batch/model/vaccination_list_model.dart';
-import 'package:agriflock360/features/farmer/batch/model/recommended_vaccination_model.dart';
-import 'package:agriflock360/features/farmer/batch/repo/vaccination_repo.dart';
-import 'package:agriflock360/features/farmer/batch/shared/stat_card.dart';
+import 'package:agriflock/core/utils/date_util.dart';
+import 'package:agriflock/core/utils/result.dart';
+import 'package:agriflock/features/farmer/batch/model/batch_model.dart';
+import 'package:agriflock/features/farmer/batch/model/vaccination_list_model.dart';
+import 'package:agriflock/features/farmer/batch/model/recommended_vaccination_model.dart';
+import 'package:agriflock/features/farmer/batch/repo/vaccination_repo.dart';
+import 'package:agriflock/features/farmer/batch/shared/stat_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 

@@ -1,7 +1,7 @@
 // lib/features/farmer/batch/model/product_model.dart
 
 import 'dart:convert';
-import 'package:agriflock360/core/utils/type_safe_utils.dart';
+import 'package:agriflock/core/utils/type_safe_utils.dart';
 
 class Product {
   final String id;

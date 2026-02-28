@@ -1,6 +1,6 @@
-import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
-import 'package:agriflock360/features/auth/quiz/shared/gender_selector.dart';
-import 'package:agriflock360/features/auth/shared/auth_text_field.dart';
+import 'package:agriflock/core/widgets/custom_date_text_field.dart';
+import 'package:agriflock/features/auth/quiz/shared/gender_selector.dart';
+import 'package:agriflock/features/auth/shared/auth_text_field.dart';
 import 'package:flutter/material.dart';
 
 class VetPersonalInfoStep extends StatelessWidget {

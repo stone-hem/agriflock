@@ -1,9 +1,9 @@
-import 'package:agriflock360/features/farmer/inventory/models/inventory_models.dart';
-import 'package:agriflock360/features/farmer/inventory/repo/inventory_repository.dart';
-import 'package:agriflock360/features/farmer/inventory/widgets/inventory_stats_card.dart';
+import 'package:agriflock/features/farmer/inventory/models/inventory_models.dart';
+import 'package:agriflock/features/farmer/inventory/repo/inventory_repository.dart';
+import 'package:agriflock/features/farmer/inventory/widgets/inventory_stats_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock/core/utils/result.dart';
 
 class InventoryScreen extends StatefulWidget {
 

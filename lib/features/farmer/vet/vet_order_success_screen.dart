@@ -1,5 +1,5 @@
 // vet_order_success_screen.dart
-import 'package:agriflock360/features/farmer/vet/models/vet_order_model.dart';
+import 'package:agriflock/features/farmer/vet/models/vet_order_model.dart';
 import 'package:flutter/material.dart';
 
 class VetOrderSuccessScreen extends StatelessWidget {

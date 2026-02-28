@@ -1,11 +1,11 @@
 {
-    "name": "agriflock360",
-    "short_name": "agriflock360",
+    "name": "agriflock",
+    "short_name": "agriflock",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#ffffff",
-    "description": "Agriflock Project",
+    "description": "A new Flutter project.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

@@ -1,4 +1,4 @@
-import 'package:agriflock360/features/farmer/home/model/batch_home_model.dart';
+import 'package:agriflock/features/farmer/home/model/batch_home_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 

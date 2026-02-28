@@ -1,19 +1,19 @@
-import 'package:agriflock360/core/utils/api_error_handler.dart';
-import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
-import 'package:agriflock360/core/widgets/reusable_input.dart';
-import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
-import 'package:agriflock360/features/farmer/batch/model/bird_type.dart';
-import 'package:agriflock360/features/farmer/batch/repo/batch_house_repo.dart';
-import 'package:agriflock360/features/farmer/farm/repositories/farm_repository.dart';
-import 'package:agriflock360/features/farmer/vet/models/vet_farmer_model.dart';
-import 'package:agriflock360/features/farmer/vet/models/vet_order_model.dart';
-import 'package:agriflock360/features/farmer/vet/models/vet_service_type.dart';
-import 'package:agriflock360/features/farmer/vet/repo/vet_farmer_repository.dart';
-import 'package:agriflock360/features/farmer/vet/widgets/order_process.dart';
-import 'package:agriflock360/features/farmer/vet/widgets/vet_order_bottom_sheet.dart';
+import 'package:agriflock/core/utils/api_error_handler.dart';
+import 'package:agriflock/core/widgets/reusable_dropdown.dart';
+import 'package:agriflock/core/widgets/reusable_input.dart';
+import 'package:agriflock/features/farmer/batch/model/batch_model.dart';
+import 'package:agriflock/features/farmer/batch/model/bird_type.dart';
+import 'package:agriflock/features/farmer/batch/repo/batch_house_repo.dart';
+import 'package:agriflock/features/farmer/farm/repositories/farm_repository.dart';
+import 'package:agriflock/features/farmer/vet/models/vet_farmer_model.dart';
+import 'package:agriflock/features/farmer/vet/models/vet_order_model.dart';
+import 'package:agriflock/features/farmer/vet/models/vet_service_type.dart';
+import 'package:agriflock/features/farmer/vet/repo/vet_farmer_repository.dart';
+import 'package:agriflock/features/farmer/vet/widgets/order_process.dart';
+import 'package:agriflock/features/farmer/vet/widgets/vet_order_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock/core/utils/result.dart';
 
 class VetOrderScreen extends StatefulWidget {
   final VetFarmer vet;

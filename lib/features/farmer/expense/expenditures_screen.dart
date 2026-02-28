@@ -1,19 +1,19 @@
-import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
-import 'package:agriflock360/core/widgets/disclaimer_widget.dart';
-import 'package:agriflock360/core/widgets/expense/expense_button.dart';
-import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
-import 'package:agriflock360/core/widgets/search_input.dart';
-import 'package:agriflock360/main.dart';
+import 'package:agriflock/core/widgets/custom_date_text_field.dart';
+import 'package:agriflock/core/widgets/disclaimer_widget.dart';
+import 'package:agriflock/core/widgets/expense/expense_button.dart';
+import 'package:agriflock/core/widgets/reusable_dropdown.dart';
+import 'package:agriflock/core/widgets/search_input.dart';
+import 'package:agriflock/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:agriflock360/core/utils/api_error_handler.dart';
-import 'package:agriflock360/core/utils/date_util.dart';
-import 'package:agriflock360/core/utils/result.dart';
-import 'package:agriflock360/features/farmer/farm/repositories/farm_repository.dart';
-import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
-import 'package:agriflock360/features/farmer/batch/repo/batch_house_repo.dart';
-import 'package:agriflock360/features/farmer/expense/model/expenditure_model.dart';
-import 'package:agriflock360/features/farmer/expense/repo/expenditure_repository.dart';
+import 'package:agriflock/core/utils/api_error_handler.dart';
+import 'package:agriflock/core/utils/date_util.dart';
+import 'package:agriflock/core/utils/result.dart';
+import 'package:agriflock/features/farmer/farm/repositories/farm_repository.dart';
+import 'package:agriflock/features/farmer/batch/model/batch_model.dart';
+import 'package:agriflock/features/farmer/batch/repo/batch_house_repo.dart';
+import 'package:agriflock/features/farmer/expense/model/expenditure_model.dart';
+import 'package:agriflock/features/farmer/expense/repo/expenditure_repository.dart';
 
 class ExpendituresScreen extends StatefulWidget {
   const ExpendituresScreen({super.key});

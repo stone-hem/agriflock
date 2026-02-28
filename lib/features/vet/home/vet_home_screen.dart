@@ -1,15 +1,15 @@
-import 'package:agriflock360/core/model/user_model.dart';
-import 'package:agriflock360/core/utils/log_util.dart';
-import 'package:agriflock360/core/utils/result.dart';
-import 'package:agriflock360/core/widgets/alert_button.dart';
-import 'package:agriflock360/core/widgets/vet_unverified_banner.dart';
-import 'package:agriflock360/features/vet/home/models/dashboard_stats_model.dart';
-import 'package:agriflock360/features/vet/home/repo/dashboard_stats_repo.dart';
-import 'package:agriflock360/features/vet/home/widgets/vet_dashboard_skeleton.dart';
-import 'package:agriflock360/main.dart';
+import 'package:agriflock/core/model/user_model.dart';
+import 'package:agriflock/core/utils/log_util.dart';
+import 'package:agriflock/core/utils/result.dart';
+import 'package:agriflock/core/widgets/alert_button.dart';
+import 'package:agriflock/core/widgets/vet_unverified_banner.dart';
+import 'package:agriflock/features/vet/home/models/dashboard_stats_model.dart';
+import 'package:agriflock/features/vet/home/repo/dashboard_stats_repo.dart';
+import 'package:agriflock/features/vet/home/widgets/vet_dashboard_skeleton.dart';
+import 'package:agriflock/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:agriflock360/features/vet/schedules/repo/visit_repo.dart';
+import 'package:agriflock/features/vet/schedules/repo/visit_repo.dart';
 
 class VetHomeScreen extends StatefulWidget {
   const VetHomeScreen({super.key});

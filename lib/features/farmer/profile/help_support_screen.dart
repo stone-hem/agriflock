@@ -7,7 +7,7 @@ class HelpSupportScreen extends StatelessWidget {
   void _launchEmail() async {
     final Uri emailLaunchUri = Uri(
       scheme: 'mailto',
-      path: 'support@agriflock360.com',
+      path: 'support@agriflock.com',
       queryParameters: {
         'subject': 'Agriflock 360 Support Request',
         'body': 'Hello Agriflock Team,\n\nI need assistance with:',
@@ -110,7 +110,7 @@ class HelpSupportScreen extends StatelessWidget {
               icon: Icons.email_outlined,
               title: 'Email Support',
               subtitle: 'Send us an email',
-              actionText: 's@agriflock360.com',
+              actionText: 's@agriflock.com',
               color: Colors.blue,
               onTap: _launchEmail,
             ),

@@ -7,6 +7,42 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:966300580112:android:36bd42e63555b260304d95",
+        "android_client_info": {
+          "package_name": "com.mglobal.agriflock"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "966300580112-oqnprsgcfusiiem0e5rs920oo3tm7f60.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlcsIUtIBvX0DcJZFc8yGSI09KF-jhuag"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "966300580112-mlu13btg98kc7mu5f3anb1ff4rce7dts.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "966300580112-uu71cfn2vnn0i7qugq09u6b6lt01h48b.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.mglobal.agriflock360"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:966300580112:android:3b1ba4947d7effbe304d95",
         "android_client_info": {
           "package_name": "com.mglobal.agriflock360"

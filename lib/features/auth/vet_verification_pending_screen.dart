@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:agriflock360/app_routes.dart';
-import 'package:agriflock360/core/utils/result.dart';
-import 'package:agriflock360/core/utils/toast_util.dart';
-import 'package:agriflock360/features/auth/repo/manual_auth_repo.dart';
+import 'package:agriflock/app_routes.dart';
+import 'package:agriflock/core/utils/result.dart';
+import 'package:agriflock/core/utils/toast_util.dart';
+import 'package:agriflock/features/auth/repo/manual_auth_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -37,7 +37,7 @@ class _VetVerificationPendingScreenState
     {
       'title': 'Connect with Farmers',
       'body':
-      'AgriFlock360 connects you with thousands of poultry farmers who need your veterinary expertise in their area.',
+      'agriflock connects you with thousands of poultry farmers who need your veterinary expertise in their area.',
     },
     {
       'title': 'Manage Your Practice',

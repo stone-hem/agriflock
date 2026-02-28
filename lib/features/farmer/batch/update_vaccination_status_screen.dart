@@ -1,15 +1,15 @@
-import 'package:agriflock360/core/utils/result.dart';
-import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
-import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
-import 'package:agriflock360/core/widgets/reusable_input.dart';
-import 'package:agriflock360/core/widgets/reusable_time_input.dart';
-import 'package:agriflock360/features/farmer/batch/model/vaccination_list_model.dart';
+import 'package:agriflock/core/utils/result.dart';
+import 'package:agriflock/core/widgets/custom_date_text_field.dart';
+import 'package:agriflock/core/widgets/reusable_dropdown.dart';
+import 'package:agriflock/core/widgets/reusable_input.dart';
+import 'package:agriflock/core/widgets/reusable_time_input.dart';
+import 'package:agriflock/features/farmer/batch/model/vaccination_list_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:agriflock360/core/utils/date_util.dart';
-import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
-import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
-import 'package:agriflock360/features/farmer/batch/repo/vaccination_repo.dart';
+import 'package:agriflock/core/utils/date_util.dart';
+import 'package:agriflock/features/farmer/batch/model/batch_model.dart';
+import 'package:agriflock/features/farmer/batch/model/vaccination_model.dart';
+import 'package:agriflock/features/farmer/batch/repo/vaccination_repo.dart';
 
 class UpdateVaccinationStatusScreen extends StatefulWidget {
   final BatchModel batch;

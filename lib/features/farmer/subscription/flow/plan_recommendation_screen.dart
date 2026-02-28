@@ -1,18 +1,21 @@
-import 'package:agriflock360/app_routes.dart';
-import 'package:agriflock360/core/utils/result.dart';
-import 'package:agriflock360/features/farmer/payg/models/subscription_plans_model.dart';
-import 'package:agriflock360/features/farmer/payg/repo/subscription_repo.dart';
+import 'package:agriflock/app_routes.dart';
+import 'package:agriflock/core/utils/result.dart';
+import 'package:agriflock/features/farmer/subscription/models/subscription_plan_model.dart';
+import 'package:agriflock/features/farmer/subscription/repo/subscription_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class PlanTransitionScreen extends StatefulWidget {
-  const PlanTransitionScreen({super.key});
+/// Shown when a farmer's trial ends — displays the AI-recommended plan
+/// based on their actual farm usage and gives them options to subscribe or continue free.
+class PlanRecommendationScreen extends StatefulWidget {
+  const PlanRecommendationScreen({super.key});
 
   @override
-  State<PlanTransitionScreen> createState() => _PlanTransitionScreenState();
+  State<PlanRecommendationScreen> createState() =>
+      _PlanRecommendationScreenState();
 }
 
-class _PlanTransitionScreenState extends State<PlanTransitionScreen> {
+class _PlanRecommendationScreenState extends State<PlanRecommendationScreen> {
   final SubscriptionRepository _repo = SubscriptionRepository();
 
   PlanRecommendationResponse? _recommendation;
@@ -55,7 +58,8 @@ class _PlanTransitionScreenState extends State<PlanTransitionScreen> {
       backgroundColor: Colors.grey[50],
       body: SafeArea(
         child: _isLoading
-            ? const Center(child: CircularProgressIndicator(color: Colors.green))
+            ? const Center(
+                child: CircularProgressIndicator(color: Colors.green))
             : _error != null
                 ? _buildErrorState()
                 : _buildContent(),
@@ -121,7 +125,8 @@ class _PlanTransitionScreenState extends State<PlanTransitionScreen> {
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   color: Colors.green.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
@@ -139,7 +144,6 @@ class _PlanTransitionScreenState extends State<PlanTransitionScreen> {
 
           const SizedBox(height: 30),
 
-          // Title
           const Text(
             'Your Recommended Plan is Ready',
             style: TextStyle(
@@ -152,7 +156,6 @@ class _PlanTransitionScreenState extends State<PlanTransitionScreen> {
 
           const SizedBox(height: 20),
 
-          // Reasoning from API
           Text(
             rec.reasoning,
             style: const TextStyle(
@@ -190,11 +193,8 @@ class _PlanTransitionScreenState extends State<PlanTransitionScreen> {
                         color: Colors.green.withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
-                        Icons.star,
-                        color: Colors.green,
-                        size: 20,
-                      ),
+                      child: const Icon(Icons.star,
+                          color: Colors.green, size: 20),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -215,32 +215,23 @@ class _PlanTransitionScreenState extends State<PlanTransitionScreen> {
                 Text(
                   plan.description,
                   style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                    height: 1.4,
-                  ),
+                      fontSize: 14, color: Colors.grey[600], height: 1.4),
                 ),
 
                 const SizedBox(height: 16),
 
-                // Features
                 ...features.map((feature) => Padding(
                       padding: const EdgeInsets.symmetric(vertical: 6),
                       child: Row(
                         children: [
-                          Icon(
-                            Icons.check_circle,
-                            color: Colors.green[600],
-                            size: 20,
-                          ),
+                          Icon(Icons.check_circle,
+                              color: Colors.green[600], size: 20),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
                               feature,
                               style: const TextStyle(
-                                fontSize: 15,
-                                color: Colors.black54,
-                              ),
+                                  fontSize: 15, color: Colors.black54),
                             ),
                           ),
                         ],
@@ -249,7 +240,6 @@ class _PlanTransitionScreenState extends State<PlanTransitionScreen> {
 
                 const SizedBox(height: 20),
 
-                // Price
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -263,10 +253,7 @@ class _PlanTransitionScreenState extends State<PlanTransitionScreen> {
                     ),
                     Text(
                       '/ ${plan.billingCycleDays} days',
-                      style: const TextStyle(
-                        fontSize: 15,
-                        color: Colors.grey,
-                      ),
+                      style: const TextStyle(fontSize: 15, color: Colors.grey),
                     ),
                   ],
                 ),
@@ -281,12 +268,14 @@ class _PlanTransitionScreenState extends State<PlanTransitionScreen> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                context.push('/payg/payment', extra: {
+                context.push(AppRoutes.subscriptionPayment, extra: {
                   'planId': plan.id,
                   'planName': plan.name,
                   'planType': plan.planType,
                   'amount': plan.priceAmount,
                   'currency': plan.currency,
+                  'billingCycleDays': plan.billingCycleDays,
+                  'isOnboarding': false,
                 });
               },
               style: ElevatedButton.styleFrom(
@@ -300,10 +289,7 @@ class _PlanTransitionScreenState extends State<PlanTransitionScreen> {
               ),
               child: const Text(
                 'Accept Recommended Plan',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
               ),
             ),
           ),
@@ -314,7 +300,7 @@ class _PlanTransitionScreenState extends State<PlanTransitionScreen> {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
-              onPressed: () => context.go('/plans'),
+              onPressed: () => context.go(AppRoutes.subscriptionPlansPreview),
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.green,
                 side: const BorderSide(color: Colors.green),
@@ -325,10 +311,7 @@ class _PlanTransitionScreenState extends State<PlanTransitionScreen> {
               ),
               child: const Text(
                 'View Other Plans',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
             ),
           ),
@@ -356,11 +339,8 @@ class _PlanTransitionScreenState extends State<PlanTransitionScreen> {
           const Padding(
             padding: EdgeInsets.only(bottom: 20),
             child: Text(
-              'Free access includes basic features with limited usage.',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
+              'Free access includes vet services and device monitoring only.',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
               textAlign: TextAlign.center,
             ),
           ),

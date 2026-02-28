@@ -1,4 +1,4 @@
-package com.mglobal.agriflock360
+package com.mglobal.agriflock
 
 import io.flutter.embedding.android.FlutterActivity
 

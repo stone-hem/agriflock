@@ -17,10 +17,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -30,10 +27,7 @@ class DefaultFirebaseOptions {
       case TargetPlatform.macOS:
         return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -48,7 +42,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyDlcsIUtIBvX0DcJZFc8yGSI09KF-jhuag',
-    appId: '1:966300580112:android:3b1ba4947d7effbe304d95',
+    appId: '1:966300580112:android:36bd42e63555b260304d95',
     messagingSenderId: '966300580112',
     projectId: 'agriflock-360-cb236',
     storageBucket: 'agriflock-360-cb236.firebasestorage.app',
@@ -56,24 +50,42 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyBp_g1jSDl7MMBXoVqEb0CD038jsbPl08U',
-    appId: '1:966300580112:ios:a6ba7e86dee56d13304d95',
+    appId: '1:966300580112:ios:d9e2c4fd4b4b8382304d95',
     messagingSenderId: '966300580112',
     projectId: 'agriflock-360-cb236',
     storageBucket: 'agriflock-360-cb236.firebasestorage.app',
     androidClientId: '966300580112-imqmadra66jmits9ah9km3lgcvmtjlpd.apps.googleusercontent.com',
-    iosClientId: '966300580112-uu71cfn2vnn0i7qugq09u6b6lt01h48b.apps.googleusercontent.com',
-    iosBundleId: 'com.mglobal.agriflock360',
+    iosClientId: '966300580112-jjrj4naeftomrf8hedcub6soh96ug1g4.apps.googleusercontent.com',
+    iosBundleId: 'com.mglobal.agriflock',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBp_g1jSDl7MMBXoVqEb0CD038jsbPl08U',
-    appId: '1:966300580112:ios:a6ba7e86dee56d13304d95',
+    appId: '1:966300580112:ios:d9e2c4fd4b4b8382304d95',
     messagingSenderId: '966300580112',
     projectId: 'agriflock-360-cb236',
     storageBucket: 'agriflock-360-cb236.firebasestorage.app',
     androidClientId: '966300580112-imqmadra66jmits9ah9km3lgcvmtjlpd.apps.googleusercontent.com',
-    iosClientId: '966300580112-uu71cfn2vnn0i7qugq09u6b6lt01h48b.apps.googleusercontent.com',
-    iosBundleId: 'com.mglobal.agriflock360',
+    iosClientId: '966300580112-jjrj4naeftomrf8hedcub6soh96ug1g4.apps.googleusercontent.com',
+    iosBundleId: 'com.mglobal.agriflock',
+  );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyCEg8aegC5KCa0wppqj9a6vkudQQC-HMnM',
+    appId: '1:966300580112:web:2e8d5cb04e7dea79304d95',
+    messagingSenderId: '966300580112',
+    projectId: 'agriflock-360-cb236',
+    authDomain: 'agriflock-360-cb236.firebaseapp.com',
+    storageBucket: 'agriflock-360-cb236.firebasestorage.app',
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyCEg8aegC5KCa0wppqj9a6vkudQQC-HMnM',
+    appId: '1:966300580112:web:02aa5b426dd25ea8304d95',
+    messagingSenderId: '966300580112',
+    projectId: 'agriflock-360-cb236',
+    authDomain: 'agriflock-360-cb236.firebaseapp.com',
+    storageBucket: 'agriflock-360-cb236.firebasestorage.app',
   );
 
 }

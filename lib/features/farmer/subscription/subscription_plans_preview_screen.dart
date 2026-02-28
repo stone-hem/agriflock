@@ -1,18 +1,22 @@
-import 'package:agriflock360/main.dart';
+import 'package:agriflock/app_routes.dart';
+import 'package:agriflock/features/farmer/subscription/models/subscription_plan_model.dart';
+import 'package:agriflock/features/farmer/subscription/repo/subscription_repo.dart';
+import 'package:agriflock/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'models/subscription_plans_model.dart';
-import 'repo/subscription_repo.dart';
-
-class PlansPreviewScreen extends StatefulWidget {
-  const PlansPreviewScreen({super.key});
+/// Mid-session plan browser — shown when a farmer wants to upgrade
+/// their subscription or browse available plans.
+class SubscriptionPlansPreviewScreen extends StatefulWidget {
+  const SubscriptionPlansPreviewScreen({super.key});
 
   @override
-  State<PlansPreviewScreen> createState() => _PlansPreviewScreenState();
+  State<SubscriptionPlansPreviewScreen> createState() =>
+      _SubscriptionPlansPreviewScreenState();
 }
 
-class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
+class _SubscriptionPlansPreviewScreenState
+    extends State<SubscriptionPlansPreviewScreen> {
   final SubscriptionRepository _repo = SubscriptionRepository();
 
   List<ActivePlan> _plans = [];
@@ -40,10 +44,7 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
         setState(() {
           _plans = plans;
           _isLoading = false;
-          // Default select the first plan
-          if (_selectedIndex >= plans.length) {
-            _selectedIndex = 0;
-          }
+          if (_selectedIndex >= plans.length) _selectedIndex = 0;
         });
       },
       failure: (message, _, __) {
@@ -54,8 +55,6 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
       },
     );
   }
-
-  // ── Styling helpers ────────────────────────────────────────────────
 
   Color _planColor(String planType) {
     switch (planType.toUpperCase()) {
@@ -94,8 +93,6 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
     }
   }
 
-  // ── Build ──────────────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -120,7 +117,7 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.help_outline, color: Colors.grey),
-            onPressed: () => _showHelpDialog(),
+            onPressed: _showHelpDialog,
           ),
         ],
       ),
@@ -136,8 +133,6 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
     );
   }
 
-  // ── Loading state ──────────────────────────────────────────────────
-
   Widget _buildLoading() {
     return const Center(
       child: Column(
@@ -145,16 +140,12 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
         children: [
           CircularProgressIndicator(color: Colors.green),
           SizedBox(height: 16),
-          Text(
-            'Loading plans...',
-            style: TextStyle(color: Colors.grey, fontSize: 14),
-          ),
+          Text('Loading plans…',
+              style: TextStyle(color: Colors.grey, fontSize: 14)),
         ],
       ),
     );
   }
-
-  // ── Error state ────────────────────────────────────────────────────
 
   Widget _buildError() {
     return Center(
@@ -186,30 +177,22 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
     );
   }
 
-  // ── Main content ───────────────────────────────────────────────────
-
   Widget _buildContent() {
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
       children: [
-        // Plan cards
         ...List.generate(_plans.length, (i) {
           return Padding(
             padding: const EdgeInsets.only(bottom: 14),
             child: _buildPlanCard(i),
           );
         }),
-
         const SizedBox(height: 8),
-
-        // Bottom action section
         if (_plans.isNotEmpty) _buildActionSection(),
       ],
     );
   }
-
-  // ── Plan card ──────────────────────────────────────────────────────
 
   Widget _buildPlanCard(int index) {
     final plan = _plans[index];
@@ -241,12 +224,12 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
           children: [
             // Header
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.08),
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(13),
-                ),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(13)),
               ),
               child: Row(
                 children: [
@@ -256,18 +239,14 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
                     child: Text(
                       plan.name,
                       style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: color,
-                      ),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: color),
                     ),
                   ),
-                  // Price chip
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
+                        horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: color.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(20),
@@ -275,10 +254,9 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
                     child: Text(
                       '${_currencySymbol(plan.currency)} ${plan.priceAmount.toStringAsFixed(plan.priceAmount % 1 == 0 ? 0 : 2)}/mo',
                       style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: color,
-                      ),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: color),
                     ),
                   ),
                 ],
@@ -291,14 +269,10 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Description + chick range
                   Text(
                     plan.description,
                     style: TextStyle(
-                      fontSize: 12.5,
-                      color: Colors.grey[600],
-                      height: 1.35,
-                    ),
+                        fontSize: 12.5, color: Colors.grey[600], height: 1.35),
                   ),
                   if (plan.chicksLabel.isNotEmpty) ...[
                     const SizedBox(height: 6),
@@ -309,18 +283,14 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
                         Text(
                           plan.chicksLabel,
                           style: TextStyle(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey[800],
-                          ),
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey[800]),
                         ),
                       ],
                     ),
                   ],
-
                   const SizedBox(height: 10),
-
-                  // Features (show first 4)
                   ...plan.readableFeatures.take(4).map((f) => Padding(
                         padding: const EdgeInsets.only(bottom: 5),
                         child: Row(
@@ -333,17 +303,14 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
                               child: Text(
                                 f,
                                 style: TextStyle(
-                                  fontSize: 12.5,
-                                  color: Colors.grey[700],
-                                  height: 1.3,
-                                ),
+                                    fontSize: 12.5,
+                                    color: Colors.grey[700],
+                                    height: 1.3),
                               ),
                             ),
                           ],
                         ),
                       )),
-
-                  // View all features
                   if (plan.readableFeatures.length > 4)
                     Align(
                       alignment: Alignment.centerRight,
@@ -354,10 +321,9 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
                           minimumSize: const Size(0, 32),
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
-                        child: Text(
-                          'View all features',
-                          style: TextStyle(color: color, fontSize: 12.5),
-                        ),
+                        child: Text('View all features',
+                            style:
+                                TextStyle(color: color, fontSize: 12.5)),
                       ),
                     ),
                 ],
@@ -368,8 +334,6 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
       ),
     );
   }
-
-  // ── Action section ─────────────────────────────────────────────────
 
   Widget _buildActionSection() {
     final plan = _plans[_selectedIndex];
@@ -392,23 +356,21 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
         children: [
           Text(
             'Selected: ${plan.name}',
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-            ),
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: _isSubscribing ? null : () => _handlePlanSelection(plan),
+              onPressed: _isSubscribing
+                  ? null
+                  : () => _handlePlanSelection(plan),
               style: ElevatedButton.styleFrom(
                 backgroundColor: color,
                 foregroundColor: Colors.white,
                 minimumSize: const Size(double.infinity, 50),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                    borderRadius: BorderRadius.circular(12)),
                 elevation: 2,
                 disabledBackgroundColor: color.withValues(alpha: 0.5),
               ),
@@ -417,16 +379,14 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
                       width: 22,
                       height: 22,
                       child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2.5,
-                      ),
+                          color: Colors.white, strokeWidth: 2.5),
                     )
                   : Text(
-                      plan.isFreeTrial ? 'Start Free Trial' : 'Get ${plan.name}',
+                      plan.isFreeTrial
+                          ? 'Start Free Trial'
+                          : 'Get ${plan.name}',
                       style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
+                          fontSize: 15, fontWeight: FontWeight.w600),
                     ),
             ),
           ),
@@ -434,8 +394,6 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
       ),
     );
   }
-
-  // ── Dialogs / bottom sheets ────────────────────────────────────────
 
   void _showAllFeatures(ActivePlan plan) {
     final color = _planColor(plan.planType);
@@ -445,130 +403,111 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.6,
-          minChildSize: 0.4,
-          maxChildSize: 0.85,
-          expand: false,
-          builder: (_, controller) {
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Drag handle
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.4,
+        maxChildSize: 0.85,
+        expand: false,
+        builder: (_, controller) => Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '${plan.name} Features',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    plan.description,
-                    style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                  ),
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: ListView.separated(
-                      controller: controller,
-                      itemCount: plan.readableFeatures.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
-                      itemBuilder: (_, i) {
-                        return Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(Icons.check_circle_rounded,
-                                color: color, size: 20),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                plan.readableFeatures[i],
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  height: 1.4,
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _handlePlanSelection(plan);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: color,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size(double.infinity, 50),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Text(
-                        'Get ${plan.name}',
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            );
-          },
-        );
-      },
+              const SizedBox(height: 16),
+              Text(
+                '${plan.name} Features',
+                style: const TextStyle(
+                    fontSize: 18, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 4),
+              Text(plan.description,
+                  style: TextStyle(fontSize: 13, color: Colors.grey[600])),
+              const SizedBox(height: 16),
+              Expanded(
+                child: ListView.separated(
+                  controller: controller,
+                  itemCount: plan.readableFeatures.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  itemBuilder: (_, i) => Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.check_circle_rounded,
+                          color: color, size: 20),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(plan.readableFeatures[i],
+                            style: const TextStyle(
+                                fontSize: 14, height: 1.4)),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _handlePlanSelection(plan);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: color,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text('Get ${plan.name}',
+                      style: const TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.w600)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
   Future<void> _handlePlanSelection(ActivePlan plan) async {
     if (plan.isFreeTrial) {
       setState(() => _isSubscribing = true);
-
       final result = await _repo.subscribeToPlan(plan.id);
       if (!mounted) return;
-
       result.when(
         success: (_) async {
           await secureStorage.saveSubscriptionState('has_active_plan');
           if (!mounted) return;
-          context.go('/home');
+          context.go(AppRoutes.home);
         },
         failure: (message, _, __) {
           setState(() => _isSubscribing = false);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message), backgroundColor: Colors.red),
+            SnackBar(
+                content: Text(message), backgroundColor: Colors.red),
           );
         },
       );
     } else {
-      context.push('/payg/payment', extra: {
+      context.push(AppRoutes.subscriptionPayment, extra: {
         'planId': plan.id,
         'planName': plan.name,
         'planType': plan.planType,
         'amount': plan.priceAmount,
         'currency': plan.currency,
+        'billingCycleDays': plan.billingCycleDays,
+        'isOnboarding': false,
       });
     }
   }
@@ -577,22 +516,20 @@ class _PlansPreviewScreenState extends State<PlansPreviewScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Plan Selection Help'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Choosing the right plan:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+            const Text('Choosing the right plan:',
+                style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             ..._plans.map((p) => Padding(
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Text(
-                    '• ${p.name}: ${p.chicksLabel} — ${_currencySymbol(p.currency)} ${p.priceAmount.toStringAsFixed(p.priceAmount % 1 == 0 ? 0 : 2)}/mo',
-                  ),
+                      '• ${p.name}: ${p.chicksLabel} — ${_currencySymbol(p.currency)} ${p.priceAmount.toStringAsFixed(p.priceAmount % 1 == 0 ? 0 : 2)}/mo'),
                 )),
             const SizedBox(height: 12),
             const Text(

@@ -1,13 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:agriflock360/core/utils/log_util.dart';
-import 'package:agriflock360/core/utils/result.dart';
-import 'package:agriflock360/features/farmer/vet/models/completed_orders_model.dart';
-import 'package:agriflock360/features/farmer/vet/models/my_order_list_item.dart';
-import 'package:agriflock360/features/farmer/vet/models/vet_farmer_model.dart';
-import 'package:agriflock360/features/farmer/vet/models/vet_order_model.dart';
-import 'package:agriflock360/features/farmer/vet/models/vet_service_type.dart';
-import 'package:agriflock360/main.dart';
+import 'package:agriflock/core/utils/log_util.dart';
+import 'package:agriflock/core/utils/result.dart';
+import 'package:agriflock/features/farmer/vet/models/completed_orders_model.dart';
+import 'package:agriflock/features/farmer/vet/models/my_order_list_item.dart';
+import 'package:agriflock/features/farmer/vet/models/vet_farmer_model.dart';
+import 'package:agriflock/features/farmer/vet/models/vet_order_model.dart';
+import 'package:agriflock/features/farmer/vet/models/vet_service_type.dart';
+import 'package:agriflock/main.dart';
 import 'package:http/http.dart' as http;
 
 class VetFarmerRepository {

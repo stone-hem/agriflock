@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:agriflock360/core/utils/log_util.dart';
-import 'package:agriflock360/core/utils/result.dart';
-import 'package:agriflock360/features/farmer/payg/models/subscription_plans_model.dart';
+import 'package:agriflock/core/utils/log_util.dart';
+import 'package:agriflock/core/utils/result.dart';
+import 'package:agriflock/features/farmer/subscription/models/subscription_plan_model.dart';
 import 'package:http/http.dart' as http;
 
 import '../../../../main.dart';
@@ -31,10 +31,7 @@ class SubscriptionRepository {
       }
     } on SocketException catch (e) {
       LogUtil.error('Network error in getActivePlans: $e');
-      return const Failure(
-        message: 'No internet connection. Pull down to retry.',
-        statusCode: 0,
-      );
+      return const Failure(message: 'No internet connection. Pull down to retry.', statusCode: 0);
     } catch (e) {
       LogUtil.error('Error in getActivePlans: $e');
       return Failure(message: e.toString());
@@ -65,10 +62,7 @@ class SubscriptionRepository {
       }
     } on SocketException catch (e) {
       LogUtil.error('Network error in subscribeToPlan: $e');
-      return const Failure(
-        message: 'No internet connection. Please try again.',
-        statusCode: 0,
-      );
+      return const Failure(message: 'No internet connection. Please try again.', statusCode: 0);
     } catch (e) {
       LogUtil.error('Error in subscribeToPlan: $e');
       return Failure(message: e.toString());
@@ -83,11 +77,7 @@ class SubscriptionRepository {
       LogUtil.info('Get Recommended Plan API Response: $jsonResponse');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        return Success(
-          PlanRecommendationResponse.fromJson(
-            jsonResponse as Map<String, dynamic>,
-          ),
-        );
+        return Success(PlanRecommendationResponse.fromJson(jsonResponse as Map<String, dynamic>));
       } else {
         return Failure(
           message: jsonResponse is Map
@@ -99,10 +89,7 @@ class SubscriptionRepository {
       }
     } on SocketException catch (e) {
       LogUtil.error('Network error in getRecommendedPlan: $e');
-      return const Failure(
-        message: 'No internet connection. Pull down to retry.',
-        statusCode: 0,
-      );
+      return const Failure(message: 'No internet connection. Pull down to retry.', statusCode: 0);
     } catch (e) {
       LogUtil.error('Error in getRecommendedPlan: $e');
       return Failure(message: e.toString());
@@ -119,37 +106,18 @@ class SubscriptionRepository {
     String? sortOrder,
   }) async {
     try {
-      // Build query parameters
       final queryParams = <String, String>{};
-
-      if (status != null && status.isNotEmpty) {
-        queryParams['status'] = status;
-      }
-
-      if (planType != null && planType.isNotEmpty) {
-        queryParams['plan_type'] = planType;
-      }
-
-      if (sortBy != null && sortBy.isNotEmpty) {
-        queryParams['sort_by'] = sortBy;
-      }
-
-      if (sortOrder != null && sortOrder.isNotEmpty) {
-        queryParams['sort_order'] = sortOrder;
-      }
-
+      if (status != null && status.isNotEmpty) queryParams['status'] = status;
+      if (planType != null && planType.isNotEmpty) queryParams['plan_type'] = planType;
+      if (sortBy != null && sortBy.isNotEmpty) queryParams['sort_by'] = sortBy;
+      if (sortOrder != null && sortOrder.isNotEmpty) queryParams['sort_order'] = sortOrder;
       queryParams['page'] = page.toString();
       queryParams['limit'] = limit.toString();
 
-      // Build query string
       final queryString = Uri(queryParameters: queryParams).query;
-
-      // Assuming the endpoint is /subscription/history or similar
-      // Adjust the endpoint according to your actual API
       final endpoint = '/app-subscriptions${queryString.isNotEmpty ? '?$queryString' : ''}';
 
       final response = await apiClient.get(endpoint);
-
       final jsonResponse = jsonDecode(response.body);
       LogUtil.info('Get Subscription History API Response: $jsonResponse');
 
@@ -164,13 +132,9 @@ class SubscriptionRepository {
       }
     } on SocketException catch (e) {
       LogUtil.error('Network error in getSubscriptionHistory: $e');
-      return const Failure(
-        message: 'No internet connection',
-        statusCode: 0,
-      );
+      return const Failure(message: 'No internet connection', statusCode: 0);
     } catch (e) {
       LogUtil.error('Error in getSubscriptionHistory: $e');
-
       if (e is http.Response) {
         return Failure(
           message: 'Failed to fetch subscription history',
@@ -178,7 +142,6 @@ class SubscriptionRepository {
           statusCode: e.statusCode,
         );
       }
-
       return Failure(message: e.toString());
     }
   }

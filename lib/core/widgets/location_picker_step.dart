@@ -1,4 +1,4 @@
-import 'package:agriflock360/core/constants/app_constants.dart';
+import 'package:agriflock/core/constants/app_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';

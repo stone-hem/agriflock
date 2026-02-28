@@ -1,5 +1,6 @@
-import 'package:agriflock360/features/farmer/devices/models/device_model.dart';
-import 'package:agriflock360/features/farmer/devices/repository/devices_repo.dart';
+import 'package:agriflock/app_routes.dart';
+import 'package:agriflock/features/farmer/devices/models/device_model.dart';
+import 'package:agriflock/features/farmer/devices/repository/devices_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -503,6 +504,28 @@ class _DeviceCard extends StatelessWidget {
                 ),
               ),
             ),
+            if (device.isPaygLocked) ...[
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: Builder(
+                  builder: (context) => OutlinedButton.icon(
+                    onPressed: () => context.push(AppRoutes.paygIntro, extra: device),
+                    icon: const Icon(Icons.credit_card_outlined, size: 16),
+                    label: const Text('Manage Device Lease'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.orange.shade700,
+                      side: BorderSide(color: Colors.orange.shade400),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

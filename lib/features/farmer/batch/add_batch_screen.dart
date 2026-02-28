@@ -1,18 +1,18 @@
 import 'dart:io';
-import 'package:agriflock360/core/utils/api_error_handler.dart';
-import 'package:agriflock360/core/utils/date_util.dart';
-import 'package:agriflock360/core/utils/result.dart';
-import 'package:agriflock360/core/utils/toast_util.dart';
-import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
-import 'package:agriflock360/core/widgets/photo_upload.dart';
-import 'package:agriflock360/core/widgets/reusable_decimal_input.dart';
-import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
-import 'package:agriflock360/core/widgets/reusable_input.dart';
-import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
-import 'package:agriflock360/features/farmer/batch/model/bird_type.dart';
-import 'package:agriflock360/features/farmer/batch/repo/batch_house_repo.dart';
-import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
-import 'package:agriflock360/main.dart';
+import 'package:agriflock/core/utils/api_error_handler.dart';
+import 'package:agriflock/core/utils/date_util.dart';
+import 'package:agriflock/core/utils/result.dart';
+import 'package:agriflock/core/utils/toast_util.dart';
+import 'package:agriflock/core/widgets/custom_date_text_field.dart';
+import 'package:agriflock/core/widgets/photo_upload.dart';
+import 'package:agriflock/core/widgets/reusable_decimal_input.dart';
+import 'package:agriflock/core/widgets/reusable_dropdown.dart';
+import 'package:agriflock/core/widgets/reusable_input.dart';
+import 'package:agriflock/features/farmer/batch/model/batch_model.dart';
+import 'package:agriflock/features/farmer/batch/model/bird_type.dart';
+import 'package:agriflock/features/farmer/batch/repo/batch_house_repo.dart';
+import 'package:agriflock/features/farmer/farm/models/farm_model.dart';
+import 'package:agriflock/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -37,6 +37,12 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
   final _chickCostController = TextEditingController();
   final _chickAgeController = TextEditingController();
   final _hatchSourceController = TextEditingController();
+  String? _selectedHatcherySource;
+
+  static const List<String> _hatcheriesList = [
+    'Kenchic', 'Suguna', 'Isinya', 'Kenbrid', 'Uzima Chicken', 'Kukuchic', 'Others',
+  ];
+
   final _repository = BatchHouseRepository();
 
   String? _selectedBirdTypeId;
@@ -481,13 +487,27 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                 const SizedBox(height: 20),
 
                 // Hatch Source (Optional) - Only for purchased chicks
-                ReusableInput(
+                ReusableDropdown<String>(
+                  value: _selectedHatcherySource,
                   topLabel: 'Hatchery/Source (Optional)',
-                  controller: _hatchSourceController,
-                  labelText: 'Where did you purchase the chicks?',
-                  hintText: 'e.g., XYZ Hatchery, Local Market, Farm Name',
-                  maxLines: 2,
+                  hintText: 'Select hatchery or source',
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _selectedHatcherySource = newValue;
+                      if (newValue != 'Others') _hatchSourceController.clear();
+                    });
+                  },
+                  items: _hatcheriesList.map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(value: value, child: Text(value));
+                  }).toList(),
                 ),
+                if (_selectedHatcherySource == 'Others') ...[
+                  const SizedBox(height: 12),
+                  ReusableInput(
+                    controller: _hatchSourceController,
+                    hintText: 'Please specify hatchery or source',
+                  ),
+                ],
                 const SizedBox(height: 20),
 
                 // Show calculated hatch date for both modes
@@ -1053,9 +1073,11 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
         'expected_weight': _expectedWeightController.text.isNotEmpty?double.parse(_expectedWeightController.text.trim()):null,
         'purchase_cost': double.tryParse(_chickCostController.text.trim()) ?? 0,
         'age_at_purchase': _isOwnHatch ? 0 : (int.tryParse(_chickAgeController.text.trim()) ?? 0),
-        'hatchery_source': !_isOwnHatch && _hatchSourceController.text.isNotEmpty
-            ? _hatchSourceController.text.trim()
-            : null, // Optional hatch source
+        'hatchery_source': !_isOwnHatch && _selectedHatcherySource != null
+            ? (_selectedHatcherySource == 'Others'
+                ? (_hatchSourceController.text.trim().isNotEmpty ? _hatchSourceController.text.trim() : null)
+                : _selectedHatcherySource)
+            : null,
         'feeding_time': _selectedFeedingTimeCategory,
         'feeding_schedule': selectedFeedingTimes.join(
           ',',

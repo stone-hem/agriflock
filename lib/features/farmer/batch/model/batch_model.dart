@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:agriflock360/core/utils/type_safe_utils.dart'; // Adjust the import path as needed
+import 'package:agriflock/core/utils/type_safe_utils.dart'; // Adjust the import path as needed
 
 class BatchModel {
   final String id;

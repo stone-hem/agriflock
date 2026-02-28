@@ -1,6 +1,6 @@
-import 'package:agriflock360/features/vet/schedules/models/visit_model.dart';
-import 'package:agriflock360/features/vet/schedules/repo/visit_repo.dart';
-import 'package:agriflock360/features/vet/schedules/widgets/visit_details_section.dart';
+import 'package:agriflock/features/vet/schedules/models/visit_model.dart';
+import 'package:agriflock/features/vet/schedules/repo/visit_repo.dart';
+import 'package:agriflock/features/vet/schedules/widgets/visit_details_section.dart';
 import 'package:flutter/material.dart';
 
 class PendingVisitCard extends StatefulWidget {

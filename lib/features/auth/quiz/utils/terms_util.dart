@@ -1,4 +1,4 @@
-import 'package:agriflock360/features/auth/quiz/shared/vet_terms_dialog.dart';
+import 'package:agriflock/features/auth/quiz/shared/vet_terms_dialog.dart';
 import 'package:flutter/material.dart';
 
 class TermsUtil {

@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:agriflock360/core/notifications/notification_model.dart';
-import 'package:agriflock360/core/utils/log_util.dart';
-import 'package:agriflock360/core/utils/secure_storage.dart';
+import 'package:agriflock/core/notifications/notification_model.dart';
+import 'package:agriflock/core/utils/log_util.dart';
+import 'package:agriflock/core/utils/secure_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:web_socket_channel/web_socket_channel.dart';

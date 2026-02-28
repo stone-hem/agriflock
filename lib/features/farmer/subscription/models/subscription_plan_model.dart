@@ -1,4 +1,4 @@
-import 'package:agriflock360/core/utils/type_safe_utils.dart';
+import 'package:agriflock/core/utils/type_safe_utils.dart';
 
 class SubscriptionPlansResponse {
   final List<SubscriptionPlanItem> data;
@@ -11,11 +11,10 @@ class SubscriptionPlansResponse {
 
   factory SubscriptionPlansResponse.fromJson(Map<String, dynamic> json) {
     final dataList = TypeUtils.toListSafe<dynamic>(json['data']);
-
     return SubscriptionPlansResponse(
       data: dataList
           .map((x) => SubscriptionPlanItem.fromJson(
-          x is Map<String, dynamic> ? x : {}))
+              x is Map<String, dynamic> ? x : {}))
           .toList(),
       total: TypeUtils.toIntSafe(json['total']),
     );
@@ -64,7 +63,6 @@ class SubscriptionPlanItem {
 
   factory SubscriptionPlanItem.fromJson(Map<String, dynamic> json) {
     final planMap = TypeUtils.toMapSafe(json['plan']);
-
     return SubscriptionPlanItem(
       id: TypeUtils.toStringSafe(json['id']),
       userId: TypeUtils.toStringSafe(json['userId']),
@@ -124,7 +122,6 @@ class SubscriptionPlan {
 
   factory SubscriptionPlan.fromJson(Map<String, dynamic> json) {
     final featuresMap = TypeUtils.toMapSafe(json['features']);
-
     return SubscriptionPlan(
       id: TypeUtils.toStringSafe(json['id']),
       planType: TypeUtils.toStringSafe(json['planType']),
@@ -146,7 +143,6 @@ class SubscriptionPlan {
     'features': features.toJson(),
   };
 
-  // Helper method to safely parse string list
   static List<String> _parseStringList(dynamic value) {
     final list = TypeUtils.toListSafe<dynamic>(value);
     return list.map((item) => TypeUtils.toStringSafe(item)).toList();
@@ -231,7 +227,6 @@ class ActivePlan {
 
   factory ActivePlan.fromJson(Map<String, dynamic> json) {
     final featuresMap = TypeUtils.toMapSafe(json['features']);
-
     return ActivePlan(
       id: TypeUtils.toStringSafe(json['id']),
       planType: TypeUtils.toStringSafe(json['planType']),
@@ -269,17 +264,13 @@ class ActivePlan {
     'updatedAt': updatedAt,
   };
 
-  // Helper method to safely parse string list
   static List<String> _parseStringList(dynamic value) {
     final list = TypeUtils.toListSafe<dynamic>(value);
     return list.map((item) => TypeUtils.toStringSafe(item)).toList();
   }
 
-  /// Human-readable feature descriptions for display
   List<String> get readableFeatures {
     final list = <String>[];
-
-    // Chick capacity
     if (features.maxChicks != null && features.minChicks != null) {
       list.add('Manage ${features.minChicks} to ${features.maxChicks} chicks per batch');
     } else if (features.maxChicks != null) {
@@ -287,8 +278,6 @@ class ActivePlan {
     } else if (features.minChicks != null) {
       list.add('Manage ${features.minChicks}+ chicks — no upper limit');
     }
-
-    // Included modules
     for (final module in includedModules) {
       switch (module) {
         case 'VACCINATIONS':
@@ -303,8 +292,6 @@ class ActivePlan {
           list.add(module[0] + module.substring(1).toLowerCase());
       }
     }
-
-    // Support level
     switch (features.supportLevel) {
       case 'standard':
         list.add('Standard community support');
@@ -317,21 +304,11 @@ class ActivePlan {
           list.add('${features.supportLevel[0].toUpperCase()}${features.supportLevel.substring(1)} support');
         }
     }
-
-    // Trial
-    if (features.trialPeriodDays > 0) {
-      list.add('${features.trialPeriodDays}-day free trial included');
-    }
-
-    // Marketplace access
-    if (features.marketplaceAccess == 'pay_per_use') {
-      list.add('Pay-per-use marketplace extensions');
-    }
-
+    if (features.trialPeriodDays > 0) list.add('${features.trialPeriodDays}-day free trial included');
+    if (features.marketplaceAccess == 'pay_per_use') list.add('Pay-per-use marketplace extensions');
     return list;
   }
 
-  /// Short chick-range label
   String get chicksLabel {
     if (features.maxChicks != null && features.minChicks != null) {
       return '${features.minChicks}–${features.maxChicks} chicks';
@@ -362,14 +339,12 @@ class PlanRecommendationResponse {
     final recMap = TypeUtils.toMapSafe(json['recommendedPlan']) ?? {};
     final metricsMap = TypeUtils.toMapSafe(json['farmMetrics']) ?? {};
     final altList = TypeUtils.toListSafe<dynamic>(json['alternativePlans']);
-
     return PlanRecommendationResponse(
       recommendedPlan: RecommendedPlan.fromJson(recMap),
       farmMetrics: FarmMetrics.fromJson(metricsMap),
       reasoning: TypeUtils.toStringSafe(json['reasoning']),
       alternativePlans: altList
-          .map((e) => AlternativePlan.fromJson(
-              e is Map<String, dynamic> ? e : {}))
+          .map((e) => AlternativePlan.fromJson(e is Map<String, dynamic> ? e : {}))
           .toList(),
     );
   }
@@ -418,7 +393,6 @@ class RecommendedPlan {
     return list.map((item) => TypeUtils.toStringSafe(item)).toList();
   }
 
-  /// Human-readable feature list for display
   List<String> get readableFeatures {
     final list = <String>[];
     for (final module in includedModules) {
@@ -435,9 +409,7 @@ class RecommendedPlan {
           list.add(module[0] + module.substring(1).toLowerCase());
       }
     }
-    if (features.minChicks != null) {
-      list.add('Designed for ${features.minChicks}+ chicks');
-    }
+    if (features.minChicks != null) list.add('Designed for ${features.minChicks}+ chicks');
     switch (features.supportLevel) {
       case 'premium':
         list.add('Premium 24/7 dedicated support');
@@ -509,90 +481,55 @@ class AlternativePlan {
   }
 }
 
-// Enum for subscription status (optional but recommended)
 enum SubscriptionPlanStatus {
-  active,
-  expired,
-  cancelled,
-  pending,
-  trial,
-  unknown;
+  active, expired, cancelled, pending, trial, unknown;
 
   factory SubscriptionPlanStatus.fromString(String value) {
     switch (value.toUpperCase()) {
-      case 'ACTIVE':
-        return SubscriptionPlanStatus.active;
-      case 'EXPIRED':
-        return SubscriptionPlanStatus.expired;
-      case 'CANCELLED':
-        return SubscriptionPlanStatus.cancelled;
-      case 'PENDING':
-        return SubscriptionPlanStatus.pending;
-      case 'TRIAL':
-        return SubscriptionPlanStatus.trial;
-      default:
-        return SubscriptionPlanStatus.unknown;
+      case 'ACTIVE': return SubscriptionPlanStatus.active;
+      case 'EXPIRED': return SubscriptionPlanStatus.expired;
+      case 'CANCELLED': return SubscriptionPlanStatus.cancelled;
+      case 'PENDING': return SubscriptionPlanStatus.pending;
+      case 'TRIAL': return SubscriptionPlanStatus.trial;
+      default: return SubscriptionPlanStatus.unknown;
     }
   }
 
   String get displayName {
     switch (this) {
-      case SubscriptionPlanStatus.active:
-        return 'Active';
-      case SubscriptionPlanStatus.expired:
-        return 'Expired';
-      case SubscriptionPlanStatus.cancelled:
-        return 'Cancelled';
-      case SubscriptionPlanStatus.pending:
-        return 'Pending';
-      case SubscriptionPlanStatus.trial:
-        return 'Trial';
-      case SubscriptionPlanStatus.unknown:
-        return 'Unknown';
+      case SubscriptionPlanStatus.active: return 'Active';
+      case SubscriptionPlanStatus.expired: return 'Expired';
+      case SubscriptionPlanStatus.cancelled: return 'Cancelled';
+      case SubscriptionPlanStatus.pending: return 'Pending';
+      case SubscriptionPlanStatus.trial: return 'Trial';
+      case SubscriptionPlanStatus.unknown: return 'Unknown';
     }
   }
 }
 
-// Enum for plan types (optional but recommended)
 enum PlanType {
-  silver,
-  platinum,
-  gold,
-  bronze,
-  free,
-  unknown;
+  silver, platinum, gold, bronze, free, unknown;
 
   factory PlanType.fromString(String value) {
     switch (value.toUpperCase()) {
-      case 'SILVER':
-        return PlanType.silver;
-      case 'PLATINUM':
-        return PlanType.platinum;
-      case 'GOLD':
-        return PlanType.gold;
-      case 'BRONZE':
-        return PlanType.bronze;
-      case 'FREE':
-        return PlanType.free;
-      default:
-        return PlanType.unknown;
+      case 'SILVER': return PlanType.silver;
+      case 'PLATINUM': return PlanType.platinum;
+      case 'GOLD': return PlanType.gold;
+      case 'BRONZE': return PlanType.bronze;
+      case 'FREE': return PlanType.free;
+      default: return PlanType.unknown;
     }
   }
 
   String get displayName {
     switch (this) {
-      case PlanType.silver:
-        return 'Silver';
-      case PlanType.platinum:
-        return 'Platinum';
-      case PlanType.gold:
-        return 'Gold';
-      case PlanType.bronze:
-        return 'Bronze';
-      case PlanType.free:
-        return 'Free';
-      case PlanType.unknown:
-        return 'Unknown';
+      case PlanType.silver: return 'Silver';
+      case PlanType.platinum: return 'Platinum';
+      case PlanType.gold: return 'Gold';
+      case PlanType.bronze: return 'Bronze';
+      case PlanType.free: return 'Free';
+      case PlanType.unknown: return 'Unknown';
     }
   }
 }
+

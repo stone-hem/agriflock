@@ -1,8 +1,8 @@
-import 'package:agriflock360/features/farmer/more/models/activity_model.dart';
-import 'package:agriflock360/features/farmer/more/repo/activity_repository.dart';
+import 'package:agriflock/features/farmer/more/models/activity_model.dart';
+import 'package:agriflock/features/farmer/more/repo/activity_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock/core/utils/result.dart';
 
 class RecentActivityScreen extends StatefulWidget {
   const RecentActivityScreen({super.key});

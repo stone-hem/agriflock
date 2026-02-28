@@ -1,7 +1,7 @@
-import 'package:agriflock360/core/model/user_model.dart';
-import 'package:agriflock360/core/utils/secure_storage.dart';
-import 'package:agriflock360/features/shared/nav_destination_item.dart';
-import 'package:agriflock360/main.dart';
+import 'package:agriflock/core/model/user_model.dart';
+import 'package:agriflock/core/utils/secure_storage.dart';
+import 'package:agriflock/features/shared/nav_destination_item.dart';
+import 'package:agriflock/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';

@@ -1,18 +1,22 @@
-import 'package:agriflock360/core/utils/toast_util.dart';
-import 'package:agriflock360/features/farmer/payg/models/subscription_plans_model.dart';
-import 'package:agriflock360/features/farmer/payg/repo/subscription_repo.dart';
-import 'package:agriflock360/main.dart';
+import 'package:agriflock/app_routes.dart';
+import 'package:agriflock/core/utils/toast_util.dart';
+import 'package:agriflock/features/farmer/subscription/models/subscription_plan_model.dart';
+import 'package:agriflock/features/farmer/subscription/repo/subscription_repo.dart';
+import 'package:agriflock/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class Day1WelcomeScreen extends StatefulWidget {
-  const Day1WelcomeScreen({super.key});
+/// Day-1 screen shown after the experience-selection screen.
+/// Farmer picks a subscription plan (free trial or paid) to get started.
+class SubscriptionPlansScreen extends StatefulWidget {
+  const SubscriptionPlansScreen({super.key});
 
   @override
-  State<Day1WelcomeScreen> createState() => _Day1WelcomeScreenState();
+  State<SubscriptionPlansScreen> createState() =>
+      _SubscriptionPlansScreenState();
 }
 
-class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
+class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
   final SubscriptionRepository _repo = SubscriptionRepository();
 
   List<ActivePlan> _plans = [];
@@ -39,7 +43,7 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
           _selectedPlanIndex = trialIndex >= 0 ? trialIndex : null;
         });
       },
-      failure: (_, _, _) {
+      failure: (_, __, ___) {
         setState(() => _isLoadingPlans = false);
       },
     );
@@ -90,14 +94,16 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
         },
       );
     } else {
-      // Paid plan: go to payment screen with plan details
+      // Paid plan: go to subscription payment screen
       setState(() => _isSubscribing = false);
-      context.push('/payg/payment', extra: {
+      context.push(AppRoutes.subscriptionPayment, extra: {
         'planId': plan.id,
         'planName': plan.name,
         'planType': plan.planType,
         'amount': plan.priceAmount,
         'currency': plan.currency,
+        'billingCycleDays': plan.billingCycleDays,
+        'isOnboarding': true,
       });
     }
   }
@@ -143,7 +149,7 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
                       color: Colors.white,
                       shape: BoxShape.circle,
                     ),
-                    child:  Image.asset(
+                    child: Image.asset(
                       'assets/logos/Logo_0725.png',
                       fit: BoxFit.cover,
                       width: 40,
@@ -172,7 +178,7 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Choose a plan to get started (All plans are free for 60 days) ',
+                    'Choose a plan to get started (All plans are free for 60 days)',
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.white.withValues(alpha: 0.9),
@@ -232,7 +238,7 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-            itemCount: _plans.length + 1, // +1 for the header
+            itemCount: _plans.length + 1,
             itemBuilder: (context, index) {
               if (index == 0) {
                 return Padding(
@@ -251,8 +257,6 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
             },
           ),
         ),
-
-        // ── Bottom buttons ───────────────────────────────────
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
           child: _buildContinueButton(),
@@ -263,7 +267,9 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
 
   Widget _buildContinueButton() {
     final plan = _selectedPlan;
-    final buttonColor = plan != null ? _planColor(plan.planType) : Theme.of(context).primaryColor;
+    final buttonColor = plan != null
+        ? _planColor(plan.planType)
+        : Theme.of(context).primaryColor;
 
     return SizedBox(
       width: double.infinity,
@@ -292,7 +298,8 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
               )
             : Text(
                 _buttonText,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
       ),
     );
@@ -327,7 +334,6 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
         ),
         child: Column(
           children: [
-            // ── Header (always visible) ──────────────────────
             InkWell(
               borderRadius: BorderRadius.circular(14),
               onTap: () {
@@ -337,7 +343,8 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
                 });
               },
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 child: Row(
                   children: [
                     // Radio indicator
@@ -347,7 +354,8 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: isSelected ? color : Colors.grey.shade400,
+                          color:
+                              isSelected ? color : Colors.grey.shade400,
                           width: 2,
                         ),
                       ),
@@ -372,7 +380,8 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
                         color: color.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(_planIcon(plan.planType), color: color, size: 20),
+                      child:
+                          Icon(_planIcon(plan.planType), color: color, size: 20),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -394,8 +403,12 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
                                 : '${plan.currency} ${plan.priceAmount.toStringAsFixed(plan.priceAmount % 1 == 0 ? 0 : 2)}/mo',
                             style: TextStyle(
                               fontSize: 12,
-                              color: isTrial ? Colors.green : Colors.grey[600],
-                              fontWeight: isTrial ? FontWeight.w600 : FontWeight.normal,
+                              color: isTrial
+                                  ? Colors.green
+                                  : Colors.grey[600],
+                              fontWeight: isTrial
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
                             ),
                           ),
                         ],
@@ -403,7 +416,8 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
                     ),
                     if (isTrial)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
                           color: Colors.green.shade50,
                           borderRadius: BorderRadius.circular(20),
@@ -432,8 +446,9 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
             AnimatedCrossFade(
               firstChild: const SizedBox.shrink(),
               secondChild: _buildExpandedDetails(plan, color),
-              crossFadeState:
-                  isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+              crossFadeState: isExpanded
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
               duration: const Duration(milliseconds: 200),
             ),
           ],
@@ -443,7 +458,7 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
   }
 
   Widget _buildExpandedDetails(ActivePlan plan, Color color) {
-    final modules = plan.includedModules.toSet().toList(); // dedupe
+    final modules = plan.includedModules.toSet().toList();
     final features = plan.readableFeatures;
 
     return Container(
@@ -458,12 +473,14 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
           if (plan.description.isNotEmpty) ...[
             Text(
               plan.description,
-              style: TextStyle(fontSize: 12.5, color: Colors.grey[600], height: 1.35),
+              style: TextStyle(
+                  fontSize: 12.5,
+                  color: Colors.grey[600],
+                  height: 1.35),
             ),
             const SizedBox(height: 10),
           ],
 
-          // Modules chips
           if (modules.isNotEmpty) ...[
             Text(
               'Included modules',
@@ -480,14 +497,18 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
               runSpacing: 4,
               children: modules.map((m) {
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: color.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     m[0] + m.substring(1).toLowerCase(),
-                    style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: color,
+                        fontWeight: FontWeight.w600),
                   ),
                 );
               }).toList(),
@@ -495,7 +516,6 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
             const SizedBox(height: 10),
           ],
 
-          // Features list
           if (features.isNotEmpty) ...[
             Text(
               'Features',
@@ -512,12 +532,16 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.check_circle_rounded, color: color, size: 15),
+                      Icon(Icons.check_circle_rounded,
+                          color: color, size: 15),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
                           f,
-                          style: TextStyle(fontSize: 12, color: Colors.grey[700], height: 1.3),
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[700],
+                              height: 1.3),
                         ),
                       ),
                     ],
@@ -525,7 +549,6 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
                 )),
           ],
 
-          // Trial-specific note
           if (plan.isFreeTrial) ...[
             const SizedBox(height: 8),
             Container(
@@ -536,12 +559,14 @@ class _Day1WelcomeScreenState extends State<Day1WelcomeScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline, size: 16, color: Colors.green[700]),
+                  Icon(Icons.info_outline,
+                      size: 16, color: Colors.green[700]),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Full access to all features during your trial. No payment required.',
-                      style: TextStyle(fontSize: 11.5, color: Colors.green[800]),
+                      style: TextStyle(
+                          fontSize: 11.5, color: Colors.green[800]),
                     ),
                   ),
                 ],

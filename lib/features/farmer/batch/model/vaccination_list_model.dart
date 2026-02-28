@@ -1,5 +1,5 @@
-import 'package:agriflock360/core/utils/date_util.dart';
-import 'package:agriflock360/core/utils/type_safe_utils.dart';
+import 'package:agriflock/core/utils/date_util.dart';
+import 'package:agriflock/core/utils/type_safe_utils.dart';
 
 class VaccinationListResponse {
   final List<VaccinationListItem> list;

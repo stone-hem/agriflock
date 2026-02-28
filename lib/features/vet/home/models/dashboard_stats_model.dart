@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:agriflock360/core/utils/type_safe_utils.dart';
+import 'package:agriflock/core/utils/type_safe_utils.dart';
 
 class VetDashboardStats {
   final int todayVisits;

@@ -1,11 +1,11 @@
-import 'package:agriflock360/core/utils/date_util.dart';
-import 'package:agriflock360/core/utils/result.dart';
-import 'package:agriflock360/core/widgets/expense/expense_marquee_banner.dart';
-import 'package:agriflock360/features/farmer/batch/model/batch_mgt_model.dart';
-import 'package:agriflock360/features/farmer/batch/repo/batch_mgt_repo.dart';
-import 'package:agriflock360/features/farmer/report/models/batch_report_model.dart';
-import 'package:agriflock360/features/farmer/report/repo/report_repo.dart';
-import 'package:agriflock360/main.dart';
+import 'package:agriflock/core/utils/date_util.dart';
+import 'package:agriflock/core/utils/result.dart';
+import 'package:agriflock/core/widgets/expense/expense_marquee_banner.dart';
+import 'package:agriflock/features/farmer/batch/model/batch_mgt_model.dart';
+import 'package:agriflock/features/farmer/batch/repo/batch_mgt_repo.dart';
+import 'package:agriflock/features/farmer/report/models/batch_report_model.dart';
+import 'package:agriflock/features/farmer/report/repo/report_repo.dart';
+import 'package:agriflock/main.dart';
 import 'package:flutter/material.dart';
 
 class BatchReportScreen extends StatefulWidget {

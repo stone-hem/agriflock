@@ -1,11 +1,11 @@
-import 'package:agriflock360/core/widgets/expense/expense_marquee_banner.dart';
-import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
-import 'package:agriflock360/features/farmer/batch/tabs/batch_expenditures_tab.dart';
-import 'package:agriflock360/features/farmer/batch/tabs/batch_feed_tab.dart';
-import 'package:agriflock360/features/farmer/batch/tabs/batch_overview.dart';
-import 'package:agriflock360/features/farmer/batch/tabs/batch_products_tab.dart';
-import 'package:agriflock360/features/farmer/batch/tabs/batch_vaccinations_tab.dart';
-import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
+import 'package:agriflock/core/widgets/expense/expense_marquee_banner.dart';
+import 'package:agriflock/features/farmer/batch/model/batch_model.dart';
+import 'package:agriflock/features/farmer/batch/tabs/batch_expenditures_tab.dart';
+import 'package:agriflock/features/farmer/batch/tabs/batch_feed_tab.dart';
+import 'package:agriflock/features/farmer/batch/tabs/batch_overview.dart';
+import 'package:agriflock/features/farmer/batch/tabs/batch_products_tab.dart';
+import 'package:agriflock/features/farmer/batch/tabs/batch_vaccinations_tab.dart';
+import 'package:agriflock/features/farmer/farm/models/farm_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 

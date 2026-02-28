@@ -1,8 +1,8 @@
 import 'dart:convert';
 
-import 'package:agriflock360/core/notifications/notification_model.dart';
-import 'package:agriflock360/core/utils/result.dart';
-import 'package:agriflock360/core/utils/secure_storage.dart';
+import 'package:agriflock/core/notifications/notification_model.dart';
+import 'package:agriflock/core/utils/result.dart';
+import 'package:agriflock/core/utils/secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 /// Fetches past notifications from the REST API.
@@ -12,7 +12,7 @@ class NotificationRepository {
       : _storage = storage ?? SecureStorage();
 
   final SecureStorage _storage;
-  static const _base = 'https://api.agriflock360.com/api/v1';
+  static const _base = 'https://api.agriflock.com/api/v1';
 
   Future<Map<String, String>> _headers() async {
     final token = await _storage.getToken();

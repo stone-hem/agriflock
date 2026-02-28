@@ -1,13 +1,13 @@
-import 'package:agriflock360/app_routes.dart';
-import 'package:agriflock360/core/services/social_auth_service.dart';
-import 'package:agriflock360/core/utils/api_error_handler.dart';
-import 'package:agriflock360/core/utils/first_login_util.dart';
-import 'package:agriflock360/core/utils/result.dart';
-import 'package:agriflock360/core/utils/toast_util.dart';
-import 'package:agriflock360/features/auth/repo/manual_auth_repo.dart';
-import 'package:agriflock360/features/auth/shared/auth_text_field.dart';
-import 'package:agriflock360/features/auth/shared/country_phone_input.dart';
-import 'package:agriflock360/features/auth/shared/country_service.dart';
+import 'package:agriflock/app_routes.dart';
+import 'package:agriflock/core/services/social_auth_service.dart';
+import 'package:agriflock/core/utils/api_error_handler.dart';
+import 'package:agriflock/core/utils/first_login_util.dart';
+import 'package:agriflock/core/utils/result.dart';
+import 'package:agriflock/core/utils/toast_util.dart';
+import 'package:agriflock/features/auth/repo/manual_auth_repo.dart';
+import 'package:agriflock/features/auth/shared/auth_text_field.dart';
+import 'package:agriflock/features/auth/shared/country_phone_input.dart';
+import 'package:agriflock/features/auth/shared/country_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -637,7 +637,7 @@ class _SignupScreenState extends State<SignupScreen> {
         title: const Text('Terms and Conditions'),
         content: SingleChildScrollView(
           child: Text(
-            'By creating an account with AgriFlock360, you agree to:\n\n'
+            'By creating an account with agriflock, you agree to:\n\n'
                 '1. Provide accurate and complete information\n'
                 '2. Maintain the security of your account credentials\n'
                 '3. Accept responsibility for all activities under your account\n'

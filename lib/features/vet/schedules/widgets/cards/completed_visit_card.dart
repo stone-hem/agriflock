@@ -1,6 +1,6 @@
-import 'package:agriflock360/core/utils/date_util.dart';
-import 'package:agriflock360/features/vet/schedules/models/visit_model.dart';
-import 'package:agriflock360/features/vet/schedules/widgets/visit_details_section.dart';
+import 'package:agriflock/core/utils/date_util.dart';
+import 'package:agriflock/features/vet/schedules/models/visit_model.dart';
+import 'package:agriflock/features/vet/schedules/widgets/visit_details_section.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 

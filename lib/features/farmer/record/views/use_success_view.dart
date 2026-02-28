@@ -1,6 +1,6 @@
-import 'package:agriflock360/features/farmer/batch/model/batch_list_model.dart';
-import 'package:agriflock360/features/farmer/expense/model/expense_category.dart';
-import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
+import 'package:agriflock/features/farmer/batch/model/batch_list_model.dart';
+import 'package:agriflock/features/farmer/expense/model/expense_category.dart';
+import 'package:agriflock/features/farmer/farm/models/farm_model.dart';
 import 'package:flutter/material.dart';
 
 class UseSuccessView extends StatelessWidget {

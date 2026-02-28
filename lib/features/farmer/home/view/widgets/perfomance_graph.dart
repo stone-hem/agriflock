@@ -1,7 +1,7 @@
 import 'dart:math';
 
-import 'package:agriflock360/features/farmer/home/model/financial_overview_model.dart';
-import 'package:agriflock360/main.dart';
+import 'package:agriflock/features/farmer/home/model/financial_overview_model.dart';
+import 'package:agriflock/main.dart';
 import 'package:flutter/material.dart';
 
 class FinancialPerformanceGraph extends StatefulWidget {

@@ -1,9 +1,9 @@
-import 'package:agriflock360/core/utils/result.dart';
-import 'package:agriflock360/features/farmer/vet/models/my_order_list_item.dart';
-import 'package:agriflock360/features/farmer/vet/repo/vet_farmer_repository.dart';
+import 'package:agriflock/core/utils/result.dart';
+import 'package:agriflock/features/farmer/vet/models/my_order_list_item.dart';
+import 'package:agriflock/features/farmer/vet/repo/vet_farmer_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:agriflock360/core/utils/date_util.dart';
+import 'package:agriflock/core/utils/date_util.dart';
 
 class MyVetOrdersScreen extends StatefulWidget {
   const MyVetOrdersScreen({

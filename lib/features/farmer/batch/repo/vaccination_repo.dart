@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:agriflock360/core/utils/log_util.dart';
-import 'package:agriflock360/core/utils/result.dart';
-import 'package:agriflock360/features/farmer/batch/model/vaccination_list_model.dart';
-import 'package:agriflock360/features/farmer/batch/model/vaccination_model.dart';
-import 'package:agriflock360/features/farmer/batch/model/recommended_vaccination_model.dart';
-import 'package:agriflock360/main.dart';
+import 'package:agriflock/core/utils/log_util.dart';
+import 'package:agriflock/core/utils/result.dart';
+import 'package:agriflock/features/farmer/batch/model/vaccination_list_model.dart';
+import 'package:agriflock/features/farmer/batch/model/vaccination_model.dart';
+import 'package:agriflock/features/farmer/batch/model/recommended_vaccination_model.dart';
+import 'package:agriflock/main.dart';
 import 'package:http/http.dart' as http;
 
 class VaccinationRepository {

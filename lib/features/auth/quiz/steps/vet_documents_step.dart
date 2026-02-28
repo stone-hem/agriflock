@@ -1,6 +1,6 @@
 import 'dart:io';
-import 'package:agriflock360/core/widgets/file_upload.dart';
-import 'package:agriflock360/core/widgets/photo_upload.dart';
+import 'package:agriflock/core/widgets/file_upload.dart';
+import 'package:agriflock/core/widgets/photo_upload.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 

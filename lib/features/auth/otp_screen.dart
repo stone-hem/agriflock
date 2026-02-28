@@ -1,7 +1,7 @@
-import 'package:agriflock360/core/utils/api_error_handler.dart';
-import 'package:agriflock360/core/utils/toast_util.dart';
-import 'package:agriflock360/app_routes.dart';
-import 'package:agriflock360/features/auth/repo/manual_auth_repo.dart';
+import 'package:agriflock/core/utils/api_error_handler.dart';
+import 'package:agriflock/core/utils/toast_util.dart';
+import 'package:agriflock/app_routes.dart';
+import 'package:agriflock/features/auth/repo/manual_auth_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 

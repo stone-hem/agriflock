@@ -1,8 +1,8 @@
-import 'package:agriflock360/features/farmer/vet/models/vet_farmer_model.dart';
-import 'package:agriflock360/features/farmer/vet/repo/vet_farmer_repository.dart';
+import 'package:agriflock/features/farmer/vet/models/vet_farmer_model.dart';
+import 'package:agriflock/features/farmer/vet/repo/vet_farmer_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock/core/utils/result.dart';
 
 class VetDetailsScreen extends StatefulWidget {
   final String vetId;

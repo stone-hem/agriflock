@@ -1,7 +1,7 @@
-import 'package:agriflock360/app_routes.dart';
-import 'package:agriflock360/core/model/user_model.dart';
-import 'package:agriflock360/core/utils/date_util.dart';
-import 'package:agriflock360/core/utils/secure_storage.dart';
+import 'package:agriflock/app_routes.dart';
+import 'package:agriflock/core/model/user_model.dart';
+import 'package:agriflock/core/utils/date_util.dart';
+import 'package:agriflock/core/utils/secure_storage.dart';
 
 class FirstLoginUtil {
   /// Check if this is the user's first login session

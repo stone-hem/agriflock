@@ -1,21 +1,21 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:agriflock360/app_routes.dart';
-import 'package:agriflock360/core/utils/api_error_handler.dart';
-import 'package:agriflock360/core/utils/date_util.dart';
-import 'package:agriflock360/core/utils/log_util.dart';
-import 'package:agriflock360/core/utils/result.dart';
-import 'package:agriflock360/core/utils/toast_util.dart';
-import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
-import 'package:agriflock360/core/widgets/location_picker_step.dart';
-import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
-import 'package:agriflock360/core/widgets/reusable_input.dart';
-import 'package:agriflock360/core/widgets/reusable_decimal_input.dart';
-import 'package:agriflock360/core/widgets/photo_upload.dart';
-import 'package:agriflock360/features/farmer/batch/model/bird_type.dart';
-import 'package:agriflock360/features/farmer/batch/repo/batch_house_repo.dart';
-import 'package:agriflock360/main.dart';
+import 'package:agriflock/app_routes.dart';
+import 'package:agriflock/core/utils/api_error_handler.dart';
+import 'package:agriflock/core/utils/date_util.dart';
+import 'package:agriflock/core/utils/log_util.dart';
+import 'package:agriflock/core/utils/result.dart';
+import 'package:agriflock/core/utils/toast_util.dart';
+import 'package:agriflock/core/widgets/custom_date_text_field.dart';
+import 'package:agriflock/core/widgets/location_picker_step.dart';
+import 'package:agriflock/core/widgets/reusable_dropdown.dart';
+import 'package:agriflock/core/widgets/reusable_input.dart';
+import 'package:agriflock/core/widgets/reusable_decimal_input.dart';
+import 'package:agriflock/core/widgets/photo_upload.dart';
+import 'package:agriflock/features/farmer/batch/model/bird_type.dart';
+import 'package:agriflock/features/farmer/batch/repo/batch_house_repo.dart';
+import 'package:agriflock/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
@@ -65,6 +65,11 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
   final _chickCostController = TextEditingController();
   final _chickAgeController = TextEditingController();
   final _hatchSourceController = TextEditingController();
+  String? _selectedHatcherySource;
+
+  static const List<String> _hatcheriesList = [
+    'Kenchic', 'Suguna', 'Isinya', 'Kenbrid', 'Uzima Chicken', 'Kukuchic', 'Others',
+  ];
 
   final List<String> _batchTypes = [
     'Meat Production',
@@ -392,8 +397,10 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
         'feeding_schedule': selectedFeedingTimes.join(','),
         'purchase_cost': double.parse(_chickCostController.text.trim()),
         'age_at_purchase': int.parse(_chickAgeController.text.trim()),
-        if (!_isOwnHatch && _hatchSourceController.text.isNotEmpty)
-          'hatchery_source': _hatchSourceController.text.trim(),
+        if (!_isOwnHatch && _selectedHatcherySource != null)
+          'hatchery_source': _selectedHatcherySource == 'Others'
+              ? (_hatchSourceController.text.trim().isNotEmpty ? _hatchSourceController.text.trim() : null)
+              : _selectedHatcherySource,
         if (_currentWeightController.text.isNotEmpty)
           'current_weight':
               double.parse(_currentWeightController.text.trim()),
@@ -981,13 +988,27 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                 hintText: 'e.g., 1, 7, 14',
               ),
               const SizedBox(height: 20),
-              ReusableInput(
+              ReusableDropdown<String>(
+                value: _selectedHatcherySource,
                 topLabel: 'Hatchery/Source',
-                controller: _hatchSourceController,
-                labelText: 'Where did you purchase the chicks?',
-                hintText: 'e.g., XYZ Hatchery, Local Market, Farm Name',
-                maxLines: 2,
+                hintText: 'Select hatchery or source',
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedHatcherySource = newValue;
+                    if (newValue != 'Others') _hatchSourceController.clear();
+                  });
+                },
+                items: _hatcheriesList.map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(value: value, child: Text(value));
+                }).toList(),
               ),
+              if (_selectedHatcherySource == 'Others') ...[
+                const SizedBox(height: 12),
+                ReusableInput(
+                  controller: _hatchSourceController,
+                  hintText: 'Please specify hatchery or source',
+                ),
+              ],
               const SizedBox(height: 20),
               // Calculated hatch date display
               Container(

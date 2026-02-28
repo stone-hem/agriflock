@@ -1,13 +1,13 @@
-import 'package:agriflock360/core/utils/api_error_handler.dart';
-import 'package:agriflock360/core/utils/date_util.dart';
-import 'package:agriflock360/core/utils/result.dart';
-import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
-import 'package:agriflock360/features/farmer/batch/model/expenditure_model.dart';
-import 'package:agriflock360/features/farmer/batch/repo/batch_mgt_repo.dart';
-import 'package:agriflock360/features/farmer/batch/shared/stat_card.dart';
-import 'package:agriflock360/features/farmer/expense/model/expenditure_model.dart' as expense_model;
-import 'package:agriflock360/features/farmer/expense/repo/expenditure_repository.dart';
-import 'package:agriflock360/main.dart';
+import 'package:agriflock/core/utils/api_error_handler.dart';
+import 'package:agriflock/core/utils/date_util.dart';
+import 'package:agriflock/core/utils/result.dart';
+import 'package:agriflock/features/farmer/batch/model/batch_model.dart';
+import 'package:agriflock/features/farmer/batch/model/expenditure_model.dart';
+import 'package:agriflock/features/farmer/batch/repo/batch_mgt_repo.dart';
+import 'package:agriflock/features/farmer/batch/shared/stat_card.dart';
+import 'package:agriflock/features/farmer/expense/model/expenditure_model.dart' as expense_model;
+import 'package:agriflock/features/farmer/expense/repo/expenditure_repository.dart';
+import 'package:agriflock/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 

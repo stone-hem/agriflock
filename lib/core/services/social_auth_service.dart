@@ -1,5 +1,5 @@
-import 'package:agriflock360/core/utils/result.dart';
-import 'package:agriflock360/features/auth/repo/manual_auth_repo.dart';
+import 'package:agriflock/core/utils/result.dart';
+import 'package:agriflock/features/auth/repo/manual_auth_repo.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:google_sign_in/google_sign_in.dart';

@@ -1,12 +1,12 @@
-import 'package:agriflock360/features/farmer/batch/repo/batch_house_repo.dart';
-import 'package:agriflock360/features/farmer/quotation/models/production_quotation_model.dart';
-import 'package:agriflock360/features/farmer/quotation/repo/quotation_repository.dart';
-import 'package:agriflock360/features/farmer/quotation/widgets/image_with_desc.dart';
+import 'package:agriflock/features/farmer/batch/repo/batch_house_repo.dart';
+import 'package:agriflock/features/farmer/quotation/models/production_quotation_model.dart';
+import 'package:agriflock/features/farmer/quotation/repo/quotation_repository.dart';
+import 'package:agriflock/features/farmer/quotation/widgets/image_with_desc.dart';
 import 'package:flutter/material.dart';
-import 'package:agriflock360/core/utils/result.dart';
-import 'package:agriflock360/core/utils/api_error_handler.dart';
-import 'package:agriflock360/core/utils/toast_util.dart';
-import 'package:agriflock360/features/farmer/batch/model/bird_type.dart';
+import 'package:agriflock/core/utils/result.dart';
+import 'package:agriflock/core/utils/api_error_handler.dart';
+import 'package:agriflock/core/utils/toast_util.dart';
+import 'package:agriflock/features/farmer/batch/model/bird_type.dart';
 
 // ─── FRONTEND CALCULATOR CONSTANTS ───────────────────────────────────────────
 

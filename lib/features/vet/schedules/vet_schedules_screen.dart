@@ -1,12 +1,12 @@
-import 'package:agriflock360/core/utils/result.dart';
-import 'package:agriflock360/core/widgets/alert_button.dart';
-import 'package:agriflock360/core/widgets/vet_unverified_banner.dart';
-import 'package:agriflock360/features/vet/schedules/models/visit_stats.dart';
-import 'package:agriflock360/features/vet/schedules/repo/visit_repo.dart';
-import 'package:agriflock360/features/vet/schedules/widgets/status_chip.dart';
-import 'package:agriflock360/features/vet/schedules/widgets/visits_list_view.dart';
+import 'package:agriflock/core/utils/result.dart';
+import 'package:agriflock/core/widgets/alert_button.dart';
+import 'package:agriflock/core/widgets/vet_unverified_banner.dart';
+import 'package:agriflock/features/vet/schedules/models/visit_stats.dart';
+import 'package:agriflock/features/vet/schedules/repo/visit_repo.dart';
+import 'package:agriflock/features/vet/schedules/widgets/status_chip.dart';
+import 'package:agriflock/features/vet/schedules/widgets/visits_list_view.dart';
 import 'package:flutter/material.dart';
-import 'package:agriflock360/features/vet/schedules/models/visit_model.dart';
+import 'package:agriflock/features/vet/schedules/models/visit_model.dart';
 
 class VetSchedulesScreen extends StatefulWidget {
   const VetSchedulesScreen({super.key});

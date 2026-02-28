@@ -1,32 +1,30 @@
+import 'package:agriflock/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class PAYGDashboard extends StatelessWidget {
-  const PAYGDashboard({super.key});
+/// PAYG Dashboard — central hub for managing device lease payments.
+/// Shows current lease status, device info, quick actions, and recent payments.
+class PaygDashboardScreen extends StatelessWidget {
+  const PaygDashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title:Row(
+        title: Row(
           children: [
             Image.asset(
               'assets/logos/Logo_0725.png',
               fit: BoxFit.cover,
               width: 40,
               height: 40,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: Colors.green,
-                  child: const Icon(
-                    Icons.image,
-                    size: 100,
-                    color: Colors.white54,
-                  ),
-                );
-              },
+              errorBuilder: (context, error, stackTrace) => Container(
+                color: Colors.green,
+                child: const Icon(Icons.image, size: 40, color: Colors.white54),
+              ),
             ),
-            const Text('PAYG Dashboard'),
+            const SizedBox(width: 8),
+            const Text('Device Lease'),
           ],
         ),
         centerTitle: false,
@@ -42,19 +40,12 @@ class PAYGDashboard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Lease Status Card
             _buildLeaseStatusCard(context),
             const SizedBox(height: 24),
-
-            // Device Status
             _buildDeviceStatus(),
             const SizedBox(height: 32),
-
-            // Quick Actions
             _buildQuickActions(context),
             const SizedBox(height: 32),
-
-            // Recent Payments
             _buildRecentPayments(context),
           ],
         ),
@@ -162,23 +153,18 @@ class PAYGDashboard extends StatelessWidget {
                   child: const Icon(Icons.lock_open, color: Colors.green),
                 ),
                 const SizedBox(width: 16),
-                Expanded(
+                const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Text('Device Status',
+                          style: TextStyle(color: Colors.grey, fontSize: 14)),
+                      SizedBox(height: 4),
                       Text(
-                        'Device Status',
+                        '🔓 Unlocked — All Features Available',
                         style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '🔓 Unlocked - All Features Available',
-                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          fontSize: 15,
                           color: Colors.green,
                         ),
                       ),
@@ -191,11 +177,8 @@ class PAYGDashboard extends StatelessWidget {
             Divider(color: Colors.grey.shade200),
             const SizedBox(height: 12),
             Text(
-              'Your device is currently active and all features are available for use.',
-              style: TextStyle(
-                color: Colors.grey.shade600,
-                fontSize: 14,
-              ),
+              'Your device is active and streaming live data.',
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
               textAlign: TextAlign.center,
             ),
           ],
@@ -228,32 +211,28 @@ class PAYGDashboard extends StatelessWidget {
               title: 'Make Payment',
               subtitle: 'Pay lease amount',
               color: Colors.green,
-              onTap: () => context.push('/payg/payment'),
+              onTap: () => context.push(AppRoutes.paygPayment),
             ),
             _ActionTile(
               icon: Icons.history,
               title: 'Payment History',
               subtitle: 'View past payments',
               color: Colors.blue,
-              onTap: () => context.push('/payg/history'),
+              onTap: () => context.push(AppRoutes.paygHistory),
             ),
             _ActionTile(
-              icon: Icons.receipt,
+              icon: Icons.receipt_long_rounded,
               title: 'View Invoice',
               subtitle: 'Download receipts',
               color: Colors.orange,
-              onTap: () {
-                context.push('/invoice');
-              },
+              onTap: () => context.push(AppRoutes.paygInvoice),
             ),
             _ActionTile(
               icon: Icons.help_outline,
               title: 'Get Support',
               subtitle: 'Contact help desk',
               color: Colors.purple,
-              onTap: () {
-                context.go('/help');
-              },
+              onTap: () => context.go(AppRoutes.help),
             ),
           ],
         ),
@@ -276,7 +255,7 @@ class PAYGDashboard extends StatelessWidget {
             ),
             const Spacer(),
             TextButton(
-              onPressed: () => context.push('/payg/history'),
+              onPressed: () => context.push(AppRoutes.paygHistory),
               child: const Text('View All'),
             ),
           ],
@@ -308,6 +287,8 @@ class PAYGDashboard extends StatelessWidget {
   }
 }
 
+// ── Local widgets ────────────────────────────────────────────────────────────
+
 class _LeaseInfoRow extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -329,22 +310,15 @@ class _LeaseInfoRow extends StatelessWidget {
         children: [
           Icon(icon, size: 20, color: Colors.blue.shade600),
           const SizedBox(width: 12),
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.grey.shade600,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          Text(label,
+              style: TextStyle(
+                  color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
           const Spacer(),
-          Text(
-            value,
-            style: valueStyle ??
-                TextStyle(
-                  color: Colors.grey.shade800,
-                  fontWeight: FontWeight.w600,
-                ),
-          ),
+          Text(value,
+              style: valueStyle ??
+                  TextStyle(
+                      color: Colors.grey.shade800,
+                      fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -391,21 +365,13 @@ class _ActionTile extends StatelessWidget {
                 child: Icon(icon, size: 20, color: color),
               ),
               const SizedBox(height: 12),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
+              Text(title,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 14)),
               const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontSize: 12,
-                ),
-              ),
+              Text(subtitle,
+                  style: TextStyle(
+                      color: Colors.grey.shade600, fontSize: 12)),
             ],
           ),
         ),
@@ -447,27 +413,19 @@ class _PaymentItem extends StatelessWidget {
               color: Colors.green.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.payment, size: 18, color: Colors.green),
+            child: const Icon(Icons.payment, size: 18, color: Colors.green),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  amount,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                Text(
-                  '$method • $date',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 12,
-                  ),
-                ),
+                Text(amount,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 16)),
+                Text('$method • $date',
+                    style: TextStyle(
+                        color: Colors.grey.shade600, fontSize: 12)),
               ],
             ),
           ),
@@ -478,14 +436,11 @@ class _PaymentItem extends StatelessWidget {
               borderRadius: BorderRadius.circular(6),
               border: Border.all(color: statusColor.withOpacity(0.3)),
             ),
-            child: Text(
-              status,
-              style: TextStyle(
-                color: statusColor,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+            child: Text(status,
+                style: TextStyle(
+                    color: statusColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500)),
           ),
         ],
       ),

@@ -1,4 +1,4 @@
-import 'package:agriflock360/features/farmer/expense/model/expense_category.dart';
+import 'package:agriflock/features/farmer/expense/model/expense_category.dart';
 import 'package:flutter/material.dart';
 
 class UsageChoiceView extends StatelessWidget {

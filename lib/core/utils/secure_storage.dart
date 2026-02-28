@@ -1,6 +1,6 @@
 import 'dart:ffi';
 
-import 'package:agriflock360/core/model/user_model.dart';
+import 'package:agriflock/core/model/user_model.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
 

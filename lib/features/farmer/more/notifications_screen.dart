@@ -1,7 +1,7 @@
-import 'package:agriflock360/core/notifications/notification_model.dart';
-import 'package:agriflock360/core/notifications/notification_repository.dart';
-import 'package:agriflock360/core/notifications/notification_service.dart';
-import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock/core/notifications/notification_model.dart';
+import 'package:agriflock/core/notifications/notification_repository.dart';
+import 'package:agriflock/core/notifications/notification_service.dart';
+import 'package:agriflock/core/utils/result.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 

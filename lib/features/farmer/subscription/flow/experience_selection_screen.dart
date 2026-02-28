@@ -1,5 +1,5 @@
-import 'package:agriflock360/app_routes.dart';
-import 'package:agriflock360/main.dart';
+import 'package:agriflock/app_routes.dart';
+import 'package:agriflock/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -22,11 +22,11 @@ class _ExperienceSelectionScreenState
     setState(() => _isContinuing = true);
 
     if (_selectedOption == 0) {
-      // Full Farm Experience → go to plan selection (Day1WelcomeScreen)
+      // Full Farm Experience → go to subscription plan selection
       if (!mounted) return;
-      context.push('/day1/welcome-msg-page');
+      context.push(AppRoutes.subscriptionPlans);
     } else {
-      // Extension Services + Devices Only → save state & go home
+      // Extension Services + Devices Only → save state & go to limited home
       await secureStorage.saveSubscriptionState('no_subscription_plan');
       if (!mounted) return;
       context.go(AppRoutes.browseVets);
@@ -145,13 +145,13 @@ class _ExperienceSelectionScreenState
                         selectedIndex: _selectedOption,
                         accentColor: Colors.blue,
                         icon: Icons.devices_rounded,
-                        title: 'Extension Services or  Devices Only',
+                        title: 'Extension Services or Devices Only',
                         description:
-                            'Access vet & extension services, quotations, and device monitoring without full farm setup. Ideal if you mainly need advisory services.',
+                            'Access vet & extension services and device monitoring without full farm setup. Ideal if you mainly need advisory services or only manage leased devices.',
                         bullets: const [
                           'Vet & extension services',
-                          'Quotations',
                           'Device monitoring',
+                          'Basic profile',
                         ],
                         onTap: () =>
                             setState(() => _selectedOption = 1),

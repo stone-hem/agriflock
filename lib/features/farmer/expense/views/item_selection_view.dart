@@ -1,5 +1,5 @@
-import 'package:agriflock360/core/widgets/reusable_input.dart';
-import 'package:agriflock360/features/farmer/expense/model/expense_category.dart';
+import 'package:agriflock/core/widgets/reusable_input.dart';
+import 'package:agriflock/features/farmer/expense/model/expense_category.dart';
 import 'package:flutter/material.dart';
 
 class ItemSelectionView extends StatefulWidget {

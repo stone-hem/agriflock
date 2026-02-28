@@ -1,13 +1,13 @@
 import 'dart:math';
-import 'package:agriflock360/core/utils/log_util.dart';
-import 'package:agriflock360/core/widgets/expense/expense_marquee_banner.dart';
-import 'package:agriflock360/core/widgets/popup_wdget.dart';
-import 'package:agriflock360/features/farmer/vet/models/vet_farmer_model.dart';
-import 'package:agriflock360/features/farmer/vet/repo/vet_farmer_repository.dart';
-import 'package:agriflock360/main.dart';
+import 'package:agriflock/core/utils/log_util.dart';
+import 'package:agriflock/core/widgets/expense/expense_marquee_banner.dart';
+import 'package:agriflock/core/widgets/popup_wdget.dart';
+import 'package:agriflock/features/farmer/vet/models/vet_farmer_model.dart';
+import 'package:agriflock/features/farmer/vet/repo/vet_farmer_repository.dart';
+import 'package:agriflock/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:agriflock360/core/utils/result.dart';
+import 'package:agriflock/core/utils/result.dart';
 
 // ── Trial nudge messages ──────────────────────────────────────────────────────
 const List<Map<String, String>> _trialNudges = [

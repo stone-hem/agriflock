@@ -1,17 +1,17 @@
-import 'package:agriflock360/core/model/user_model.dart';
-import 'package:agriflock360/core/utils/log_util.dart';
-import 'package:agriflock360/core/utils/secure_storage.dart';
-import 'package:agriflock360/core/widgets/custom_date_text_field.dart';
-import 'package:agriflock360/core/widgets/reusable_dropdown.dart';
-import 'package:agriflock360/features/farmer/profile/models/profile_model.dart';
+import 'package:agriflock/core/model/user_model.dart';
+import 'package:agriflock/core/utils/log_util.dart';
+import 'package:agriflock/core/utils/secure_storage.dart';
+import 'package:agriflock/core/widgets/custom_date_text_field.dart';
+import 'package:agriflock/core/widgets/reusable_dropdown.dart';
+import 'package:agriflock/features/farmer/profile/models/profile_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:agriflock360/app_routes.dart';
-import 'package:agriflock360/core/utils/api_error_handler.dart';
-import 'package:agriflock360/core/utils/toast_util.dart';
-import 'package:agriflock360/core/widgets/reusable_input.dart';
-import 'package:agriflock360/features/auth/quiz/shared/gender_selector.dart';
+import 'package:agriflock/app_routes.dart';
+import 'package:agriflock/core/utils/api_error_handler.dart';
+import 'package:agriflock/core/utils/toast_util.dart';
+import 'package:agriflock/core/widgets/reusable_input.dart';
+import 'package:agriflock/features/auth/quiz/shared/gender_selector.dart';
 import '../../../main.dart';
 
 class CompleteProfileScreen extends StatefulWidget {
@@ -60,6 +60,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
   // Dropdown options
   static const List<String> _feedCompanyOptions = [
+  'Unga Feeds','Pembe feeds','Sigma feeds','Chania Feeds', 'Pioneer Feeds', 'Pwani Feeds', 'Wonder Feeds','Others'
+  ];
+
+  static const List<String> _hatcheriesList=[
     'Kenchic',
     'Suguna',
     'Isinya',
@@ -110,9 +114,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         _otherFeedCompanyController.text = existingFeedCompany;
       }
 
-      // Parse existing hatchery company (using same list)
+      // Parse existing hatchery company
       final existingHatchery = widget.profileData!.preferredChicksCompany ?? '';
-      if (_feedCompanyOptions.contains(existingHatchery)) {
+      if (_hatcheriesList.contains(existingHatchery)) {
         _selectedHatcheryCompany = existingHatchery;
         _showOtherHatchery = false;
       } else if (existingHatchery.isNotEmpty) {
@@ -611,17 +615,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Preferred Feed Company *',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
                   ReusableDropdown<String>(
                     value: _selectedFeedCompany,
+                    topLabel: 'Preferred Feed Company *',
                     hintText: 'Select feed company',
                     onChanged: (String? newValue) {
                       setState(() {
@@ -641,25 +637,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   ),
                   if (_showOtherFeedCompany) ...[
                     const SizedBox(height: 12),
-                    TextField(
+                    ReusableInput(
                       controller: _otherFeedCompanyController,
                       focusNode: _otherFeedCompanyFocus,
-                      decoration: InputDecoration(
-                        hintText: 'Please specify feed company',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: primaryGreen, width: 2),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      ),
+                      hintText: 'Please specify feed company',
                     ),
                   ],
                 ],
@@ -683,7 +664,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                         }
                       });
                     },
-                    items: _feedCompanyOptions.map<DropdownMenuItem<String>>((String value) {
+                    items: _hatcheriesList.map<DropdownMenuItem<String>>((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
                         child: Text(value),
@@ -692,25 +673,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   ),
                   if (_showOtherHatchery) ...[
                     const SizedBox(height: 12),
-                    TextField(
+                    ReusableInput(
                       controller: _otherHatcheryController,
                       focusNode: _otherHatcheryFocus,
-                      decoration: InputDecoration(
-                        hintText: 'Please specify hatchery company',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: primaryGreen, width: 2),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      ),
+                      hintText: 'Please specify hatchery company',
                     ),
                   ],
                 ],

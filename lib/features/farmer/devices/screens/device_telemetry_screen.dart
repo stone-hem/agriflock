@@ -1,9 +1,9 @@
 import 'dart:async';
 
-import 'package:agriflock360/features/farmer/devices/models/device_model.dart';
-import 'package:agriflock360/features/farmer/devices/models/telemetry_model.dart';
-import 'package:agriflock360/features/farmer/devices/services/device_telemetry_service.dart';
-import 'package:agriflock360/main.dart';
+import 'package:agriflock/features/farmer/devices/models/device_model.dart';
+import 'package:agriflock/features/farmer/devices/models/telemetry_model.dart';
+import 'package:agriflock/features/farmer/devices/services/device_telemetry_service.dart';
+import 'package:agriflock/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 

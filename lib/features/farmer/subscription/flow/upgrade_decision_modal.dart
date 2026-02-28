@@ -20,30 +20,22 @@ class UpgradeDecisionModal extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   '$currentDay Days Completed',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green),
                 ),
               ],
             ),
             const SizedBox(height: 8),
-
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
@@ -52,16 +44,10 @@ class UpgradeDecisionModal extends StatelessWidget {
               ),
               child: Text(
                 '$_daysLeft days left',
-                style: TextStyle(
-                  color: Colors.orange[800],
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(color: Colors.orange[800], fontWeight: FontWeight.w600),
               ),
             ),
-
             const SizedBox(height: 20),
-
-            // Progress indicator
             LinearProgressIndicator(
               value: currentDay / totalDays,
               backgroundColor: Colors.grey[200],
@@ -69,10 +55,7 @@ class UpgradeDecisionModal extends StatelessWidget {
               minHeight: 8,
               borderRadius: BorderRadius.circular(4),
             ),
-
             const SizedBox(height: 28),
-
-            // Icon
             Container(
               width: 70,
               height: 70,
@@ -80,42 +63,21 @@ class UpgradeDecisionModal extends StatelessWidget {
                 color: Colors.green.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.insights,
-                size: 40,
-                color: Colors.green,
-              ),
+              child: const Icon(Icons.insights, size: 40, color: Colors.green),
             ),
-
             const SizedBox(height: 16),
-
-            // Title
             Text(
               'You\'ve been farming smarter for $currentDay days',
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
               textAlign: TextAlign.center,
             ),
-
             const SizedBox(height: 12),
-
-            // Message
             const Text(
               'Based on your activity, AgriFlock 360 is preparing a plan recommendation tailored to your farm size and usage.',
-              style: TextStyle(
-                fontSize: 15,
-                color: Colors.black54,
-                height: 1.5,
-              ),
+              style: TextStyle(fontSize: 15, color: Colors.black54, height: 1.5),
               textAlign: TextAlign.center,
             ),
-
             const SizedBox(height: 20),
-
-            // Continue Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -124,33 +86,16 @@ class UpgradeDecisionModal extends StatelessWidget {
                   backgroundColor: Colors.green,
                   foregroundColor: Colors.white,
                   minimumSize: const Size(double.infinity, 52),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   elevation: 2,
                 ),
-                child: const Text(
-                  'Continue',
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                child: const Text('Continue', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
               ),
             ),
-
             const SizedBox(height: 8),
-
-            // Dismiss Button
             TextButton(
               onPressed: onDismiss ?? () => Navigator.pop(context),
-              child: const Text(
-                'Not now',
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 16,
-                ),
-              ),
+              child: const Text('Not now', style: TextStyle(color: Colors.grey, fontSize: 16)),
             ),
           ],
         ),

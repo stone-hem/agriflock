@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class PAYGPaymentScreen extends StatefulWidget {
-  const PAYGPaymentScreen({super.key});
+/// Payment screen for monthly device lease (PAYG) payments.
+/// Separate from subscription payments — this is for device rental fees only.
+class PaygPaymentScreen extends StatefulWidget {
+  const PaygPaymentScreen({super.key});
 
   @override
-  State<PAYGPaymentScreen> createState() => _PAYGPaymentScreenState();
+  State<PaygPaymentScreen> createState() => _PaygPaymentScreenState();
 }
 
-class _PAYGPaymentScreenState extends State<PAYGPaymentScreen> {
+class _PaygPaymentScreenState extends State<PaygPaymentScreen> {
   int _selectedMethod = 0;
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _cardNumberController = TextEditingController();
@@ -16,22 +18,22 @@ class _PAYGPaymentScreenState extends State<PAYGPaymentScreen> {
   final TextEditingController _cvvController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
 
-  final List<PaymentMethod> _paymentMethods = [
-    PaymentMethod(
+  final List<_PaymentMethod> _paymentMethods = const [
+    _PaymentMethod(
       id: 0,
       name: 'M-Pesa',
       icon: Icons.phone_iphone,
       color: Colors.green,
       description: 'Pay via M-Pesa mobile money',
     ),
-    PaymentMethod(
+    _PaymentMethod(
       id: 1,
-      name: 'Credit/Debit Card',
+      name: 'Credit / Debit Card',
       icon: Icons.credit_card,
       color: Colors.blue,
       description: 'Pay with Visa, Mastercard',
     ),
-    PaymentMethod(
+    _PaymentMethod(
       id: 2,
       name: 'Bank Transfer',
       icon: Icons.account_balance,
@@ -41,15 +43,15 @@ class _PAYGPaymentScreenState extends State<PAYGPaymentScreen> {
   ];
 
   void _processPayment() {
-    // Simulate payment processing
     showDialog(
       context: context,
-      builder: (context) => const PaymentProcessingDialog(),
+      barrierDismissible: false,
+      builder: (_) => const PaygPaymentProcessingDialog(),
     );
 
-    // Simulate API call
     Future.delayed(const Duration(seconds: 3), () {
-      Navigator.pop(context); // Close processing dialog
+      if (!mounted) return;
+      Navigator.pop(context);
       _showPaymentResult(true);
     });
   }
@@ -57,13 +59,11 @@ class _PAYGPaymentScreenState extends State<PAYGPaymentScreen> {
   void _showPaymentResult(bool success) {
     showDialog(
       context: context,
-      builder: (context) => PaymentResultDialog(
+      builder: (_) => PaygPaymentResultDialog(
         success: success,
         onDone: () {
           Navigator.pop(context);
-          if (success) {
-            context.pop(); // Return to dashboard
-          }
+          if (success) context.pop();
         },
       ),
     );
@@ -73,25 +73,20 @@ class _PAYGPaymentScreenState extends State<PAYGPaymentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title:Row(
+        title: Row(
           children: [
             Image.asset(
               'assets/logos/Logo_0725.png',
               fit: BoxFit.cover,
               width: 40,
               height: 40,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: Colors.green,
-                  child: const Icon(
-                    Icons.image,
-                    size: 100,
-                    color: Colors.white54,
-                  ),
-                );
-              },
+              errorBuilder: (_, __, ___) => Container(
+                color: Colors.green,
+                child: const Icon(Icons.image, size: 40, color: Colors.white54),
+              ),
             ),
-            const Text('Make Payment'),
+            const SizedBox(width: 8),
+            const Text('Lease Payment'),
           ],
         ),
         centerTitle: false,
@@ -107,19 +102,12 @@ class _PAYGPaymentScreenState extends State<PAYGPaymentScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Payment Summary
             _buildPaymentSummary(),
             const SizedBox(height: 32),
-
-            // Payment Method Selection
             _buildPaymentMethods(),
             const SizedBox(height: 24),
-
-            // Payment Form
             _buildPaymentForm(),
             const SizedBox(height: 32),
-
-            // Pay Button
             _buildPayButton(),
           ],
         ),
@@ -142,13 +130,9 @@ class _PAYGPaymentScreenState extends State<PAYGPaymentScreen> {
               children: [
                 const Icon(Icons.payment, color: Colors.blue),
                 const SizedBox(width: 12),
-                const Text(
-                  'Payment Due',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                const Text('Lease Payment Due',
+                    style:
+                        TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                 const Spacer(),
                 Text(
                   'KES 2,500',
@@ -163,18 +147,9 @@ class _PAYGPaymentScreenState extends State<PAYGPaymentScreen> {
             const SizedBox(height: 12),
             Divider(color: Colors.grey.shade200),
             const SizedBox(height: 12),
-            _SummaryRow(
-              label: 'Lease Period',
-              value: 'Dec 1 - Dec 31, 2024',
-            ),
-            _SummaryRow(
-              label: 'Due Date',
-              value: 'Dec 15, 2024',
-            ),
-            _SummaryRow(
-              label: 'Device',
-              value: 'Brooder 001',
-            ),
+            _SummaryRow(label: 'Lease Period', value: 'Dec 1 – Dec 31, 2024'),
+            _SummaryRow(label: 'Due Date', value: 'Dec 15, 2024'),
+            _SummaryRow(label: 'Device', value: 'Brooder 001'),
           ],
         ),
       ),
@@ -187,32 +162,29 @@ class _PAYGPaymentScreenState extends State<PAYGPaymentScreen> {
       children: [
         Text(
           'Payment Method',
-          style: Theme.of(context).textTheme.titleLarge!.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.grey.shade800,
-          ),
+          style: Theme.of(context)
+              .textTheme
+              .titleLarge!
+              .copyWith(fontWeight: FontWeight.bold, color: Colors.grey.shade800),
         ),
         const SizedBox(height: 16),
         ..._paymentMethods.map((method) => _PaymentMethodCard(
-          method: method,
-          isSelected: _selectedMethod == method.id,
-          onTap: () {
-            setState(() {
-              _selectedMethod = method.id;
-            });
-          },
-        )),
+              method: method,
+              isSelected: _selectedMethod == method.id,
+              onTap: () => setState(() => _selectedMethod = method.id),
+            )),
       ],
     );
   }
 
   Widget _buildPaymentForm() {
-    if (_selectedMethod == 0) {
-      return _buildMpesaForm();
-    } else if (_selectedMethod == 1) {
-      return _buildCardForm();
-    } else {
-      return _buildBankTransferForm();
+    switch (_selectedMethod) {
+      case 0:
+        return _buildMpesaForm();
+      case 1:
+        return _buildCardForm();
+      default:
+        return _buildBankTransferForm();
     }
   }
 
@@ -220,23 +192,18 @@ class _PAYGPaymentScreenState extends State<PAYGPaymentScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'M-Pesa Payment',
-          style: Theme.of(context).textTheme.titleLarge!.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.grey.shade800,
-          ),
-        ),
+        Text('M-Pesa Payment',
+            style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                fontWeight: FontWeight.bold, color: Colors.grey.shade800)),
         const SizedBox(height: 16),
         TextFormField(
           controller: _phoneController,
           decoration: InputDecoration(
             labelText: 'M-Pesa Phone Number',
             prefixText: '+254 ',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            prefixIcon: Icon(Icons.phone, color: Colors.green),
+            border:
+                OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            prefixIcon: const Icon(Icons.phone, color: Colors.green),
           ),
           keyboardType: TextInputType.phone,
         ),
@@ -254,11 +221,8 @@ class _PAYGPaymentScreenState extends State<PAYGPaymentScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'You will receive an STK push prompt on your phone to complete the payment.',
-                  style: TextStyle(
-                    color: Colors.green.shade800,
-                    fontSize: 14,
-                  ),
+                  'You will receive an STK push on your phone to complete the payment.',
+                  style: TextStyle(color: Colors.green.shade800, fontSize: 14),
                 ),
               ),
             ],
@@ -272,22 +236,17 @@ class _PAYGPaymentScreenState extends State<PAYGPaymentScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Card Details',
-          style: Theme.of(context).textTheme.titleLarge!.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.grey.shade800,
-          ),
-        ),
+        Text('Card Details',
+            style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                fontWeight: FontWeight.bold, color: Colors.grey.shade800)),
         const SizedBox(height: 16),
         TextFormField(
           controller: _cardNumberController,
           decoration: InputDecoration(
             labelText: 'Card Number',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            prefixIcon: Icon(Icons.credit_card, color: Colors.blue),
+            border:
+                OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            prefixIcon: const Icon(Icons.credit_card, color: Colors.blue),
           ),
           keyboardType: TextInputType.number,
         ),
@@ -301,8 +260,7 @@ class _PAYGPaymentScreenState extends State<PAYGPaymentScreen> {
                   labelText: 'Expiry Date',
                   hintText: 'MM/YY',
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                      borderRadius: BorderRadius.circular(12)),
                 ),
               ),
             ),
@@ -313,8 +271,7 @@ class _PAYGPaymentScreenState extends State<PAYGPaymentScreen> {
                 decoration: InputDecoration(
                   labelText: 'CVV',
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                      borderRadius: BorderRadius.circular(12)),
                 ),
                 keyboardType: TextInputType.number,
               ),
@@ -326,10 +283,9 @@ class _PAYGPaymentScreenState extends State<PAYGPaymentScreen> {
           controller: _nameController,
           decoration: InputDecoration(
             labelText: 'Cardholder Name',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            prefixIcon: Icon(Icons.person, color: Colors.blue),
+            border:
+                OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            prefixIcon: const Icon(Icons.person, color: Colors.blue),
           ),
         ),
       ],
@@ -340,13 +296,9 @@ class _PAYGPaymentScreenState extends State<PAYGPaymentScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Bank Transfer',
-          style: Theme.of(context).textTheme.titleLarge!.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.grey.shade800,
-          ),
-        ),
+        Text('Bank Transfer',
+            style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                fontWeight: FontWeight.bold, color: Colors.grey.shade800)),
         const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(20),
@@ -358,45 +310,24 @@ class _PAYGPaymentScreenState extends State<PAYGPaymentScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _BankDetailRow(
-                label: 'Bank Name',
-                value: 'Equity Bank Kenya',
-              ),
-              _BankDetailRow(
-                label: 'Account Name',
-                value: 'Agriflock 360 Ltd',
-              ),
-              _BankDetailRow(
-                label: 'Account Number',
-                value: '1234567890',
-              ),
-              _BankDetailRow(
-                label: 'Branch',
-                value: 'Nairobi Main',
-              ),
-              _BankDetailRow(
-                label: 'Swift Code',
-                value: 'EQBLKENA',
-              ),
+              _BankDetailRow(label: 'Bank Name', value: 'Equity Bank Kenya'),
+              _BankDetailRow(label: 'Account Name', value: 'Agriflock 360 Ltd'),
+              _BankDetailRow(label: 'Account Number', value: '1234567890'),
+              _BankDetailRow(label: 'Branch', value: 'Nairobi Main'),
+              _BankDetailRow(label: 'Swift Code', value: 'EQBLKENA'),
               const SizedBox(height: 16),
               Divider(color: Colors.orange.shade200),
               const SizedBox(height: 12),
-              Text(
-                'Instructions:',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.orange.shade800,
-                ),
-              ),
+              Text('Instructions:',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange.shade800)),
               const SizedBox(height: 8),
               Text(
-                '1. Use your lease number as reference\n'
-                    '2. Send exact amount: KES 2,500\n'
-                    '3. Upload receipt in app after transfer\n'
-                    '4. Allow 24 hours for processing',
-                style: TextStyle(
-                  color: Colors.orange.shade700,
-                ),
+                '1. Use your lease reference number\n'
+                '2. Send exact amount: KES 2,500\n'
+                '3. Allow 24 hours for processing',
+                style: TextStyle(color: Colors.orange.shade700),
               ),
             ],
           ),
@@ -414,17 +345,13 @@ class _PAYGPaymentScreenState extends State<PAYGPaymentScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.green,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           elevation: 0,
         ),
         child: const Text(
           'Pay KES 2,500',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
       ),
     );
@@ -441,14 +368,16 @@ class _PAYGPaymentScreenState extends State<PAYGPaymentScreen> {
   }
 }
 
-class PaymentMethod {
+// ── Local helpers ────────────────────────────────────────────────────────────
+
+class _PaymentMethod {
   final int id;
   final String name;
   final IconData icon;
   final Color color;
   final String description;
 
-  PaymentMethod({
+  const _PaymentMethod({
     required this.id,
     required this.name,
     required this.icon,
@@ -458,7 +387,7 @@ class PaymentMethod {
 }
 
 class _PaymentMethodCard extends StatelessWidget {
-  final PaymentMethod method;
+  final _PaymentMethod method;
   final bool isSelected;
   final VoidCallback onTap;
 
@@ -500,20 +429,12 @@ class _PaymentMethodCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      method.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    Text(
-                      method.description,
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 12,
-                      ),
-                    ),
+                    Text(method.name,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text(method.description,
+                        style: TextStyle(
+                            color: Colors.grey.shade600, fontSize: 12)),
                   ],
                 ),
               ),
@@ -529,12 +450,12 @@ class _PaymentMethodCard extends StatelessWidget {
                 ),
                 child: isSelected
                     ? Container(
-                  margin: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: method.color,
-                  ),
-                )
+                        margin: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: method.color,
+                        ),
+                      )
                     : null,
               ),
             ],
@@ -549,10 +470,7 @@ class _SummaryRow extends StatelessWidget {
   final String label;
   final String value;
 
-  const _SummaryRow({
-    required this.label,
-    required this.value,
-  });
+  const _SummaryRow({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -560,21 +478,12 @@ class _SummaryRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.grey.shade600,
-              fontSize: 14,
-            ),
-          ),
+          Text(label,
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
           const Spacer(),
-          Text(
-            value,
-            style: TextStyle(
-              color: Colors.grey.shade800,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          Text(value,
+              style: TextStyle(
+                  color: Colors.grey.shade800, fontWeight: FontWeight.w500)),
         ],
       ),
     );
@@ -585,10 +494,7 @@ class _BankDetailRow extends StatelessWidget {
   final String label;
   final String value;
 
-  const _BankDetailRow({
-    required this.label,
-    required this.value,
-  });
+  const _BankDetailRow({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -598,59 +504,45 @@ class _BankDetailRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 120,
-            child: Text(
-              label,
+            child: Text(label,
+                style: TextStyle(
+                    color: Colors.orange.shade700,
+                    fontWeight: FontWeight.w500)),
+          ),
+          Text(value,
               style: TextStyle(
-                color: Colors.orange.shade700,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              color: Colors.orange.shade800,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+                  color: Colors.orange.shade800, fontWeight: FontWeight.w600)),
         ],
       ),
     );
   }
 }
 
-class PaymentProcessingDialog extends StatelessWidget {
-  const PaymentProcessingDialog({super.key});
+// ── Dialogs ──────────────────────────────────────────────────────────────────
+
+class PaygPaymentProcessingDialog extends StatelessWidget {
+  const PaygPaymentProcessingDialog({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
+      shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const CircularProgressIndicator(
-              color: Colors.green,
-            ),
+            const CircularProgressIndicator(color: Colors.green),
             const SizedBox(height: 20),
-            Text(
-              'Processing Payment',
-              style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            Text('Processing Payment',
+                style: Theme.of(context)
+                    .textTheme
+                    .titleLarge!
+                    .copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Text(
-              'Please wait while we process your payment...',
-              style: TextStyle(
-                color: Colors.grey.shade600,
-              ),
-              textAlign: TextAlign.center,
-            ),
+            Text('Please wait…',
+                style: TextStyle(color: Colors.grey.shade600)),
           ],
         ),
       ),
@@ -658,11 +550,11 @@ class PaymentProcessingDialog extends StatelessWidget {
   }
 }
 
-class PaymentResultDialog extends StatelessWidget {
+class PaygPaymentResultDialog extends StatelessWidget {
   final bool success;
   final VoidCallback onDone;
 
-  const PaymentResultDialog({
+  const PaygPaymentResultDialog({
     super.key,
     required this.success,
     required this.onDone,
@@ -671,9 +563,8 @@ class PaymentResultDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
+      shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -687,18 +578,17 @@ class PaymentResultDialog extends StatelessWidget {
             const SizedBox(height: 20),
             Text(
               success ? 'Payment Successful!' : 'Payment Failed',
-              style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge!
+                  .copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             Text(
               success
-                  ? 'Your payment has been processed successfully. Your device has been unlocked.'
-                  : 'We encountered an issue processing your payment. Please try again.',
-              style: TextStyle(
-                color: Colors.grey.shade600,
-              ),
+                  ? 'Your device has been unlocked. Live data is now streaming.'
+                  : 'We could not process your payment. Please try again.',
+              style: TextStyle(color: Colors.grey.shade600),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -711,8 +601,7 @@ class PaymentResultDialog extends StatelessWidget {
                   backgroundColor: success ? Colors.green : Colors.red,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                      borderRadius: BorderRadius.circular(12)),
                 ),
                 child: Text(success ? 'Done' : 'Try Again'),
               ),

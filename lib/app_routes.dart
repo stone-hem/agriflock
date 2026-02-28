@@ -1,85 +1,87 @@
-import 'package:agriflock360/core/notifications/notification_service.dart';
-import 'package:agriflock360/features/farmer/batch/add_batch_screen.dart';
-import 'package:agriflock360/features/farmer/batch/adopt_schedule_screen.dart';
-import 'package:agriflock360/features/farmer/batch/batch_details_screen.dart';
-import 'package:agriflock360/features/farmer/batch/completed_batches_screen.dart';
-import 'package:agriflock360/features/farmer/batch/edit_batch_screen.dart';
-import 'package:agriflock360/features/farmer/batch/houses_screen.dart';
-import 'package:agriflock360/features/farmer/batch/log_feeding_screen.dart';
-import 'package:agriflock360/features/farmer/batch/model/batch_list_model.dart';
-import 'package:agriflock360/features/farmer/batch/model/batch_model.dart';
-import 'package:agriflock360/features/farmer/batch/model/recommended_vaccination_model.dart';
-import 'package:agriflock360/features/farmer/batch/model/vaccination_list_model.dart';
-import 'package:agriflock360/features/farmer/expense/buy_inputs_screen.dart';
-import 'package:agriflock360/features/farmer/expense/expenditures_screen.dart';
-import 'package:agriflock360/features/farmer/batch/record_vaccination_screen.dart';
-import 'package:agriflock360/features/farmer/batch/record_product_screen.dart';
-import 'package:agriflock360/features/farmer/batch/update_vaccination_status_screen.dart';
-import 'package:agriflock360/features/farmer/farm/models/farm_model.dart';
-import 'package:agriflock360/features/farmer/farm/view/add_farm_screen.dart';
-import 'package:agriflock360/features/farmer/farm/view/farms_home_screen.dart';
-import 'package:agriflock360/features/farmer/home/view/home_screen.dart';
-import 'package:agriflock360/features/farmer/inventory/inventory_screen.dart';
-import 'package:agriflock360/features/farmer/more/notifications_screen.dart';
-import 'package:agriflock360/features/farmer/more/recent_activity_screen.dart';
-import 'package:agriflock360/features/farmer/payg/experience_selection_screen.dart';
-import 'package:agriflock360/features/farmer/payg/flow/plan_transition_screen.dart';
-import 'package:agriflock360/features/farmer/payg/day_one_welcome_screen.dart';
-import 'package:agriflock360/features/farmer/payg/payg_dashboard.dart';
-import 'package:agriflock360/features/farmer/payg/payment_history_screen.dart';
-import 'package:agriflock360/features/farmer/payg/payment_screen.dart';
-import 'package:agriflock360/features/farmer/payg/plans.dart';
-import 'package:agriflock360/features/farmer/payg/view_invoice.dart';
-import 'package:agriflock360/features/farmer/profile/about_screen.dart';
-import 'package:agriflock360/features/farmer/quotation/complete_profile_screen.dart';
-import 'package:agriflock360/features/farmer/quotation/congratulations_screen.dart';
-import 'package:agriflock360/features/farmer/profile/help_support_screen.dart';
-import 'package:agriflock360/features/farmer/profile/models/profile_model.dart';
-import 'package:agriflock360/features/farmer/profile/profile_screen.dart';
-import 'package:agriflock360/features/farmer/profile/settings_screen.dart';
-import 'package:agriflock360/features/farmer/devices/screens/devices_screen.dart';
-import 'package:agriflock360/features/farmer/devices/screens/device_telemetry_screen.dart';
-import 'package:agriflock360/features/farmer/devices/models/device_model.dart';
-import 'package:agriflock360/features/farmer/profile/update_profile_screen.dart';
-import 'package:agriflock360/features/farmer/onboarding/onboarding_setup_screen.dart';
-import 'package:agriflock360/features/farmer/quotation/quotation_screen.dart';
-import 'package:agriflock360/features/farmer/record/quick_record.dart';
-import 'package:agriflock360/features/farmer/home/view/quick_batches_list_screen.dart';
-import 'package:agriflock360/features/farmer/batch/record_mortality_screen.dart';
-import 'package:agriflock360/features/farmer/report/batch/batch_report_screen.dart';
-import 'package:agriflock360/features/farmer/report/farm_reports_screen.dart';
-import 'package:agriflock360/features/farmer/report/reports_flow_screen.dart';
-import 'package:agriflock360/features/farmer/vet/all_vets_screen.dart';
-import 'package:agriflock360/features/farmer/vet/completed_orders_screen.dart';
-import 'package:agriflock360/features/farmer/vet/models/my_order_list_item.dart';
-import 'package:agriflock360/features/farmer/vet/models/vet_farmer_model.dart';
-import 'package:agriflock360/features/farmer/vet/my_orders_screen.dart';
-import 'package:agriflock360/features/farmer/vet/vet_details_screen.dart';
-import 'package:agriflock360/features/farmer/vet/vet_order_screen.dart';
-import 'package:agriflock360/features/farmer/vet/my_order_tracking_screen.dart';
-import 'package:agriflock360/features/farmer/vet/browse_vets_screen.dart';
-import 'package:agriflock360/features/shared/error_screen.dart';
-import 'package:agriflock360/features/shared/shell_scaffold.dart';
-import 'package:agriflock360/features/vet/home/vet_home_screen.dart';
-import 'package:agriflock360/features/vet/payments/vet_payments_history_screen.dart';
-import 'package:agriflock360/features/vet/payments/vet_payments_screen.dart';
-import 'package:agriflock360/features/vet/payments/vet_service_payments_screen.dart';
-import 'package:agriflock360/features/vet/profile/vet_profile_screen.dart';
-import 'package:agriflock360/features/vet/schedules/vet_schedules_screen.dart';
-import 'package:agriflock360/features/vet/schedules/widgets/vet_visit_form.dart';
+import 'package:agriflock/core/notifications/notification_service.dart';
+import 'package:agriflock/features/farmer/batch/add_batch_screen.dart';
+import 'package:agriflock/features/farmer/batch/adopt_schedule_screen.dart';
+import 'package:agriflock/features/farmer/batch/batch_details_screen.dart';
+import 'package:agriflock/features/farmer/batch/completed_batches_screen.dart';
+import 'package:agriflock/features/farmer/batch/edit_batch_screen.dart';
+import 'package:agriflock/features/farmer/batch/houses_screen.dart';
+import 'package:agriflock/features/farmer/batch/log_feeding_screen.dart';
+import 'package:agriflock/features/farmer/batch/model/batch_list_model.dart';
+import 'package:agriflock/features/farmer/batch/model/batch_model.dart';
+import 'package:agriflock/features/farmer/batch/model/recommended_vaccination_model.dart';
+import 'package:agriflock/features/farmer/batch/model/vaccination_list_model.dart';
+import 'package:agriflock/features/farmer/expense/buy_inputs_screen.dart';
+import 'package:agriflock/features/farmer/expense/expenditures_screen.dart';
+import 'package:agriflock/features/farmer/batch/record_vaccination_screen.dart';
+import 'package:agriflock/features/farmer/batch/record_product_screen.dart';
+import 'package:agriflock/features/farmer/batch/update_vaccination_status_screen.dart';
+import 'package:agriflock/features/farmer/farm/models/farm_model.dart';
+import 'package:agriflock/features/farmer/farm/view/add_farm_screen.dart';
+import 'package:agriflock/features/farmer/farm/view/farms_home_screen.dart';
+import 'package:agriflock/features/farmer/home/view/home_screen.dart';
+import 'package:agriflock/features/farmer/inventory/inventory_screen.dart';
+import 'package:agriflock/features/farmer/more/notifications_screen.dart';
+import 'package:agriflock/features/farmer/more/recent_activity_screen.dart';
+import 'package:agriflock/features/farmer/subscription/flow/experience_selection_screen.dart';
+import 'package:agriflock/features/farmer/subscription/flow/plan_recommendation_screen.dart';
+import 'package:agriflock/features/farmer/subscription/flow/subscription_payment_screen.dart';
+import 'package:agriflock/features/farmer/subscription/flow/subscription_plans_screen.dart';
+import 'package:agriflock/features/farmer/subscription/subscription_plans_preview_screen.dart';
+import 'package:agriflock/features/farmer/payg/flow/payg_intro_screen.dart';
+import 'package:agriflock/features/farmer/payg/payg_dashboard_screen.dart';
+import 'package:agriflock/features/farmer/payg/payg_history_screen.dart';
+import 'package:agriflock/features/farmer/payg/payg_invoice_screen.dart';
+import 'package:agriflock/features/farmer/payg/payg_payment_screen.dart';
+import 'package:agriflock/features/farmer/profile/about_screen.dart';
+import 'package:agriflock/features/farmer/quotation/complete_profile_screen.dart';
+import 'package:agriflock/features/farmer/quotation/congratulations_screen.dart';
+import 'package:agriflock/features/farmer/profile/help_support_screen.dart';
+import 'package:agriflock/features/farmer/profile/models/profile_model.dart';
+import 'package:agriflock/features/farmer/profile/profile_screen.dart';
+import 'package:agriflock/features/farmer/profile/settings_screen.dart';
+import 'package:agriflock/features/farmer/devices/screens/devices_screen.dart';
+import 'package:agriflock/features/farmer/devices/screens/device_telemetry_screen.dart';
+import 'package:agriflock/features/farmer/devices/models/device_model.dart';
+import 'package:agriflock/features/farmer/profile/update_profile_screen.dart';
+import 'package:agriflock/features/farmer/farm/view/onboarding_setup_screen.dart';
+import 'package:agriflock/features/farmer/quotation/quotation_screen.dart';
+import 'package:agriflock/features/farmer/record/quick_record.dart';
+import 'package:agriflock/features/farmer/home/view/quick_batches_list_screen.dart';
+import 'package:agriflock/features/farmer/batch/record_mortality_screen.dart';
+import 'package:agriflock/features/farmer/report/batch/batch_report_screen.dart';
+import 'package:agriflock/features/farmer/report/farm_reports_screen.dart';
+import 'package:agriflock/features/farmer/report/reports_flow_screen.dart';
+import 'package:agriflock/features/farmer/vet/all_vets_screen.dart';
+import 'package:agriflock/features/farmer/vet/completed_orders_screen.dart';
+import 'package:agriflock/features/farmer/vet/models/my_order_list_item.dart';
+import 'package:agriflock/features/farmer/vet/models/vet_farmer_model.dart';
+import 'package:agriflock/features/farmer/vet/my_orders_screen.dart';
+import 'package:agriflock/features/farmer/vet/vet_details_screen.dart';
+import 'package:agriflock/features/farmer/vet/vet_order_screen.dart';
+import 'package:agriflock/features/farmer/vet/my_order_tracking_screen.dart';
+import 'package:agriflock/features/farmer/vet/browse_vets_screen.dart';
+import 'package:agriflock/features/shared/error_screen.dart';
+import 'package:agriflock/features/shared/shell_scaffold.dart';
+import 'package:agriflock/features/vet/home/vet_home_screen.dart';
+import 'package:agriflock/features/vet/payments/vet_payments_history_screen.dart';
+import 'package:agriflock/features/vet/payments/vet_payments_screen.dart';
+import 'package:agriflock/features/vet/payments/vet_service_payments_screen.dart';
+import 'package:agriflock/features/vet/profile/vet_profile_screen.dart';
+import 'package:agriflock/features/vet/schedules/vet_schedules_screen.dart';
+import 'package:agriflock/features/vet/schedules/widgets/vet_visit_form.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'core/utils/secure_storage.dart';
 import 'core/utils/shared_prefs.dart';
 
-import 'package:agriflock360/features/auth/forgot_password_screen.dart';
-import 'package:agriflock360/features/auth/otp_screen.dart';
-import 'package:agriflock360/features/auth/quiz/onboarding_quiz_screen.dart';
-import 'package:agriflock360/features/auth/reset_password_screen.dart';
-import 'package:agriflock360/features/auth/sign_in_screen.dart';
-import 'package:agriflock360/features/auth/sign_up_screen.dart';
-import 'package:agriflock360/features/auth/vet_verification_pending_screen.dart';
-import 'package:agriflock360/features/auth/welcome_screen.dart';
+import 'package:agriflock/features/auth/forgot_password_screen.dart';
+import 'package:agriflock/features/auth/otp_screen.dart';
+import 'package:agriflock/features/auth/quiz/onboarding_quiz_screen.dart';
+import 'package:agriflock/features/auth/reset_password_screen.dart';
+import 'package:agriflock/features/auth/sign_in_screen.dart';
+import 'package:agriflock/features/auth/sign_up_screen.dart';
+import 'package:agriflock/features/auth/vet_verification_pending_screen.dart';
+import 'package:agriflock/features/auth/welcome_screen.dart';
 
 // Navigator keys for ShellRoute
 final GlobalKey<NavigatorState> _shellNavigatorKey =
@@ -131,6 +133,18 @@ class AppRoutes {
   static const String paygPayment = '/payg/payment';
   static const String paygHistory = '/payg/history';
   static const String invoice = '/invoice';
+
+  // Subscription flow routes
+  static const String subscriptionExperience = '/subscription/experience';
+  static const String subscriptionPlans = '/subscription/plans';
+  static const String subscriptionRecommendation = '/subscription/recommendation';
+  static const String subscriptionPlansPreview = '/subscription/plans-preview';
+  static const String subscriptionPayment = '/subscription/payment';
+
+  // PAYG (device lease) routes
+  static const String paygIntro = '/payg/intro';
+  static const String paygDashboard = '/payg/dashboard';
+  static const String paygInvoice = '/payg/invoice';
   static const String settings = '/settings';
   static const String help = '/help';
   static const String about = '/about';
@@ -169,6 +183,14 @@ class AppRoutes {
     paygPayment,
     paygHistory,
     invoice,
+    subscriptionExperience,
+    subscriptionPlans,
+    subscriptionRecommendation,
+    subscriptionPlansPreview,
+    subscriptionPayment,
+    paygIntro,
+    paygDashboard,
+    paygInvoice,
     settings,
     farmsAdd,
     farmsInventory,
@@ -606,29 +628,15 @@ class AppRoutes {
             return ExpendituresScreen();
           },
         ),
-        GoRoute(
-            path: payg,
-            builder: (context, state) => const PAYGDashboard()),
-        GoRoute(
-          path: paygPayment,
-          builder: (context, state) => const PAYGPaymentScreen(),
-        ),
-        GoRoute(
-          path: paygHistory,
-          builder: (context, state) => const PaymentHistoryScreen(),
-        ),
-        GoRoute(
-          path: '/day1/welcome-msg-page',
-          builder: (context, state) => const Day1WelcomeScreen(),
-        ),
+        GoRoute(path: payg, redirect: (_, __) => paygDashboard),
+        GoRoute(path: paygPayment, builder: (_, __) => const PaygPaymentScreen()),
+        GoRoute(path: paygHistory, builder: (_, __) => const PaygHistoryScreen()),
+        GoRoute(path: '/day1/welcome-msg-page', redirect: (_, __) => subscriptionPlans),
         GoRoute(
           path: '/onboarding/setup',
           builder: (context, state) => const OnboardingSetupScreen(),
         ),
-        GoRoute(
-          path: invoice,
-          builder: (context, state) => const ViewInvoiceScreen(),
-        ),
+        GoRoute(path: invoice, redirect: (_, __) => paygInvoice),
         GoRoute(
           path: settings,
           builder: (context, state) => const SettingsScreen(),
@@ -721,17 +729,57 @@ class AppRoutes {
             return VetOrderScreen(vet: vet);
           },
         ),
+        GoRoute(path: '/welcome-day1', redirect: (_, __) => subscriptionExperience),
+        GoRoute(path: '/plan-transition', redirect: (_, __) => subscriptionRecommendation),
+        GoRoute(path: '/plans', redirect: (_, __) => subscriptionPlansPreview),
+
+        // ── Subscription flow routes ──────────────────────────────────
         GoRoute(
-          path: '/welcome-day1',
-          builder: (context, state) => const ExperienceSelectionScreen(),
+          path: subscriptionExperience,
+          builder: (_, __) => const ExperienceSelectionScreen(),
         ),
         GoRoute(
-          path: '/plan-transition',
-          builder: (context, state) => const PlanTransitionScreen(),
+          path: subscriptionPlans,
+          builder: (_, __) => const SubscriptionPlansScreen(),
         ),
         GoRoute(
-          path: '/plans',
-          builder: (context, state) => const PlansPreviewScreen(),
+          path: subscriptionRecommendation,
+          builder: (_, __) => const PlanRecommendationScreen(),
+        ),
+        GoRoute(
+          path: subscriptionPlansPreview,
+          builder: (_, __) => const SubscriptionPlansPreviewScreen(),
+        ),
+        GoRoute(
+          path: subscriptionPayment,
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            return SubscriptionPaymentScreen(
+              planId: extra?['planId'] as String? ?? '',
+              planName: extra?['planName'] as String? ?? '',
+              planType: extra?['planType'] as String? ?? '',
+              amount: (extra?['amount'] as num?)?.toDouble() ?? 0.0,
+              currency: extra?['currency'] as String? ?? 'KES',
+              billingCycleDays: extra?['billingCycleDays'] as int? ?? 30,
+              isOnboarding: extra?['isOnboarding'] as bool? ?? false,
+            );
+          },
+        ),
+
+        // ── PAYG (device lease) routes ────────────────────────────────
+        GoRoute(
+          path: paygIntro,
+          builder: (context, state) => PaygIntroScreen(
+            device: state.extra as DeviceItem?,
+          ),
+        ),
+        GoRoute(
+          path: paygDashboard,
+          builder: (_, __) => const PaygDashboardScreen(),
+        ),
+        GoRoute(
+          path: paygInvoice,
+          builder: (_, __) => const PaygInvoiceScreen(),
         ),
 
         // Vet payment routes (outside shell)
