@@ -924,34 +924,117 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                   ),
             ),
             const SizedBox(height: 8),
-            Row(
-              children: [
-
-                Expanded(
-                  child: ChoiceChip(
-                    label: const Text('Purchased Chicks'),
-                    selected: !_isOwnHatch,
-                    onSelected: (_) => _switchHatchSource(false),
-                    selectedColor: Colors.blue,
-                    labelStyle: TextStyle(
-                      color: !_isOwnHatch ? Colors.white : Colors.grey.shade800,
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              padding: const EdgeInsets.all(4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => _switchHatchSource(false),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeInOut,
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        decoration: BoxDecoration(
+                          color: !_isOwnHatch
+                              ? Colors.blue.shade600
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(9),
+                          boxShadow: !_isOwnHatch
+                              ? [
+                                  BoxShadow(
+                                    color: Colors.blue.withOpacity(0.2),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ]
+                              : [],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.shopping_bag_outlined,
+                              size: 18,
+                              color: !_isOwnHatch
+                                  ? Colors.white
+                                  : Colors.grey.shade600,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Purchased',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: !_isOwnHatch
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
+                                color: !_isOwnHatch
+                                    ? Colors.white
+                                    : Colors.grey.shade700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 10),
-
-                Expanded(
-                  child: ChoiceChip(
-                    label: const Text('Own Hatch'),
-                    selected: _isOwnHatch,
-                    onSelected: (_) => _switchHatchSource(true),
-                    selectedColor: Colors.green,
-                    labelStyle: TextStyle(
-                      color: _isOwnHatch ? Colors.white : Colors.grey.shade800,
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => _switchHatchSource(true),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeInOut,
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        decoration: BoxDecoration(
+                          color: _isOwnHatch
+                              ? Colors.green.shade600
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(9),
+                          boxShadow: _isOwnHatch
+                              ? [
+                                  BoxShadow(
+                                    color: Colors.green.withOpacity(0.2),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ]
+                              : [],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.egg_outlined,
+                              size: 18,
+                              color: _isOwnHatch
+                                  ? Colors.white
+                                  : Colors.grey.shade600,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Own Hatch',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: _isOwnHatch
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
+                                color: _isOwnHatch
+                                    ? Colors.white
+                                    : Colors.grey.shade700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 20),
 

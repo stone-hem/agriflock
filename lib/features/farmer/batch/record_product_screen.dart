@@ -50,8 +50,6 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
   @override
   void initState() {
     super.initState();
-    // Set default cracked eggs to 0
-    _crackedEggsController.text = '0';
   }
 
 
