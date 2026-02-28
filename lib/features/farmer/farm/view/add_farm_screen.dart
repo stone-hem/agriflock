@@ -118,6 +118,8 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
                 selectedAddress: _selectedAddress,
                 latitude: _latitude,
                 longitude: _longitude,
+                title: 'Select Location',
+                text: 'Search and Select your farm location',
                 onLocationSelected: (String address, double lat, double lng) {
                   setState(() {
                     _selectedAddress = address;

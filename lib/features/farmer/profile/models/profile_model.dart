@@ -1,45 +1,6 @@
 import 'dart:convert';
 import 'package:agriflock/core/utils/type_safe_utils.dart';
 
-// Request class - NOT using TypeUtils as per rules
-class UpdateProfileRequest {
-  final String fullName;
-  final String phoneNumber;
-  final Location location;
-  final int yearsOfExperience;
-  final String poultryTypeId;
-  final int chickenHouseCapacity;
-  final int currentNumberOfChickens;
-  final String preferredAgrovetName;
-  final String preferredFeedCompany;
-
-  UpdateProfileRequest({
-    required this.fullName,
-    required this.phoneNumber,
-    required this.location,
-    required this.yearsOfExperience,
-    required this.poultryTypeId,
-    required this.chickenHouseCapacity,
-    required this.currentNumberOfChickens,
-    required this.preferredAgrovetName,
-    required this.preferredFeedCompany,
-  });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'full_name': fullName,
-      'phone_number': phoneNumber,
-      'location': location.toJson(),
-      'years_of_experience': yearsOfExperience,
-      'poultry_type_id': poultryTypeId,
-      'chicken_house_capacity': chickenHouseCapacity,
-      'current_number_of_chickens': currentNumberOfChickens,
-      'preferred_agrovet_name': preferredAgrovetName,
-      'preferred_feed_company': preferredFeedCompany,
-    };
-  }
-}
-
 class Location {
   final String address;
   final double latitude;

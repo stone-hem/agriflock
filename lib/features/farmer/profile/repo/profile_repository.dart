@@ -1,5 +1,3 @@
-// repositories/profile_repository.dart
-
 import 'dart:convert';
 import 'dart:io';
 
@@ -15,17 +13,17 @@ class ProfileRepository {
 
   /// Update user profile
   Future<Result> updateProfile(
-      UpdateProfileRequest request,
+      Map<String,dynamic> request,
       ) async {
     try {
-      LogUtil.info('Request data: ${request.toJson()}');
+      LogUtil.info('Request data: $request');
 
       final response = await apiClient.put(
         '/users/profile',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: request.toJson(),
+        body: request,
       );
 
       final jsonResponse = jsonDecode(response.body);
