@@ -533,7 +533,7 @@ class PaygPaymentProcessingDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const CircularProgressIndicator(color: Colors.green),
+            const CircularProgressIndicator(),
             const SizedBox(height: 20),
             Text('Processing Payment',
                 style: Theme.of(context)

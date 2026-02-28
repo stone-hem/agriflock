@@ -180,10 +180,12 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
   Widget _stars(double r) => Row(
     mainAxisSize: MainAxisSize.min,
     children: List.generate(5, (i) {
-      if (i < r.floor())
+      if (i < r.floor()) {
         return Icon(Icons.star, color: Colors.amber.shade700, size: 14);
-      if (r - i >= 0.5 && i < r.ceil())
+      }
+      if (r - i >= 0.5 && i < r.ceil()) {
         return Icon(Icons.star_half, color: Colors.amber.shade700, size: 14);
+      }
       return Icon(Icons.star_border, color: Colors.amber.shade400, size: 14);
     }),
   );
@@ -581,7 +583,6 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: Row(children: [
           Image.asset('assets/logos/Logo_0725.png',
@@ -617,7 +618,7 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                   child: Padding(
                       padding: EdgeInsets.symmetric(vertical: 40),
                       child:
-                      CircularProgressIndicator(color: Colors.green)),
+                      CircularProgressIndicator()),
                 ),
 
               if (_hasRecommendedError && !_isLoadingRecommended)

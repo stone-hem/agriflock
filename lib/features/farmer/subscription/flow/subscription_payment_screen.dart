@@ -710,7 +710,7 @@ class _ProcessingDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const CircularProgressIndicator(color: Colors.green),
+            const CircularProgressIndicator(),
             const SizedBox(height: 20),
             const Text('Processing Payment',
                 style:

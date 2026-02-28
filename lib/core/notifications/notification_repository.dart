@@ -12,7 +12,7 @@ class NotificationRepository {
       : _storage = storage ?? SecureStorage();
 
   final SecureStorage _storage;
-  static const _base = 'https://api.agriflock.com/api/v1';
+  static const _base = 'https://api.agriflock360.com/api/v1';
 
   Future<Map<String, String>> _headers() async {
     final token = await _storage.getToken();

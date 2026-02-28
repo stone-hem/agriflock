@@ -23,7 +23,6 @@ class _VetDetailsScreenState extends State<VetDetailsScreen> {
   static const Color _green = Color(0xFF2E7D32);
   static const Color _dark = Color(0xFF1A1A1A);
   static const Color _mid = Color(0xFF6B6B6B);
-  static const Color _bg = Color(0xFFF7F8FA);
   static const Color _border = Color(0xFFEEEEEE);
 
   @override
@@ -233,7 +232,6 @@ class _VetDetailsScreenState extends State<VetDetailsScreen> {
     final isTablet = MediaQuery.of(context).size.width >= 600;
 
     return Scaffold(
-      backgroundColor: _bg,
       body: CustomScrollView(
         slivers: [
           // ── Hero ──

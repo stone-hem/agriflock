@@ -335,7 +335,6 @@ class _AllVetsScreenState extends State<AllVetsScreen> {
     final isTablet = MediaQuery.of(context).size.width >= 600;
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         title: const Text('All Veterinary Officers'),
         backgroundColor: Colors.white,
@@ -383,7 +382,7 @@ class _AllVetsScreenState extends State<AllVetsScreen> {
             // Body
             Expanded(
               child: _isLoading && _allVets.isEmpty
-                  ? const Center(child: CircularProgressIndicator(color: Colors.green))
+                  ? const Center(child: CircularProgressIndicator())
                   : _hasError && _allVets.isEmpty
                   ? Center(
                 child: Padding(

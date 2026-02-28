@@ -11,7 +11,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 /// Create one per telemetry screen, call [connect], and listen to
 /// [telemetryStream] / [alertStream]. Call [dispose] on screen exit.
 class DeviceTelemetryService {
-  static const _wsBaseUrl = 'wss://api.agriflock.com/telemetry';
+  static const _wsBaseUrl = 'wss://api.agriflock360.com/telemetry';
   static const _maxReconnectAttempts = 6;
 
   final String deviceId;

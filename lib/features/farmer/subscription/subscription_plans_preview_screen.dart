@@ -138,7 +138,7 @@ class _SubscriptionPlansPreviewScreenState
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          CircularProgressIndicator(color: Colors.green),
+          CircularProgressIndicator(),
           SizedBox(height: 16),
           Text('Loading plans…',
               style: TextStyle(color: Colors.grey, fontSize: 14)),

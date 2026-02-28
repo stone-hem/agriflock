@@ -202,7 +202,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                 ),
                 child: _isLoadingPlans
                     ? const Center(
-                        child: CircularProgressIndicator(color: Colors.green),
+                        child: CircularProgressIndicator(),
                       )
                     : _plans.isEmpty
                         ? _buildEmptyPlans()

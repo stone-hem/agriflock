@@ -59,7 +59,7 @@ class _PlanRecommendationScreenState extends State<PlanRecommendationScreen> {
       body: SafeArea(
         child: _isLoading
             ? const Center(
-                child: CircularProgressIndicator(color: Colors.green))
+                child: CircularProgressIndicator())
             : _error != null
                 ? _buildErrorState()
                 : _buildContent(),
