@@ -1197,7 +1197,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                 if (int.tryParse(value) == null) return 'Please enter a valid number';
                 final alive = int.parse(value);
                 final initial = int.tryParse(_initialQuantityController.text) ?? 0;
-                if (alive > initial) return 'Current bird count cannot exceed initial bird';
+                if (alive > initial) return 'Current bird count cannot exceed initial birds';
                 return null;
               },
               labelText: 'Current count during placement',

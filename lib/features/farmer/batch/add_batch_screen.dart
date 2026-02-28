@@ -731,11 +731,11 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                   final initial =
                       int.tryParse(_initialQuantityController.text) ?? 0;
                   if (alive > initial) {
-                    return 'Birds alive cannot exceed initial count';
+                    return 'Current bird count cannot exceed initial birds';
                   }
                   return null;
                 },
-                labelText: 'Current count at the moment',
+                labelText: 'Current count during placement',
                 hintText: 'e.g., $_availableCapacity',
               ),
               const SizedBox(height: 20),
