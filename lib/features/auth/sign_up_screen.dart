@@ -482,7 +482,7 @@ class _SignupScreenState extends State<SignupScreen> {
         context.push(
           '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(tempToken)}',
         );
-      case 'account_inactive':
+      case 'account_unverified':
         final email = failure.data?['email'] as String? ??
             _emailController.text.trim();
         final userId = failure.data?['userId'] as String? ?? '';

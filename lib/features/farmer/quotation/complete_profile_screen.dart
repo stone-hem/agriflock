@@ -218,8 +218,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     return _selectedHatcheryCompany ?? '';
   }
 
-  String _getAggregatorValue() {
+  List<String> _getAggregatorValue() {
     List<String> selected = [];
+
     _aggregatorSelections.forEach((key, value) {
       if (value && key != 'Others') {
         selected.add(key);
@@ -230,7 +231,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       selected.add(_otherAggregatorController.text.trim());
     }
 
-    return selected.join(', ');
+    return selected; // Returns List<String> instead of comma-separated string
   }
 
   Future<void> _loadUserData() async {

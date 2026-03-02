@@ -13,119 +13,119 @@ class ExperienceSelectionScreen extends StatefulWidget {
 
 class _ExperienceSelectionScreenState
     extends State<ExperienceSelectionScreen> {
-  int? _selectedOption; // 0 = Full Farm, 1 = Extension Only
-  bool _isContinuing = false;
+  bool _isNavigating = false;
 
-  Future<void> _handleContinue() async {
-    if (_selectedOption == null) return;
+  Future<void> _handleSelect(int option) async {
+    if (_isNavigating) return;
+    setState(() => _isNavigating = true);
 
-    setState(() => _isContinuing = true);
-
-    if (_selectedOption == 0) {
-      // Full Farm Experience → go to subscription plan selection
+    if (option == 0) {
       if (!mounted) return;
       context.push(AppRoutes.subscriptionPlans);
     } else {
-      // Extension Services + Devices Only → save state & go to limited home
       await secureStorage.saveSubscriptionState('no_subscription_plan');
       if (!mounted) return;
       context.go(AppRoutes.browseVets);
     }
 
-    if (mounted) setState(() => _isContinuing = false);
+    if (mounted) setState(() => _isNavigating = false);
   }
 
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).primaryColor;
+
     return Scaffold(
-      backgroundColor: Theme.of(context).primaryColor,
+      backgroundColor: const Color(0xFFF4F6F4),
       body: SafeArea(
-        child: Column(
-          children: [
-            // ── Hero Section ──────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-              child: Column(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Compact Header ────────────────────────────────
+              Row(
                 children: [
                   Container(
-                    width: 100,
-                    height: 100,
-                    decoration: const BoxDecoration(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
                       color: Colors.white,
-                      shape: BoxShape.circle,
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: ClipOval(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
                       child: Image.asset(
                         'assets/logos/Logo_0725.png',
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            Icon(Icons.agriculture,
-                                size: 50,
-                                color: Theme.of(context).primaryColor),
+                        errorBuilder: (_, __, ___) => Icon(
+                          Icons.agriculture,
+                          color: Colors.white,
+                          size: 22,
+                        ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'How would you like to use AgriFlock 360?',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Choose the experience that best fits your needs.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white.withValues(alpha: 0.88),
-                      height: 1.4,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // ── Options Section ───────────────────────────────────
-            Expanded(
-              child: Container(
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFF8F9FA),
-                  borderRadius:
-                      BorderRadius.vertical(top: Radius.circular(24)),
-                ),
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
-                  child: Column(
+                  const SizedBox(width: 12),
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Select your experience',
+                        'AgriFlock 360',
                         style: TextStyle(
                           fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.grey[800],
+                          fontWeight: FontWeight.w800,
+                          color: Colors.grey[850],
+                          letterSpacing: -0.3,
                         ),
                       ),
-                      const SizedBox(height: 14),
+                      Text(
+                        'Choose your experience',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
 
-                      // ── Option A: Full Farm Experience ────────────
-                      _ExperienceOptionCard(
-                        index: 0,
-                        selectedIndex: _selectedOption,
-                        accentColor: Colors.green,
+              const SizedBox(height: 20),
+
+              Text(
+                'How would you\nlike to use the app?',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.grey[900],
+                  height: 1.2,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Tap a plan to get started instantly.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey[500],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // ── Option Cards ──────────────────────────────────
+              Expanded(
+                child: Column(
+                  children: [
+                    // Full Farm
+                    Expanded(
+                      child: _TapOptionCard(
+                        accentColor: primaryColor,
                         icon: Icons.agriculture_rounded,
                         title: 'Full Farm Experience',
-                        description:
-                            'Unlock complete farm management — batch tracking, daily records, expenses, reports, vet services & device monitoring. Best for farmers managing multiple flocks.',
+                        subtitle: 'Best for managing multiple flocks',
                         badge: 'Recommended',
-                        badgeColor: Colors.green,
                         bullets: const [
                           'Farm & batch management',
                           'Daily records & expenses',
@@ -133,260 +133,261 @@ class _ExperienceSelectionScreenState
                           'Vet services booking',
                           'Device monitoring',
                         ],
-                        onTap: () =>
-                            setState(() => _selectedOption = 0),
+                        isLoading: _isNavigating,
+                        onTap: () => _handleSelect(0),
                       ),
+                    ),
 
-                      const SizedBox(height: 14),
+                    const SizedBox(height: 14),
 
-                      // ── Option B: Extension Services + Devices ────
-                      _ExperienceOptionCard(
-                        index: 1,
-                        selectedIndex: _selectedOption,
-                        accentColor: Colors.blue,
+                    // Extension / Devices Only
+                    Expanded(
+                      child: _TapOptionCard(
+                        accentColor: Colors.blue.shade600,
                         icon: Icons.devices_rounded,
                         title: 'Extension Services or Devices Only',
-                        description:
-                            'Access vet & extension services and device monitoring without full farm setup. Ideal if you mainly need advisory services or only manage leased devices.',
+                        subtitle: 'Advisory services & device monitoring',
                         bullets: const [
                           'Vet & extension services',
                           'Device monitoring',
                           'Basic profile',
                         ],
-                        onTap: () =>
-                            setState(() => _selectedOption = 1),
+                        isLoading: _isNavigating,
+                        onTap: () => _handleSelect(1),
                       ),
-
-                      const SizedBox(height: 28),
-
-                      // ── Continue Button ───────────────────────────
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _selectedOption == null || _isContinuing
-                              ? null
-                              : _handleContinue,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                Theme.of(context).primaryColor,
-                            foregroundColor: Colors.white,
-                            minimumSize:
-                                const Size(double.infinity, 52),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 2,
-                            disabledBackgroundColor: Theme.of(context)
-                                .primaryColor
-                                .withValues(alpha: 0.4),
-                          ),
-                          child: _isContinuing
-                              ? const SizedBox(
-                                  width: 22,
-                                  height: 22,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2.5,
-                                  ),
-                                )
-                              : const Text(
-                                  'Continue',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-          ],
+
+              const SizedBox(height: 8),
+              Center(
+                child: Text(
+                  'You can change this later.',
+                  style: TextStyle(fontSize: 11.5, color: Colors.grey[400]),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _ExperienceOptionCard extends StatelessWidget {
-  final int index;
-  final int? selectedIndex;
+class _TapOptionCard extends StatefulWidget {
   final Color accentColor;
   final IconData icon;
   final String title;
-  final String description;
+  final String subtitle;
   final List<String> bullets;
   final String? badge;
-  final Color? badgeColor;
+  final bool isLoading;
   final VoidCallback onTap;
 
-  const _ExperienceOptionCard({
-    required this.index,
-    required this.selectedIndex,
+  const _TapOptionCard({
     required this.accentColor,
     required this.icon,
     required this.title,
-    required this.description,
+    required this.subtitle,
     required this.bullets,
+    required this.isLoading,
     required this.onTap,
     this.badge,
-    this.badgeColor,
   });
 
-  bool get _isSelected => selectedIndex == index;
+  @override
+  State<_TapOptionCard> createState() => _TapOptionCardState();
+}
+
+class _TapOptionCardState extends State<_TapOptionCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scaleAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+      lowerBound: 0.0,
+      upperBound: 1.0,
+    );
+    _scaleAnim = Tween<double>(begin: 1.0, end: 0.97).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: _isSelected ? accentColor : Colors.grey.shade200,
-          width: _isSelected ? 2 : 1,
-        ),
-        boxShadow: [
-          if (_isSelected)
-            BoxShadow(
-              color: accentColor.withValues(alpha: 0.14),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-        ],
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Radio
-                  Container(
-                    width: 22,
-                    height: 22,
-                    margin: const EdgeInsets.only(top: 2),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: _isSelected
-                            ? accentColor
-                            : Colors.grey.shade400,
-                        width: 2,
+    return ScaleTransition(
+      scale: _scaleAnim,
+      child: GestureDetector(
+        onTapDown: (_) => _controller.forward(),
+        onTapUp: (_) {
+          _controller.reverse();
+          widget.onTap();
+        },
+        onTapCancel: () => _controller.reverse(),
+        child: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.grey.shade200, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: widget.accentColor.withValues(alpha: 0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Top row: icon + title + badge + arrow
+                Row(
+                  children: [
+                    Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: widget.accentColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(13),
                       ),
+                      child: Icon(widget.icon,
+                          color: widget.accentColor, size: 24),
                     ),
-                    child: _isSelected
-                        ? Center(
-                            child: Container(
-                              width: 12,
-                              height: 12,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: accentColor,
-                              ),
-                            ),
-                          )
-                        : null,
-                  ),
-                  const SizedBox(width: 12),
-                  // Icon
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: accentColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(icon, color: accentColor, size: 22),
-                  ),
-                  const SizedBox(width: 12),
-                  // Title + badge
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                title,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.grey[850],
-                                ),
-                              ),
-                            ),
-                            if (badge != null) ...[
-                              const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: (badgeColor ?? accentColor)
-                                      .withValues(alpha: 0.1),
-                                  borderRadius:
-                                      BorderRadius.circular(20),
-                                ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
                                 child: Text(
-                                  badge!,
-                                  style: TextStyle(
-                                    fontSize: 10,
+                                  widget.title,
+                                  style: const TextStyle(
+                                    fontSize: 14,
                                     fontWeight: FontWeight.w700,
-                                    color:
-                                        badgeColor ?? accentColor,
+                                    color: Color(0xFF1A1A1A),
                                   ),
                                 ),
                               ),
+                              if (widget.badge != null)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: widget.accentColor
+                                        .withValues(alpha: 0.12),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    widget.badge!,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      color: widget.accentColor,
+                                    ),
+                                  ),
+                                ),
                             ],
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          description,
-                          style: TextStyle(
-                            fontSize: 12.5,
-                            color: Colors.grey[600],
-                            height: 1.35,
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 2),
+                          Text(
+                            widget.subtitle,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[500],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 8),
+                    widget.isLoading
+                        ? SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        color: widget.accentColor,
+                        strokeWidth: 2,
+                      ),
+                    )
+                        : Icon(Icons.arrow_forward_ios_rounded,
+                        size: 16, color: Colors.grey[400]),
+                  ],
+                ),
+
+                const SizedBox(height: 14),
+                Divider(color: Colors.grey.shade100, height: 1),
+                const SizedBox(height: 12),
+
+                // Bullet features
+                Expanded(
+                  child: Wrap(
+                    spacing: 10,
+                    runSpacing: 8,
+                    children: widget.bullets.map((b) {
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.check_circle_rounded,
+                              color: widget.accentColor, size: 14),
+                          const SizedBox(width: 5),
+                          Text(
+                            b,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
                   ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Divider(color: Colors.grey.shade100, height: 1),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 6,
-                children: bullets.map((b) {
-                  return Row(
-                    mainAxisSize: MainAxisSize.min,
+                ),
+
+                // Tap CTA bar
+                const SizedBox(height: 10),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: widget.accentColor.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.check_circle_rounded,
-                          color: accentColor, size: 14),
-                      const SizedBox(width: 4),
+                      Icon(Icons.touch_app_rounded,
+                          size: 15, color: widget.accentColor),
+                      const SizedBox(width: 6),
                       Text(
-                        b,
+                        'Tap to select & continue',
                         style: TextStyle(
-                          fontSize: 11.5,
-                          color: Colors.grey[700],
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: widget.accentColor,
                         ),
                       ),
                     ],
-                  );
-                }).toList(),
-              ),
-            ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -487,7 +487,7 @@ class _SubscriptionPlansPreviewScreenState
       if (!mounted) return;
       result.when(
         success: (_) async {
-          await secureStorage.saveSubscriptionState('has_active_plan');
+          await secureStorage.saveSubscriptionState('has_subscription_plan');
           if (!mounted) return;
           context.go(AppRoutes.home);
         },

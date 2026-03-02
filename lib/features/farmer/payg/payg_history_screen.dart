@@ -16,7 +16,7 @@ class PaygHistoryScreen extends StatelessWidget {
               fit: BoxFit.cover,
               width: 40,
               height: 40,
-              errorBuilder: (_, __, ___) => Container(
+              errorBuilder: (_, _, _) => Container(
                 color: Colors.green,
                 child: const Icon(Icons.image, size: 40, color: Colors.white54),
               ),

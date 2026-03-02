@@ -33,14 +33,16 @@ class VetOrderRequest {
   final List<String>? houseIds;
   final List<String>? batchIds;
   final List<String> serviceIds;
+  final int? participantsCount;
   final int birdsCount;
   final String priorityLevel;
   final String preferredDate;
   final String preferredTime;
   final bool termsAgreed;
-  final int? participantsCount;
+  final int? mortality;
+  final int? ageInDays;
   final String? paymentMode;
-  final List<BirdTypeEntry>? birdTypeDetails;
+  final List<String>? birdTypeIds;
 
   VetOrderRequest({
     required this.vetId,
@@ -54,7 +56,7 @@ class VetOrderRequest {
     required this.termsAgreed,
     this.participantsCount,
     this.paymentMode,
-    this.birdTypeDetails,
+    this.birdTypeIds, this.mortality, this.ageInDays,
   });
 
   Map<String, dynamic> toJson() {
@@ -69,10 +71,12 @@ class VetOrderRequest {
       'preferred_time': preferredTime,
       'terms_agreed': termsAgreed,
       'participants_count': participantsCount,
+      'mortality':mortality,
+      'age_in_days':ageInDays,
       if (paymentMode != null) 'payment_mode': paymentMode,
-      if (birdTypeDetails != null)
-        'bird_type_details':
-            birdTypeDetails!.map((e) => e.toJson()).toList(),
+      if (birdTypeIds != null)
+        'bird_type_ids':
+        birdTypeIds!.map((e) => e).toList(),
     };
   }
 }
@@ -88,8 +92,10 @@ class VetEstimateRequest {
   final String preferredDate;
   final String preferredTime;
   final bool termsAgreed;
+  final int? mortality;
+  final int? ageInDays;
   final String? paymentMode;
-  final List<BirdTypeEntry>? birdTypeDetails;
+  final List<String>? birdTypeIds;
 
   VetEstimateRequest({
     required this.vetId,
@@ -103,7 +109,7 @@ class VetEstimateRequest {
     required this.termsAgreed,
     this.participantsCount,
     this.paymentMode,
-    this.birdTypeDetails,
+    this.birdTypeIds, this.mortality, this.ageInDays,
   });
 
   Map<String, dynamic> toJson() {
@@ -118,10 +124,12 @@ class VetEstimateRequest {
       'preferred_time': preferredTime,
       'terms_agreed': termsAgreed,
       'participants_count': participantsCount,
+      'mortality':mortality,
+      'age_in_days':ageInDays,
       if (paymentMode != null) 'payment_mode': paymentMode,
-      if (birdTypeDetails != null)
-        'bird_type_details':
-            birdTypeDetails!.map((e) => e.toJson()).toList(),
+      if (birdTypeIds != null)
+        'bird_type_ids':
+        birdTypeIds!.map((e) => e).toList(),
     };
   }
 }

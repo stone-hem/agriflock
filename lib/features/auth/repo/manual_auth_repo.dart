@@ -28,7 +28,7 @@ class ManualAuthRepository {
   /// - [Success] with LoginResponse when login succeeds
   /// - [Failure] with cond for conditional routing:
   ///   - 'user_onboarding': user needs to complete onboarding (data contains tempToken)
-  ///   - 'account_inactive': user needs to verify email (data contains email, userId)
+  ///   - 'account_unverified': user needs to verify email (data contains email, userId)
   ///   - 'unverified_vet': vet account pending verification
   Future<Result<LoginResponse>> login({
     required String email,
@@ -100,6 +100,13 @@ class ManualAuthRepository {
     required String password,
     required bool agreedToTerms,
   }) async {
+    LogUtil.warning({
+      'name': fullName,
+      'email': email,
+      'password': password,
+      'phone_number': phoneNumber,
+      'agreed_to_terms': agreedToTerms,
+    });
     try {
       final response = await apiClient.post(
         '/auth/register',

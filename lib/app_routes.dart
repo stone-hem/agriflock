@@ -333,6 +333,7 @@ class AppRoutes {
           path: otpVerifyEmailOrPhone,
           builder: (context, state) {
             final email = state.uri.queryParameters['email'];
+            final phoneNumber=state.uri.queryParameters['phone'];
             final userId = state.uri.queryParameters['userId'];
 
             if (email == null || email.isEmpty) {
@@ -341,6 +342,10 @@ class AppRoutes {
 
             if (userId == null || userId.isEmpty) {
               return ErrorScreen(message: 'User ID parameter is missing');
+            }
+
+            if (phoneNumber == null || phoneNumber.isEmpty) {
+              return ErrorScreen(message: 'Phone  parameter is missing');
             }
             final decodedEmail = Uri.decodeComponent(email);
             final decodedUserId = Uri.decodeComponent(userId);
@@ -628,15 +633,15 @@ class AppRoutes {
             return ExpendituresScreen();
           },
         ),
-        GoRoute(path: payg, redirect: (_, __) => paygDashboard),
-        GoRoute(path: paygPayment, builder: (_, __) => const PaygPaymentScreen()),
-        GoRoute(path: paygHistory, builder: (_, __) => const PaygHistoryScreen()),
-        GoRoute(path: '/day1/welcome-msg-page', redirect: (_, __) => subscriptionPlans),
+        GoRoute(path: payg, redirect: (_, _) => paygDashboard),
+        GoRoute(path: paygPayment, builder: (_, _) => const PaygPaymentScreen()),
+        GoRoute(path: paygHistory, builder: (_, _) => const PaygHistoryScreen()),
+        GoRoute(path: '/day1/welcome-msg-page', redirect: (_, _) => subscriptionPlans),
         GoRoute(
           path: '/onboarding/setup',
           builder: (context, state) => const OnboardingSetupScreen(),
         ),
-        GoRoute(path: invoice, redirect: (_, __) => paygInvoice),
+        GoRoute(path: invoice, redirect: (_, _) => paygInvoice),
         GoRoute(
           path: settings,
           builder: (context, state) => const SettingsScreen(),
@@ -729,26 +734,26 @@ class AppRoutes {
             return VetOrderScreen(vet: vet);
           },
         ),
-        GoRoute(path: '/welcome-day1', redirect: (_, __) => subscriptionExperience),
-        GoRoute(path: '/plan-transition', redirect: (_, __) => subscriptionRecommendation),
-        GoRoute(path: '/plans', redirect: (_, __) => subscriptionPlansPreview),
+        GoRoute(path: '/welcome-day1', redirect: (_, _) => subscriptionExperience),
+        GoRoute(path: '/plan-transition', redirect: (_, _) => subscriptionRecommendation),
+        GoRoute(path: '/plans', redirect: (_, _) => subscriptionPlansPreview),
 
         // ── Subscription flow routes ──────────────────────────────────
         GoRoute(
           path: subscriptionExperience,
-          builder: (_, __) => const ExperienceSelectionScreen(),
+          builder: (_, _) => const ExperienceSelectionScreen(),
         ),
         GoRoute(
           path: subscriptionPlans,
-          builder: (_, __) => const SubscriptionPlansScreen(),
+          builder: (_, _) => const SubscriptionPlansScreen(),
         ),
         GoRoute(
           path: subscriptionRecommendation,
-          builder: (_, __) => const PlanRecommendationScreen(),
+          builder: (_, _) => const PlanRecommendationScreen(),
         ),
         GoRoute(
           path: subscriptionPlansPreview,
-          builder: (_, __) => const SubscriptionPlansPreviewScreen(),
+          builder: (_, _) => const SubscriptionPlansPreviewScreen(),
         ),
         GoRoute(
           path: subscriptionPayment,
@@ -775,11 +780,11 @@ class AppRoutes {
         ),
         GoRoute(
           path: paygDashboard,
-          builder: (_, __) => const PaygDashboardScreen(),
+          builder: (_, _) => const PaygDashboardScreen(),
         ),
         GoRoute(
           path: paygInvoice,
-          builder: (_, __) => const PaygInvoiceScreen(),
+          builder: (_, _) => const PaygInvoiceScreen(),
         ),
 
         // Vet payment routes (outside shell)

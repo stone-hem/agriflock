@@ -335,7 +335,7 @@ class _LoginScreenState extends State<LoginScreen> {
           '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(tempToken)}',
           extra: _identifierController.text.trim(),
         );
-      case 'account_inactive':
+      case 'account_unverified':
         final email = failure.data?['email'] as String? ??
             _identifierController.text.trim();
         final userId = failure.data?['userId'] as String? ?? '';

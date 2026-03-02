@@ -111,7 +111,7 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        widget.email,
+                        'Verify Phone number for this account : ${widget.email}',
                         style: TextStyle(
                           fontSize: 14,
                           color: Theme.of(context).primaryColor,
@@ -268,7 +268,7 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
                               ),
                             )
                                 : const Text(
-                              'Verify Email',
+                              'Verify Phone Number',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,

@@ -1,4 +1,5 @@
 import 'package:agriflock/core/utils/api_error_handler.dart';
+import 'package:agriflock/core/utils/secure_storage.dart';
 import 'package:agriflock/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock/core/widgets/reusable_input.dart';
 import 'package:agriflock/features/farmer/batch/model/batch_model.dart';
@@ -15,6 +16,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:agriflock/core/utils/result.dart';
 
+/// Subscription states
+enum _SubscriptionState { loading, noSubscription, expired, hasSubscription }
+
 class VetOrderScreen extends StatefulWidget {
   final VetFarmer vet;
 
@@ -26,88 +30,136 @@ class VetOrderScreen extends StatefulWidget {
 
 class _VetOrderScreenState extends State<VetOrderScreen> {
   final VetFarmerRepository _vetRepository = VetFarmerRepository();
+  final SecureStorage _secureStorage = SecureStorage();
   final _formKey = GlobalKey<FormState>();
 
-  // Selection states
+  // ── Subscription ──────────────────────────────────────────────────────────
+  _SubscriptionState _subscriptionState = _SubscriptionState.loading;
+
+  bool get _hasNoSubscription =>
+      _subscriptionState == _SubscriptionState.noSubscription;
+
+  bool get _hasValidOrExpiredSubscription =>
+      _subscriptionState == _SubscriptionState.hasSubscription ||
+          _subscriptionState == _SubscriptionState.expired;
+
+  // ── Farm-based selection (has/expired plan) ────────────────────────────────
   String? _selectedFarm;
   String? _selectedHouse;
   List<String> _selectedBatches = [];
+
+  // ── Services & priority ────────────────────────────────────────────────────
   List<String> _selectedServices = [];
   String? _selectedPriority;
 
-  // Manual birds count (used when no farm/house/batch selected)
+  // ── Manual / no-plan fields ────────────────────────────────────────────────
   final _birdsCountController = TextEditingController();
   int? _manualBirdsCount;
 
-  // Number of people (for PER_PERSON services)
-  final _numberOfPeopleController = TextEditingController();
-  int? _numberOfPeople;
-
-  // Bird types (for manual mode)
+  // ── Bird types (manual mode) ───────────────────────────────────────────────
   List<BirdType> _birdTypes = [];
   bool _isLoadingBirdTypes = false;
   final Set<String> _selectedBirdTypeIds = {};
-  // Shared flock detail fields (apply to all selected bird types)
+
   final _birdAgeController = TextEditingController();
   final _birdMortalityController = TextEditingController();
-  String _birdAgeUnit = 'days';
+  String _birdAgeUnit = 'days'; // 'days' | 'weeks'
 
-  // Payment mode (both modes)
+  // ── PER_PERSON services ────────────────────────────────────────────────────
+  final _numberOfPeopleController = TextEditingController();
+  int? _numberOfPeople;
+
+  // ── Payment ────────────────────────────────────────────────────────────────
   String? _selectedPaymentMode;
-  static const List<String> _paymentModes = [
-    'M-Pesa',
-    'Cash',
-    'Card',
-    'Bank Transfer',
-  ];
 
-  // Estimate state
+  // Displayed label → API value
+  static const Map<String, String> _paymentModes = {
+    'M-Pesa': 'MOBILE_MONEY',
+    'Cash': 'CASH',
+    'Card': 'CREDIT_CARD',
+    'Bank Transfer': 'BANK_TRANSFER',
+  };
+
+  // ── Estimate ───────────────────────────────────────────────────────────────
   bool _isLoadingEstimate = false;
 
-  // Service types - Dynamic from API
+  // ── Service types ──────────────────────────────────────────────────────────
   List<VetServiceType> _serviceTypes = [];
   bool _isLoadingServices = false;
   String? _servicesError;
 
-  // Repositories
+  // ── Repositories ──────────────────────────────────────────────────────────
   final _farmRepository = FarmRepository();
   final _batchHouseRepository = BatchHouseRepository();
 
-  // Data states
+  // ── Farm data ─────────────────────────────────────────────────────────────
   FarmsResponse? _farmsResponse;
   List<House> _houses = [];
   List<BatchModel> _availableBatches = [];
 
-  // Loading states
   bool _isLoadingFarms = false;
   bool _isLoadingHouses = false;
-  bool _hasError = false;
-  String? _errorMessage;
+  bool _hasFarmsError = false;
+  String? _farmsErrorMessage;
 
-  final List<String> _priorities = [
-    'NORMAL',
-    'URGENT',
-    'EMERGENCY',
-  ];
+  final List<String> _priorities = ['NORMAL', 'URGENT', 'EMERGENCY'];
+
+  // ── Lifecycle ──────────────────────────────────────────────────────────────
 
   @override
   void initState() {
     super.initState();
-    _loadFarms();
     _loadServiceTypes();
+    _checkSubscriptionAndInit();
+  }
+
+  @override
+  void dispose() {
+    _birdsCountController.dispose();
+    _numberOfPeopleController.dispose();
+    _birdAgeController.dispose();
+    _birdMortalityController.dispose();
+    super.dispose();
+  }
+
+  // ── Subscription check ─────────────────────────────────────────────────────
+
+  Future<void> _checkSubscriptionAndInit() async {
+    final String state = await _secureStorage.getSubscriptionState();
+
+    _SubscriptionState resolved;
+    if (state == 'no_subscription_plan') {
+      resolved = _SubscriptionState.noSubscription;
+    } else if (state == 'expired_subscription_plan') {
+      resolved = _SubscriptionState.expired;
+    } else {
+      resolved = _SubscriptionState.hasSubscription;
+    }
+
+    setState(() => _subscriptionState = resolved);
+
+    // Only fetch farm data when the farmer actually has (or had) a plan.
+    if (resolved == _SubscriptionState.hasSubscription ||
+        resolved == _SubscriptionState.expired) {
+      _loadFarms();
+    }
+
+    // Bird types are always needed — a subscribed farmer with no farms set up
+    // will also fall through to the manual section.
     _loadBirdTypes();
   }
+
+  // ── Data loaders ───────────────────────────────────────────────────────────
 
   Future<void> _loadFarms() async {
     setState(() {
       _isLoadingFarms = true;
-      _hasError = false;
-      _errorMessage = null;
+      _hasFarmsError = false;
+      _farmsErrorMessage = null;
     });
 
     try {
       final result = await _farmRepository.getAllFarmsWithStats();
-
       switch (result) {
         case Success<FarmsResponse>(data: final data):
           setState(() {
@@ -115,10 +167,10 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
             _isLoadingFarms = false;
           });
           break;
-        case Failure(message: final error, :final statusCode, :final response):
+        case Failure(message: final error):
           setState(() {
-            _hasError = true;
-            _errorMessage = error;
+            _hasFarmsError = true;
+            _farmsErrorMessage = error;
             _isLoadingFarms = false;
           });
           ApiErrorHandler.handle(error);
@@ -126,8 +178,8 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
       }
     } catch (e) {
       setState(() {
-        _hasError = true;
-        _errorMessage = 'Failed to load farms: $e';
+        _hasFarmsError = true;
+        _farmsErrorMessage = 'Failed to load farms: $e';
         _isLoadingFarms = false;
       });
     }
@@ -141,7 +193,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
 
     try {
       final result = await _vetRepository.getVetServiceTypes();
-
       switch (result) {
         case Success<VetServiceTypesResponse>(data: final data):
           setState(() {
@@ -183,33 +234,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
     }
   }
 
-  void _toggleBirdType(BirdType type, bool selected) {
-    setState(() {
-      if (selected) {
-        _selectedBirdTypeIds.add(type.id);
-      } else {
-        _selectedBirdTypeIds.remove(type.id);
-      }
-    });
-  }
-
-  List<BirdTypeEntry> _buildBirdTypeEntries() {
-    final count = int.tryParse(_birdsCountController.text) ?? 0;
-    final age = int.tryParse(_birdAgeController.text) ?? 0;
-    final mortality = double.tryParse(_birdMortalityController.text) ?? 0;
-    return _selectedBirdTypeIds.map((id) {
-      final type = _birdTypes.firstWhere((t) => t.id == id);
-      return BirdTypeEntry(
-        birdTypeId: id,
-        birdTypeName: type.name,
-        count: count,
-        ageValue: age,
-        ageUnit: _birdAgeUnit,
-        mortalityRate: mortality,
-      );
-    }).toList();
-  }
-
   Future<void> _loadHousesForSelectedFarm() async {
     if (_selectedFarm == null) return;
 
@@ -223,7 +247,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
 
     try {
       final result = await _batchHouseRepository.getAllHouses(_selectedFarm!);
-
       switch (result) {
         case Success<List<House>>(data: final houses):
           setState(() {
@@ -232,39 +255,27 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
           });
           break;
         case Failure(message: final error):
-          setState(() {
-            _isLoadingHouses = false;
-          });
+          setState(() => _isLoadingHouses = false);
           ApiErrorHandler.handle(error);
           break;
       }
     } catch (e) {
-      setState(() {
-        _isLoadingHouses = false;
-        _errorMessage = 'Failed to load houses: $e';
-      });
+      setState(() => _isLoadingHouses = false);
     }
   }
+
+  // ── Selection helpers ──────────────────────────────────────────────────────
 
   void _onHouseSelected(String? houseId) {
     setState(() {
       _selectedHouse = houseId;
       _selectedBatches.clear();
-
-      // Update available batches based on selected house
       if (houseId != null) {
-        final selectedHouse = _houses.firstWhere(
-              (house) => house.id == houseId,
-          orElse: () => _houses.isNotEmpty
-              ? _houses.first
-              : House(
-            id: '',
-            houseName: '',
-            capacity: 0,
-            batches: [],
-          ),
+        final h = _houses.firstWhere(
+              (h) => h.id == houseId,
+          orElse: () => House(id: '', houseName: '', capacity: 0, batches: []),
         );
-        _availableBatches = selectedHouse.batches;
+        _availableBatches = h.batches;
       } else {
         _availableBatches = [];
       }
@@ -274,119 +285,110 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
   void _onBatchSelected(String batchId, bool selected) {
     setState(() {
       if (selected) {
-        if (!_selectedBatches.contains(batchId)) {
-          _selectedBatches.add(batchId);
-        }
+        if (!_selectedBatches.contains(batchId)) _selectedBatches.add(batchId);
       } else {
         _selectedBatches.remove(batchId);
       }
     });
   }
 
-  /// Whether the user has selected farm details (farm + house + batches)
-  bool get _hasFarmDetails => _selectedFarm != null && _selectedHouse != null && _selectedBatches.isNotEmpty;
-
   void _onServiceSelected(String serviceId, bool selected) {
     setState(() {
       if (selected) {
-        if (!_selectedServices.contains(serviceId)) {
+        if (!_selectedServices.contains(serviceId))
           _selectedServices.add(serviceId);
-        }
       } else {
         _selectedServices.remove(serviceId);
       }
     });
   }
 
-  Future<void> _getEstimate() async {
-    if (_selectedPriority == null || _selectedServices.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select priority level and at least one service'),
-          backgroundColor: Colors.orange,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
-    if (_selectedPaymentMode == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a mode of payment'),
-          backgroundColor: Colors.orange,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
-    // If no farm details provided, birds count is required
-    if (!_hasFarmDetails && (_manualBirdsCount == null || _manualBirdsCount! <= 0)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select farm details or enter the number of birds'),
-          backgroundColor: Colors.orange,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
-    // Validate number of people for PER_PERSON services
-    final hasPerPersonService = _selectedServices.any((serviceId) {
-      final service = _serviceTypes.firstWhere((s) => s.id == serviceId, orElse: () => _serviceTypes.first);
-      return service.pricingType == 'PER_PERSON';
-    });
-    if (hasPerPersonService && (_numberOfPeople == null || _numberOfPeople! <= 0)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter the number of people for the training/group session'),
-          backgroundColor: Colors.orange,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
+  void _toggleBirdType(BirdType type, bool selected) {
     setState(() {
-      _isLoadingEstimate = true;
-    });
-
-    // Calculate birds count from selected batches, or use manual count
-    int birdsCount = 0;
-    if (_selectedBatches.isNotEmpty) {
-      for (final batchId in _selectedBatches) {
-        final batch = _availableBatches.firstWhere(
-              (b) => b.id == batchId,
-          orElse: () => BatchModel(
-            id: '',
-            batchNumber: '',
-            initialQuantity: 0,
-            birdsAlive: 0,
-            age: 0,
-            type: '', birdTypeId: '', breed: '', startDate: DateTime.now(), currentWeight: 1, expectedWeight:0, feedingTime: '', feedingSchedule: [],
-          ),
-        );
-        birdsCount += batch.birdsAlive;
+      if (selected) {
+        _selectedBirdTypeIds.add(type.id);
+      } else {
+        _selectedBirdTypeIds.remove(type.id);
       }
+    });
+  }
+
+  /// Whether the farmer has fully specified farm → house → batch.
+  bool get _hasFarmDetails =>
+      _selectedFarm != null &&
+          _selectedHouse != null &&
+          _selectedBatches.isNotEmpty;
+
+  bool get _hasPerPersonService => _selectedServices.any((id) {
+    final s = _serviceTypes.firstWhere((s) => s.id == id,
+        orElse: () => _serviceTypes.first);
+    return s.pricingType == 'PER_PERSON';
+  });
+
+  // ── Build request payload ──────────────────────────────────────────────────
+
+  VetEstimateRequest _buildRequest() {
+    int birdsCount = 0;
+    List<String>? batchIds;
+    List<String>? houseIds;
+    List<BirdTypeEntry>? birdTypeDetails;
+    int? mortality;
+    int? ageInDays;
+
+    if (_hasFarmDetails) {
+      // Farm-based path
+      for (final id in _selectedBatches) {
+        final b = _availableBatches.firstWhere((b) => b.id == id,
+            orElse: () => BatchModel(
+              id: '',
+              batchNumber: '',
+              initialQuantity: 0,
+              birdsAlive: 0,
+              age: 0,
+              type: '',
+              birdTypeId: '',
+              breed: '',
+              startDate: DateTime.now(),
+              currentWeight: 1,
+              expectedWeight: 0,
+              feedingTime: '',
+              feedingSchedule: [],
+            ));
+        birdsCount += b.birdsAlive;
+      }
+      batchIds = _selectedBatches;
+      houseIds = [_selectedHouse!];
     } else {
+      // Manual / no-plan path
       birdsCount = _manualBirdsCount ?? 0;
+
+      if (_selectedBirdTypeIds.isNotEmpty) {
+        final age = int.tryParse(_birdAgeController.text) ?? 0;
+        final ageInDaysValue =
+        _birdAgeUnit == 'weeks' ? age * 7 : age;
+        final mort =
+            double.tryParse(_birdMortalityController.text) ?? 0;
+
+        birdTypeDetails = _selectedBirdTypeIds.map((id) {
+          final type = _birdTypes.firstWhere((t) => t.id == id);
+          return BirdTypeEntry(
+            birdTypeId: id,
+            birdTypeName: type.name,
+            count: birdsCount,
+            ageValue: ageInDaysValue,
+            ageUnit: 'days', // normalised
+            mortalityRate: mort,
+          );
+        }).toList();
+
+        // Top-level fields for basic request
+        mortality = mort.round();
+        ageInDays = ageInDaysValue;
+      }
     }
 
-    final birdTypeEntries =
-        !_hasFarmDetails && _selectedBirdTypeIds.isNotEmpty
-            ? _buildBirdTypeEntries()
-            : null;
-
-    final request = VetEstimateRequest(
+    return VetEstimateRequest(
       vetId: widget.vet.id,
-      houseIds: _selectedHouse != null ? [_selectedHouse!] : null,
-      batchIds: _selectedBatches.isNotEmpty ? _selectedBatches : null,
       serviceIds: _selectedServices,
       birdsCount: birdsCount,
       priorityLevel: _selectedPriority!,
@@ -397,34 +399,74 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
           .first,
       preferredTime: '09:00',
       termsAgreed: false,
-      participantsCount: hasPerPersonService ? _numberOfPeople : null,
       paymentMode: _selectedPaymentMode,
-      birdTypeDetails: birdTypeEntries,
+      // Farm-based fields (null for manual path)
+      houseIds: houseIds,
+      batchIds: batchIds,
+      // Manual fields (null for farm path)
+      birdTypeIds: !_hasFarmDetails && _selectedBirdTypeIds.isNotEmpty
+          ? _selectedBirdTypeIds.toList()
+          : null,
+      mortality: mortality,
+      ageInDays: ageInDays,
+      participantsCount: _hasPerPersonService ? _numberOfPeople : null,
     );
+  }
 
+  // ── Estimate submission ────────────────────────────────────────────────────
+
+  Future<void> _getEstimate() async {
+    // Validation
+    if (_selectedPriority == null || _selectedServices.isEmpty) {
+      _showSnack(
+          'Please select priority level and at least one service', Colors.orange);
+      return;
+    }
+    if (_selectedPaymentMode == null) {
+      _showSnack('Please select a mode of payment', Colors.orange);
+      return;
+    }
+    if (!_hasFarmDetails &&
+        (_manualBirdsCount == null || _manualBirdsCount! <= 0)) {
+      _showSnack(
+          'Please select farm details or enter the number of birds',
+          Colors.orange);
+      return;
+    }
+    if (_hasPerPersonService &&
+        (_numberOfPeople == null || _numberOfPeople! <= 0)) {
+      _showSnack(
+          'Please enter the number of people for the training/group session',
+          Colors.orange);
+      return;
+    }
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoadingEstimate = true);
+
+    final request = _buildRequest();
     final result = await _vetRepository.getVetOrderEstimate(request);
 
-    setState(() {
-      _isLoadingEstimate = false;
-    });
+    setState(() => _isLoadingEstimate = false);
 
     switch (result) {
       case Success<VetEstimateResponse>(data: final estimate):
-      // Show bottom sheet with estimate
         _showOrderBottomSheet(estimate, request);
         break;
       case Failure(message: final error):
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to get estimate: $error'),
-              backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
+        if (mounted) _showSnack('Failed to get estimate: $error', Colors.red);
         break;
     }
+  }
+
+  void _showSnack(String msg, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: color,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   void _showOrderBottomSheet(
@@ -440,14 +482,16 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
         vet: widget.vet,
         vetRepository: _vetRepository,
         onOrderSuccess: () {
-          context.pop(); // Close bottom sheet
-          context.pop(); // Go back to vet details
-          context.pop(); // Go back to vet list
+          context.pop();
+          context.pop();
+          context.pop();
         },
         request: request,
       ),
     );
   }
+
+  // ── Shared UI helpers ──────────────────────────────────────────────────────
 
   Widget _buildLoadingIndicator(String message) {
     return Container(
@@ -486,15 +530,9 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
           Icon(Icons.error, color: Colors.red.shade600),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              error,
-              style: TextStyle(color: Colors.red.shade700),
-            ),
-          ),
-          TextButton(
-            onPressed: onRetry,
-            child: const Text('Retry'),
-          ),
+              child: Text(error,
+                  style: TextStyle(color: Colors.red.shade700))),
+          TextButton(onPressed: onRetry, child: const Text('Retry')),
         ],
       ),
     );
@@ -513,13 +551,148 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
     );
   }
 
+  // ── Subscribe banner ───────────────────────────────────────────────────────
+
+  /// Shown for farmers with NO subscription to encourage them to subscribe.
+  Widget _buildSubscribeBanner() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.green.shade700, Colors.green.shade500],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.green.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.workspace_premium,
+                    color: Colors.white, size: 22),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Unlock Full Farm Management',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Subscribe to create farms, track flocks, monitor expenditures, '
+                'and attach your batches directly to vet orders — all in one place.',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.92),
+              fontSize: 13,
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                // TODO: Navigate to subscription/plans screen
+                context.push('/subscription');
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.white,
+                side: const BorderSide(color: Colors.white, width: 1.5),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              icon: const Icon(Icons.arrow_forward, size: 16),
+              label: const Text(
+                'View Subscription Plans',
+                style:
+                TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Manual birds & bird type section ──────────────────────────────────────
+
+  Widget _buildManualBirdsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header
+        Text(
+          'Flock Information',
+          style: Theme.of(context).textTheme.titleMedium!.copyWith(
+            fontWeight: FontWeight.bold,
+            color: Colors.grey.shade800,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Tell us about the birds you need the vet to attend to.',
+          style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+        ),
+        const SizedBox(height: 12),
+
+        // Birds count
+        ReusableInput(
+          controller: _birdsCountController,
+          labelText: 'Total Number of Birds *',
+          hintText: 'e.g. 200',
+          keyboardType: TextInputType.number,
+          onChanged: (v) =>
+              setState(() => _manualBirdsCount = int.tryParse(v ?? '')),
+          validator: (value) {
+            if (!_hasFarmDetails) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter the number of birds';
+              }
+              if ((int.tryParse(value) ?? 0) <= 0) {
+                return 'Please enter a valid number';
+              }
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 16),
+
+        // Bird types
+        _buildBirdTypeSection(),
+      ],
+    );
+  }
+
   Widget _buildBirdTypeSection() {
     if (_isLoadingBirdTypes) {
       return _buildLoadingIndicator('Loading bird types...');
     }
-    if (_birdTypes.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    if (_birdTypes.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -527,9 +700,9 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
         Text(
           'Type of Birds (Select all that apply)',
           style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
-              ),
+            fontWeight: FontWeight.bold,
+            color: Colors.grey.shade800,
+          ),
         ),
         const SizedBox(height: 8),
         Container(
@@ -554,7 +727,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
           ),
         ),
 
-        // Shared flock detail fields — shown once when any type is selected
+        // Flock detail fields (shown once any bird type is selected)
         if (_selectedBirdTypeIds.isNotEmpty) ...[
           const SizedBox(height: 14),
           Container(
@@ -578,8 +751,8 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                 const SizedBox(height: 10),
                 ReusableInput(
                   controller: _birdMortalityController,
-                  labelText: 'Mortality Rate (%)',
-                  hintText: 'e.g. 2.5',
+                  labelText: 'Mortality Count',
+                  hintText: 'e.g. 2',
                   keyboardType: const TextInputType.numberWithOptions(
                       decimal: true),
                 ),
@@ -592,7 +765,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                         controller: _birdAgeController,
                         labelText: 'Age',
                         hintText:
-                            _birdAgeUnit == 'days' ? 'e.g. 14' : 'e.g. 3',
+                        _birdAgeUnit == 'days' ? 'e.g. 14' : 'e.g. 3',
                         keyboardType: TextInputType.number,
                       ),
                     ),
@@ -610,12 +783,9 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                             _birdAgeUnit == 'days',
                             _birdAgeUnit == 'weeks',
                           ],
-                          onPressed: (index) {
-                            setState(() {
-                              _birdAgeUnit =
-                                  index == 0 ? 'days' : 'weeks';
-                            });
-                          },
+                          onPressed: (i) => setState(() {
+                            _birdAgeUnit = i == 0 ? 'days' : 'weeks';
+                          }),
                           borderRadius: BorderRadius.circular(8),
                           selectedColor: Colors.white,
                           fillColor: Colors.green,
@@ -624,8 +794,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                               minHeight: 36, minWidth: 56),
                           children: const [
                             Text('Days', style: TextStyle(fontSize: 12)),
-                            Text('Weeks',
-                                style: TextStyle(fontSize: 12)),
+                            Text('Weeks', style: TextStyle(fontSize: 12)),
                           ],
                         ),
                       ],
@@ -640,6 +809,453 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
     );
   }
 
+  // ── Farm section (has/expired plan) ───────────────────────────────────────
+
+  Widget _buildFarmSection() {
+    // Whether farms have finished loading (regardless of result).
+    final bool farmsLoaded = !_isLoadingFarms && !_hasFarmsError;
+    final bool hasNoFarms =
+        farmsLoaded && (_farmsResponse == null || _farmsResponse!.farms.isEmpty);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Farm Details (Optional)',
+          style: Theme.of(context).textTheme.titleMedium!.copyWith(
+            fontWeight: FontWeight.bold,
+            color: Colors.grey.shade800,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          hasNoFarms
+              ? 'You have no farms set up yet. Provide your flock details below.'
+              : 'Select your farm, house, and batches — or just enter the number of birds below.',
+          style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+        ),
+        const SizedBox(height: 12),
+
+        // While farms are loading show a spinner.
+        if (_isLoadingFarms) _buildLoadingIndicator('Loading farms...'),
+
+        // Farm load error.
+        if (_hasFarmsError)
+          _buildErrorWidget(_farmsErrorMessage ?? 'Failed to load farms', _loadFarms),
+
+        // Farms loaded and at least one exists — show farm → house → batch picker.
+        if (farmsLoaded && !hasNoFarms) ...[
+          _buildFarmDropdown(),
+          if (_selectedFarm != null) ...[
+            _buildFarmDetails(),
+            const SizedBox(height: 8),
+            FilledButton.tonal(
+              onPressed: () => setState(() {
+                _selectedFarm = null;
+                _selectedHouse = null;
+                _selectedBatches.clear();
+                _houses = [];
+                _availableBatches = [];
+              }),
+              child: const Text('Clear Farm Selection'),
+            ),
+            const SizedBox(height: 16),
+            _buildHouseDropdown(),
+            if (_selectedHouse != null) ...[
+              _buildHouseDetails(),
+              const SizedBox(height: 16),
+              _buildBatchSelection(),
+            ],
+          ],
+
+          // Manual fallback when the farmer has farms but hasn't selected one yet.
+          if (_selectedFarm == null) ...[
+            const SizedBox(height: 12),
+            _buildInfoBanner(
+              icon: Icons.info_outline,
+              color: Colors.orange,
+              message: 'No farm selected? Provide your flock details below.',
+            ),
+            const SizedBox(height: 12),
+            _buildManualBirdsSection(),
+          ],
+        ],
+
+        // No farms at all → drop straight to manual input (same as no-plan flow).
+        if (hasNoFarms) ...[
+          _buildInfoBanner(
+            icon: Icons.info_outline,
+            color: Colors.orange,
+            message:
+            'No farms found on your account. Please provide your flock details below.',
+          ),
+          const SizedBox(height: 12),
+          _buildManualBirdsSection(),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildFarmDropdown() {
+    if (_isLoadingFarms) return _buildLoadingIndicator('Loading farms...');
+    if (_hasFarmsError) {
+      return _buildErrorWidget(_farmsErrorMessage ?? 'Failed to load farms', _loadFarms);
+    }
+    if (_farmsResponse == null || _farmsResponse!.farms.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return ReusableDropdown<String>(
+      value: _selectedFarm,
+      topLabel: 'Select a farm',
+      hintText: 'Choose a farm',
+      icon: Icons.agriculture,
+      isExpanded: true,
+      items: _farmsResponse!.farms.map((farm) {
+        return DropdownMenuItem<String>(
+          value: farm.id,
+          child: Text(farm.farmName,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 14)),
+        );
+      }).toList(),
+      onChanged: (v) {
+        setState(() {
+          _selectedFarm = v;
+          _selectedHouse = null;
+          _selectedBatches.clear();
+          _houses = [];
+          _availableBatches = [];
+        });
+        if (v != null) _loadHousesForSelectedFarm();
+      },
+    );
+  }
+
+  Widget _buildFarmDetails() {
+    if (_selectedFarm == null || _farmsResponse == null) return const SizedBox();
+    final farm = _farmsResponse!.farms
+        .firstWhere((f) => f.id == _selectedFarm, orElse: () => _farmsResponse!.farms.first);
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.blue.shade100),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(farm.farmName,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+          if (farm.location != null && farm.location!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Row(
+                children: [
+                  Icon(Icons.location_on, size: 12, color: Colors.grey.shade600),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(farm.location!,
+                        style: TextStyle(
+                            fontSize: 12, color: Colors.grey.shade600)),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHouseDropdown() {
+    if (_isLoadingHouses) return _buildLoadingIndicator('Loading houses...');
+    if (_houses.isEmpty) return _buildEmptyState('No houses available in this farm');
+
+    return ReusableDropdown<String>(
+      topLabel: 'Select a house',
+      value: _selectedHouse,
+      hintText: 'Choose a poultry house',
+      labelText: 'House',
+      icon: Icons.home_work,
+      isExpanded: true,
+      items: _houses.map((h) => DropdownMenuItem<String>(
+        value: h.id,
+        child: Text(h.houseName,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 14)),
+      )).toList(),
+      onChanged: _onHouseSelected,
+    );
+  }
+
+  Widget _buildHouseDetails() {
+    if (_selectedHouse == null) return const SizedBox();
+    final house = _houses.firstWhere((h) => h.id == _selectedHouse,
+        orElse: () => _houses.first);
+    final util = house.capacity > 0
+        ? (house.currentBirds / house.capacity * 100)
+        : 0.0;
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.green.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.green.shade100),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(house.houseName,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              _houseDetailText('Capacity', '${house.currentBirds}/${house.capacity} birds'),
+              const SizedBox(width: 16),
+              _houseDetailText(
+                'Utilization',
+                '${util.toStringAsFixed(1)}%',
+                valueColor: util > 80 ? Colors.red : Colors.green,
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          _houseDetailText(
+              'Batches', '${house.batches.length} batch${house.batches.length == 1 ? '' : 'es'}'),
+        ],
+      ),
+    );
+  }
+
+  Widget _houseDetailText(String label, String value, {Color? valueColor}) {
+    return Row(
+      children: [
+        Text(label,
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+        const Text(': ', style: TextStyle(fontSize: 12)),
+        Text(value,
+            style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: valueColor)),
+      ],
+    );
+  }
+
+  Widget _buildBatchSelection() {
+    if (_availableBatches.isEmpty) {
+      return _buildEmptyState('No batches available in this house');
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Select Batches',
+            style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                fontWeight: FontWeight.bold, color: Colors.grey.shade800)),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.white,
+          ),
+          child: Column(
+            children: _availableBatches.map((batch) {
+              final isSelected = _selectedBatches.contains(batch.id);
+              return CheckboxListTile(
+                title: Text(batch.batchNumber,
+                    style: const TextStyle(fontWeight: FontWeight.w500)),
+                subtitle: Row(children: [
+                  Text('${batch.birdsAlive} birds'),
+                  const SizedBox(width: 12),
+                  Text('${batch.age} days'),
+                ]),
+                value: isSelected,
+                onChanged: (v) => _onBatchSelected(batch.id, v ?? false),
+                controlAffinity: ListTileControlAffinity.leading,
+                secondary:
+                Icon(Icons.pets, color: isSelected ? Colors.green : Colors.grey),
+              );
+            }).toList(),
+          ),
+        ),
+        if (_selectedBatches.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue.shade100),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Selected Batches:',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: _selectedBatches.map((id) {
+                    final b = _availableBatches.firstWhere((b) => b.id == id);
+                    return Chip(
+                      label: Text(b.batchNumber),
+                      deleteIcon: const Icon(Icons.close, size: 16),
+                      onDeleted: () => _onBatchSelected(id, false),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Total birds: ${_selectedBatches.fold<int>(0, (sum, id) {
+                    final b = _availableBatches.firstWhere((b) => b.id == id);
+                    return sum + b.birdsAlive;
+                  })}',
+                  style: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  // ── Service selection ──────────────────────────────────────────────────────
+
+  Widget _buildServiceSelection() {
+    if (_isLoadingServices) return _buildLoadingIndicator('Loading service types...');
+    if (_servicesError != null) {
+      return _buildErrorWidget(_servicesError!, _loadServiceTypes);
+    }
+
+    final active = _serviceTypes.where((s) => s.active).toList();
+    if (active.isEmpty) return _buildEmptyState('No active services available');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Select Services',
+            style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                fontWeight: FontWeight.bold, color: Colors.grey.shade800)),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.white,
+          ),
+          child: Column(
+            children: active.map((service) {
+              final isSelected = _selectedServices.contains(service.id);
+              final priceText = switch (service.pricingType) {
+                'PER_BIRD' =>
+                '${service.currency} ${service.perBirdRate?.toStringAsFixed(2) ?? '0.00'}/bird',
+                'PER_PERSON' =>
+                '${service.currency} ${service.perPersonRate?.toStringAsFixed(2) ?? '0.00'}/person',
+                _ =>
+                '${service.currency} ${service.basePrice?.toStringAsFixed(2) ?? '0.00'}',
+              };
+              return CheckboxListTile(
+                title: Text(service.serviceName,
+                    style: const TextStyle(fontWeight: FontWeight.w500)),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (service.description.isNotEmpty)
+                      Text(service.description,
+                          style: TextStyle(
+                              fontSize: 12, color: Colors.grey.shade600)),
+                    const SizedBox(height: 4),
+                    Text('Price: $priceText',
+                        style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.green)),
+                  ],
+                ),
+                value: isSelected,
+                onChanged: (v) => _onServiceSelected(service.id, v ?? false),
+                controlAffinity: ListTileControlAffinity.leading,
+                secondary: Icon(Icons.medical_services,
+                    color: isSelected ? Colors.purple : Colors.grey),
+              );
+            }).toList(),
+          ),
+        ),
+
+        // Number of people for PER_PERSON services
+        if (_hasPerPersonService) ...[
+          const SizedBox(height: 12),
+          ReusableInput(
+            controller: _numberOfPeopleController,
+            labelText: 'Number of People *',
+            hintText: 'Enter number of attendees',
+            keyboardType: TextInputType.number,
+            onChanged: (v) =>
+                setState(() => _numberOfPeople = int.tryParse(v ?? '')),
+            validator: (value) {
+              if (_hasPerPersonService && (value == null || value.isEmpty)) {
+                return 'Please enter the number of people';
+              }
+              if (_hasPerPersonService &&
+                  (int.tryParse(value ?? '') ?? 0) <= 0) {
+                return 'Please enter a valid number';
+              }
+              return null;
+            },
+          ),
+        ],
+
+        if (_selectedServices.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.purple.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.purple.shade100),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Selected Services:',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 14)),
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: _selectedServices.map((id) {
+                    final s = _serviceTypes.firstWhere((s) => s.id == id);
+                    return Chip(
+                      label: Text(s.serviceName),
+                      backgroundColor: Colors.purple.shade100,
+                      deleteIcon: const Icon(Icons.close, size: 16),
+                      onDeleted: () => _onServiceSelected(id, false),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  // ── Payment mode ───────────────────────────────────────────────────────────
+
   Widget _buildPaymentModeSection() {
     return ReusableDropdown<String>(
       topLabel: 'Mode of Payment',
@@ -647,9 +1263,9 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
       hintText: 'Select payment method',
       icon: Icons.payment,
       isExpanded: true,
-      items: _paymentModes.map((mode) {
+      items: _paymentModes.entries.map((entry) {
         IconData icon;
-        switch (mode) {
+        switch (entry.key) {
           case 'M-Pesa':
             icon = Icons.phone_android;
             break;
@@ -663,12 +1279,12 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
             icon = Icons.money;
         }
         return DropdownMenuItem<String>(
-          value: mode,
+          value: entry.value, // API value e.g. 'MOBILE_MONEY'
           child: Row(
             children: [
               Icon(icon, size: 18, color: Colors.grey.shade600),
               const SizedBox(width: 10),
-              Text(mode),
+              Text(entry.key), // Display label e.g. 'M-Pesa'
             ],
           ),
         );
@@ -683,149 +1299,29 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
     );
   }
 
-  Widget _buildFarmDetails() {
-    if (_selectedFarm == null || _farmsResponse == null) return const SizedBox();
+  // ── Small helpers ──────────────────────────────────────────────────────────
 
-    final farm = _farmsResponse!.farms.firstWhere(
-          (f) => f.id == _selectedFarm,
-      orElse: () => _farmsResponse!.farms.first,
-    );
-
+  Widget _buildInfoBanner({
+    required IconData icon,
+    required MaterialColor color,
+    required String message,
+  }) {
     return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.blue.shade50,
+        color: color.shade50,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.blue.shade100),
+        border: Border.all(color: color.shade100),
       ),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            farm.farmName,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-          if (farm.location != null && farm.location!.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.location_on,
-                    size: 12,
-                    color: Colors.grey.shade600,
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      farm.location!,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHouseDetails() {
-    if (_selectedHouse == null) return const SizedBox();
-
-    final house = _houses.firstWhere(
-          (h) => h.id == _selectedHouse,
-      orElse: () => _houses.first,
-    );
-
-    final batchCount = house.batches.length;
-    final currentBirds = house.currentBirds;
-    final capacity = house.capacity;
-    final utilization = capacity > 0 ? (currentBirds / capacity * 100) : 0;
-
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(top: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.green.shade50,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.green.shade100),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            house.houseName,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Row(
-              children: [
-                Text(
-                  'Capacity: ',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-                Text(
-                  '$currentBirds/$capacity birds',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 2),
-            child: Row(
-              children: [
-                Text(
-                  'Batches: ',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-                Text(
-                  '$batchCount batch${batchCount == 1 ? '' : 'es'}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Utilization: ',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-                Text(
-                  '${utilization.toStringAsFixed(1)}%',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: utilization > 80 ? Colors.red : Colors.green,
-                  ),
-                ),
-              ],
+          Icon(icon, color: color.shade700, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(fontSize: 12.5, color: color.shade800),
             ),
           ),
         ],
@@ -833,291 +1329,17 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
     );
   }
 
-  Widget _buildBatchSelection() {
-    if (_selectedHouse == null || _availableBatches.isEmpty) {
-      return _buildEmptyState('No batches available in this house');
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Select Batches',
-          style: Theme.of(context).textTheme.titleMedium!.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.grey.shade800,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(12),
-            color: Colors.white,
-          ),
-          child: Column(
-            children: _availableBatches.map((batch) {
-              final isSelected = _selectedBatches.contains(batch.id);
-
-              return CheckboxListTile(
-                title: Text(
-                  batch.batchNumber,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                subtitle: Row(
-                  children: [
-                    Text('${batch.birdsAlive} birds'),
-                    const SizedBox(width: 12),
-                    Text('${batch.age} days'),
-                  ],
-                ),
-                value: isSelected,
-                onChanged: (bool? value) {
-                  _onBatchSelected(batch.id, value ?? false);
-                },
-                controlAffinity: ListTileControlAffinity.leading,
-                secondary: Icon(
-                  Icons.pets,
-                  color: isSelected ? Colors.green : Colors.grey,
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-        // Selected batches summary
-        if (_selectedBatches.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.blue.shade100),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Selected Batches:',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  children: _selectedBatches.map((batchId) {
-                    final batch = _availableBatches.firstWhere(
-                          (b) => b.id == batchId,
-                    );
-                    return Chip(
-                      label: Text(batch.batchNumber),
-                      deleteIcon: const Icon(Icons.close, size: 16),
-                      onDeleted: () {
-                        _onBatchSelected(batchId, false);
-                      },
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Total birds: ${_selectedBatches.fold<int>(0, (sum, batchId) {
-                    final batch = _availableBatches.firstWhere((b) => b.id == batchId);
-                    return sum + batch.birdsAlive;
-                  })}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildServiceSelection() {
-    if (_isLoadingServices) {
-      return _buildLoadingIndicator('Loading service types...');
-    }
-
-    if (_servicesError != null) {
-      return _buildErrorWidget(_servicesError!, _loadServiceTypes);
-    }
-
-    if (_serviceTypes.isEmpty) {
-      return _buildEmptyState('No service types available');
-    }
-
-    final activeServices =
-    _serviceTypes.where((service) => service.active).toList();
-
-    if (activeServices.isEmpty) {
-      return _buildEmptyState('No active services available');
-    }
-
-    // Check if any selected service requires number of people
-    final hasPerPersonService = _selectedServices.any((serviceId) {
-      final service = _serviceTypes.firstWhere((s) => s.id == serviceId, orElse: () => _serviceTypes.first);
-      return service.pricingType == 'PER_PERSON';
-    });
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Select Services',
-          style: Theme.of(context).textTheme.titleMedium!.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.grey.shade800,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(12),
-            color: Colors.white,
-          ),
-          child: Column(
-            children: activeServices.map((service) {
-              final isSelected = _selectedServices.contains(service.id);
-
-              // Build price display based on pricing type
-              String priceText;
-              switch (service.pricingType) {
-                case 'PER_BIRD':
-                  priceText = '${service.currency} ${service.perBirdRate?.toStringAsFixed(2) ?? '0.00'}/bird';
-                  break;
-                case 'PER_PERSON':
-                  priceText = '${service.currency} ${service.perPersonRate?.toStringAsFixed(2) ?? '0.00'}/person';
-                  break;
-                default: // FIXED
-                  priceText = '${service.currency} ${service.basePrice?.toStringAsFixed(2) ?? '0.00'}';
-              }
-
-              return CheckboxListTile(
-                title: Text(
-                  service.serviceName,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (service.description.isNotEmpty)
-                      Text(
-                        service.description,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Price: $priceText',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.green,
-                      ),
-                    ),
-                  ],
-                ),
-                value: isSelected,
-                onChanged: (bool? value) {
-                  _onServiceSelected(service.id, value ?? false);
-                },
-                controlAffinity: ListTileControlAffinity.leading,
-                secondary: Icon(
-                  Icons.medical_services,
-                  color: isSelected ? Colors.purple : Colors.grey,
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-
-        // Number of people input (for PER_PERSON services)
-        if (hasPerPersonService) ...[
-          const SizedBox(height: 12),
-          ReusableInput(
-            controller: _numberOfPeopleController,
-            labelText: 'Number of People',
-            hintText: 'Enter number of attendees',
-            keyboardType: TextInputType.number,
-            onChanged: (value) {
-              setState(() {
-                _numberOfPeople = int.tryParse(value ?? '');
-              });
-            },
-            validator: (value) {
-              if (hasPerPersonService && (value == null || value.isEmpty)) {
-                return 'Please enter the number of people';
-              }
-              if (hasPerPersonService && (int.tryParse(value ?? '') ?? 0) <= 0) {
-                return 'Please enter a valid number';
-              }
-              return null;
-            },
-          ),
-        ],
-
-        // Selected services summary
-        if (_selectedServices.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.purple.shade50,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.purple.shade100),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Selected Services:',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  children: _selectedServices.map((serviceId) {
-                    final service = _serviceTypes.firstWhere(
-                          (s) => s.id == serviceId,
-                    );
-                    return Chip(
-                      label: Text(service.serviceName),
-                      backgroundColor: Colors.purple.shade100,
-                      deleteIcon: const Icon(Icons.close, size: 16),
-                      onDeleted: () {
-                        _onServiceSelected(serviceId, false);
-                      },
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ],
-    );
-  }
+  // ── Build ──────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
+    // Show a full-screen loader while we determine subscription state.
+    if (_subscriptionState == _SubscriptionState.loading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Book Veterinary Service'),
@@ -1136,208 +1358,66 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Vet Info Card
-              Card(
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Center(
-                          child: Icon(
-                            Icons.pets,
-                            color: Colors.green,
-                            size: 24,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.vet.name,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            Text(
-                              widget.vet.educationLevel,
-                              style: TextStyle(
-                                color: Colors.grey.shade600,
-                                fontSize: 14,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.location_on,
-                                  color: Colors.grey.shade500,
-                                  size: 12,
-                                ),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(
-                                    widget.vet.location.address!.formattedAddress,
-                                    style: TextStyle(
-                                      color: Colors.grey.shade600,
-                                      fontSize: 12,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (widget.vet.isVerified)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Row(
-                            children: [
-                              Icon(
-                                Icons.verified,
-                                size: 14,
-                                color: Colors.green,
-                              ),
-                              SizedBox(width: 4),
-                              Text(
-                                'Verified',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.green,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
+              // ── Vet info card ──────────────────────────────────────────────
+              _buildVetInfoCard(),
               const SizedBox(height: 24),
 
-              // Order Details Card
-              Card(
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(color: Colors.blue.shade100),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.description, color: Colors.blue.shade600),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'Service Booking',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Provide details for your veterinary service request. '
-                            'The veterinarian will review your booking and contact you.',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              // ── Booking info card ──────────────────────────────────────────
+              _buildBookingInfoCard(),
               const SizedBox(height: 24),
 
-              // Farm Selection (Optional)
-              _buildFarmSection(),
+              // ── Subscribe banner (no plan only) ────────────────────────────
+              if (_hasNoSubscription) ...[
+                _buildSubscribeBanner(),
+                const SizedBox(height: 24),
+              ],
+
+              // ── Farm section OR manual section ─────────────────────────────
+              if (_hasNoSubscription)
+                _buildManualBirdsSection()
+              else
+                _buildFarmSection(),
+
               const SizedBox(height: 20),
 
-              // Service Selection
+              // ── Services ───────────────────────────────────────────────────
               _buildServiceSelection(),
               const SizedBox(height: 20),
 
-              // Mode of Payment
+              // ── Payment ────────────────────────────────────────────────────
               _buildPaymentModeSection(),
               const SizedBox(height: 20),
 
-              // Priority Level
+              // ── Priority ───────────────────────────────────────────────────
               ReusableDropdown<String>(
                 topLabel: 'Priority Level',
                 value: _selectedPriority,
                 hintText: 'Select priority level',
                 icon: Icons.priority_high,
                 isExpanded: true,
-                items: _priorities.map((String priority) {
-                  String displayText = priority.toUpperCase();
-                  Color? color;
-
-                  if (priority == 'EMERGENCY') {
-                    displayText = 'EMERGENCY';
-                    color = Colors.red;
-                  } else if (priority == 'URGENT') {
-                    displayText = 'URGENT';
-                    color = Colors.orange;
-                  } else {
-                    displayText = 'NORMAL';
-                    color = Colors.green;
-                  }
-
+                items: _priorities.map((p) {
+                  final color = p == 'EMERGENCY'
+                      ? Colors.red
+                      : p == 'URGENT'
+                      ? Colors.orange
+                      : Colors.green;
                   return DropdownMenuItem<String>(
-                    value: priority,
+                    value: p,
                     child: Row(
                       children: [
                         Container(
                           width: 8,
                           height: 8,
                           decoration: BoxDecoration(
-                            color: color,
-                            shape: BoxShape.circle,
-                          ),
+                              color: color, shape: BoxShape.circle),
                         ),
                         const SizedBox(width: 12),
-                        Text(displayText),
+                        Text(p),
                       ],
                     ),
                   );
                 }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedPriority = newValue;
-                  });
-                },
+                onChanged: (v) => setState(() => _selectedPriority = v),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please select priority level';
@@ -1347,7 +1427,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Get Estimate Button
+              // ── Next / estimate button ──────────────────────────────────────
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -1356,36 +1436,30 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                     backgroundColor: Colors.blue,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                        borderRadius: BorderRadius.circular(12)),
                   ),
                   icon: _isLoadingEstimate
                       ? const SizedBox(
                     width: 16,
                     height: 16,
                     child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation(Colors.white),
-                    ),
+                        strokeWidth: 2,
+                        valueColor:
+                        AlwaysStoppedAnimation(Colors.white)),
                   )
-                      : const Icon(
-                    Icons.arrow_forward,
-                    size: 20,
-                    color: Colors.white,
-                  ),
+                      : const Icon(Icons.arrow_forward,
+                      size: 20, color: Colors.white),
                   label: Text(
                     _isLoadingEstimate ? 'Loading...' : 'Next',
                     style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
                   ),
                 ),
               ),
               const SizedBox(height: 32),
 
-              // Process Info
               const OrderProcess(),
               const SizedBox(height: 20),
             ],
@@ -1395,189 +1469,117 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
     );
   }
 
-  /// Builds the optional farm → house → batch section, OR the manual birds count input.
-  Widget _buildFarmSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Farm Details (Optional)',
-          style: Theme.of(context).textTheme.titleMedium!.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.grey.shade800,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'Select your farm, house, and batches — or just enter the number of birds below.',
-          style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
-        ),
-        const SizedBox(height: 12),
-
-        // Farm dropdown
-        _buildFarmDropdown(),
-        if (_selectedFarm != null) _buildFarmDetails(),
-        if (_selectedFarm != null) FilledButton(onPressed: () {
-          setState(() {
-            _selectedFarm = null;
-            _selectedHouse = null;
-            _selectedBatches.clear();
-          });
-        }, child: Text('Clear Farm selection'),),
-
-        // House dropdown
-        if (_selectedFarm != null) const SizedBox(height: 16),
-
-        // House dropdown
-        if (_selectedFarm != null) ...[
-          _buildHouseDropdown(),
-          if (_selectedHouse != null) _buildHouseDetails(),
-          if (_selectedHouse != null) const SizedBox(height: 16),
-        ],
-
-        // Batch selection
-        if (_selectedHouse != null) ...[
-          _buildBatchSelection(),
-        ],
-
-        // Manual birds count + bird type details — only shown when no farm is selected
-        if (_selectedFarm == null) ...[
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.orange.shade50,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.orange.shade100),
+  Widget _buildVetInfoCard() {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Center(
+                child: Icon(Icons.pets, color: Colors.green, size: 24),
+              ),
             ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.info_outline, color: Colors.orange.shade700, size: 18),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'No farm set up yet? Provide your flock details below.',
-                    style: TextStyle(fontSize: 12.5, color: Colors.orange.shade800),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.vet.name,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 16),
+                    overflow: TextOverflow.ellipsis,
                   ),
+                  Text(
+                    widget.vet.educationLevel,
+                    style:
+                    TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(Icons.location_on,
+                          color: Colors.grey.shade500, size: 12),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          widget.vet.location.address!.formattedAddress,
+                          style: TextStyle(
+                              color: Colors.grey.shade600, fontSize: 12),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            if (widget.vet.isVerified)
+              Container(
+                padding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.verified, size: 14, color: Colors.green),
+                    SizedBox(width: 4),
+                    Text('Verified',
+                        style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.green,
+                            fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBookingInfoCard() {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.blue.shade100),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.description, color: Colors.blue.shade600),
+                const SizedBox(width: 8),
+                const Text('Service Booking',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 16)),
               ],
             ),
-          ),
-          const SizedBox(height: 12),
-          ReusableInput(
-            controller: _birdsCountController,
-            labelText: 'Total Number of Birds',
-            hintText: 'Enter total number of birds',
-            keyboardType: TextInputType.number,
-            onChanged: (value) {
-              setState(() {
-                _manualBirdsCount = int.tryParse(value ?? '');
-              });
-            },
-            validator: (value) {
-              if (!_hasFarmDetails) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter the number of birds';
-                }
-                if ((int.tryParse(value) ?? 0) <= 0) {
-                  return 'Please enter a valid number';
-                }
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 16),
-          _buildBirdTypeSection(),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildFarmDropdown() {
-    if (_isLoadingFarms) {
-      return _buildLoadingIndicator('Loading farms...');
-    }
-
-    if (_hasError) {
-      return _buildErrorWidget(_errorMessage ?? 'Failed to load farms', _loadFarms);
-    }
-
-    if (_farmsResponse == null || _farmsResponse!.farms.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return ReusableDropdown<String>(
-      value: _selectedFarm,
-      topLabel: "Select a farm",
-      hintText: 'Choose a farm',
-      icon: Icons.agriculture,
-      isExpanded: true,
-      items: _farmsResponse!.farms.map((farm) {
-        return DropdownMenuItem<String>(
-          value: farm.id,
-          child: Text(
-            farm.farmName,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 14,
+            const SizedBox(height: 12),
+            Text(
+              'Provide details for your veterinary service request. '
+                  'The veterinarian will review your booking and contact you.',
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
             ),
-          ),
-        );
-      }).toList(),
-      onChanged: (String? newValue) {
-        setState(() {
-          _selectedFarm = newValue;
-          _selectedHouse = null;
-          _selectedBatches.clear();
-          _houses = [];
-          _availableBatches = [];
-        });
-        if (newValue != null) {
-          _loadHousesForSelectedFarm();
-        }
-      },
+          ],
+        ),
+      ),
     );
-  }
-
-  Widget _buildHouseDropdown() {
-    if (_isLoadingHouses) {
-      return _buildLoadingIndicator('Loading houses...');
-    }
-
-    if (_houses.isEmpty) {
-      return _buildEmptyState('No houses available in this farm');
-    }
-
-    return ReusableDropdown<String>(
-      topLabel: "Select a house",
-      value: _selectedHouse,
-      hintText: 'Choose a poultry house',
-      labelText: 'House',
-      icon: Icons.home_work,
-      isExpanded: true,
-      items: _houses.map((house) {
-        return DropdownMenuItem<String>(
-          value: house.id,
-          child: Text(
-            house.houseName,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 14,
-            ),
-          ),
-        );
-      }).toList(),
-      onChanged: _onHouseSelected,
-    );
-  }
-
-  @override
-  void dispose() {
-    _birdsCountController.dispose();
-    _numberOfPeopleController.dispose();
-    _birdAgeController.dispose();
-    _birdMortalityController.dispose();
-    super.dispose();
   }
 }

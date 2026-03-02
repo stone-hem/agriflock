@@ -685,8 +685,17 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
       birdsCount: widget.request.birdsCount,
       priorityLevel: widget.request.priorityLevel,
       preferredDate: _selectedDateController.text,
-      termsAgreed: _termsAgreed, preferredTime: _selectedTime!.format(context),
+      termsAgreed: _termsAgreed,
+      preferredTime: _selectedTime!.format(context),
       participantsCount: widget.request.participantsCount,
+
+      paymentMode: widget.request.paymentMode,
+      // Manual fields (null for farm path)
+      birdTypeIds: (widget.request.birdTypeIds?.isNotEmpty ?? false)
+          ? widget.request.birdTypeIds
+          : null,
+      mortality: widget.request.mortality,
+      ageInDays:  widget.request.ageInDays,
     );
 
     final result = await widget.vetRepository.submitVetOrder(request);
