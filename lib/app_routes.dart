@@ -333,7 +333,6 @@ class AppRoutes {
           path: otpVerifyEmailOrPhone,
           builder: (context, state) {
             final email = state.uri.queryParameters['email'];
-            final phoneNumber=state.uri.queryParameters['phone'];
             final userId = state.uri.queryParameters['userId'];
 
             if (email == null || email.isEmpty) {
@@ -344,9 +343,7 @@ class AppRoutes {
               return ErrorScreen(message: 'User ID parameter is missing');
             }
 
-            if (phoneNumber == null || phoneNumber.isEmpty) {
-              return ErrorScreen(message: 'Phone  parameter is missing');
-            }
+
             final decodedEmail = Uri.decodeComponent(email);
             final decodedUserId = Uri.decodeComponent(userId);
 

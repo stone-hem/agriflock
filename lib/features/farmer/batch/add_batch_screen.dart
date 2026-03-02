@@ -267,7 +267,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                             Colors.orange,
                           ),
                           _buildCapacityInfo(
-                            'Available',
+                            'Available Space',
                             '$_availableCapacity birds',
                             Icons.event_available,
                             _availableCapacity > 0 ? Colors.green : Colors.red,

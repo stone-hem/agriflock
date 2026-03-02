@@ -232,6 +232,18 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
+            Text(
+              batch.batchNumber,
+              style: TextStyle(
+                color: primaryColor.shade900,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 8),
+
             // Header with batch name format as requested
             Container(
               padding: const EdgeInsets.all(10),
@@ -271,16 +283,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                           ),
                         ),
                         const SizedBox(height: 3),
-                        Text(
-                          batch.batchNumber, // This will show format like "Kienyeji Batch – 9 Feb 2026"
-                          style: TextStyle(
-                            color: primaryColor.shade900,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+
                         Text(
                           '${batch.farmName} • ${batch.houseName}',
                           style: TextStyle(
@@ -344,7 +347,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                     Expanded(
                       child: _buildInfoRow(
                         'Total feeds in store',
-                        '${batch.foodInStoreKg} kgs ${batch.foodInStoreBags} bags',
+                        '${batch.foodInStoreKg} kgs ${batch.foodInStoreBags} bags (50kgs)',
                         Icons.inventory_2_outlined,
                         Colors.brown,
                       ),
@@ -392,7 +395,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: _buildInfoRow(
-                        'Actual consumed',
+                        'Actual feeds consumed',
                         '${batch.actualFoodPerBirdPerDayG.toStringAsFixed(0)}g/bird = ${batch.totalActualFoodPerDayKg.toStringAsFixed(1)} kgs',
                         Icons.restaurant_menu_outlined,
                         Colors.teal,
@@ -450,13 +453,13 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildInfoRow(
-                      'Feeding stage',
-                      batch.feedingPlan!.stageName,
-                      Icons.timeline_outlined,
-                      Colors.teal,
-                    ),
-                    const SizedBox(height: 8),
+                    // _buildInfoRow(
+                    //   'Feeding stage',
+                    //   batch.feedingPlan!.stageName,
+                    //   Icons.timeline_outlined,
+                    //   Colors.teal,
+                    // ),
+                    // const SizedBox(height: 8),
                     _buildInfoRow(
                       'Feed type',
                       batch.feedingPlan!.feedTypeInUse,
@@ -472,8 +475,8 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                     ),
                     const SizedBox(height: 8),
                     _buildInfoRow(
-                      'Expected/week',
-                      '${batch.feedingPlan!.expectedFeedPerWeekBags} bags',
+                      'Expected feeds per week',
+                      '${batch.feedingPlan!.expectedFeedPerWeekBags} bags(50kgs)',
                       Icons.calendar_today,
                       Colors.teal.shade700,
                     ),
@@ -834,7 +837,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
               Text(
                 label,
                 style: TextStyle(color: Colors.grey.shade700, fontSize: 11),
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
               Text(

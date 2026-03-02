@@ -150,7 +150,6 @@ class _ExperienceSelectionScreenState
                         bullets: const [
                           'Vet & extension services',
                           'Device monitoring',
-                          'Basic profile',
                         ],
                         isLoading: _isNavigating,
                         onTap: () => _handleSelect(1),

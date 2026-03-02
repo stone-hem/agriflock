@@ -265,7 +265,7 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
         Text(
           widget.title ?? 'Select Location',
           style: TextStyle(
-            fontSize: 24,
+            fontSize: 20,
             fontWeight: FontWeight.bold,
             color: Colors.black87,
           ),
@@ -278,7 +278,7 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
             color: Colors.black54,
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 18),
 
         // Use Current Location Button
         SizedBox(
@@ -306,7 +306,7 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
           ),
         ),
 
-        const SizedBox(height: 20),
+        const SizedBox(height: 18),
 
         // Divider with "OR"
         Row(
@@ -326,7 +326,7 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
           ],
         ),
 
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
 
         // Google Places Autocomplete TextField
         Focus(
@@ -405,7 +405,7 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
           ),
         ),
 
-        const SizedBox(height: 30),
+        const SizedBox(height: 14),
 
         // Selected Location Display
         if (_selectedAddress != null && _latitude != null && _longitude != null)

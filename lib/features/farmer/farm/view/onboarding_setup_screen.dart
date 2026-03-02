@@ -670,7 +670,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
               selectedAddress: _selectedAddress,
               latitude: _latitude,
               longitude: _longitude,
-              title: 'Select Location',
+              title: 'Select Farm Location',
               text: 'Search and Select your farm location',
               onLocationSelected: (String address, double lat, double lng) {
                 setState(() {
@@ -768,7 +768,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
             const SizedBox(height: 20),
 
             ReusableInput(
-              topLabel: 'Capacity (number of birds)',
+              topLabel: 'House Capacity',
               controller: _houseCapacityController,
               keyboardType: TextInputType.number,
               validator: (value) {
@@ -778,7 +778,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                 if (cap <= 0) return 'Capacity must be greater than 0';
                 return null;
               },
-              labelText: 'Maximum bird capacity',
+              labelText: 'Maximum Number of bird house can hold',
               hintText: 'e.g., 500, 1000, 5000',
             ),
             const SizedBox(height: 20),
@@ -1549,7 +1549,12 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
               ),
             ),
             const SizedBox(height: 32),
-            Text('Did you by other expenses'),
+            Text('Did you buy other inputs',  style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: Colors.black,
+            ),),
+            const SizedBox(height: 14),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -1564,7 +1569,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                   elevation: 2,
                 ),
                 child: const Text(
-                  'Add more expenses',
+                  'Please add the expenses',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),

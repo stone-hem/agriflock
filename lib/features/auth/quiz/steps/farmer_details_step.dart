@@ -1,7 +1,8 @@
+import 'package:agriflock/core/widgets/location_picker_step.dart';
 import 'package:agriflock/features/auth/shared/auth_text_field.dart';
 import 'package:flutter/material.dart';
 
-class FarmerDetailsStep extends StatelessWidget {
+class FarmerDetailsStep extends StatefulWidget {
   final TextEditingController experienceController;
   final FocusNode experienceFocus;
 
@@ -11,6 +12,17 @@ class FarmerDetailsStep extends StatelessWidget {
     required this.experienceFocus,
   });
 
+  @override
+  State<FarmerDetailsStep> createState() => _FarmerDetailsStepState();
+}
+
+class _FarmerDetailsStepState extends State<FarmerDetailsStep> {
+
+
+  // Location data (for both farmer and vet)
+  String? _selectedAddress;
+  double? _latitude;
+  double? _longitude;
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -33,18 +45,31 @@ class FarmerDetailsStep extends StatelessWidget {
               color: Colors.black54,
             ),
           ),
-          const SizedBox(height: 40),
+          const SizedBox(height: 16),
           AuthTextField(
             labelText: 'Years of experience',
             hintText: 'Enter your years of experience in poultry farming',
             icon: Icons.work,
             keyboardType: TextInputType.number,
-            controller: experienceController,
-            focusNode: experienceFocus,
+            controller: widget.experienceController,
+            focusNode: widget.experienceFocus,
             maxLength: 2,
             value: '',
           ),
-          const SizedBox(height: 30),
+          LocationPickerStep(
+            selectedAddress: _selectedAddress,
+            latitude: _latitude,
+            longitude: _longitude,
+            title: 'My Location',
+            text: 'Select your current location',
+            onLocationSelected: (String address, double lat, double lng) {
+              setState(() {
+                _selectedAddress = address;
+                _latitude = lat;
+                _longitude = lng;
+              });
+            },
+          ),
           SizedBox(height: MediaQuery.of(context).viewInsets.bottom > 0 ? 100 : 0),
         ],
       ),
