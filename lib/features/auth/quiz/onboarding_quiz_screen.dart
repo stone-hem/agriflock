@@ -71,8 +71,8 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
 
 
   // Step configurations
-  // Farmer steps: Role -> Farm Details -> Location -> Congratulations (4 steps)
-  // Vet steps: Role -> Personal Info -> Professional -> Documents -> Location -> Congratulations (6 steps)
+  // Farmer steps: Role -> Farm Details (including Location) -> Congratulations (3 steps)
+  // Vet steps: Role -> Terms -> Personal Info -> Professional -> Documents -> Location -> Congratulations (7 steps)
 
   int get _totalPages {
     if (_selectedUserType == 'vet') return 7;
@@ -225,6 +225,9 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
       final result = await _repository.submitFarmerOnboarding(
         token: widget.token,
         yearsOfExperience: int.tryParse(_farmerExperienceController.text) ?? 0,
+        address: _selectedAddress!,
+        latitude: _latitude!,
+        longitude: _longitude!,
       );
 
       if (result['success'] == true) {
@@ -307,6 +310,10 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
   bool _validateFarmerFields() {
     if (_farmerExperienceController.text.isEmpty) {
       ToastUtil.showError("Please enter your years of experience");
+      return false;
+    }
+    if (_selectedAddress == null || _latitude == null || _longitude == null) {
+      ToastUtil.showError("Please select your location");
       return false;
     }
     return true;
@@ -583,6 +590,16 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     return FarmerDetailsStep(
       experienceController: _farmerExperienceController,
       experienceFocus: _farmerExperienceFocus,
+      selectedAddress: _selectedAddress,
+      latitude: _latitude,
+      longitude: _longitude,
+      onLocationSelected: (String address, double lat, double lng) {
+        setState(() {
+          _selectedAddress = address;
+          _latitude = lat;
+          _longitude = lng;
+        });
+      },
     );
   }
 

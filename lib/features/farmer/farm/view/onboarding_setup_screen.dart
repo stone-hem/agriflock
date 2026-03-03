@@ -133,24 +133,11 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
           _hatchController.text = DateUtil.toReadableDate(DateTime.now());
         } else {
           _hatchController.text = DateUtil.toReadableDate(DateTime.now());
-          _calculateAndUpdateHatchDate();
         }
       }
     });
   }
 
-  void _calculateAndUpdateHatchDate() {
-    if (!_isOwnHatch) {
-      final age = int.tryParse(_chickAgeController.text) ?? 0;
-      if (age >= 0) {
-        setState(() {
-          _hatchController.text = DateUtil.toReadableDate(
-            DateTime.now().subtract(Duration(days: age)),
-          );
-        });
-      }
-    }
-  }
 
   double _calculateTotalChickCost() {
     try {
@@ -395,7 +382,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
         'birds_alive': int.parse(_birdsAliveController.text.trim()),
         'feeding_time': _selectedFeedingTimeCategory,
         'feeding_schedule': selectedFeedingTimes.join(','),
-        'purchase_cost': double.parse(_chickCostController.text.trim()),
+        'cost_per_bird': double.parse(_chickCostController.text.trim()),
         'age_at_purchase': int.parse(_chickAgeController.text.trim()),
         if (!_isOwnHatch && _selectedHatcherySource != null)
           'hatchery_source': _selectedHatcherySource == 'Others'
@@ -1058,7 +1045,6 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                 topLabel: 'Chick Age (Days)',
                 controller: _chickAgeController,
                 keyboardType: TextInputType.number,
-                onChanged: (_) => _calculateAndUpdateHatchDate(),
                 validator: (value) {
                   if (value == null || value.isEmpty) return 'Please enter chick age in days';
                   if (int.tryParse(value) == null) return 'Please enter a valid number';
@@ -1092,51 +1078,6 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                   hintText: 'Please specify hatchery or source',
                 ),
               ],
-              const SizedBox(height: 20),
-              // Calculated hatch date display
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.blue.shade100),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.calendar_today, color: Colors.blue.shade700, size: 20),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Calculated Hatch Date',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue.shade700,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _hatchController.text.isNotEmpty
-                          ? _hatchController.text
-                          : 'Not provided',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey.shade800,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Based on chicks being ${_chickAgeController.text} days old',
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                    ),
-                  ],
-                ),
-              ),
               const SizedBox(height: 20),
             ],
 

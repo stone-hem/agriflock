@@ -746,7 +746,6 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                       label: 'Date Used',
                       icon: Icons.calendar_today,
                       required: true,
-                      initialDate: widget.selectedDate,
                       minYear: DateTime.now().year - 1,
                       maxYear: DateTime.now().year,
                       returnFormat: DateReturnFormat.isoString,
@@ -758,7 +757,6 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                     ReusableTimeInput(
                       topLabel: 'Time Used',
                       icon: Icons.access_time,
-                      initialTime: _selectedTime,
                       onTimeChanged: (time) {
                         setState(() => _selectedTime = time);
                       },

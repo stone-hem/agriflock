@@ -413,10 +413,6 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
           imageAssetPath: 'assets/quotation/img_4.png',
           description: 'This is the fifth image description',
         ),
-        ImageWithDescriptionWidget(
-          imageAssetPath: 'assets/quotation/img_5.png',
-          description: 'This is the sixth image description',
-        ),
 
         const SizedBox(height: 10),
 

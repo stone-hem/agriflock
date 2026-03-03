@@ -386,6 +386,45 @@ class _MyVetOrdersScreenState extends State<MyVetOrdersScreen> {
             ),
             const SizedBox(height: 12),
 
+            // Services Section
+            if (order.serviceCosts.isNotEmpty) ...[
+              const Text(
+                'Services:',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 4),
+              ...order.serviceCosts.map((service) => Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '• ${service.serviceName}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      'KES ${service.cost.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade800,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              )),
+              const SizedBox(height: 12),
+            ],
+
             // Vet Info with Specialization
             Row(
               children: [
@@ -472,40 +511,30 @@ class _MyVetOrdersScreenState extends State<MyVetOrdersScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-
-            // Multiple Services Indicator
-            if (order.services.length > 1 || order.serviceCosts.length > 1)
-              Row(
-                children: [
-                  Icon(Icons.list, size: 16, color: Colors.purple.shade600),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '${order.services.length + order.serviceCosts.length} services',
-                      style: TextStyle(
-                        color: Colors.purple.shade600,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
             const SizedBox(height: 12),
 
             // Cost and Actions
             Row(
               children: [
-                Icon(Icons.monetization_on, size: 16, color: Colors.green.shade600),
-                const SizedBox(width: 8),
-                Text(
-                  'KES ${order.totalEstimatedCost.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Total Estimated Cost',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    Text(
+                      'KES ${order.totalEstimatedCost.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                    ),
+                  ],
                 ),
                 const Spacer(),
                 if (order.status == 'PENDING' || order.status == 'REVIEWED')

@@ -289,7 +289,7 @@ class _ScheduledVisitCardState extends State<ScheduledVisitCard> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        widget.visit.farmerLocation,
+                        widget.visit.farmerLocation.address,
                         style: TextStyle(
                           color: Colors.grey.shade600,
                           fontSize: 14,

@@ -2,27 +2,24 @@ import 'package:agriflock/core/widgets/location_picker_step.dart';
 import 'package:agriflock/features/auth/shared/auth_text_field.dart';
 import 'package:flutter/material.dart';
 
-class FarmerDetailsStep extends StatefulWidget {
+class FarmerDetailsStep extends StatelessWidget {
   final TextEditingController experienceController;
   final FocusNode experienceFocus;
+  final String? selectedAddress;
+  final double? latitude;
+  final double? longitude;
+  final Function(String address, double lat, double lng) onLocationSelected;
 
   const FarmerDetailsStep({
     super.key,
     required this.experienceController,
     required this.experienceFocus,
+    this.selectedAddress,
+    this.latitude,
+    this.longitude,
+    required this.onLocationSelected,
   });
 
-  @override
-  State<FarmerDetailsStep> createState() => _FarmerDetailsStepState();
-}
-
-class _FarmerDetailsStepState extends State<FarmerDetailsStep> {
-
-
-  // Location data (for both farmer and vet)
-  String? _selectedAddress;
-  double? _latitude;
-  double? _longitude;
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -51,24 +48,18 @@ class _FarmerDetailsStepState extends State<FarmerDetailsStep> {
             hintText: 'Enter your years of experience in poultry farming',
             icon: Icons.work,
             keyboardType: TextInputType.number,
-            controller: widget.experienceController,
-            focusNode: widget.experienceFocus,
+            controller: experienceController,
+            focusNode: experienceFocus,
             maxLength: 2,
             value: '',
           ),
           LocationPickerStep(
-            selectedAddress: _selectedAddress,
-            latitude: _latitude,
-            longitude: _longitude,
+            selectedAddress: selectedAddress,
+            latitude: latitude,
+            longitude: longitude,
             title: 'My Location',
             text: 'Select your current location',
-            onLocationSelected: (String address, double lat, double lng) {
-              setState(() {
-                _selectedAddress = address;
-                _latitude = lat;
-                _longitude = lng;
-              });
-            },
+            onLocationSelected: onLocationSelected,
           ),
           SizedBox(height: MediaQuery.of(context).viewInsets.bottom > 0 ? 100 : 0),
         ],

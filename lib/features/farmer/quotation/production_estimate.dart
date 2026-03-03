@@ -680,7 +680,7 @@ class _LayersTabState extends State<_LayersTab> {
             ]),
             const SizedBox(height: 12),
             _aRow('Total Investment',         'KSh ${_fmt(scaledInv)}'),
-            _aRow('Trays at 70% Lay Rate',    '$scaledTrays trays'),
+            _aRow('Trays at 75% average',    '$scaledTrays trays'),
             _aRow('Cost per Egg',             'KSh ${analysis.costPerEgg.toStringAsFixed(2)}', note: 'fixed'),
             _aRow('Break-even Cost per Tray', 'KSh ${_fmt(analysis.breakEvenCostPerTray)}',   note: 'fixed'),
           ]),
@@ -863,7 +863,7 @@ class _FrontendCalculatorPageState extends State<_FrontendCalculatorPage> {
         decoration: BoxDecoration(color: _kCream, borderRadius: BorderRadius.circular(12)),
         child: Column(children: [
           _row('TOTAL PRODUCTION COST', _fmtCalc(r.totalProductionCost), hi: true),
-          _row('Cost per bird', _fmtCalc(r.costPerBird)),
+          _row('Cost of production per bird', _fmtCalc(r.costPerBird)),
         ]),
       ),
     ],
@@ -877,21 +877,13 @@ class _FrontendCalculatorPageState extends State<_FrontendCalculatorPage> {
       _row('Gross Profit / Loss', '${ok ? "+" : ""}${_fmtCalc(r.grossProfit)}', hi: true),
       _row('Return on Investment (ROI)', '${r.roi}%'),
       _row('Break-even: birds to sell', '${r.breakEven} birds'),
-      const SizedBox(height: 12),
       Container(
-        width: double.infinity,
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: ok ? _kGreen100 : const Color(0xFFFFE4E4),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          ok ? '✅ Profitable at Ksh ${sellingPrice._loc()}/bird — Est. net: ${_fmtCalc(r.grossProfit)}'
-              : '⚠️ Loss at Ksh ${sellingPrice._loc()}/bird — raise selling price or reduce costs',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600,
-              color: ok ? _kGreen900 : const Color(0xFF9B1C1C)),
-        ),
+        decoration: BoxDecoration(color: _kCream, borderRadius: BorderRadius.circular(12)),
+        child: Column(children: [
+          _row('TOTAL PRODUCTION COST', _fmtCalc(r.totalProductionCost), hi: true),
+          _row('Cost of production per bird', _fmtCalc(r.costPerBird)),
+        ]),
       ),
     ]);
   }

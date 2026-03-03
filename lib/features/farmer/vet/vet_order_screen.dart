@@ -1401,6 +1401,13 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                       : p == 'URGENT'
                       ? Colors.orange
                       : Colors.green;
+                  
+                  final surcharge = p == 'EMERGENCY'
+                      ? '50%'
+                      : p == 'URGENT'
+                      ? '25%'
+                      : '0%';
+
                   return DropdownMenuItem<String>(
                     value: p,
                     child: Row(
@@ -1412,7 +1419,15 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                               color: color, shape: BoxShape.circle),
                         ),
                         const SizedBox(width: 12),
-                        Text(p),
+                        Expanded(child: Text(p)),
+                        Text(
+                          '$surcharge surcharge of the total cost',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey.shade600,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
                       ],
                     ),
                   );

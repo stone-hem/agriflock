@@ -333,7 +333,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
 
             // Updated to use correct fields
             _buildEstimateItem('Service Fee:', widget.estimate.serviceFee),
-            _buildEstimateItem('Mileage Fee:', widget.estimate.mileageFee),
+            _buildEstimateItem('Transport Fee(to and fro):', widget.estimate.mileageFee),
 
             // Mileage details if available
             if (widget.estimate.mileageDetails != null) ...[

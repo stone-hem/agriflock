@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:agriflock/core/utils/type_safe_utils.dart';
 
 class Visit {
@@ -6,7 +7,7 @@ class Visit {
   final String farmerId;
   final String farmerName;
   final String farmerPhone;
-  final String farmerLocation;
+  final FarmerLocation farmerLocation;
   final String vetId;
   final String vetName;
   final List<String> vetSpecialization;
@@ -89,7 +90,7 @@ class Visit {
       farmerId: TypeUtils.toStringSafe(json['farmer_id']),
       farmerName: TypeUtils.toStringSafe(json['farmer_name']),
       farmerPhone: TypeUtils.toStringSafe(json['farmer_phone']),
-      farmerLocation: TypeUtils.toStringSafe(json['farmer_location']),
+      farmerLocation: FarmerLocation.fromJson(json['farmer_location']),
       vetId: TypeUtils.toStringSafe(json['vet_id']),
       vetName: TypeUtils.toStringSafe(json['vet_name']),
       vetSpecialization: vetSpecializationList
@@ -137,7 +138,7 @@ class Visit {
       'farmer_id': farmerId,
       'farmer_name': farmerName,
       'farmer_phone': farmerPhone,
-      'farmer_location': farmerLocation,
+      'farmer_location': farmerLocation.toJson(),
       'vet_id': vetId,
       'vet_name': vetName,
       'vet_specialization': vetSpecialization,
@@ -167,6 +168,48 @@ class Visit {
       'cancellation_reason': cancellationReason,
       'terms_agreed': termsAgreed,
       'is_paid': isPaid,
+    };
+  }
+}
+
+class FarmerLocation {
+  final String address;
+  final double latitude;
+  final double longitude;
+
+  FarmerLocation({
+    required this.address,
+    required this.latitude,
+    required this.longitude,
+  });
+
+  factory FarmerLocation.fromJson(dynamic json) {
+    if (json is String) {
+      try {
+        final decoded = jsonDecode(json);
+        return FarmerLocation(
+          address: TypeUtils.toStringSafe(decoded['address']),
+          latitude: TypeUtils.toDoubleSafe(decoded['latitude']),
+          longitude: TypeUtils.toDoubleSafe(decoded['longitude']),
+        );
+      } catch (e) {
+        return FarmerLocation(address: json, latitude: 0, longitude: 0);
+      }
+    } else if (json is Map) {
+      return FarmerLocation(
+        address: TypeUtils.toStringSafe(json['address']),
+        latitude: TypeUtils.toDoubleSafe(json['latitude']),
+        longitude: TypeUtils.toDoubleSafe(json['longitude']),
+      );
+    }
+    return FarmerLocation(address: '', latitude: 0, longitude: 0);
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'address': address,
+      'latitude': latitude,
+      'longitude': longitude,
     };
   }
 }

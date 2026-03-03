@@ -8,10 +8,18 @@ class OnboardingRepository {
   Future<Map<String, dynamic>> submitFarmerOnboarding({
     required String token,
     required int yearsOfExperience,
+    required String address,
+    required double latitude,
+    required double longitude,
   }) async {
     try {
       final body = <String, dynamic>{
         'years_of_experience': yearsOfExperience,
+        'location': {
+          'address': address,
+          'latitude': latitude,
+          'longitude': longitude,
+        },
       };
 
       final response = await apiClient.post(

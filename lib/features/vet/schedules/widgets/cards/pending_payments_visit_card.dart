@@ -72,7 +72,7 @@ class PendingPaymentsVisitCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        visit.farmerLocation,
+                        visit.farmerLocation.address,
                         style: TextStyle(
                           color: Colors.grey.shade600,
                           fontSize: 14,

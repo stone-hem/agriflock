@@ -160,21 +160,9 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
           // Switching to purchased chicks
           _hatchController.clear();
           _hatchController.text = DateUtil.toReadableDate(DateTime.now());
-          _calculateAndUpdateHatchDate();
         }
       }
     });
-  }
-
-  void _calculateAndUpdateHatchDate() {
-    if (!_isOwnHatch) {
-      final age = int.tryParse(_chickAgeController.text) ?? 0;
-      if (age >= 0) {
-        setState(() {
-          _hatchController.text = DateUtil.toReadableDate(DateTime.now().subtract(Duration(days: age)));
-        });
-      }
-    }
   }
 
   @override
@@ -538,10 +526,6 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                   topLabel: 'Chick Age (Days)',
                   controller: _chickAgeController,
                   keyboardType: TextInputType.number,
-                  onChanged: (value) {
-                    // Calculate and update hatch date in real-time
-                    _calculateAndUpdateHatchDate();
-                  },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter chick age in days';
@@ -587,54 +571,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                 ],
                 const SizedBox(height: 20),
 
-                // Show calculated hatch date for both modes
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.blue.shade100),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.calendar_today, color: Colors.blue.shade700, size: 20),
-                          const SizedBox(width: 8),
-                          Text(
-                            _isOwnHatch ? 'Selected Hatch Date' : 'Calculated Hatch Date',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue.shade700,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _hatchController.text.isNotEmpty?_hatchController.text:'Not provided',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.grey.shade800,
-                        ),
-                      ),
-                      if (!_isOwnHatch) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          'Based on chicks being ${_chickAgeController.text} days old',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
+
               ],
 
               // Chick Cost
@@ -1148,8 +1085,8 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
         'birds_alive': int.parse(_birdsAliveController.text.trim()),
         'current_weight': _currentWeightController.text.isNotEmpty?double.parse(_currentWeightController.text.trim()):null,
         'expected_weight': _expectedWeightController.text.isNotEmpty?double.parse(_expectedWeightController.text.trim()):null,
-        'purchase_cost': double.tryParse(_chickCostController.text.trim()) ?? 0,
-        'age_at_purchase': _isOwnHatch ? 0 : (int.tryParse(_chickAgeController.text.trim()) ?? 0),
+        'cost_per_bird':double.tryParse(_chickCostController.text.trim()) ?? 0,
+        'age_at_purchase': _isOwnHatch ? null : (int.tryParse(_chickAgeController.text.trim()) ?? 1),
         'hatchery_source': !_isOwnHatch && _selectedHatcherySource != null
             ? (_selectedHatcherySource == 'Others'
                 ? (_hatchSourceController.text.trim().isNotEmpty ? _hatchSourceController.text.trim() : null)

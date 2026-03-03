@@ -384,6 +384,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    if(!isLayers)...[
                     Expanded(
                       child: _buildInfoRow(
                         'Production cost/bird',
@@ -392,7 +393,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                         Colors.green,
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 10),],
                     Expanded(
                       child: _buildInfoRow(
                         'Actual feeds consumed',
@@ -422,7 +423,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                   children: [
                     _buildInfoRow(
                       'Bags consumed (50 Kgs)',
-                      '${batch.feed!.totalBagsConsumed} (Day: ${batch.feed!.bagsConsumedDay}, Night: ${batch.feed!.bagsConsumedNight})',
+                      '${batch.feed!.totalBagsConsumed} (Day: ${batch.feed!.bagsConsumedDay} ${ !isLayers?', Night: ${batch.feed!.bagsConsumedNight}':''})',
                       Icons.restaurant,
                       Colors.orange.shade700,
                     ),
@@ -453,13 +454,6 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // _buildInfoRow(
-                    //   'Feeding stage',
-                    //   batch.feedingPlan!.stageName,
-                    //   Icons.timeline_outlined,
-                    //   Colors.teal,
-                    // ),
-                    // const SizedBox(height: 8),
                     _buildInfoRow(
                       'Feed type',
                       batch.feedingPlan!.feedTypeInUse,
@@ -496,6 +490,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
               ),
               child: Row(
                 children: [
+                  if(!isLayers)...[
                   Expanded(
                     child: Column(
                       children: [
@@ -508,7 +503,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 10),],
                   Expanded(
                     child: Column(
                       children: [

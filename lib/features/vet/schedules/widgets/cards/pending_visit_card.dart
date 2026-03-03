@@ -138,7 +138,7 @@ class _PendingVisitCardState extends State<PendingVisitCard> {
                 style: const TextStyle(fontWeight: FontWeight.w600),
               ),
               Text(
-                'Location: ${widget.visit.farmerLocation}',
+                'Location: ${widget.visit.farmerLocation.address}',
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
               ),
               const SizedBox(height: 8),
@@ -304,7 +304,7 @@ class _PendingVisitCardState extends State<PendingVisitCard> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        widget.visit.farmerLocation,
+                        widget.visit.farmerLocation.address,
                         style: TextStyle(
                           color: Colors.grey.shade600,
                           fontSize: 14,
@@ -358,21 +358,6 @@ class _PendingVisitCardState extends State<PendingVisitCard> {
                   accentColor: Colors.orange,
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Icon(Icons.attach_money, size: 16, color: Colors.green.shade700),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Est. Earnings: KES ${widget.visit.officerEarnings.toStringAsFixed(2)}',
-                      style: TextStyle(
-                        color: Colors.green.shade700,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
                 Row(
                   children: [
                     Icon(Icons.access_time, size: 14, color: Colors.grey.shade500),
