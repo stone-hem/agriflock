@@ -1,7 +1,6 @@
 import 'package:agriflock/core/utils/toast_util.dart';
 import 'package:agriflock/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock/core/widgets/reusable_time_input.dart';
-import 'package:agriflock/core/widgets/location_picker_step.dart';
 import 'package:agriflock/features/farmer/vet/models/vet_farmer_model.dart';
 import 'package:agriflock/features/farmer/vet/models/vet_order_model.dart';
 import 'package:agriflock/features/farmer/vet/repo/vet_farmer_repository.dart';
@@ -36,14 +35,9 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
   bool _termsAgreed = false;
   bool _isSubmittingOrder = false;
 
-  String? _selectedAddress;
-  double? _latitude;
-  double? _longitude;
-
   @override
   void initState() {
     super.initState();
-    _initializeLocation();
     _selectedDateController.addListener(_onDateChanged);
   }
 
@@ -56,18 +50,6 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
     _selectedDateController.removeListener(_onDateChanged);
     _selectedDateController.dispose();
     super.dispose();
-  }
-
-  Future<void> _initializeLocation() async {
-    // 1. Try location from request (selected farm)
-    if (widget.request.farmerLocation != null) {
-      setState(() {
-        _selectedAddress = widget.request.farmerLocation!.address;
-        _latitude = widget.request.farmerLocation!.latitude;
-        _longitude = widget.request.farmerLocation!.longitude;
-      });
-      return;
-    }
   }
 
   @override
@@ -158,20 +140,40 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                       _buildEstimateCard(),
                       const SizedBox(height: 24),
 
-                      LocationPickerStep(
-                        selectedAddress: _selectedAddress,
-                        latitude: _latitude,
-                        longitude: _longitude,
-                        title: 'Service Location',
-                        text: 'Confirm where the vet should visit',
-                        onLocationSelected: (address, lat, lng) {
-                          setState(() {
-                            _selectedAddress = address;
-                            _latitude = lat;
-                            _longitude = lng;
-                          });
-                        },
-                      ),
+                      // Confirmed Location Display
+                      if (widget.request.farmLocation != null)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.blue.withOpacity(0.1)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Icons.location_on, color: Colors.blue.shade700, size: 20),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Confirmed Location',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blue.shade700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                widget.request.farmLocation!.address,
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                            ],
+                          ),
+                        ),
                       const SizedBox(height: 24),
 
                       CustomDateTextField(
@@ -714,11 +716,6 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
       return;
     }
 
-    if (_selectedAddress == null) {
-      ToastUtil.showError('Please select a service location');
-      return;
-    }
-
     setState(() {
       _isSubmittingOrder = true;
     });
@@ -743,11 +740,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
           : null,
       mortality: widget.request.mortality,
       ageInDays:  widget.request.ageInDays,
-      farmerLocation: FarmerLocation(
-        address: _selectedAddress!,
-        latitude: _latitude!,
-        longitude: _longitude!,
-      ),
+      farmLocation: widget.request.farmLocation,
     );
 
     final result = await widget.vetRepository.submitVetOrder(request);

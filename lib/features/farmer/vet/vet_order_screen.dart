@@ -1,5 +1,7 @@
+import 'package:agriflock/app_routes.dart';
 import 'package:agriflock/core/utils/api_error_handler.dart';
 import 'package:agriflock/core/utils/secure_storage.dart';
+import 'package:agriflock/core/widgets/location_picker_step.dart';
 import 'package:agriflock/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock/core/widgets/reusable_input.dart';
 import 'package:agriflock/features/farmer/batch/model/batch_model.dart';
@@ -47,6 +49,11 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
   String? _selectedFarm;
   String? _selectedHouse;
   List<String> _selectedBatches = [];
+
+  // ── Location data ──────────────────────────────────────────────────────────
+  String? _selectedAddress;
+  double? _latitude;
+  double? _longitude;
 
   // ── Services & priority ────────────────────────────────────────────────────
   List<String> _selectedServices = [];
@@ -169,7 +176,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
           break;
         case Failure(message: final error):
           setState(() {
-            _hasFarmsError = true;
             _farmsErrorMessage = error;
             _isLoadingFarms = false;
           });
@@ -334,7 +340,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
     List<BirdTypeEntry>? birdTypeDetails;
     int? mortality;
     int? ageInDays;
-    FarmerLocation? location;
+    FarmLocation? location;
 
     if (_hasFarmDetails) {
       // Farm-based path
@@ -359,18 +365,6 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
       }
       batchIds = _selectedBatches;
       houseIds = [_selectedHouse!];
-
-      // Get farm location
-      if (_selectedFarm != null && _farmsResponse != null) {
-        final farm = _farmsResponse!.farms.firstWhere((f) => f.id == _selectedFarm);
-        if (farm.gpsCoordinates != null) {
-          location = FarmerLocation(
-            address: farm.location ?? '',
-            latitude: farm.gpsCoordinates!.latitude,
-            longitude: farm.gpsCoordinates!.longitude,
-          );
-        }
-      }
     } else {
       // Manual / no-plan path
       birdsCount = _manualBirdsCount ?? 0;
@@ -400,6 +394,14 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
       }
     }
 
+    if (_selectedAddress != null && _latitude != null && _longitude != null) {
+      location = FarmLocation(
+        address: _selectedAddress!,
+        latitude: _latitude!,
+        longitude: _longitude!,
+      );
+    }
+
     return VetEstimateRequest(
       vetId: widget.vet.id,
       serviceIds: _selectedServices,
@@ -423,7 +425,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
       mortality: mortality,
       ageInDays: ageInDays,
       participantsCount: _hasPerPersonService ? _numberOfPeople : null,
-      farmerLocation: location,
+      farmLocation: location,
     );
   }
 
@@ -431,6 +433,10 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
 
   Future<void> _getEstimate() async {
     // Validation
+    if (_selectedAddress == null) {
+      _showSnack('Please select service location', Colors.orange);
+      return;
+    }
     if (_selectedPriority == null || _selectedServices.isEmpty) {
       _showSnack(
           'Please select priority level and at least one service', Colors.orange);
@@ -565,93 +571,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
     );
   }
 
-  // ── Subscribe banner ───────────────────────────────────────────────────────
 
-  /// Shown for farmers with NO subscription to encourage them to subscribe.
-  Widget _buildSubscribeBanner() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.green.shade700, Colors.green.shade500],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.green.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.workspace_premium,
-                    color: Colors.white, size: 22),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'Unlock Full Farm Management',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'Subscribe to create farms, track flocks, monitor expenditures, '
-                'and attach your batches directly to vet orders — all in one place.',
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.92),
-              fontSize: 13,
-              height: 1.45,
-            ),
-          ),
-          const SizedBox(height: 14),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                // TODO: Navigate to subscription/plans screen
-                context.push('/subscription');
-              },
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.white,
-                side: const BorderSide(color: Colors.white, width: 1.5),
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              icon: const Icon(Icons.arrow_forward, size: 16),
-              label: const Text(
-                'View Subscription Plans',
-                style:
-                TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   // ── Manual birds & bird type section ──────────────────────────────────────
 
@@ -941,7 +861,18 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
           _houses = [];
           _availableBatches = [];
         });
-        if (v != null) _loadHousesForSelectedFarm();
+        if (v != null) {
+          _loadHousesForSelectedFarm();
+          // Update location from farm
+          final farm = _farmsResponse!.farms.firstWhere((f) => f.id == v);
+          if (farm.gpsCoordinates != null) {
+            setState(() {
+              _selectedAddress = farm.location;
+              _latitude = farm.gpsCoordinates!.latitude;
+              _longitude = farm.gpsCoordinates!.longitude;
+            });
+          }
+        }
       },
     );
   }
@@ -960,8 +891,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.blue.shade100),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column( crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(farm.farmName,
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
@@ -1379,12 +1309,41 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
               // ── Booking info card ──────────────────────────────────────────
               _buildBookingInfoCard(),
               const SizedBox(height: 24),
-
-              // ── Subscribe banner (no plan only) ────────────────────────────
+              /// Shown for farmers with NO subscription to encourage them to subscribe.
               if (_hasNoSubscription) ...[
-                _buildSubscribeBanner(),
-                const SizedBox(height: 24),
+                TextButton.icon(
+                  onPressed: ()=>context.push(AppRoutes.subscriptionPlansPreview),
+                  icon: const Icon(Icons.arrow_forward),
+                  label:
+                  Text(
+                    'Subscribe to attach your batches directly to vet orders.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      height: 1.45,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
               ],
+
+              // ── Location ───────────────────────────────────────────────────
+              LocationPickerStep(
+                selectedAddress: _selectedAddress,
+                latitude: _latitude,
+                longitude: _longitude,
+                title: 'Service Location',
+                text: 'Select where the vet should visit',
+                onLocationSelected: (address, lat, lng) {
+                  setState(() {
+                    _selectedAddress = address;
+                    _latitude = lat;
+                    _longitude = lng;
+                  });
+                },
+              ),
+              const SizedBox(height: 24),
+
+
 
               // ── Farm section OR manual section ─────────────────────────────
               if (_hasNoSubscription)

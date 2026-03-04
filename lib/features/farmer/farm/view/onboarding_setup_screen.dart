@@ -113,7 +113,6 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
     super.initState();
     _houseNameController.text = 'House 1';
     _hatchController.text = DateUtil.toReadableDate(DateTime.now());
-    _chickCostController.text = '0';
     _loadBirdTypes();
     _loadCurrency();
   }

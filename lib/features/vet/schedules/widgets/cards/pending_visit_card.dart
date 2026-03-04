@@ -134,7 +134,7 @@ class _PendingVisitCardState extends State<PendingVisitCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Farmer: ${widget.visit.farmerName}',
+                'Farmer: ${widget.visit.farmerName} (${widget.visit.farmerCategory})',
                 style: const TextStyle(fontWeight: FontWeight.w600),
               ),
               Text(
@@ -296,7 +296,7 @@ class _PendingVisitCardState extends State<PendingVisitCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.visit.farmerName,
+                        '${widget.visit.farmerName} (${widget.visit.farmerCategory})',
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,

@@ -11,6 +11,7 @@ class UseItemDetailsView extends StatefulWidget {
   final InventoryCategory category;
   final CategoryItem? selectedItem;
   final double? quantity;
+  final String? selectedPackagingOption;
   final String? methodOfAdministration;
   final String? notes;
   final DateTime selectedDate;
@@ -19,6 +20,7 @@ class UseItemDetailsView extends StatefulWidget {
   final VoidCallback onItemCleared;
   final Function({
   required double quantity,
+  String? selectedPackagingOption,
   String? methodOfAdministration,
   String? notes,
   required DateTime selectedDate,
@@ -33,6 +35,7 @@ class UseItemDetailsView extends StatefulWidget {
     required this.category,
     this.selectedItem,
     this.quantity,
+    this.selectedPackagingOption,
     this.methodOfAdministration,
     this.notes,
     required this.selectedDate,
@@ -58,7 +61,12 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
 
   String _searchQuery = '';
   String? _selectedMethodOfAdministration;
+  String? _selectedPackagingOption;
   TimeOfDay _selectedTime = TimeOfDay.now();
+
+  // Packaging options
+  bool _hasPackagingOptions = false;
+  List<String> _packagingOptions = [];
 
   @override
   void initState() {
@@ -75,6 +83,29 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
     }
     if (widget.methodOfAdministration != null) {
       _selectedMethodOfAdministration = widget.methodOfAdministration;
+    }
+
+    // Initialize packaging options if item is selected
+    _initializePackagingOptions();
+  }
+
+  void _initializePackagingOptions() {
+    if (widget.selectedItem != null) {
+      _hasPackagingOptions = widget.selectedItem!.categoryItemPackagingOptions != null &&
+          widget.selectedItem!.categoryItemPackagingOptions!.isNotEmpty;
+
+      if (_hasPackagingOptions) {
+        _packagingOptions = widget.selectedItem!.categoryItemPackagingOptions!;
+        _selectedPackagingOption = widget.selectedPackagingOption ?? _packagingOptions.first;
+      }
+    }
+  }
+
+  @override
+  void didUpdateWidget(UseItemDetailsView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selectedItem != oldWidget.selectedItem) {
+      _initializePackagingOptions();
     }
   }
 
@@ -115,6 +146,13 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
     }
   }
 
+  String _getUnitDisplay() {
+    if (_hasPackagingOptions && _selectedPackagingOption != null) {
+      return _selectedPackagingOption!;
+    }
+    return widget.selectedItem?.categoryItemUnit ?? 'units';
+  }
+
   List<CategoryItem> get _filteredItems {
     // First filter to only items that can be used from store
     final usableItems = widget.category.categoryItems.where((item) => item.useFromStore).toList();
@@ -123,8 +161,7 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
       return usableItems;
     }
     return usableItems.where((item) {
-      return item.categoryItemName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          item.description.toLowerCase().contains(_searchQuery.toLowerCase());
+      return item.categoryItemName.toLowerCase().contains(_searchQuery.toLowerCase());
     }).toList();
   }
 
@@ -167,6 +204,7 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
 
     widget.onSave(
       quantity: quantity,
+      selectedPackagingOption: _selectedPackagingOption,
       methodOfAdministration: _selectedMethodOfAdministration,
       notes: _notesController.text.isNotEmpty ? _notesController.text : null,
       selectedDate: combinedDateTime,
@@ -240,9 +278,7 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                       color: categoryColor,
                     ),
                   ),
-                  SizedBox(width: 5,),
-
-
+                  const SizedBox(width: 5),
                 ],
               ),
             ],
@@ -490,9 +526,9 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                                         ),
                                         const SizedBox(height: 8),
                                         // Description
-                                        if (item.description.isNotEmpty)
+                                        if (item.description != null)
                                           Text(
-                                            item.description,
+                                            item.description!,
                                             maxLines: 2,
                                             overflow: TextOverflow.ellipsis,
                                             style: TextStyle(
@@ -502,7 +538,7 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                                             ),
                                           ),
                                         // Suggestion context chip (if suggested)
-                                        if (item.isSuggestedForAge && item.suggestionContext.isNotEmpty) ...[
+                                        if (item.isSuggestedForAge && item.suggestionContext != null && item.suggestionContext!.isNotEmpty) ...[
                                           const SizedBox(height: 8),
                                           Container(
                                             padding: const EdgeInsets.symmetric(
@@ -527,7 +563,7 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                                                 const SizedBox(width: 4),
                                                 Expanded(
                                                   child: Text(
-                                                    item.suggestionContext,
+                                                    item.suggestionContext!,
                                                     style: TextStyle(
                                                       fontSize: 11,
                                                       fontWeight: FontWeight.w500,
@@ -600,9 +636,9 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                                     color: categoryColor,
                                   ),
                                 ),
-                                if (widget.selectedItem!.description.isNotEmpty)
+                                if (widget.selectedItem!.description != null)
                                   Text(
-                                    widget.selectedItem!.description,
+                                    widget.selectedItem!.description!,
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: Colors.grey.shade700,
@@ -622,7 +658,116 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Quantity input
+                    // Packaging Options Dropdown (if available)
+                    if (_hasPackagingOptions) ...[
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.grey.shade300,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                left: 16,
+                                top: 12,
+                                right: 16,
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.inventory_2_outlined,
+                                    size: 16,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Packaging Size',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey.shade700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            DropdownButtonFormField<String>(
+                              value: _selectedPackagingOption,
+                              decoration: InputDecoration(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                errorBorder: InputBorder.none,
+                                disabledBorder: InputBorder.none,
+                              ),
+                              icon: Icon(
+                                Icons.arrow_drop_down,
+                                color: categoryColor,
+                              ),
+                              dropdownColor: Colors.white,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey.shade800,
+                              ),
+                              items: _packagingOptions.map((option) {
+                                return DropdownMenuItem<String>(
+                                  value: option,
+                                  child: Text(option),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedPackagingOption = value;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Show unit info
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              size: 16,
+                              color: Colors.grey.shade600,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Base unit: ${widget.selectedItem!.categoryItemUnit}',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
                     const Text(
                       'How much did you use?',
                       style: TextStyle(
@@ -633,10 +778,10 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                     const SizedBox(height: 16),
 
                     ReusableInput(
-                      topLabel: 'Quantity Used',
+                      topLabel: 'Quantity Used (${_getUnitDisplay()})',
                       icon: Icons.inventory_2,
                       controller: _quantityController,
-                      hintText: '0',
+                      hintText: 'Enter quantity in ${_getUnitDisplay()}',
                       keyboardType: TextInputType.number,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -757,6 +902,7 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                     ReusableTimeInput(
                       topLabel: 'Time Used',
                       icon: Icons.access_time,
+                      initialTime: _selectedTime,
                       onTimeChanged: (time) {
                         setState(() => _selectedTime = time);
                       },

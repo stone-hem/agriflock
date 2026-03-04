@@ -41,8 +41,7 @@ class _ItemSelectionViewState extends State<ItemSelectionView> {
       return widget.category.categoryItems;
     }
     return widget.category.categoryItems.where((item) {
-      return item.categoryItemName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          item.description.toLowerCase().contains(_searchQuery.toLowerCase());
+      return item.categoryItemName.toLowerCase().contains(_searchQuery.toLowerCase());
     }).toList();
   }
 
@@ -423,11 +422,11 @@ class _ItemSelectionViewState extends State<ItemSelectionView> {
                                             : Colors.grey.shade800,
                                       ),
                                     ),
-                                    if (item.description.isNotEmpty)
+                                    if (item.description!=null)
                                       Padding(
                                         padding: const EdgeInsets.only(top: 4),
                                         child: Text(
-                                          item.description,
+                                          item.description!,
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
                                           style: TextStyle(

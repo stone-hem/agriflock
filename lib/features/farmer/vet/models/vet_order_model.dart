@@ -43,7 +43,7 @@ class VetOrderRequest {
   final int? ageInDays;
   final String? paymentMode;
   final List<String>? birdTypeIds;
-  final FarmerLocation? farmerLocation;
+  final FarmLocation? farmLocation;
 
   VetOrderRequest({
     required this.vetId,
@@ -57,8 +57,10 @@ class VetOrderRequest {
     required this.termsAgreed,
     this.participantsCount,
     this.paymentMode,
-    this.birdTypeIds, this.mortality, this.ageInDays,
-    this.farmerLocation,
+    this.birdTypeIds,
+    this.mortality,
+    this.ageInDays,
+    this.farmLocation,
   });
 
   Map<String, dynamic> toJson() {
@@ -79,17 +81,17 @@ class VetOrderRequest {
       if (birdTypeIds != null)
         'bird_type_ids':
         birdTypeIds!.map((e) => e).toList(),
-      if (farmerLocation != null) 'location': farmerLocation!.toJson(),
+      if (farmLocation != null) 'farm_location': farmLocation!.toJson(),
     };
   }
 }
 
-class FarmerLocation {
+class FarmLocation {
   final String address;
   final double latitude;
   final double longitude;
 
-  FarmerLocation({
+  FarmLocation({
     required this.address,
     required this.latitude,
     required this.longitude,
@@ -119,7 +121,7 @@ class VetEstimateRequest {
   final int? ageInDays;
   final String? paymentMode;
   final List<String>? birdTypeIds;
-  final FarmerLocation? farmerLocation;
+  final FarmLocation? farmLocation;
 
   VetEstimateRequest({
     required this.vetId,
@@ -134,7 +136,7 @@ class VetEstimateRequest {
     this.participantsCount,
     this.paymentMode,
     this.birdTypeIds, this.mortality, this.ageInDays,
-    this.farmerLocation,
+    this.farmLocation,
   });
 
   Map<String, dynamic> toJson() {
@@ -155,6 +157,7 @@ class VetEstimateRequest {
       if (birdTypeIds != null)
         'bird_type_ids':
         birdTypeIds!.map((e) => e).toList(),
+      if (farmLocation != null) 'farm_location': farmLocation!.toJson(),
     };
   }
 }

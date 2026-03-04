@@ -1,4 +1,5 @@
 import 'package:agriflock/core/widgets/custom_date_text_field.dart';
+import 'package:agriflock/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock/core/widgets/reusable_input.dart';
 import 'package:agriflock/core/widgets/reusable_time_input.dart';
 import 'package:agriflock/features/farmer/expense/model/expense_category.dart';
@@ -11,12 +12,14 @@ class QuantityPriceView extends StatefulWidget {
   final double? quantity;
   final double? unitPrice;
   final double? totalPrice;
+  final String? selectedPackagingOption;
   final DateTime selectedDate;
   final Function({
   required double quantity,
   required double unitPrice,
   required double totalPrice,
   required DateTime selectedDate,
+  String? selectedPackagingOption,
   }) onContinue;
   final VoidCallback onBack;
 
@@ -27,6 +30,7 @@ class QuantityPriceView extends StatefulWidget {
     this.quantity,
     this.unitPrice,
     this.totalPrice,
+    this.selectedPackagingOption,
     required this.selectedDate,
     required this.onContinue,
     required this.onBack,
@@ -42,17 +46,22 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
   late TextEditingController _unitPriceController;
   late TextEditingController _dateController;
 
+  String? _selectedPackagingOption;
   String? _methodOfAdministration;
   double _totalPrice = 0.0;
-  String _currency='';
+  String _currency = '';
   TimeOfDay _selectedTime = TimeOfDay.now();
 
-
+  // Dropdown state
+  bool _hasPackagingOptions = false;
+  List<String> _packagingOptions = [];
 
   @override
   void initState() {
     super.initState();
     _loadCurrency();
+    _initializePackagingOptions();
+
     _quantityController = TextEditingController(
       text: widget.quantity?.toString() ?? '',
     );
@@ -63,11 +72,24 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
       text: widget.selectedDate.toIso8601String(),
     );
     _totalPrice = widget.totalPrice ?? 0.0;
+    _selectedPackagingOption = widget.selectedPackagingOption;
 
     _quantityController.addListener(_calculateTotal);
     _unitPriceController.addListener(_calculateTotal);
   }
 
+  void _initializePackagingOptions() {
+    if (widget.item.categoryItemPackagingOptions != null &&
+        widget.item.categoryItemPackagingOptions!.isNotEmpty) {
+      _hasPackagingOptions = true;
+      _packagingOptions = widget.item.categoryItemPackagingOptions!;
+
+      // Set default selected option if none selected
+      if (_selectedPackagingOption == null && _packagingOptions.isNotEmpty) {
+        _selectedPackagingOption = _packagingOptions.first;
+      }
+    }
+  }
 
   Future<void> _loadCurrency() async {
     var currency = await secureStorage.getCurrency();
@@ -82,6 +104,13 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
     setState(() {
       _totalPrice = quantity * unitPrice;
     });
+  }
+
+  String _getUnitDisplay() {
+    if (_hasPackagingOptions && _selectedPackagingOption != null) {
+      return _selectedPackagingOption!;
+    }
+    return widget.item.categoryItemUnit;
   }
 
   Color _getCategoryColor() {
@@ -130,6 +159,7 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
       unitPrice: unitPrice,
       totalPrice: _totalPrice,
       selectedDate: combinedDateTime,
+      selectedPackagingOption: _selectedPackagingOption,
     );
   }
 
@@ -178,9 +208,9 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
                         color: categoryColor,
                       ),
                     ),
-                    if (widget.item.description.isNotEmpty)
+                    if (widget.item.description != null)
                       Text(
-                        widget.item.description,
+                        widget.item.description!,
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey.shade700,
@@ -210,12 +240,71 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
                   ),
                   const SizedBox(height: 24),
 
+                  // Packaging Options Dropdown (if available)
+                  if (_hasPackagingOptions) ...[
+                    ReusableDropdown<String>(
+                      value: _selectedPackagingOption,
+                      icon: Icons.inventory_2_outlined,
+                      topLabel: 'Packaging Size',
+                      items: _packagingOptions.map((option) {
+                        return DropdownMenuItem<String>(
+                          value: option,
+                          child: Text(option),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedPackagingOption = value;
+                        });
+                      },
+                      validator: (value) {
+                        if (_hasPackagingOptions && value == null) {
+                          return 'Please select a packaging option';
+                        }
+                        return null;
+                      }, hintText: 'Packaging Size',
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Show unit info
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            size: 16,
+                            color: Colors.grey.shade600,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Unit: ${widget.item.categoryItemUnit}',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
                   // Quantity
                   ReusableInput(
                     topLabel: 'Quantity *',
                     icon: Icons.format_list_numbered,
                     controller: _quantityController,
-                    hintText: '0',
+                    hintText: 'Enter quantity in ${_getUnitDisplay()}',
                     keyboardType: TextInputType.number,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -363,8 +452,6 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
       return Icons.inventory_2;
     }
   }
-
-
 
   @override
   void dispose() {

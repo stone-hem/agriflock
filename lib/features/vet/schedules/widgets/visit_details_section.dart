@@ -1,3 +1,4 @@
+import 'package:agriflock/core/utils/date_util.dart';
 import 'package:agriflock/features/vet/schedules/models/visit_model.dart';
 import 'package:flutter/material.dart';
 
@@ -71,8 +72,8 @@ class VisitDetailsSection extends StatelessWidget {
               for (final info in birdSummary)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 2),
-                  child: Text(
-                    info,
+                  child:Text(
+                    info + (visit.ageInDays != null ? ' - Age ${visit.ageInDays} days old' : ''),
                     style: TextStyle(
                       color: Colors.grey.shade700,
                       fontSize: 13,
@@ -82,8 +83,27 @@ class VisitDetailsSection extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 10),
         ],
+        if (visit.mortality !=null)
+        _SectionRow(
+          icon: Icons.reduce_capacity,
+          iconColor: accentColor,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child:Text(
+                'Mortality count - ${visit.mortality}',
+                style: TextStyle(
+                  color: Colors.grey.shade700,
+                  fontSize: 13,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+
 
         // Requested Services with costs
         if (visit.serviceCosts.isNotEmpty) ...[
@@ -92,12 +112,13 @@ class VisitDetailsSection extends StatelessWidget {
             iconColor: accentColor,
             children: [
               Text(
-                'Requested Services',
+                'Requested Services ',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                   color: Colors.grey.shade500,
                 ),
+
               ),
               const SizedBox(height: 4),
               for (final service in visit.serviceCosts)
@@ -131,6 +152,7 @@ class VisitDetailsSection extends StatelessWidget {
           ),
           const SizedBox(height: 10),
         ],
+        const SizedBox(height: 10),
 
         // Cost Breakdown
         Container(
@@ -142,6 +164,11 @@ class VisitDetailsSection extends StatelessWidget {
           ),
           child: Column(
             children: [
+              _CostRow(
+                label: 'Payment Mode',
+                value: '${visit.paymentMode.isNotEmpty?visit.paymentMode.replaceAll('_',' '):'Not Provided'}',
+              ),
+              SizedBox(height: 10,),
               _CostRow(
                 label: 'Service Cost',
                 value: 'KES ${visit.serviceFee.toStringAsFixed(2)}',
@@ -187,20 +214,16 @@ class VisitDetailsSection extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  _getDayOfWeek(visit.preferredDate),
+                  DateUtil.toShortDateWithDay(DateTime.parse(visit.preferredDate)),
                   style: TextStyle(
                     color: Colors.grey.shade700,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                if (_getDayOfWeek(visit.preferredDate).isNotEmpty)
-                  Text(
-                    '  ·  ',
-                    style: TextStyle(color: Colors.grey.shade400),
-                  ),
+                const SizedBox(width: 4),
                 Text(
-                  _formatDate(visit.preferredDate),
+                  'Time: ${DateUtil.to12HourTime(DateTime.parse(visit.preferredDate))}',
                   style: TextStyle(
                     color: Colors.grey.shade700,
                     fontSize: 13,
@@ -209,17 +232,50 @@ class VisitDetailsSection extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 2),
-            Text(
-              'Time: ${_formatTime(visit.preferredTime)}',
-              style: TextStyle(
-                color: Colors.grey.shade700,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+
           ],
         ),
+        // Requested Visit Date/Time
+        _SectionRow(
+          icon: Icons.event_outlined,
+          iconColor: accentColor,
+          children: [
+            Text(
+              'Date Visit Requested',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Text(
+                  DateUtil.toShortDateWithDay(visit.submittedAt),
+                  style: TextStyle(
+                    color: Colors.grey.shade700,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Time: ${DateUtil.to12HourTime(visit.submittedAt)}',
+                  style: TextStyle(
+                    color: Colors.grey.shade700,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+
+          ],
+        ),
+
+
+
       ],
     );
   }

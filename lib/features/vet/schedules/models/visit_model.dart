@@ -8,6 +8,7 @@ class Visit {
   final String farmerName;
   final String farmerPhone;
   final FarmerLocation farmerLocation;
+  final String farmerCategory;
   final String vetId;
   final String vetName;
   final List<String> vetSpecialization;
@@ -15,12 +16,19 @@ class Visit {
   final List<House> houses;
   final List<Batch> batches;
   final int birdsCount;
-  final String birdTypeId;
-  final List<dynamic> services;
+  final String? birdTypeId;
+  final String? birdTypeName;
+  final List<BirdType> birdTypes;
+  final int? mortality;
+  final int? ageInDays;
+  final String paymentMode;
+  final List<Service> services;
   final List<ServiceCost> serviceCosts;
   final String priorityLevel;
   final String preferredDate;
   final String preferredTime;
+  final String? reasonForVisit;
+  final String? additionalNotes;
   final double serviceFee;
   final double mileageFee;
   final double distanceKm;
@@ -35,8 +43,13 @@ class Visit {
   final DateTime? completedAt;
   final DateTime? cancelledAt;
   final String? cancellationReason;
+  final String? vetNotes;
+  final double? actualCost;
   final bool termsAgreed;
   final bool isPaid;
+  final String currency;
+  final String dateRequested;
+  final String timeRequested;
 
   Visit({
     required this.id,
@@ -45,6 +58,7 @@ class Visit {
     required this.farmerName,
     required this.farmerPhone,
     required this.farmerLocation,
+    required this.farmerCategory,
     required this.vetId,
     required this.vetName,
     required this.vetSpecialization,
@@ -52,12 +66,19 @@ class Visit {
     required this.houses,
     required this.batches,
     required this.birdsCount,
-    required this.birdTypeId,
+    this.birdTypeId,
+    this.birdTypeName,
+    required this.birdTypes,
+    this.mortality,
+    this.ageInDays,
+    required this.paymentMode,
     required this.services,
     required this.serviceCosts,
     required this.priorityLevel,
     required this.preferredDate,
     required this.preferredTime,
+    this.reasonForVisit,
+    this.additionalNotes,
     required this.serviceFee,
     required this.mileageFee,
     required this.distanceKm,
@@ -67,13 +88,18 @@ class Visit {
     required this.platformCommission,
     required this.status,
     required this.submittedAt,
-    required this.reviewedAt,
-    required this.scheduledAt,
-    required this.completedAt,
-    required this.cancelledAt,
-    required this.cancellationReason,
+    this.reviewedAt,
+    this.scheduledAt,
+    this.completedAt,
+    this.cancelledAt,
+    this.cancellationReason,
+    this.vetNotes,
+    this.actualCost,
     required this.termsAgreed,
     required this.isPaid,
+    required this.currency,
+    required this.dateRequested,
+    required this.timeRequested,
   });
 
   factory Visit.fromJson(Map<String, dynamic> json) {
@@ -83,6 +109,7 @@ class Visit {
     final servicesList = TypeUtils.toListSafe<dynamic>(json['services']);
     final serviceCostsList = TypeUtils.toListSafe<dynamic>(json['service_costs']);
     final vetSpecializationList = TypeUtils.toListSafe<dynamic>(json['vet_specialization']);
+    final birdTypesList = TypeUtils.toListSafe<dynamic>(json['bird_types']);
 
     return Visit(
       id: TypeUtils.toStringSafe(json['id']),
@@ -91,6 +118,7 @@ class Visit {
       farmerName: TypeUtils.toStringSafe(json['farmer_name']),
       farmerPhone: TypeUtils.toStringSafe(json['farmer_phone']),
       farmerLocation: FarmerLocation.fromJson(json['farmer_location']),
+      farmerCategory: TypeUtils.toStringSafe(json['farmer_category']),
       vetId: TypeUtils.toStringSafe(json['vet_id']),
       vetName: TypeUtils.toStringSafe(json['vet_name']),
       vetSpecialization: vetSpecializationList
@@ -104,14 +132,25 @@ class Visit {
           .map((x) => Batch.fromJson(x is Map<String, dynamic> ? x : {}))
           .toList(),
       birdsCount: TypeUtils.toIntSafe(json['birds_count']),
-      birdTypeId: TypeUtils.toStringSafe(json['bird_type_id']),
-      services: servicesList,
+      birdTypeId: TypeUtils.toNullableStringSafe(json['bird_type_id']),
+      birdTypeName: TypeUtils.toNullableStringSafe(json['bird_type_name']),
+      birdTypes: birdTypesList
+          .map((x) => BirdType.fromJson(x is Map<String, dynamic> ? x : {}))
+          .toList(),
+      mortality: TypeUtils.toNullableIntSafe(json['mortality']),
+      ageInDays: TypeUtils.toNullableIntSafe(json['age_in_days']),
+      paymentMode: TypeUtils.toStringSafe(json['payment_mode']),
+      services: servicesList
+          .map((x) => Service.fromJson(x is Map<String, dynamic> ? x : {}))
+          .toList(),
       serviceCosts: serviceCostsList
           .map((x) => ServiceCost.fromJson(x is Map<String, dynamic> ? x : {}))
           .toList(),
       priorityLevel: TypeUtils.toStringSafe(json['priority_level']),
       preferredDate: TypeUtils.toStringSafe(json['preferred_date']),
       preferredTime: TypeUtils.toStringSafe(json['preferred_time']),
+      reasonForVisit: TypeUtils.toNullableStringSafe(json['reason_for_visit']),
+      additionalNotes: TypeUtils.toNullableStringSafe(json['additional_notes']),
       serviceFee: TypeUtils.toDoubleSafe(json['serviceFee']),
       mileageFee: TypeUtils.toDoubleSafe(json['mileageFee']),
       distanceKm: TypeUtils.toDoubleSafe(json['distanceKm']),
@@ -126,8 +165,13 @@ class Visit {
       completedAt: TypeUtils.toDateTimeSafe(json['completed_at']),
       cancelledAt: TypeUtils.toDateTimeSafe(json['cancelled_at']),
       cancellationReason: TypeUtils.toNullableStringSafe(json['cancellation_reason']),
+      vetNotes: TypeUtils.toNullableStringSafe(json['vet_notes']),
+      actualCost: TypeUtils.toNullableDoubleSafe(json['actualCost']),
       termsAgreed: TypeUtils.toBoolSafe(json['terms_agreed']),
       isPaid: TypeUtils.toBoolSafe(json['is_paid']),
+      currency: TypeUtils.toStringSafe(json['currency']),
+      dateRequested: TypeUtils.toStringSafe(json['date_requested']),
+      timeRequested: TypeUtils.toStringSafe(json['time_requested']),
     );
   }
 
@@ -139,6 +183,7 @@ class Visit {
       'farmer_name': farmerName,
       'farmer_phone': farmerPhone,
       'farmer_location': farmerLocation.toJson(),
+      'farmer_category': farmerCategory,
       'vet_id': vetId,
       'vet_name': vetName,
       'vet_specialization': vetSpecialization,
@@ -147,11 +192,18 @@ class Visit {
       'batches': batches.map((x) => x.toJson()).toList(),
       'birds_count': birdsCount,
       'bird_type_id': birdTypeId,
-      'services': services,
+      'bird_type_name': birdTypeName,
+      'bird_types': birdTypes.map((x) => x.toJson()).toList(),
+      'mortality': mortality,
+      'age_in_days': ageInDays,
+      'payment_mode': paymentMode,
+      'services': services.map((x) => x.toJson()).toList(),
       'service_costs': serviceCosts.map((x) => x.toJson()).toList(),
       'priority_level': priorityLevel,
       'preferred_date': preferredDate,
       'preferred_time': preferredTime,
+      'reason_for_visit': reasonForVisit,
+      'additional_notes': additionalNotes,
       'serviceFee': serviceFee,
       'mileageFee': mileageFee,
       'distanceKm': distanceKm,
@@ -166,8 +218,69 @@ class Visit {
       'completed_at': completedAt?.toIso8601String(),
       'cancelled_at': cancelledAt?.toIso8601String(),
       'cancellation_reason': cancellationReason,
+      'vet_notes': vetNotes,
+      'actualCost': actualCost,
       'terms_agreed': termsAgreed,
       'is_paid': isPaid,
+      'currency': currency,
+      'date_requested': dateRequested,
+      'time_requested': timeRequested,
+    };
+  }
+}
+
+class BirdType {
+  final String id;
+  final String name;
+
+  BirdType({
+    required this.id,
+    required this.name,
+  });
+
+  factory BirdType.fromJson(Map<String, dynamic> json) {
+    return BirdType(
+      id: TypeUtils.toStringSafe(json['id']),
+      name: TypeUtils.toStringSafe(json['name']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+    };
+  }
+}
+
+class Service {
+  final String id;
+  final String name;
+  final String code;
+  final double cost;
+
+  Service({
+    required this.id,
+    required this.name,
+    required this.code,
+    required this.cost,
+  });
+
+  factory Service.fromJson(Map<String, dynamic> json) {
+    return Service(
+      id: TypeUtils.toStringSafe(json['id']),
+      name: TypeUtils.toStringSafe(json['name']),
+      code: TypeUtils.toStringSafe(json['code']),
+      cost: TypeUtils.toDoubleSafe(json['cost']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'code': code,
+      'cost': cost,
     };
   }
 }
@@ -196,8 +309,18 @@ class FarmerLocation {
         return FarmerLocation(address: json, latitude: 0, longitude: 0);
       }
     } else if (json is Map) {
+      // Handle the case where address might be a complex object
+      String address = '';
+      if (json['address'] is Map) {
+        // If address is a complex object, we might want to extract formatted_address
+        final addressMap = json['address'] as Map;
+        address = TypeUtils.toStringSafe(addressMap['formatted_address']);
+      } else {
+        address = TypeUtils.toStringSafe(json['address']);
+      }
+
       return FarmerLocation(
-        address: TypeUtils.toStringSafe(json['address']),
+        address: address,
         latitude: TypeUtils.toDoubleSafe(json['latitude']),
         longitude: TypeUtils.toDoubleSafe(json['longitude']),
       );
@@ -245,23 +368,23 @@ class VetLocation {
 }
 
 class Address {
-  final String city;
-  final String county;
-  final String subCounty;
+  final String? city;
+  final String? county;
+  final String? subCounty;
   final String formattedAddress;
 
   Address({
-    required this.city,
-    required this.county,
-    required this.subCounty,
+    this.city,
+    this.county,
+    this.subCounty,
     required this.formattedAddress,
   });
 
   factory Address.fromJson(Map<String, dynamic> json) {
     return Address(
-      city: TypeUtils.toStringSafe(json['city']),
-      county: TypeUtils.toStringSafe(json['county']),
-      subCounty: TypeUtils.toStringSafe(json['sub_county']),
+      city: TypeUtils.toNullableStringSafe(json['city']),
+      county: TypeUtils.toNullableStringSafe(json['county']),
+      subCounty: TypeUtils.toNullableStringSafe(json['sub_county']),
       formattedAddress: TypeUtils.toStringSafe(json['formatted_address']),
     );
   }
@@ -305,18 +428,18 @@ class House {
 }
 
 class Batch {
-  final String batchId;
+  final String id;
+  final String name;
   final String houseId;
-  final String batchName;
   final String houseName;
   final int birdsCount;
   final String birdTypeId;
   final String birdTypeName;
 
   Batch({
-    required this.batchId,
+    required this.id,
+    required this.name,
     required this.houseId,
-    required this.batchName,
     required this.houseName,
     required this.birdsCount,
     required this.birdTypeId,
@@ -325,9 +448,9 @@ class Batch {
 
   factory Batch.fromJson(Map<String, dynamic> json) {
     return Batch(
-      batchId: TypeUtils.toStringSafe(json['batch_id']),
+      id: TypeUtils.toStringSafe(json['id']),
+      name: TypeUtils.toStringSafe(json['name']),
       houseId: TypeUtils.toStringSafe(json['house_id']),
-      batchName: TypeUtils.toStringSafe(json['batch_name']),
       houseName: TypeUtils.toStringSafe(json['house_name']),
       birdsCount: TypeUtils.toIntSafe(json['birds_count']),
       birdTypeId: TypeUtils.toStringSafe(json['bird_type_id']),
@@ -337,9 +460,9 @@ class Batch {
 
   Map<String, dynamic> toJson() {
     return {
-      'batch_id': batchId,
+      'id': id,
+      'name': name,
       'house_id': houseId,
-      'batch_name': batchName,
       'house_name': houseName,
       'birds_count': birdsCount,
       'bird_type_id': birdTypeId,
@@ -353,12 +476,16 @@ class ServiceCost {
   final String serviceId;
   final String serviceCode;
   final String serviceName;
+  final int? birdsCount;
+  final int? participantsCount;
 
   ServiceCost({
     required this.cost,
     required this.serviceId,
     required this.serviceCode,
     required this.serviceName,
+    this.birdsCount,
+    this.participantsCount,
   });
 
   factory ServiceCost.fromJson(Map<String, dynamic> json) {
@@ -367,6 +494,8 @@ class ServiceCost {
       serviceId: TypeUtils.toStringSafe(json['service_id']),
       serviceCode: TypeUtils.toStringSafe(json['service_code']),
       serviceName: TypeUtils.toStringSafe(json['service_name']),
+      birdsCount: TypeUtils.toNullableIntSafe(json['birds_count']),
+      participantsCount: TypeUtils.toNullableIntSafe(json['participants_count']),
     );
   }
 
@@ -376,6 +505,8 @@ class ServiceCost {
       'service_id': serviceId,
       'service_code': serviceCode,
       'service_name': serviceName,
+      'birds_count': birdsCount,
+      'participants_count': participantsCount,
     };
   }
 }
@@ -422,20 +553,21 @@ class VisitListResponse {
 
 // Enum for visit status
 enum VisitStatus {
-  pending('pending'),
-  inProgress('in_progress'),
-  pendingPayments('pending_payments'),
-  completed('completed'),
-  accepted('accepted'),
-  declined('declined'),
-  cancelled('cancelled');
+  pending('PENDING'),
+  accepted('ACCEPTED'),
+  declined('DECLINED'),
+  paid('PAID'),
+  paymentPending('PAYMENT_PENDING'),
+  inProgress('IN_PROGRESS'),
+  completed('COMPLETED'),
+  cancelled('CANCELLED');
 
   final String value;
   const VisitStatus(this.value);
 
   static VisitStatus fromString(String value) {
     return VisitStatus.values.firstWhere(
-          (status) => status.value.toLowerCase() == value.toLowerCase(),
+          (status) => status.value == value,
       orElse: () => VisitStatus.pending,
     );
   }
@@ -445,16 +577,18 @@ enum VisitStatus {
     switch (this) {
       case VisitStatus.pending:
         return 'Pending';
-      case VisitStatus.inProgress:
-        return 'In Progress';
-        case VisitStatus.pendingPayments:
-        return 'Pending Payments';
-      case VisitStatus.completed:
-        return 'Completed';
       case VisitStatus.accepted:
         return 'Accepted';
       case VisitStatus.declined:
         return 'Declined';
+      case VisitStatus.paid:
+        return 'Paid';
+      case VisitStatus.paymentPending:
+        return 'Payment Pending';
+      case VisitStatus.inProgress:
+        return 'In Progress';
+      case VisitStatus.completed:
+        return 'Completed';
       case VisitStatus.cancelled:
         return 'Cancelled';
     }
@@ -464,14 +598,16 @@ enum VisitStatus {
   bool get isActive {
     return this == VisitStatus.pending ||
         this == VisitStatus.accepted ||
-        this == VisitStatus.inProgress;
+        this == VisitStatus.inProgress ||
+        this == VisitStatus.paymentPending;
   }
 
   // Check if status is a final status (read-only)
   bool get isFinal {
     return this == VisitStatus.completed ||
         this == VisitStatus.declined ||
-        this == VisitStatus.cancelled;
+        this == VisitStatus.cancelled ||
+        this == VisitStatus.paid;
   }
 
   // Get next possible status transitions
@@ -483,7 +619,9 @@ enum VisitStatus {
         return [VisitStatus.inProgress, VisitStatus.cancelled];
       case VisitStatus.inProgress:
         return [VisitStatus.completed, VisitStatus.cancelled];
-        case VisitStatus.pendingPayments:
+      case VisitStatus.paymentPending:
+        return [VisitStatus.paid, VisitStatus.cancelled];
+      case VisitStatus.paid:
       case VisitStatus.completed:
       case VisitStatus.declined:
       case VisitStatus.cancelled:
@@ -505,6 +643,38 @@ enum PriorityLevel {
     return PriorityLevel.values.firstWhere(
           (priority) => priority.value == value,
       orElse: () => PriorityLevel.normal,
+    );
+  }
+}
+
+// Enum for payment mode
+enum PaymentMode {
+  mobileMoney('MOBILE_MONEY'),
+  cash('CASH');
+
+  final String value;
+  const PaymentMode(this.value);
+
+  static PaymentMode fromString(String value) {
+    return PaymentMode.values.firstWhere(
+          (mode) => mode.value == value,
+      orElse: () => PaymentMode.cash,
+    );
+  }
+}
+
+// Enum for farmer category
+enum FarmerCategory {
+  starter('STARTER'),
+  premium('PREMIUM');
+
+  final String value;
+  const FarmerCategory(this.value);
+
+  static FarmerCategory fromString(String value) {
+    return FarmerCategory.values.firstWhere(
+          (category) => category.value == value,
+      orElse: () => FarmerCategory.starter,
     );
   }
 }

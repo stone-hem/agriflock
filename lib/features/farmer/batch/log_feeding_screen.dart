@@ -337,9 +337,9 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
                               fontSize: 16,
                             ),
                           ),
-                          if (_selectedFeedItem!.description.isNotEmpty)
+                          if (_selectedFeedItem!.description!=null)
                             Text(
-                              _selectedFeedItem!.description,
+                              _selectedFeedItem!.description!,
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey.shade600,
@@ -539,11 +539,11 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
                     color: isSelected ? color : Colors.grey.shade800,
                   ),
                 ),
-                if (item.description.isNotEmpty)
+                if (item.description!=null)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
-                      item.description,
+                      item.description!,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(

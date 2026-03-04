@@ -992,9 +992,9 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> {
                   item.categoryItemName,
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
-                if (item.description.isNotEmpty)
+                if (item.description!=null)
                   Text(
-                    item.description,
+                    item.description!,
                     style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                   ),
               ],
@@ -1051,11 +1051,11 @@ class _VaccinationRecordScreenState extends State<VaccinationRecordScreen> {
                     color: isSelected ? color : Colors.grey.shade800,
                   ),
                 ),
-                if (item.description.isNotEmpty)
+                if (item.description!=null)
                   Padding(
                     padding: const EdgeInsets.only(top: 4),
                     child: Text(
-                      item.description,
+                      item.description!,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontSize: 12, color: Colors.grey.shade600),

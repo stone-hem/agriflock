@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:agriflock/app_routes.dart';
 import 'package:agriflock/core/utils/log_util.dart';
 import 'package:agriflock/core/widgets/expense/expense_marquee_banner.dart';
 import 'package:agriflock/core/widgets/popup_wdget.dart';
@@ -535,6 +536,8 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        TextButton.icon(onPressed: ()=>context.push(AppRoutes.subscriptionPlans), label: Text('Start with a trial plan today!'),icon: Icon(Icons.arrow_circle_right_outlined), ),
+
         Row(children: [
           Icon(Icons.flash_on, size: 17, color: Colors.grey.shade700),
           const SizedBox(width: 8),

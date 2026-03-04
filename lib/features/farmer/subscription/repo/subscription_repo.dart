@@ -145,4 +145,56 @@ class SubscriptionRepository {
       return Failure(message: e.toString());
     }
   }
+
+
+  /// Pay for a farm subscription using Stripe
+  Future<Result<void>> payFarmSubscription({
+    required String farmSubscriptionPlanId,
+    required String cardToken,
+    String? phoneNumber,
+  }) async {
+
+    try {
+      final response = await apiClient.post(
+        '/payments/farm-subscription',
+        body: {
+          'farmSubscriptionPlanId': farmSubscriptionPlanId,
+          'paymentMethod': 'stripe',
+          'cardToken': cardToken,
+          if (phoneNumber != null && phoneNumber.isNotEmpty)
+            'phoneNumber': phoneNumber,
+        },
+        headers: {'Content-Type': 'application/json'},
+      );
+      final jsonResponse = jsonDecode(response.body);
+      final data={
+        'farmSubscriptionPlanId': farmSubscriptionPlanId,
+        'paymentMethod': 'stripe',
+        'cardToken': cardToken,
+        if (phoneNumber != null && phoneNumber.isNotEmpty)
+          'phoneNumber': phoneNumber,
+      };
+      LogUtil.info('Pay Farm Subscription: $data');
+      LogUtil.info('Pay Farm Subscription API Response: $jsonResponse');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return const Success(null);
+      } else {
+        return Failure(
+          message: jsonResponse is Map
+              ? (jsonResponse['message'] ?? 'Payment failed')
+              : 'Payment failed',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in payFarmSubscription: $e');
+      return const Failure(
+          message: 'No internet connection. Please try again.', statusCode: 0);
+    } catch (e) {
+      LogUtil.error('Error in payFarmSubscription: $e');
+      return Failure(message: e.toString());
+    }
+  }
 }

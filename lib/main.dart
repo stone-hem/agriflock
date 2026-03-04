@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:agriflock/core/constants/app_constants.dart';
 import 'package:agriflock/core/network/api_client.dart';
 import 'package:agriflock/core/notifications/notification_service.dart';
 import 'package:agriflock/core/services/social_auth_service.dart';
@@ -8,6 +9,8 @@ import 'package:agriflock/core/utils/shared_prefs.dart';
 import 'package:agriflock/app_routes.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:go_router/go_router.dart';
 import 'firebase_options.dart';
 
@@ -23,6 +26,8 @@ void main() async {
   print('=== App Initialization Starting ===');
 
   try {
+    //0 env
+    await dotenv.load(fileName: ".env");
     // 1. Initialize SharedPreferences
     print('Initializing SharedPreferences...');
     await SharedPrefs.init();
@@ -37,9 +42,15 @@ void main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
 
-    // 4. Initialize Google Sign-In (CRITICAL - must be done after Firebase)
+    // . Initialize Google Sign-In (CRITICAL - must be done after Firebase)
     // print('Initializing Google Sign-In...');
     // await authService.initializeGoogleSignIn();
+    // 4. Stripe
+    if(!dotenv.env.containsKey('STRIPE_PUBLISHABLE_KEY')){
+      throw Exception('STRIPE_PUBLISHABLE_KEY is not set');
+    }
+    Stripe.publishableKey = dotenv.env['STRIPE_PUBLISHABLE_KEY']!;
+    await Stripe.instance.applySettings();
 
     // 5. Initialize ApiClient
     print('Initializing ApiClient...');

@@ -53,7 +53,7 @@ class _FinancialPerformanceGraphState extends State<FinancialPerformanceGraph> {
       month: _formatMonth(data.month),
       expenditure: data.totalExpenditure.toInt(),
       income: data.totalIncome.toInt(),
-      profit: data.netProfit, // ADD THIS
+      profit: data.netProfit, 
     ))
         .toList()
         .reversed
@@ -260,13 +260,13 @@ class FinancialDataPoint {
   final String month;
   final int expenditure;
   final int income;
-  final double profit; // ADD THIS
+  final double profit; 
 
   FinancialDataPoint({
     required this.month,
     required this.expenditure,
     required this.income,
-    required this.profit, // ADD THIS
+    required this.profit, 
   });
 }
 
@@ -287,7 +287,9 @@ class FinancialGraphPainter extends CustomPainter {
 
     final paint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
+      ..strokeWidth = 2.5
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
 
     final areaPaint = Paint()
       ..style = PaintingStyle.fill
@@ -328,7 +330,7 @@ class FinancialGraphPainter extends CustomPainter {
       textPainter.paint(canvas, Offset(-textPainter.width - 4, y - 8));
     }
 
-    // Calculate point positions — guard single-point edge case
+    // Calculate point positions
     final pointSpacing = dataPoints.length > 1
         ? size.width / (dataPoints.length - 1)
         : size.width;
@@ -339,26 +341,21 @@ class FinancialGraphPainter extends CustomPainter {
     for (int i = 0; i < dataPoints.length; i++) {
       final x = i * pointSpacing;
 
-      // Income points (green)
       final incomeY = size.height - (dataPoints[i].income / effectiveMax) * size.height;
       incomePoints.add(Offset(x, incomeY));
 
-      // Expenditure points (red)
       final expenditureY = size.height - (dataPoints[i].expenditure / effectiveMax) * size.height;
       expenditurePoints.add(Offset(x, expenditureY));
 
-      // Profit points (blue)
       final profitValue = profitValues[i];
-      double profitY;
-
-      if (profitValue >= 0) {
-        profitY = size.height - (profitValue / effectiveMax) * size.height;
-      } else {
-        profitY = size.height;
+      double profitY = size.height - (profitValue.abs() / effectiveMax) * size.height;
+      if (profitValue < 0) {
+         // for visualization, we'll keep negative profit near the baseline but distinguishable
+         profitY = size.height - 2; 
       }
       profitPoints.add(Offset(x, profitY));
 
-      // Draw month labels at bottom
+      // Month labels
       textPainter.text = TextSpan(
         text: dataPoints[i].month,
         style: textStyle,
@@ -367,114 +364,80 @@ class FinancialGraphPainter extends CustomPainter {
       textPainter.paint(canvas, Offset(x - textPainter.width / 2, size.height + 4));
     }
 
-    // Draw income area (green)
-    if (incomePoints.length > 1) {
-      final incomePath = Path();
-      incomePath.moveTo(incomePoints.first.dx, incomePoints.first.dy);
-      for (int i = 1; i < incomePoints.length; i++) {
-        incomePath.lineTo(incomePoints[i].dx, incomePoints[i].dy);
-      }
+    // --- Draw Smooth Curves ---
 
-      // Close the area path
-      incomePath.lineTo(incomePoints.last.dx, size.height);
-      incomePath.lineTo(incomePoints.first.dx, size.height);
-      incomePath.close();
+    // 1. Income Area and Curve
+    if (incomePoints.length > 1) {
+      final curvePath = _createSmoothPath(incomePoints);
+      final areaPath = Path.from(curvePath);
+      areaPath.lineTo(incomePoints.last.dx, size.height);
+      areaPath.lineTo(incomePoints.first.dx, size.height);
+      areaPath.close();
 
       areaPaint.color = Colors.green.withOpacity(0.1);
-      canvas.drawPath(incomePath, areaPaint);
+      canvas.drawPath(areaPath, areaPaint);
 
-      // Draw income line
       paint.color = Colors.green;
-      canvas.drawPath(incomePath, paint);
+      canvas.drawPath(curvePath, paint);
     }
 
-    // Draw expenditure line (red)
+    // 2. Expenditure Curve
     if (expenditurePoints.length > 1) {
-      final expenditurePath = Path();
-      expenditurePath.moveTo(expenditurePoints.first.dx, expenditurePoints.first.dy);
-      for (int i = 1; i < expenditurePoints.length; i++) {
-        expenditurePath.lineTo(expenditurePoints[i].dx, expenditurePoints[i].dy);
-      }
-
+      final curvePath = _createSmoothPath(expenditurePoints);
       paint.color = Colors.red;
-      canvas.drawPath(expenditurePath, paint);
-
-      // Draw expenditure points
-      for (final point in expenditurePoints) {
-        canvas.drawCircle(point, 3, paint..color = Colors.red);
-      }
+      canvas.drawPath(curvePath, paint);
     }
 
-    // Draw profit line (blue, dashed for negative)
+    // 3. Profit Curve
     if (profitPoints.length > 1) {
-      final profitPath = Path();
-      profitPath.moveTo(profitPoints.first.dx, profitPoints.first.dy);
-
-      for (int i = 1; i < profitPoints.length; i++) {
-        final isNegative = profitValues[i] < 0;
-
-        if (isNegative) {
-          // Draw dashed line for negative profit
-          final dashPaint = Paint()
-            ..color = Colors.orange
-            ..strokeWidth = 2
-            ..style = PaintingStyle.stroke;
-
-          // Simple dashed line effect
-          final dx = profitPoints[i].dx - profitPoints[i-1].dx;
-          final dy = profitPoints[i].dy - profitPoints[i-1].dy;
-          final distance = sqrt(dx * dx + dy * dy);
-          final steps = (distance / 6).floor();
-
-          for (int j = 0; j < steps; j++) {
-            if (j % 2 == 0) {
-              final startX = profitPoints[i-1].dx + (dx * j / steps);
-              final startY = profitPoints[i-1].dy + (dy * j / steps);
-              final endX = profitPoints[i-1].dx + (dx * (j + 1) / steps);
-              final endY = profitPoints[i-1].dy + (dy * (j + 1) / steps);
-              canvas.drawLine(Offset(startX, startY), Offset(endX, endY), dashPaint);
-            }
-          }
-        } else {
-          // Solid line for positive profit
-          paint.color = Colors.blue;
-          canvas.drawLine(profitPoints[i-1], profitPoints[i], paint);
-        }
-      }
-
-      // Draw profit points
-      for (int i = 0; i < profitPoints.length; i++) {
-        final isNegative = profitValues[i] < 0;
-        canvas.drawCircle(
-          profitPoints[i],
-          4,
-          paint..color = isNegative ? Colors.orange : Colors.blue,
-        );
-
-        // Draw profit value near point
-        textPainter.text = TextSpan(
-          text: '${profitValues[i].toInt().abs()}',
-          style: TextStyle(
-            color: isNegative ? Colors.orange : Colors.blue,
-            fontSize: 9,
-            fontWeight: FontWeight.bold,
-          ),
-        );
-        textPainter.layout();
-        textPainter.paint(
-          canvas,
-          Offset(
-            profitPoints[i].dx - textPainter.width / 2,
-            profitPoints[i].dy - (profitValues[i] >= 0 ? 15 : -15),
-          ),
-        );
-      }
+      final curvePath = _createSmoothPath(profitPoints);
+      
+      // Handle positive/negative transition roughly
+      paint.color = Colors.blue;
+      canvas.drawPath(curvePath, paint);
     }
 
-    // Draw income points
-    for (final point in incomePoints) {
-      canvas.drawCircle(point, 3, paint..color = Colors.green);
+    // Draw dots at actual data points for clarity
+    for (int i = 0; i < dataPoints.length; i++) {
+      canvas.drawCircle(incomePoints[i], 3.5, Paint()..color = Colors.green);
+      canvas.drawCircle(expenditurePoints[i], 3.5, Paint()..color = Colors.red);
+      
+      final isNegative = profitValues[i] < 0;
+      canvas.drawCircle(
+        profitPoints[i], 
+        4, 
+        Paint()..color = isNegative ? Colors.orange : Colors.blue
+      );
     }
+  }
+
+  Path _createSmoothPath(List<Offset> points) {
+    final path = Path();
+    if (points.isEmpty) return path;
+
+    path.moveTo(points[0].dx, points[0].dy);
+
+    if (points.length == 2) {
+      path.lineTo(points[1].dx, points[1].dy);
+      return path;
+    }
+
+    for (int i = 0; i < points.length - 1; i++) {
+      final p0 = points[i];
+      final p1 = points[i + 1];
+      
+      // Control points for Bezier curve
+      final controlPoint1 = Offset(p0.dx + (p1.dx - p0.dx) / 2, p0.dy);
+      final controlPoint2 = Offset(p0.dx + (p1.dx - p0.dx) / 2, p1.dy);
+
+      path.cubicTo(
+        controlPoint1.dx, controlPoint1.dy,
+        controlPoint2.dx, controlPoint2.dy,
+        p1.dx, p1.dy,
+      );
+    }
+
+    return path;
   }
 
   @override

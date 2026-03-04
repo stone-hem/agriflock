@@ -50,6 +50,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
   double? _unitPrice;
   double? _totalPrice;
   DateTime _selectedDate = DateTime.now();
+  String? _selectedPackagingOption;
 
   // Usage choice
   bool _useNow=true; // true = use now, false = store
@@ -179,7 +180,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
             'used_immediately': _useNow,
             'amount': _totalPrice,
             'quantity': _quantity?.toInt() ?? 1,
-            'unit': 'unit',
+            'unit': _selectedPackagingOption,
             'date': _selectedDate.toUtc().toIso8601String(),
             if (widget.farm != null) 'farm_id': widget.farm!.id,
             if (_selectedBatch != null) 'batch_id': _selectedBatch!.id,
@@ -193,7 +194,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
             'used_immediately': _useNow,
             'amount': _totalPrice,
             'quantity': _quantity?.toInt() ?? 1,
-            'unit': 'unit',
+            'unit': _selectedPackagingOption,
             'date': _selectedDate.toUtc().toIso8601String(),
             if (widget.farm != null) 'farm_id': widget.farm!.id,
             if (_selectedBatch != null) 'batch_id': _selectedBatch!.id,
@@ -209,7 +210,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
           'description': _selectedItem!.categoryItemName,
           'amount': _totalPrice,
           'quantity': _quantity,
-          'unit': 'unit',
+          'unit': _selectedPackagingOption,
           'date': _selectedDate.toUtc().toIso8601String(),
           'notes': null,
           if (_selectedBatch != null) 'batch_id': _selectedBatch!.id,
@@ -334,7 +335,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
                     categoryItemName: _customOtherName ?? 'Custom Item',
                     description: 'Custom expense item',
                     components: null,
-                    useFromStore: false, quantityInStore: 0, isSuggestedForAge: false, suggestionContext: '',
+                    useFromStore: false, quantityInStore: 0, isSuggestedForAge: false, suggestionContext: '', categoryItemUnit: '', breeds: [], feedingRecommendationIds: [], vaccineCatalogIds: [],
                     
                   ),
                   category: _selectedCategory!,
@@ -342,12 +343,14 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
                   unitPrice: _unitPrice,
                   totalPrice: _totalPrice,
                   selectedDate: _selectedDate,
+                  selectedPackagingOption: _selectedPackagingOption,
                   onContinue: ({
                     required double quantity,
                     required double unitPrice,
                     required double totalPrice,
                     String? methodOfAdministration,
                     String? notes,
+                    String? selectedPackagingOption,
                     required DateTime selectedDate,
                   }) {
                     setState(() {
@@ -355,6 +358,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
                       _unitPrice = unitPrice;
                       _totalPrice = totalPrice;
                       _selectedDate = selectedDate;
+                      _selectedPackagingOption=selectedPackagingOption;
                     });
                     // For custom "Others" items, skip usage choice - always use immediately
                     if (_hasCustomOtherName) {
@@ -383,7 +387,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
                     categoryItemName: _customOtherName ?? 'Custom Item',
                     description: 'Custom expense item',
                     components: null,
-                    useFromStore: false, quantityInStore: 0,isSuggestedForAge: false, suggestionContext: '',
+                    useFromStore: false, quantityInStore: 0,isSuggestedForAge: false, suggestionContext: '', categoryItemUnit: '', breeds: [], feedingRecommendationIds: [], vaccineCatalogIds: [],
                   ),
                   quantity: _quantity!,
                   totalPrice: _totalPrice!,
@@ -413,7 +417,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
                       categoryItemName: _customOtherName ?? 'Custom Item',
                       description: 'Custom expense item',
                       components: null,
-                      useFromStore: false, quantityInStore: 0,isSuggestedForAge: false, suggestionContext: '',
+                      useFromStore: false, quantityInStore: 0,isSuggestedForAge: false, suggestionContext: '', categoryItemUnit: '', breeds: [], feedingRecommendationIds: [], vaccineCatalogIds: [],
                     ),
                     category: _selectedCategory!,
                     quantity: _quantity!,
@@ -436,7 +440,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
                     categoryItemName: _customOtherName ?? 'Custom Item',
                     description: 'Custom expense item',
                     components: null,
-                    useFromStore: false, quantityInStore: 0,isSuggestedForAge: false, suggestionContext: '',
+                    useFromStore: false, quantityInStore: 0,isSuggestedForAge: false, suggestionContext: '', categoryItemUnit: '', breeds: [], feedingRecommendationIds: [], vaccineCatalogIds: [],
                   ),
                   category: _selectedCategory!,
                   quantity: _quantity!,
