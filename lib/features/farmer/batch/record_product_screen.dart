@@ -431,8 +431,8 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
               // Price (common for all types)
               ReusableInput(
                 controller: _priceController,
-                topLabel: 'Price per Unit',
-                labelText: 'Price per Unit',
+                topLabel: 'Price per Tray',
+                labelText: 'Price per Tray',
                 hintText: 'e.g., 10.50',
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,

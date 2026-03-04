@@ -347,7 +347,7 @@ class AppRoutes {
             final decodedEmail = Uri.decodeComponent(email);
             final decodedUserId = Uri.decodeComponent(userId);
 
-            return OTPVerifyScreen(email: decodedEmail, userId: decodedUserId);
+            return OTPVerifyScreen(email: decodedEmail, userId: decodedUserId, phoneNumber :state.extra as String?);
           },
         ),
         GoRoute(

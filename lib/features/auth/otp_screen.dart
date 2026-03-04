@@ -8,7 +8,8 @@ import 'package:go_router/go_router.dart';
 class OTPVerifyScreen extends StatefulWidget {
   final String email;
   final String userId;
-  const OTPVerifyScreen({super.key, required this.email, required this.userId});
+  final String? phoneNumber;
+  const OTPVerifyScreen({super.key, required this.email, required this.userId,   this.phoneNumber});
 
   @override
   State<OTPVerifyScreen> createState() => _OTPVerifyScreenState();
@@ -95,30 +96,20 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
               // Email display
               Center(
                 child: Container(
+                  constraints: BoxConstraints(maxWidth: 250),
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
                     color: Colors.green.shade50,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.green.shade100),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.email_outlined,
-                        color: Theme.of(context).primaryColor,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Verify Phone number for this account : ${widget.email}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Theme.of(context).primaryColor,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    'An OTP has been sent to your number : ${widget.phoneNumber}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Theme.of(context).primaryColor,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ),

@@ -341,6 +341,7 @@ class _LoginScreenState extends State<LoginScreen> {
         final userId = failure.data?['userId'] as String? ?? '';
         context.push(
           '${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(email)}&userId=${Uri.encodeComponent(userId)}',
+          extra: 'get phone number',
         );
       case 'unverified_vet':
         context.go(AppRoutes.vetVerificationPending);
