@@ -1,6 +1,7 @@
 import 'package:agriflock/core/utils/toast_util.dart';
 import 'package:agriflock/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock/core/widgets/reusable_time_input.dart';
+import 'package:agriflock/core/widgets/location_picker_step.dart';
 import 'package:agriflock/features/farmer/vet/models/vet_farmer_model.dart';
 import 'package:agriflock/features/farmer/vet/models/vet_order_model.dart';
 import 'package:agriflock/features/farmer/vet/repo/vet_farmer_repository.dart';
@@ -14,6 +15,7 @@ class VetOrderBottomSheet extends StatefulWidget {
   final VetEstimateRequest request;
   final VetFarmerRepository vetRepository;
   final VoidCallback onOrderSuccess;
+
 
   const VetOrderBottomSheet({
     super.key,
@@ -33,6 +35,40 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
   TimeOfDay? _selectedTime;
   bool _termsAgreed = false;
   bool _isSubmittingOrder = false;
+
+  String? _selectedAddress;
+  double? _latitude;
+  double? _longitude;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeLocation();
+    _selectedDateController.addListener(_onDateChanged);
+  }
+
+  void _onDateChanged() {
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _selectedDateController.removeListener(_onDateChanged);
+    _selectedDateController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _initializeLocation() async {
+    // 1. Try location from request (selected farm)
+    if (widget.request.farmerLocation != null) {
+      setState(() {
+        _selectedAddress = widget.request.farmerLocation!.address;
+        _latitude = widget.request.farmerLocation!.latitude;
+        _longitude = widget.request.farmerLocation!.longitude;
+      });
+      return;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -122,6 +158,21 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                       _buildEstimateCard(),
                       const SizedBox(height: 24),
 
+                      LocationPickerStep(
+                        selectedAddress: _selectedAddress,
+                        latitude: _latitude,
+                        longitude: _longitude,
+                        title: 'Service Location',
+                        text: 'Confirm where the vet should visit',
+                        onLocationSelected: (address, lat, lng) {
+                          setState(() {
+                            _selectedAddress = address;
+                            _latitude = lat;
+                            _longitude = lng;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 24),
 
                       CustomDateTextField(
                         label: 'Preferred Date',
@@ -146,7 +197,9 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                           return null;
                         },
                         onTimeChanged: (time) {
-                          _selectedTime=time;
+                          setState(() {
+                            _selectedTime = time;
+                          });
                         },
                       ),
                       const SizedBox(height: 24),
@@ -179,11 +232,18 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                                     activeColor: Colors.green,
                                   ),
                                   const SizedBox(width: 8),
-                                  const Expanded(
-                                    child: Text(
-                                      'I agree to the terms and conditions',
-                                      style: TextStyle(
-                                        fontSize: 14,
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          _termsAgreed = !_termsAgreed;
+                                        });
+                                      },
+                                      child: const Text(
+                                        'I agree to the terms and conditions',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -212,10 +272,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: _isSubmittingOrder ||
-                              !_termsAgreed ||
-                              _selectedDateController.text.isEmpty ||
-                              _selectedTime == null
+                          onPressed: (_isSubmittingOrder || !_termsAgreed)
                               ? null
                               : _submitOrder,
                           style: ElevatedButton.styleFrom(
@@ -642,33 +699,23 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
 
   Future<void> _submitOrder() async {
     if (_selectedDateController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a preferred date'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      ToastUtil.showError('Please select a preferred date');
       return;
     }
 
 
     if (_selectedTime == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a preferred time'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      ToastUtil.showError('Please select a preferred time');
       return;
     }
 
     if (!_termsAgreed) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please agree to the terms and conditions'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      ToastUtil.showError('Please agree to the terms and conditions');
+      return;
+    }
+
+    if (_selectedAddress == null) {
+      ToastUtil.showError('Please select a service location');
       return;
     }
 
@@ -696,6 +743,11 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
           : null,
       mortality: widget.request.mortality,
       ageInDays:  widget.request.ageInDays,
+      farmerLocation: FarmerLocation(
+        address: _selectedAddress!,
+        latitude: _latitude!,
+        longitude: _longitude!,
+      ),
     );
 
     final result = await widget.vetRepository.submitVetOrder(request);
@@ -707,6 +759,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
     switch (result) {
       case Success<VetOrderResponse>(data: final data):
       // Close bottom sheet
+      if(!mounted) return;
         Navigator.of(context).pop();
         context.pushReplacement('/my-vet-orders');
         break;
@@ -714,11 +767,5 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
         ToastUtil.showError('Failed to submit order: $error');
         break;
     }
-  }
-
-  @override
-  void dispose() {
-    _selectedDateController.dispose();
-    super.dispose();
   }
 }

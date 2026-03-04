@@ -334,6 +334,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
     List<BirdTypeEntry>? birdTypeDetails;
     int? mortality;
     int? ageInDays;
+    FarmerLocation? location;
 
     if (_hasFarmDetails) {
       // Farm-based path
@@ -358,6 +359,18 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
       }
       batchIds = _selectedBatches;
       houseIds = [_selectedHouse!];
+
+      // Get farm location
+      if (_selectedFarm != null && _farmsResponse != null) {
+        final farm = _farmsResponse!.farms.firstWhere((f) => f.id == _selectedFarm);
+        if (farm.gpsCoordinates != null) {
+          location = FarmerLocation(
+            address: farm.location ?? '',
+            latitude: farm.gpsCoordinates!.latitude,
+            longitude: farm.gpsCoordinates!.longitude,
+          );
+        }
+      }
     } else {
       // Manual / no-plan path
       birdsCount = _manualBirdsCount ?? 0;
@@ -410,6 +423,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
       mortality: mortality,
       ageInDays: ageInDays,
       participantsCount: _hasPerPersonService ? _numberOfPeople : null,
+      farmerLocation: location,
     );
   }
 
