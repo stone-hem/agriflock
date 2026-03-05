@@ -191,6 +191,101 @@ _CalcResult _calculate({
   );
 }
 
+// ─── LAYERS PHASE 2 DATA MODEL ────────────────────────────────────────────────
+
+class _LayersPhase2State {
+  int layingWeeks;
+  int flock;
+  double prodPct;
+  int bagsPerMonth;
+  int bagCost;
+  int trayPrice;
+  int otherMonthly;
+  int exBirds;
+  int exBirdPrice;
+
+  _LayersPhase2State({
+    this.layingWeeks  = 78,
+    this.flock        = 128,
+    this.prodPct      = 75,
+    this.bagsPerMonth = 16,
+    this.bagCost      = 3700,
+    this.trayPrice    = 460,
+    this.otherMonthly = 0,
+    this.exBirds      = 128,
+    this.exBirdPrice  = 300,
+  });
+}
+
+class _LayersPhase2Result {
+  final double months;
+  final double eggsPerDay;
+  final double traysPerMonth;
+  final double revPerMonth;
+  final double feedCostPerMonth;
+  final double totalCostPerMonth;
+  final double netPerMonth;
+  final double totalRevenue;
+  final double totalCosts;
+  final double exLayerTotal;
+  final double grandRevenue;
+  final double overallNet;
+  final double? breakEvenWeek; // null if never
+
+  _LayersPhase2Result({
+    required this.months,
+    required this.eggsPerDay,
+    required this.traysPerMonth,
+    required this.revPerMonth,
+    required this.feedCostPerMonth,
+    required this.totalCostPerMonth,
+    required this.netPerMonth,
+    required this.totalRevenue,
+    required this.totalCosts,
+    required this.exLayerTotal,
+    required this.grandRevenue,
+    required this.overallNet,
+    required this.breakEvenWeek,
+  });
+}
+
+_LayersPhase2Result _calcPhase2(_LayersPhase2State s, double phase1Cost) {
+  final months         = s.layingWeeks / 4.33;
+  final eggsPerDay     = s.flock * (s.prodPct / 100);
+  final traysPerMonth  = (eggsPerDay * 30) / 30;
+  final revPerMonth    = traysPerMonth * s.trayPrice;
+  final feedPerMonth   = s.bagsPerMonth * s.bagCost.toDouble();
+  final totalCostPerMonth = feedPerMonth + s.otherMonthly;
+  final netPerMonth    = revPerMonth - totalCostPerMonth;
+  final totalRevenue   = revPerMonth * months;
+  final totalCosts     = totalCostPerMonth * months;
+  final exLayerTotal   = (s.exBirds * s.exBirdPrice).toDouble();
+  final grandRevenue   = totalRevenue + exLayerTotal;
+  final overallNet     = grandRevenue - totalCosts - phase1Cost;
+
+  double? bepWeek;
+  if (netPerMonth > 0) {
+    bepWeek = (phase1Cost / netPerMonth) * 4.33;
+    if (bepWeek > s.layingWeeks) bepWeek = null; // won't hit within period
+  }
+
+  return _LayersPhase2Result(
+    months: months,
+    eggsPerDay: eggsPerDay,
+    traysPerMonth: traysPerMonth,
+    revPerMonth: revPerMonth,
+    feedCostPerMonth: feedPerMonth,
+    totalCostPerMonth: totalCostPerMonth,
+    netPerMonth: netPerMonth,
+    totalRevenue: totalRevenue,
+    totalCosts: totalCosts,
+    exLayerTotal: exLayerTotal,
+    grandRevenue: grandRevenue,
+    overallNet: overallNet,
+    breakEvenWeek: bepWeek,
+  );
+}
+
 // ─── MAIN SCREEN — 3 TABS ────────────────────────────────────────────────────
 
 class ProductionEstimateScreen extends StatefulWidget {
@@ -202,7 +297,6 @@ class ProductionEstimateScreen extends StatefulWidget {
 
 class _ProductionEstimateScreenState extends State<ProductionEstimateScreen>
     with SingleTickerProviderStateMixin {
-
   late TabController _tab;
 
   @override
@@ -224,7 +318,7 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen>
       body: SafeArea(
         child: Column(
           children: [
-            _buildTabBar(),
+            _TabBar(controller: _tab),
             Expanded(
               child: TabBarView(
                 controller: _tab,
@@ -240,8 +334,16 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen>
       ),
     );
   }
+}
 
-  Widget _buildTabBar() {
+// ─── TAB BAR COMPONENT ───────────────────────────────────────────────────────
+
+class _TabBar extends StatelessWidget {
+  final TabController controller;
+  const _TabBar({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       padding: const EdgeInsets.all(5),
@@ -251,21 +353,21 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen>
       ),
       child: Row(
         children: [
-          _tabBtn(0, '🥚', 'Layers',     '128+ birds · eggs'),
+          _tabBtn(context, 0, '🥚', 'Layers',     '128+ birds · eggs'),
           const SizedBox(width: 4),
-          _tabBtn(1, '🐔', 'Broilers',   '5 wks · 2 kg'),
+          _tabBtn(context, 1, '🐔', 'Broilers',   '5 wks · 2 kg'),
           const SizedBox(width: 4),
-          _tabBtn(2, '🐓', 'Indigenous', '12 wks · 1.8 kg'),
+          _tabBtn(context, 2, '🐓', 'Indigenous', '12 wks · 1.8 kg'),
         ],
       ),
     );
   }
 
-  Widget _tabBtn(int idx, String icon, String label, String sub) {
-    final active = _tab.index == idx;
+  Widget _tabBtn(BuildContext context, int idx, String icon, String label, String sub) {
+    final active = controller.index == idx;
     return Expanded(
       child: GestureDetector(
-        onTap: () => _tab.animateTo(idx),
+        onTap: () => controller.animateTo(idx),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
@@ -294,7 +396,7 @@ class _ProductionEstimateScreenState extends State<ProductionEstimateScreen>
   }
 }
 
-// ─── LAYERS TAB (API-driven — unchanged from original) ───────────────────────
+// ─── LAYERS TAB ───────────────────────────────────────────────────────────────
 
 class _LayersTab extends StatefulWidget {
   const _LayersTab();
@@ -306,8 +408,8 @@ class _LayersTab extends StatefulWidget {
 class _LayersTabState extends State<_LayersTab> {
   static const Color primaryColor = Color(0xFF2E7D32);
 
-  final _batchRepo      = BatchHouseRepository();
-  final _quotationRepo  = QuotationRepository();
+  final _batchRepo     = BatchHouseRepository();
+  final _quotationRepo = QuotationRepository();
 
   bool _isLoadingBirdTypes    = false;
   bool _isGeneratingQuotation = false;
@@ -317,14 +419,28 @@ class _LayersTabState extends State<_LayersTab> {
   int?      _selectedCapacity;
 
   final Map<String, TextEditingController> _ctrl = {};
+  final _phase2 = _LayersPhase2State();
 
   static const List<int> _quantities = [128, 256, 512, 1024, 2048];
 
   double get _scale => _selectedCapacity != null ? _selectedCapacity! / 128.0 : 1.0;
 
-  // Only show laying breeds in this tab
   List<BirdType> get _layerBreeds =>
       _birdTypes.where((b) => b.name.toLowerCase().contains('laying eggs')).toList();
+
+  // Compute Phase 1 total from controllers (Stage 1 items)
+  double get _phase1Total {
+    if (_quotationData == null) return 0;
+    final lb = _quotationData!.layersBreakdown;
+    if (lb == null) return 0;
+    double total = 0;
+    for (int i = 0; i < lb.stage1.items.length; i++) {
+      final p = double.tryParse(_ctrl['s1_$i']?.text ?? '') ??
+          double.tryParse(lb.stage1.items[i].unitPrice) ?? 0.0;
+      total += p * (lb.stage1.items[i].quantity * _scale).round();
+    }
+    return total;
+  }
 
   @override
   void initState() {
@@ -365,10 +481,6 @@ class _LayersTabState extends State<_LayersTab> {
       final p = double.tryParse(lb.stage1.items[i].unitPrice) ?? 0.0;
       _ctrl['s1_$i'] = TextEditingController(text: p.toStringAsFixed(2));
     }
-    for (int i = 0; i < lb.stage2.items.length; i++) {
-      final p = double.tryParse(lb.stage2.items[i].unitPrice) ?? 0.0;
-      _ctrl['s2_$i'] = TextEditingController(text: p.toStringAsFixed(2));
-    }
   }
 
   Future<void> _generateQuotation() async {
@@ -403,13 +515,10 @@ class _LayersTabState extends State<_LayersTab> {
         padding: const EdgeInsets.all(16),
         sliver: SliverList(
           delegate: SliverChildListDelegate([
-
-
-            // Breed selection
+            // ── Breed Selection ──
             Text('Select to continue',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey.shade800)),
             const SizedBox(height: 8),
-
             if (_isLoadingBirdTypes)
               const Center(child: CircularProgressIndicator(color: primaryColor))
             else if (_layerBreeds.isEmpty)
@@ -420,12 +529,20 @@ class _LayersTabState extends State<_LayersTab> {
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   itemCount: _layerBreeds.length,
-                  itemBuilder: (_, i) => _breedCard(_layerBreeds[i]),
+                  itemBuilder: (_, i) => _BreedCard(
+                    breed: _layerBreeds[i],
+                    isSelected: _selectedBreed?.id == _layerBreeds[i].id,
+                    onTap: () => setState(() {
+                      _selectedBreed = _layerBreeds[i];
+                      _selectedCapacity = null;
+                      _quotationData = null;
+                    }),
+                  ),
                 ),
               ),
             const SizedBox(height: 24),
 
-            // Flock size
+            // ── Flock Size ──
             if (_selectedBreed != null) ...[
               Text('Select Flock Size',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey.shade800)),
@@ -461,10 +578,38 @@ class _LayersTabState extends State<_LayersTab> {
               const SizedBox(height: 16),
             ],
 
-            // Quotation
+            // ── Quotation (Phase 1 only) ──
             if (_quotationData != null) ...[
-              _layersTables(),
-              const SizedBox(height: 40),
+              _Stage1Table(
+                quotationData: _quotationData!,
+                scale: _scale,
+                capacity: _selectedCapacity ?? 128,
+                controllers: _ctrl,
+                onChanged: () => setState(() {}),
+              ),
+              const SizedBox(height: 16),
+
+              // ── Phase 2 — Laying Stage ──
+              _LayingStageSection(
+                state: _phase2,
+                onChanged: () => setState(() {}),
+              ),
+              const SizedBox(height: 16),
+
+              // ── End-of-Cycle Sale ──
+              _ExLayerSaleSection(
+                state: _phase2,
+                onChanged: () => setState(() {}),
+              ),
+              const SizedBox(height: 16),
+
+              // ── Full Investment Analysis ──
+              _FullInvestmentAnalysis(
+                phase1Cost: _phase1Total,
+                state: _phase2,
+              ),
+              const SizedBox(height: 32),
+
               ImageWithDescriptionWidget(
                   imageAssetPath: 'assets/quotation/img_7.png',
                   description: 'This is the first image description'),
@@ -472,7 +617,7 @@ class _LayersTabState extends State<_LayersTab> {
                   imageAssetPath: 'assets/quotation/img_8.png',
                   description: 'This is the first image description'),
               const SizedBox(height: 10),
-              _disclaimer(),
+              _LayersDisclaimer(),
               const SizedBox(height: 32),
             ],
           ]),
@@ -480,24 +625,32 @@ class _LayersTabState extends State<_LayersTab> {
       ),
     ]);
   }
+}
 
-  Widget _breedCard(BirdType breed) {
-    final sel = _selectedBreed?.id == breed.id;
+// ─── BREED CARD COMPONENT ─────────────────────────────────────────────────────
+
+class _BreedCard extends StatelessWidget {
+  final BirdType breed;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _BreedCard({required this.breed, required this.isSelected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
     const color = Colors.orange;
     return GestureDetector(
-      onTap: () => setState(() {
-        _selectedBreed = breed; _selectedCapacity = null; _quotationData = null;
-      }),
+      onTap: onTap,
       child: Container(
         width: 150,
         margin: const EdgeInsets.only(right: 10),
         child: Card(
-          elevation: sel ? 2 : 0,
+          elevation: isSelected ? 2 : 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: sel ? color : Colors.grey.shade300, width: sel ? 2 : 1),
+            side: BorderSide(color: isSelected ? color : Colors.grey.shade300, width: isSelected ? 2 : 1),
           ),
-          color: sel ? color.withOpacity(0.1) : Colors.white,
+          color: isSelected ? color.withOpacity(0.1) : Colors.white,
           child: Padding(
             padding: const EdgeInsets.all(10),
             child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -508,7 +661,7 @@ class _LayersTabState extends State<_LayersTab> {
               ),
               const SizedBox(height: 6),
               Text(breed.name,
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: color),
+                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: color),
                   textAlign: TextAlign.center),
               const SizedBox(height: 4),
               Text(breed.name,
@@ -520,18 +673,74 @@ class _LayersTabState extends State<_LayersTab> {
       ),
     );
   }
+}
 
-  // ── Layers quotation tables (unchanged logic from original) ──────────────
+// ─── STAGE 1 TABLE COMPONENT ──────────────────────────────────────────────────
 
-  Widget _stageTable(String key, String title, List<BreakdownItem> items, double factor) {
+class _Stage1Table extends StatelessWidget {
+  final ProductionQuotationData quotationData;
+  final double scale;
+  final int capacity;
+  final Map<String, TextEditingController> controllers;
+  final VoidCallback onChanged;
+
+  const _Stage1Table({
+    required this.quotationData,
+    required this.scale,
+    required this.capacity,
+    required this.controllers,
+    required this.onChanged,
+  });
+
+  String _fmt(double v) => v.toInt().toString()
+      .replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},');
+
+  @override
+  Widget build(BuildContext context) {
+    final lb = quotationData.layersBreakdown!;
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(color: Colors.teal, borderRadius: BorderRadius.circular(12)),
+        child: Row(children: [
+          const Icon(Icons.layers, color: Colors.white, size: 24),
+          const SizedBox(width: 12),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('LAYERS PRODUCTION QUOTATION',
+                style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+            Text('$capacity birds  •  scale ×${scale == scale.roundToDouble() ? scale.toInt() : scale}',
+                style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 12)),
+          ])),
+        ]),
+      ),
+      const SizedBox(height: 12),
+      TextButton.icon(
+          onPressed: null,
+          icon: const Icon(Icons.arrow_forward_ios, size: 14),
+          label: const Text('Scroll left or right to see the full table.')),
+      Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: Colors.teal.withOpacity(0.2))),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: _stageTable('s1', 'Stage 1 — Rearing Phase (0–20 weeks)', lb.stage1.items),
+        ),
+      ),
+    ]);
+  }
+
+  Widget _stageTable(String key, String title, List<BreakdownItem> items) {
     double subtotal = 0;
     final rows = <DataRow>[];
 
     for (int i = 0; i < items.length; i++) {
       final item     = items[i];
-      final c        = _ctrl['${key}_$i'];
+      final c        = controllers['${key}_$i'];
       final price    = double.tryParse(c?.text ?? '') ?? double.tryParse(item.unitPrice) ?? 0.0;
-      final qty      = (item.quantity * factor).round();
+      final qty      = (item.quantity * scale).round();
       final rowTotal = price * qty;
       subtotal      += rowTotal;
 
@@ -547,10 +756,11 @@ class _LayersTabState extends State<_LayersTab> {
             controller: c,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             style: const TextStyle(fontSize: 12),
-            decoration: const InputDecoration(isDense: true,
+            decoration: const InputDecoration(
+                isDense: true,
                 contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 6),
                 border: OutlineInputBorder()),
-            onChanged: (_) => setState(() {}),
+            onChanged: (_) => onChanged(),
           ),
         )),
         DataCell(Container(constraints: const BoxConstraints(minWidth: 100),
@@ -560,12 +770,14 @@ class _LayersTabState extends State<_LayersTab> {
     }
 
     rows.add(DataRow(cells: [
-      DataCell(Container(color: Colors.teal.withOpacity(0.08),
+      DataCell(Container(
+          color: Colors.teal.withOpacity(0.08),
           constraints: const BoxConstraints(minWidth: 150),
           child: const Text('SUB TOTAL',
               style: TextStyle(fontWeight: FontWeight.bold, color: Colors.teal)))),
       const DataCell(Text('')), const DataCell(Text('')), const DataCell(Text('')),
-      DataCell(Container(color: Colors.teal.withOpacity(0.08),
+      DataCell(Container(
+          color: Colors.teal.withOpacity(0.08),
           constraints: const BoxConstraints(minWidth: 100),
           child: Text(_fmt(subtotal),
               style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.teal)))),
@@ -591,150 +803,559 @@ class _LayersTabState extends State<_LayersTab> {
       ),
     ]);
   }
+}
 
-  Widget _layersTables() {
-    final lb       = _quotationData!.layersBreakdown!;
-    final factor   = _scale;
-    final qty      = _selectedCapacity ?? 128;
+// ─── PHASE 2 — LAYING STAGE SECTION ──────────────────────────────────────────
 
-    double grand = 0;
-    for (int i = 0; i < lb.stage1.items.length; i++) {
-      final p = double.tryParse(_ctrl['s1_$i']?.text ?? '') ??
-          double.tryParse(lb.stage1.items[i].unitPrice) ?? 0.0;
-      grand += p * (lb.stage1.items[i].quantity * factor).round();
-    }
-    for (int i = 0; i < lb.stage2.items.length; i++) {
-      final p = double.tryParse(_ctrl['s2_$i']?.text ?? '') ??
-          double.tryParse(lb.stage2.items[i].unitPrice) ?? 0.0;
-      grand += p * (lb.stage2.items[i].quantity * factor).round();
-    }
+class _LayingStageSection extends StatelessWidget {
+  final _LayersPhase2State state;
+  final VoidCallback onChanged;
 
-    final analysis = lb.analysis;
-    final scaledInv   = analysis.totalInvestment * factor;
-    final scaledTrays = (analysis.traysAt70LayRate * factor).round();
+  const _LayingStageSection({required this.state, required this.onChanged});
 
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        decoration: BoxDecoration(color: Colors.teal, borderRadius: BorderRadius.circular(12)),
-        child: Row(children: [
-          const Icon(Icons.layers, color: Colors.white, size: 24),
-          const SizedBox(width: 12),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('LAYERS PRODUCTION QUOTATION',
-                style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
-            Text('$qty birds  •  scale ×${factor == factor.roundToDouble() ? factor.toInt() : factor}',
-                style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 12)),
-          ])),
-        ]),
-      ),
-      const SizedBox(height: 16),
-      TextButton.icon(onPressed: null,
-          icon: const Icon(Icons.arrow_forward_ios, size: 14),
-          label: const Text('Scroll left or right to see the full table.')),
-
-      Card(
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: Colors.teal.withOpacity(0.2))),
-        child: Padding(padding: const EdgeInsets.all(16),
-            child: _stageTable('s1', 'Stage 1 — Rearing Phase (0–20 weeks)', lb.stage1.items, factor)),
-      ),
-      const SizedBox(height: 16),
-      Card(
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: Colors.teal.withOpacity(0.2))),
-        child: Padding(padding: const EdgeInsets.all(16),
-            child: _stageTable('s2', 'Stage 2 — Laying Phase (20–80 weeks)', lb.stage2.items, factor)),
-      ),
-      const SizedBox(height: 16),
-
-      Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.green.withOpacity(0.3)),
-        ),
-        child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-          const Text('GRAND TOTAL',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.green)),
-          Text('KSh ${_fmt(grand)}',
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.green)),
-        ]),
-      ),
-      const SizedBox(height: 20),
-
-      Card(
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: Colors.blue.withOpacity(0.2))),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              const Icon(Icons.analytics_outlined, color: Colors.blue, size: 20),
-              const SizedBox(width: 8),
-              const Text('INVESTMENT ANALYSIS',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.blue)),
-            ]),
-            const SizedBox(height: 12),
-            _aRow('Total Investment',         'KSh ${_fmt(scaledInv)}'),
-            _aRow('Trays at 75% average',    '$scaledTrays trays'),
-            _aRow('Cost per Egg',             'KSh ${analysis.costPerEgg.toStringAsFixed(2)}', note: 'fixed'),
-            _aRow('Break-even Cost per Tray', 'KSh ${_fmt(analysis.breakEvenCostPerTray)}',   note: 'fixed'),
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: Colors.green.withOpacity(0.3))),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          // Header
+          Row(children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(color: _kGreen900, borderRadius: BorderRadius.circular(6)),
+              child: const Text('SELF-FINANCING',
+                  style: TextStyle(fontSize: 9, color: Colors.white, letterSpacing: 1.5, fontWeight: FontWeight.bold)),
+            ),
+            const SizedBox(width: 8),
+            const Text('Phase 2 — Laying Stage',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: _kGreen900)),
           ]),
+          const SizedBox(height: 16),
+
+          // Week Slider
+          _buildWeekSlider(context),
+          const SizedBox(height: 12),
+
+          // Inputs
+          _buildInputRow('Flock size (birds)', state.flock.toString(), (v) {
+            state.flock = int.tryParse(v) ?? state.flock;
+            onChanged();
+          }),
+          _buildInputRow('Avg egg production %', state.prodPct.toString(),
+              note: '75% = industry average for layers', (v) {
+                state.prodPct = double.tryParse(v) ?? state.prodPct;
+                onChanged();
+              }),
+          _buildInputRow('Feed bags / month', state.bagsPerMonth.toString(),
+              note: '16 bags × 50 kg recommended', (v) {
+                state.bagsPerMonth = int.tryParse(v) ?? state.bagsPerMonth;
+                onChanged();
+              }),
+          _buildInputRow('Cost per bag (Ksh)', state.bagCost.toString(), (v) {
+            state.bagCost = int.tryParse(v) ?? state.bagCost;
+            onChanged();
+          }),
+          _buildInputRow('Tray price (Ksh)', state.trayPrice.toString(),
+              note: '30 eggs per tray', (v) {
+                state.trayPrice = int.tryParse(v) ?? state.trayPrice;
+                onChanged();
+              }),
+          _buildInputRow('Other monthly costs', state.otherMonthly.toString(),
+              note: 'Labour, medication, misc.', (v) {
+                state.otherMonthly = int.tryParse(v) ?? state.otherMonthly;
+                onChanged();
+              }, isLast: true),
+        ]),
+      ),
+    );
+  }
+
+  Widget _buildWeekSlider(BuildContext context) {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        const Text('Laying period (weeks)',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+              color: const Color(0xFFFFF3E0), borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: const Color(0xFFFFCC80))),
+          child: Text('${state.layingWeeks} wks',
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold,
+                  color: Color(0xFFE65100))),
+        ),
+      ]),
+      const SizedBox(height: 8),
+      SliderTheme(
+        data: SliderThemeData(
+          activeTrackColor: _kGreen900,
+          inactiveTrackColor: _kBorder,
+          thumbColor: _kGreen900,
+          overlayColor: _kGreen900.withOpacity(0.15),
+          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 9),
+          trackHeight: 4,
+        ),
+        child: Slider(
+          value: state.layingWeeks.toDouble(),
+          min: 4, max: 120, divisions: 116,
+          onChanged: (v) {
+            state.layingWeeks = v.toInt();
+            onChanged();
+          },
         ),
       ),
+      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: ['4 wks', '30 wks', '60 wks', '90 wks', '120 wks']
+              .map((s) => Text(s, style: const TextStyle(fontSize: 9, color: _kMuted)))
+              .toList()),
     ]);
   }
 
-  Widget _aRow(String label, String value, {String? note}) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 6),
-    child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-      Text(label, style: TextStyle(fontSize: 13, color: Colors.grey.shade700)),
-      Row(children: [
-        Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-        if (note != null) ...[
-          const SizedBox(width: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(4)),
-            child: Text(note, style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
+  Widget _buildInputRow(String label, String value, ValueChanged<String> onSave,
+      {String? note, bool isLast = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 9),
+      decoration: BoxDecoration(
+          border: isLast ? null : const Border(bottom: BorderSide(color: _kBorder))),
+      child: Row(children: [
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(label, style: const TextStyle(fontSize: 12)),
+          if (note != null)
+            Text(note, style: const TextStyle(fontSize: 10, color: _kMuted)),
+        ])),
+        SizedBox(
+          width: 110,
+          child: TextFormField(
+            initialValue: value,
+            textAlign: TextAlign.right,
+            keyboardType: TextInputType.number,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+            decoration: InputDecoration(
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(4),
+                  borderSide: const BorderSide(color: _kBorder)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(4),
+                  borderSide: const BorderSide(color: _kBorder)),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(4),
+                  borderSide: const BorderSide(color: _kGreen900)),
+              filled: true, fillColor: const Color(0xFFF4EFE6),
+            ),
+            onChanged: onSave,
           ),
-        ],
-      ]),
-    ]),
-  );
-
-  Widget _disclaimer() => Card(
-    elevation: 0,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.withOpacity(0.2))),
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          const Icon(Icons.warning, color: Colors.orange, size: 20),
-          const SizedBox(width: 8),
-          const Text('DISCLAIMER',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange)),
-        ]),
-        const SizedBox(height: 12),
-        Text(
-          '• Prices are estimates and may vary based on location and market conditions\n'
-              '• Mortality rates and production figures are industry averages\n'
-              '• Consult with agricultural experts for specific farm conditions\n'
-              '• Equipment costs are one-time expenses\n'
-              '• Revenue projections are based on current market prices',
-          style: TextStyle(fontSize: 14, color: Colors.grey.shade700, height: 1.5),
         ),
       ]),
-    ),
-  );
+    );
+  }
+}
 
-  String _fmt(double v) => v.toInt().toString()
+// ─── END-OF-CYCLE — EX-LAYER SALE SECTION ────────────────────────────────────
+
+class _ExLayerSaleSection extends StatelessWidget {
+  final _LayersPhase2State state;
+  final VoidCallback onChanged;
+
+  const _ExLayerSaleSection({required this.state, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final total = state.exBirds * state.exBirdPrice;
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: Colors.teal.withOpacity(0.3))),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(color: Colors.teal, borderRadius: BorderRadius.circular(6)),
+            child: const Text('ONE-TIME INCOME',
+                style: TextStyle(fontSize: 9, color: Colors.white, letterSpacing: 1.5, fontWeight: FontWeight.bold)),
+          ),
+          const SizedBox(height: 5),
+
+          const Text('End-of-Cycle — Ex-Layers',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: _kGreen900)),
+          const SizedBox(height: 14),
+          _buildRow('Birds sold at end', state.exBirds.toString(),
+              note: 'Adjust for mortality / culled birds', (v) {
+                state.exBirds = int.tryParse(v) ?? state.exBirds;
+                onChanged();
+              }),
+          _buildRow('Price per bird (Ksh)', state.exBirdPrice.toString(),
+              note: 'Spent layers typically Ksh 300–500', (v) {
+                state.exBirdPrice = int.tryParse(v) ?? state.exBirdPrice;
+                onChanged();
+              }, isLast: true),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+                color: const Color(0xFFF0F7F0), borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green.withOpacity(0.3))),
+            child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              const Text('Ex-layer sale total',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+              Text('Ksh ${_loc(total)}',
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold,
+                      color: Color(0xFF2D6A2D))),
+            ]),
+          ),
+        ]),
+      ),
+    );
+  }
+
+  Widget _buildRow(String label, String value, ValueChanged<String> onSave,
+      {String? note, bool isLast = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 9),
+      decoration: BoxDecoration(
+          border: isLast ? null : const Border(bottom: BorderSide(color: _kBorder))),
+      child: Row(children: [
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(label, style: const TextStyle(fontSize: 12)),
+          if (note != null)
+            Text(note, style: const TextStyle(fontSize: 10, color: _kMuted)),
+        ])),
+        SizedBox(
+          width: 110,
+          child: TextFormField(
+            initialValue: value,
+            textAlign: TextAlign.right,
+            keyboardType: TextInputType.number,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+            decoration: InputDecoration(
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(4),
+                  borderSide: const BorderSide(color: _kBorder)),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(4),
+                  borderSide: const BorderSide(color: _kBorder)),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(4),
+                  borderSide: const BorderSide(color: _kGreen900)),
+              filled: true, fillColor: const Color(0xFFF4EFE6),
+            ),
+            onChanged: onSave,
+          ),
+        ),
+      ]),
+    );
+  }
+
+  String _loc(int v) => v.toString()
       .replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},');
+}
+
+// ─── FULL INVESTMENT ANALYSIS SECTION ────────────────────────────────────────
+
+class _FullInvestmentAnalysis extends StatelessWidget {
+  final double phase1Cost;
+  final _LayersPhase2State state;
+
+  const _FullInvestmentAnalysis({required this.phase1Cost, required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final r = _calcPhase2(state, phase1Cost);
+    final overallPositive = r.overallNet >= 0;
+    final netMonthPositive = r.netPerMonth >= 0;
+
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: Colors.blue.withOpacity(0.2))),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        // Header
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+              color: _kGreen900, borderRadius: const BorderRadius.vertical(top: Radius.circular(12))),
+          child: const Row(children: [
+            Icon(Icons.analytics_outlined, color: Colors.white, size: 20),
+            SizedBox(width: 8),
+            Text('Full Investment Analysis',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
+          ]),
+        ),
+
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            // Results table
+            _ResultsTable(r: r, phase1Cost: phase1Cost),
+            const SizedBox(height: 16),
+
+            // Break-even label
+            _BreakEvenLabel(r: r, state: state),
+            const SizedBox(height: 16),
+
+            // Verdict
+            _VerdictBox(r: r, phase1Cost: phase1Cost, state: state),
+            const SizedBox(height: 16),
+
+            // Hero totals
+            _HeroTotals(phase1Cost: phase1Cost, overallNet: r.overallNet),
+          ]),
+        ),
+      ]),
+    );
+  }
+}
+
+// ─── RESULTS TABLE COMPONENT ──────────────────────────────────────────────────
+
+class _ResultsTable extends StatelessWidget {
+  final _LayersPhase2Result r;
+  final double phase1Cost;
+
+  const _ResultsTable({required this.r, required this.phase1Cost});
+
+  @override
+  Widget build(BuildContext context) {
+    final netPositive = r.netPerMonth >= 0;
+
+    return Table(
+      columnWidths: const {0: FlexColumnWidth(), 1: IntrinsicColumnWidth()},
+      children: [
+        _tRow('Stage 1 total cost', _ksh(phase1Cost), valueColor: const Color(0xFFB83232)),
+        _tRow('Stage 2 total laying period',
+            '${r.months.toStringAsFixed(1)} months (${(r.months * 4.33 / 4.33).round()} wks)'),
+        _tRow('Eggs per day', '${r.eggsPerDay.round()}'),
+        _tRow('Trays per month', r.traysPerMonth.toStringAsFixed(1)),
+        _tRow('Monthly egg revenue', _ksh(r.revPerMonth), valueColor: const Color(0xFF2D6A2D)),
+        _tRow('Monthly feed cost', _ksh(r.feedCostPerMonth), valueColor: const Color(0xFFB83232)),
+        _tRow('Other monthly costs', _ksh(r.totalCostPerMonth - r.feedCostPerMonth),
+            valueColor: const Color(0xFFB83232)),
+        _tRowBold('Total monthly costs', _ksh(r.totalCostPerMonth),
+            valueColor: const Color(0xFFB83232), shaded: true),
+        _tRow('Monthly net profit (Stage 2)',
+            '${r.netPerMonth >= 0 ? "+" : "-"}${_ksh(r.netPerMonth)}',
+            valueColor: netPositive ? const Color(0xFF2D6A2D) : const Color(0xFFB83232)),
+        _tRow('Total Phase 2 egg revenue', _ksh(r.totalRevenue), valueColor: const Color(0xFF2D6A2D)),
+        _tRow('Ex-layer sale (end of cycle)', _ksh(r.exLayerTotal), valueColor: const Color(0xFF2D6A2D)),
+        _tRow('Total Phase 2 costs', _ksh(r.totalCosts), valueColor: const Color(0xFFB83232)),
+        _tRowBold('Total revenue (eggs + birds)', _ksh(r.grandRevenue),
+            valueColor: const Color(0xFF2D6A2D)),
+      ],
+    );
+  }
+
+  TableRow _tRow(String label, String value, {Color? valueColor}) {
+    return TableRow(
+      decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: _kBorder, width: 0.8))),
+      children: [
+        Padding(padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Text(label, style: const TextStyle(fontSize: 12, color: _kMuted))),
+        Padding(padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+            child: Text(value,
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold,
+                    color: valueColor ?? const Color(0xFF1A1A1A)))),
+      ],
+    );
+  }
+
+  TableRow _tRowBold(String label, String value, {Color? valueColor, bool shaded = false}) {
+    return TableRow(
+      decoration: BoxDecoration(
+          color: shaded ? const Color(0xFFFDF5F5) : null,
+          border: const Border(bottom: BorderSide(color: _kBorder, width: 0.8))),
+      children: [
+        Padding(padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold))),
+        Padding(padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+            child: Text(value,
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold,
+                    color: valueColor ?? const Color(0xFF1A1A1A)))),
+      ],
+    );
+  }
+
+  String _ksh(double n) => 'Ksh ${n.abs().toStringAsFixed(0).replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}';
+}
+
+// ─── BREAK-EVEN LABEL COMPONENT ───────────────────────────────────────────────
+
+class _BreakEvenLabel extends StatelessWidget {
+  final _LayersPhase2Result r;
+  final _LayersPhase2State state;
+
+  const _BreakEvenLabel({required this.r, required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    String text;
+    Color color;
+
+    if (r.netPerMonth <= 0) {
+      text = 'Break-even: Never (monthly loss)';
+      color = const Color(0xFFB83232);
+    } else if (r.breakEvenWeek != null) {
+      text = 'Break-even: Week ${r.breakEvenWeek!.ceil()} of Phase 2';
+      color = const Color(0xFFC8813A);
+    } else {
+      text = 'Break-even: After wk ${state.layingWeeks} (extend period)';
+      color = const Color(0xFFC8813A);
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+          color: color.withOpacity(0.08), borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: color.withOpacity(0.3))),
+      child: Row(children: [
+        Icon(Icons.schedule, size: 16, color: color),
+        const SizedBox(width: 8),
+        Text(text, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: color)),
+      ]),
+    );
+  }
+}
+
+// ─── VERDICT BOX COMPONENT ────────────────────────────────────────────────────
+
+class _VerdictBox extends StatelessWidget {
+  final _LayersPhase2Result r;
+  final double phase1Cost;
+  final _LayersPhase2State state;
+
+  const _VerdictBox({required this.r, required this.phase1Cost, required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final bool good = r.netPerMonth > 0 && r.breakEvenWeek != null;
+    final bool monthlyneg = r.netPerMonth < 0;
+    final Color borderColor = good ? const Color(0xFF2D6A2D) : const Color(0xFFB83232);
+    final Color bgColor = good ? const Color(0xFFF0F7F0) : const Color(0xFFFDF0F0);
+
+    String message;
+    String icon;
+    if (monthlyneg) {
+      icon = '⚠️';
+      message = "Monthly egg revenue (${_ksh(r.revPerMonth)}) doesn't cover monthly costs "
+          "(${_ksh(r.totalCostPerMonth)}). You're losing ${_ksh(r.netPerMonth.abs())}/month — "
+          "consider raising tray price or reducing bags.";
+    } else if (good) {
+      icon = '✅';
+      message = "Egg sales recover your Phase 1 investment of ${_ksh(phase1Cost)} by "
+          "week ${r.breakEvenWeek!.ceil()}. With the ex-layer sale of ${_ksh(r.exLayerTotal)}, "
+          "total net over ${state.layingWeeks} weeks is ${r.overallNet >= 0 ? '+' : '-'}${_ksh(r.overallNet)}.";
+    } else {
+      icon = '⚠️';
+      final tip = r.overallNet >= 0
+          ? 'The bird sale tips you into profit! ✅'
+          : 'Consider extending the cycle or adjusting prices.';
+      message = "Egg sales alone don't recover Phase 1 costs within ${state.layingWeeks} weeks. "
+          "Including ex-layer sale of ${_ksh(r.exLayerTotal)}, overall net is "
+          "${r.overallNet >= 0 ? '+' : '-'}${_ksh(r.overallNet)}. $tip";
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+          color: bgColor, borderRadius: BorderRadius.circular(8),
+          border: Border(left: BorderSide(color: borderColor, width: 4))),
+      child: Text('$icon $message',
+          style: const TextStyle(fontSize: 12, height: 1.6)),
+    );
+  }
+
+  String _ksh(double n) => 'Ksh ${n.abs().toStringAsFixed(0).replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}';
+}
+
+// ─── HERO TOTALS COMPONENT ────────────────────────────────────────────────────
+
+class _HeroTotals extends StatelessWidget {
+  final double phase1Cost;
+  final double overallNet;
+
+  const _HeroTotals({required this.phase1Cost, required this.overallNet});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+          border: Border.all(color: _kBorder),
+          borderRadius: BorderRadius.circular(8)),
+      child: Row(children: [
+        Expanded(child: _heroCell('Total Investment (P1)', _ksh(phase1Cost), 'one-time spend',
+            const Color(0xFF1A1A1A))),
+        Container(width: 1, height: 80, color: _kBorder),
+        Expanded(child: _heroCell(
+            'Net Profit / Loss',
+            '${overallNet >= 0 ? "+" : "-"}${_ksh(overallNet)}',
+            'over full period',
+            overallNet >= 0 ? const Color(0xFF2D6A2D) : const Color(0xFFB83232))),
+      ]),
+    );
+  }
+
+  Widget _heroCell(String label, String value, String sub, Color valueColor) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(children: [
+        Text(label.toUpperCase(),
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 9, letterSpacing: 1.5, color: _kMuted)),
+        const SizedBox(height: 6),
+        Text(value,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: valueColor)),
+        const SizedBox(height: 4),
+        Text(sub, style: const TextStyle(fontSize: 10, color: _kMuted)),
+      ]),
+    );
+  }
+
+  String _ksh(double n) => 'Ksh ${n.abs().toStringAsFixed(0).replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}';
+}
+
+// ─── LAYERS DISCLAIMER COMPONENT ─────────────────────────────────────────────
+
+class _LayersDisclaimer extends StatelessWidget {
+  const _LayersDisclaimer();
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: Colors.grey.withOpacity(0.2))),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            const Icon(Icons.warning, color: Colors.orange, size: 20),
+            const SizedBox(width: 8),
+            const Text('DISCLAIMER',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange)),
+          ]),
+          const SizedBox(height: 12),
+          Text(
+            '• Prices are estimates and may vary based on location and market conditions\n'
+                '• Mortality rates and production figures are industry averages\n'
+                '• Consult with agricultural experts for specific farm conditions\n'
+                '• Equipment costs are one-time expenses\n'
+                '• Revenue projections are based on current market prices',
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade700, height: 1.5),
+          ),
+        ]),
+      ),
+    );
+  }
 }
 
 // ─── FRONTEND CALCULATOR PAGE (Broilers & Indigenous) ────────────────────────
@@ -888,14 +1509,10 @@ class _FrontendCalculatorPageState extends State<_FrontendCalculatorPage> {
     ]);
   }
 
-
-
   Widget _footer() => const Text(
     'Powered by AgriFlock 360 & ePoultry',
     textAlign: TextAlign.center, style: TextStyle(fontSize: 10, color: Color(0xFFBBBBBB)),
   );
-
-  // ── UI helpers ──
 
   Widget _card({required String title, required List<Widget> children}) => Container(
     padding: const EdgeInsets.all(20),
