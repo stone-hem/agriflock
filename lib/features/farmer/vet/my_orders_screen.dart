@@ -323,6 +323,9 @@ class _MyVetOrdersScreenState extends State<MyVetOrdersScreen> {
         ? order.vetSpecialization.first
         : 'General';
 
+    // Check if the order is scheduled for today
+    final isToday = DateUtil.isToday(order.preferredDate);
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       elevation: 0,
@@ -478,6 +481,31 @@ class _MyVetOrdersScreenState extends State<MyVetOrdersScreen> {
                     fontSize: 14,
                   ),
                 ),
+                // Add "Today" indicator if applicable
+                if (isToday)
+                  Container(
+                    margin: const EdgeInsets.only(left: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.green,
+                        width: 1,
+                      ),
+                    ),
+                    child: const Text(
+                      'Today',
+                      style: TextStyle(
+                        color: Colors.green,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
               ],
             ),
             const SizedBox(height: 8),
@@ -548,24 +576,54 @@ class _MyVetOrdersScreenState extends State<MyVetOrdersScreen> {
                     child: const Text('Cancel'),
                   ),
                 const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () {
-                    context.push('/my-order-tracking', extra: order);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                // Only show Track button if the order is scheduled for today
+                if (isToday)
+                  ElevatedButton(
+                    onPressed: () {
+                      context.push('/my-order-tracking', extra: order);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                    ),
+                    child: const Text('Track'),
+                  )
+                else
+                // Optionally show a disabled button or nothing at all
+                  Tooltip(
+                    message: 'Tracking is only available on the scheduled day',
+                    child: ElevatedButton(
+                      onPressed: null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey.shade300,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                      ),
+                      child: Text(
+                        'Track',
+                        style: TextStyle(color: Colors.grey.shade600),
+                      ),
+                    ),
                   ),
-                  child: const Text('Track'),
-                ),
+
+
               ],
             ),
+          SizedBox(height: 10,),
+          if(!isToday)
+            Text(
+              '* Tracking is only available on the scheduled day',
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(color:Colors.red )
+            ),
+            Text(
+                '* You cant cancel orders that are in progress',
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(color:Colors.red )
+            ),
+
           ],
         ),
       ),
     );
   }
-
 
 
   Widget _buildLoadingIndicator() {

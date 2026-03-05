@@ -550,6 +550,7 @@ class _SignupScreenState extends State<SignupScreen> {
           final userId = data['userId'] as String? ?? '';
           context.go(
             '${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(email)}&userId=${Uri.encodeComponent(userId)}',
+            extra: completePhoneNumber,
           );
 
         case final Failure failure:
@@ -643,7 +644,8 @@ class _SignupScreenState extends State<SignupScreen> {
                 '2. Maintain the security of your account credentials\n'
                 '3. Accept responsibility for all activities under your account\n'
                 '4. Use the service only for lawful purposes\n'
-                '5. Not engage in any fraudulent activities\n\n'
+                '5. Not engage in any fraudulent activities\n'
+                '6. Receive SMS alerts and account notifications from AgriFlock 360.\n\n'
                 'We reserve the right to modify these terms at any time. '
                 'Continued use of the service constitutes acceptance of modified terms.',
             style: TextStyle(fontSize: 14, color: Colors.grey.shade700),

@@ -104,7 +104,7 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
                     border: Border.all(color: Colors.green.shade100),
                   ),
                   child: Text(
-                    'An OTP has been sent to your number : ${widget.phoneNumber}',
+                    'An OTP has been sent to your number ${widget.phoneNumber ?? widget.phoneNumber}',
                     style: TextStyle(
                       fontSize: 14,
                       color: Theme.of(context).primaryColor,

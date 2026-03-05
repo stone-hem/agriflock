@@ -208,7 +208,7 @@ class _LayersPhase2State {
     this.layingWeeks  = 78,
     this.flock        = 128,
     this.prodPct      = 75,
-    this.bagsPerMonth = 16,
+    this.bagsPerMonth = 9,
     this.bagCost      = 3700,
     this.trayPrice    = 460,
     this.otherMonthly = 0,
@@ -852,7 +852,7 @@ class _LayingStageSection extends StatelessWidget {
                 onChanged();
               }),
           _buildInputRow('Feed bags / month', state.bagsPerMonth.toString(),
-              note: '16 bags × 50 kg recommended', (v) {
+              note: '9 bags × 50 kg recommended', (v) {
                 state.bagsPerMonth = int.tryParse(v) ?? state.bagsPerMonth;
                 onChanged();
               }),
