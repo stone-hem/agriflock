@@ -542,7 +542,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                     }
                     return null;
                   },
-                  labelText: 'Age of chicks when purchased (days)',
+                  labelText: 'Right age will help track vaccinations and send you alerts.',
                   hintText: 'e.g., 1, 7, 14',
                 ),
                 const SizedBox(height: 20),

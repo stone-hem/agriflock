@@ -177,8 +177,8 @@ class UseCategorySelectionView extends StatelessWidget {
                 _buildSpecialActionCard(
                   context: context,
                   icon: Icons.egg,
-                  title: 'Record Product',
-                  subtitle: 'Log eggs or other products',
+                  title: 'Record Products',
+                  subtitle: 'Log eggs, chickens and manure sold Options Eggs',
                   color: Colors.amber.shade700,
                   onTap: () {
                     context.push('/batches/${batch.id}/record-product');
