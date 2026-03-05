@@ -799,7 +799,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         _buildQuickActionCard(
           icon: Icons.edit_note,
-          title: 'Daily Record',
+          title: 'Daily Records',
           subtitle: 'Record Feed, Vaccination, Medication, Mortality, Weight, Product',
           color: Colors.green,
           onTap: () => context.push('/quick-recording'),

@@ -11,7 +11,6 @@ class UseItemDetailsView extends StatefulWidget {
   final InventoryCategory category;
   final CategoryItem? selectedItem;
   final double? quantity;
-  final String? selectedPackagingOption;
   final String? methodOfAdministration;
   final String? notes;
   final DateTime selectedDate;
@@ -20,7 +19,6 @@ class UseItemDetailsView extends StatefulWidget {
   final VoidCallback onItemCleared;
   final Function({
   required double quantity,
-  String? selectedPackagingOption,
   String? methodOfAdministration,
   String? notes,
   required DateTime selectedDate,
@@ -35,7 +33,6 @@ class UseItemDetailsView extends StatefulWidget {
     required this.category,
     this.selectedItem,
     this.quantity,
-    this.selectedPackagingOption,
     this.methodOfAdministration,
     this.notes,
     required this.selectedDate,
@@ -61,12 +58,9 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
 
   String _searchQuery = '';
   String? _selectedMethodOfAdministration;
-  String? _selectedPackagingOption;
   TimeOfDay _selectedTime = TimeOfDay.now();
 
   // Packaging options
-  bool _hasPackagingOptions = false;
-  List<String> _packagingOptions = [];
 
   @override
   void initState() {
@@ -85,28 +79,13 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
       _selectedMethodOfAdministration = widget.methodOfAdministration;
     }
 
-    // Initialize packaging options if item is selected
-    _initializePackagingOptions();
   }
 
-  void _initializePackagingOptions() {
-    if (widget.selectedItem != null) {
-      _hasPackagingOptions = widget.selectedItem!.categoryItemPackagingOptions != null &&
-          widget.selectedItem!.categoryItemPackagingOptions!.isNotEmpty;
-
-      if (_hasPackagingOptions) {
-        _packagingOptions = widget.selectedItem!.categoryItemPackagingOptions!;
-        _selectedPackagingOption = widget.selectedPackagingOption ?? _packagingOptions.first;
-      }
-    }
-  }
 
   @override
   void didUpdateWidget(UseItemDetailsView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.selectedItem != oldWidget.selectedItem) {
-      _initializePackagingOptions();
-    }
+
   }
 
   bool get _isVaccineOrMedicine {
@@ -147,9 +126,6 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
   }
 
   String _getUnitDisplay() {
-    if (_hasPackagingOptions && _selectedPackagingOption != null) {
-      return _selectedPackagingOption!;
-    }
     return widget.selectedItem?.categoryItemUnit ?? 'units';
   }
 
@@ -204,7 +180,6 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
 
     widget.onSave(
       quantity: quantity,
-      selectedPackagingOption: _selectedPackagingOption,
       methodOfAdministration: _selectedMethodOfAdministration,
       notes: _notesController.text.isNotEmpty ? _notesController.text : null,
       selectedDate: combinedDateTime,
@@ -658,115 +633,6 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Packaging Options Dropdown (if available)
-                    if (_hasPackagingOptions) ...[
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.grey.shade300,
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                left: 16,
-                                top: 12,
-                                right: 16,
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.inventory_2_outlined,
-                                    size: 16,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Packaging Size',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.grey.shade700,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            DropdownButtonFormField<String>(
-                              value: _selectedPackagingOption,
-                              decoration: InputDecoration(
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
-                                ),
-                                border: InputBorder.none,
-                                enabledBorder: InputBorder.none,
-                                focusedBorder: InputBorder.none,
-                                errorBorder: InputBorder.none,
-                                disabledBorder: InputBorder.none,
-                              ),
-                              icon: Icon(
-                                Icons.arrow_drop_down,
-                                color: categoryColor,
-                              ),
-                              dropdownColor: Colors.white,
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey.shade800,
-                              ),
-                              items: _packagingOptions.map((option) {
-                                return DropdownMenuItem<String>(
-                                  value: option,
-                                  child: Text(option),
-                                );
-                              }).toList(),
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedPackagingOption = value;
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Show unit info
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.info_outline,
-                              size: 16,
-                              color: Colors.grey.shade600,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                'Base unit: ${widget.selectedItem!.categoryItemUnit}',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.grey.shade700,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
 
                     const Text(
                       'How much did you use?',

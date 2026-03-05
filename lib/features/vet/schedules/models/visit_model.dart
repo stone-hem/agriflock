@@ -553,14 +553,14 @@ class VisitListResponse {
 
 // Enum for visit status
 enum VisitStatus {
-  pending('PENDING'),
-  accepted('ACCEPTED'),
-  declined('DECLINED'),
-  paid('PAID'),
-  paymentPending('PAYMENT_PENDING'),
-  inProgress('IN_PROGRESS'),
-  completed('COMPLETED'),
-  cancelled('CANCELLED');
+  pending('pending'),
+  accepted('accepted'),
+  declined('declined'),
+  paid('paid'),
+  paymentPending('pending_payments'), // Note: different from enum name
+  inProgress('in_progress'),
+  completed('completed'),
+  cancelled('cancelled');
 
   final String value;
   const VisitStatus(this.value);
@@ -584,7 +584,7 @@ enum VisitStatus {
       case VisitStatus.paid:
         return 'Paid';
       case VisitStatus.paymentPending:
-        return 'Payment Pending';
+        return 'Pending Payments';
       case VisitStatus.inProgress:
         return 'In Progress';
       case VisitStatus.completed:
@@ -594,38 +594,27 @@ enum VisitStatus {
     }
   }
 
-  // Check if status is an active status (can perform actions)
-  bool get isActive {
-    return this == VisitStatus.pending ||
-        this == VisitStatus.accepted ||
-        this == VisitStatus.inProgress ||
-        this == VisitStatus.paymentPending;
-  }
-
-  // Check if status is a final status (read-only)
-  bool get isFinal {
-    return this == VisitStatus.completed ||
-        this == VisitStatus.declined ||
-        this == VisitStatus.cancelled ||
-        this == VisitStatus.paid;
-  }
-
-  // Get next possible status transitions
-  List<VisitStatus> get possibleTransitions {
-    switch (this) {
-      case VisitStatus.pending:
-        return [VisitStatus.accepted, VisitStatus.declined];
-      case VisitStatus.accepted:
-        return [VisitStatus.inProgress, VisitStatus.cancelled];
-      case VisitStatus.inProgress:
-        return [VisitStatus.completed, VisitStatus.cancelled];
-      case VisitStatus.paymentPending:
-        return [VisitStatus.paid, VisitStatus.cancelled];
-      case VisitStatus.paid:
-      case VisitStatus.completed:
-      case VisitStatus.declined:
-      case VisitStatus.cancelled:
-        return []; // No transitions from final states
+  // Add a method to get the enum from display label if needed
+  static VisitStatus fromDisplayLabel(String label) {
+    switch (label) {
+      case 'Pending':
+        return VisitStatus.pending;
+      case 'Accepted':
+        return VisitStatus.accepted;
+      case 'Declined':
+        return VisitStatus.declined;
+      case 'Paid':
+        return VisitStatus.paid;
+      case 'Pending Payments':
+        return VisitStatus.paymentPending;
+      case 'In Progress':
+        return VisitStatus.inProgress;
+      case 'Completed':
+        return VisitStatus.completed;
+      case 'Cancelled':
+        return VisitStatus.cancelled;
+      default:
+        return VisitStatus.pending;
     }
   }
 }

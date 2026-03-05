@@ -48,7 +48,6 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
   String? _methodOfAdministration;
   String? _notes;
   DateTime _selectedDate = DateTime.now();
-  String? _selectedPackagingOption;
 
 
   // Vaccination/Medicine details
@@ -177,7 +176,7 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
           'category_item_id': _selectedItem!.id,
           'description': _selectedItem!.categoryItemName,
           'quantity': _quantity ?? 0,
-          'unit': _selectedPackagingOption,
+          'unit': 'kgs',
           'date': _selectedDate.toUtc().toIso8601String(),
           if (_notes != null && _notes!.isNotEmpty) 'notes': _notes,
           'mortality_today': 0, // Default to 0, can be updated if UI captures this
@@ -194,7 +193,7 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
           'category_item_id': _selectedItem!.id,
           'description': _selectedItem!.categoryItemName,
           'quantity': _quantity?.toInt() ?? 1,
-          'unit': _selectedPackagingOption,
+          'unit': 'doses',
           'date': _selectedDate.toUtc().toIso8601String(),
           if (_notes != null && _notes!.isNotEmpty) 'notes': _notes,
           if (_methodOfAdministration != null) 'method_of_administration': _methodOfAdministration,
@@ -214,7 +213,7 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
           'category_id': _selectedCategory!.id,
           'category_item_id': _selectedItem!.id,
           'quantity': _quantity?.toInt() ?? 1,
-          'unit': _selectedPackagingOption,
+          'unit': 'doses',
           'date': _selectedDate.toUtc().toIso8601String(),
           'dosage': '${_quantity ?? 1} dose(s)',
           if (_methodOfAdministration != null) 'administration_method': _methodOfAdministration,
@@ -346,7 +345,6 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
                     notes: _notes,
                     selectedDate: _selectedDate,
                     dosesUsed: _dosesUsed,
-                    selectedPackagingOption:_selectedPackagingOption,
                     onItemSelected: (item) {
                       setState(() => _selectedItem = item);
                     },
@@ -359,7 +357,6 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
                       String? notes,
                       required DateTime selectedDate,
                       double? dosesUsed,
-                      String? selectedPackagingOption,
                     }) {
                       setState(() {
                         _quantity = quantity;
@@ -367,7 +364,6 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
                         _notes = notes;
                         _selectedDate = selectedDate;
                         _dosesUsed = dosesUsed;
-                        _selectedPackagingOption=selectedPackagingOption;
                       });
                       _saveRecord();
                     },
