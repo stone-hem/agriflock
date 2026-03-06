@@ -13,16 +13,16 @@ import 'package:agriflock/core/utils/result.dart';
 // ── Trial nudge messages ──────────────────────────────────────────────────────
 const List<Map<String, String>> _trialNudges = [
   {
-    'title': '🌱 Grow smarter with Pro!',
-    'body': 'Unlock unlimited vet bookings, priority matching & farm analytics. Start your free trial today!',
+    'title': '🌱 Grow smarter with paid plan!',
+    'body': 'Unlock Priority matching & farm analytics. Start your free trial today!',
   },
   {
-    'title': '🐄 Your herd deserves the best',
+    'title': '🐄 Your chicken deserves the best',
     'body': 'Pro farmers get faster vet responses & exclusive discounts. Try it free — no credit card needed.',
   },
   {
     'title': '⚡ Supercharge your farm',
-    'body': 'Pro plan gives you AI-powered insights, premium vets & health reminders. First 7 days free!',
+    'body': 'Pro plan gives you AI-powered insights, premium vets & health reminders. First 60 days free!',
   },
   {
     'title': '🏆 Top farmers use Agriflock Pro',
@@ -30,7 +30,7 @@ const List<Map<String, String>> _trialNudges = [
   },
   {
     'title': '💰 Save on every vet visit',
-    'body': 'Pro members enjoy special rates & priority support. Try free for 7 days — cancel anytime.',
+    'body': 'Pro members enjoy special rates & priority support. Try free for 60 days — cancel anytime.',
   },
 ];
 
