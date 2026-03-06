@@ -1,3 +1,5 @@
+import 'package:agriflock/app_routes.dart';
+import 'package:agriflock/core/utils/secure_storage.dart';
 import 'package:agriflock/features/farmer/vet/models/vet_farmer_model.dart';
 import 'package:agriflock/features/farmer/vet/repo/vet_farmer_repository.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +20,7 @@ class _VetDetailsScreenState extends State<VetDetailsScreen> {
   bool _isLoading = true;
   bool _hasError = false;
   String? _errorMessage;
+  bool _isNoSubscription = false;
 
   static const Color _orange = Color(0xFFE65100);
   static const Color _green = Color(0xFF2E7D32);
@@ -29,6 +32,18 @@ class _VetDetailsScreenState extends State<VetDetailsScreen> {
   void initState() {
     super.initState();
     _loadVetDetails();
+    _checkSubscription();
+  }
+
+  Future<void> _checkSubscription() async {
+    try {
+      final state = await SecureStorage().getSubscriptionState();
+      if (mounted) {
+        setState(() => _isNoSubscription =
+            state == 'no_subscription_plan' ||
+            state == 'expired_subscription_plan');
+      }
+    } catch (_) {}
   }
 
   Future<void> _loadVetDetails() async {
@@ -150,6 +165,40 @@ class _VetDetailsScreenState extends State<VetDetailsScreen> {
       return const Icon(Icons.star_border,
           color: Color(0xFFFFB300), size: 14);
     }),
+  );
+
+  Widget _buildSubscribeBanner() => GestureDetector(
+    onTap: () => context.push(AppRoutes.subscriptionPlans),
+    child: Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.orange.shade50, Colors.green.shade50],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.orange.shade200),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.workspace_premium, color: Colors.orange.shade700, size: 18),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Subscribe to a plan to manage your farms and batches. Tap to view plans.',
+              style: TextStyle(
+                fontSize: 12.5,
+                color: Colors.orange.shade800,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Icon(Icons.arrow_forward_ios, size: 13, color: Colors.orange.shade700),
+        ],
+      ),
+    ),
   );
 
   Widget _buildBookButton() => SizedBox(
@@ -384,6 +433,11 @@ class _VetDetailsScreenState extends State<VetDetailsScreen> {
                     ]),
                   ),
 
+                  // ── Subscribe banner (no-plan users) ──
+                  if (_isNoSubscription) ...[
+                    const SizedBox(height: 14),
+                    _buildSubscribeBanner(),
+                  ],
                   // ── Book button ──
                   const SizedBox(height: 14),
                   _buildBookButton(),
@@ -572,6 +626,10 @@ class _VetDetailsScreenState extends State<VetDetailsScreen> {
 
                   // ── Bottom Book Button ──
                   const SizedBox(height: 20),
+                  if (_isNoSubscription) ...[
+                    _buildSubscribeBanner(),
+                    const SizedBox(height: 10),
+                  ],
                   _buildBookButton(),
                   const SizedBox(height: 28),
                 ],

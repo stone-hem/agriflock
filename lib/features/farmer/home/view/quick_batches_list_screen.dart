@@ -1,8 +1,9 @@
 import 'package:agriflock/core/utils/api_error_handler.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/utils/toast_util.dart';
-import 'package:agriflock/features/farmer/batch/model/batch_list_model.dart';
+import 'package:agriflock/features/farmer/batch/model/batch_list_model.dart' hide House;
 import 'package:agriflock/features/farmer/batch/model/batch_model.dart';
+import 'package:agriflock/features/farmer/batch/repo/batch_house_repo.dart';
 import 'package:agriflock/features/farmer/batch/repo/batch_mgt_repo.dart';
 import 'package:agriflock/features/farmer/farm/models/farm_model.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +18,7 @@ class QuickBatchesListScreen extends StatefulWidget {
 
 class _QuickBatchesListScreenState extends State<QuickBatchesListScreen> {
   final _batchMgtRepository = BatchMgtRepository();
+  final _batchHouseRepository = BatchHouseRepository();
 
   List<BatchListItem> _batches = [];
   bool _isLoading = true;
@@ -53,6 +55,78 @@ class _QuickBatchesListScreenState extends State<QuickBatchesListScreen> {
     }
   }
 
+  Future<void> _navigateToAddBatch() async {
+    final result = await context.push('/batches/add', extra: {
+      'farm': null,
+      'house': null,
+    });
+    if (result == true && mounted) _loadBatches();
+  }
+
+  Future<void> _navigateToEditBatch(BatchListItem batch) async {
+    final farmCopy = FarmModel(
+      id: batch.farmId,
+      farmName: batch.farm?.farmName ?? '',
+    );
+    final houseCopy = House(
+      id: batch.houseId,
+      houseName: batch.house?.name ?? '',
+      capacity: batch.house?.maximumCapacity ?? 0,
+    );
+    final batchCopy = BatchModel(
+      id: batch.id,
+      batchNumber: batch.batchNumber,
+      birdTypeId: batch.birdTypeId,
+      breed: batch.breed ?? 'Not Provided',
+      type: '',
+      startDate: DateTime.now(),
+      age: batch.ageInDays,
+      initialQuantity: batch.initialCount,
+      birdsAlive: batch.currentCount,
+      currentWeight: batch.currentWeight ?? 0.0,
+      expectedWeight: batch.expectedWeight ?? 0.0,
+      feedingTime: batch.feedingTime ?? '',
+      feedingSchedule: [?batch.feedingSchedule],
+    );
+    final result = await context.push('/batches/edit', extra: {
+      'batch': batchCopy,
+      'farm': farmCopy,
+      'house': houseCopy,
+    });
+    if (result == true && mounted) _loadBatches();
+  }
+
+  Future<void> _deleteBatch(BatchListItem batch) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Batch'),
+        content: const Text(
+            'Are you sure you want to delete this batch? This cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) {
+      try {
+        await _batchHouseRepository.deleteBatch(batch.farmId, batch.id);
+        ToastUtil.showSuccess('Batch deleted');
+        _loadBatches();
+      } catch (e) {
+        ApiErrorHandler.handle(e);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -65,6 +139,18 @@ class _QuickBatchesListScreenState extends State<QuickBatchesListScreen> {
           icon: Icon(Icons.arrow_back, color: Colors.grey.shade700),
           onPressed: () => context.pop(),
         ),
+        actions: [
+          TextButton.icon(
+            onPressed: _navigateToAddBatch,
+            icon: const Icon(Icons.add, size: 18),
+            label: const Text('Add'),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.teal,
+              visualDensity: VisualDensity.compact,
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -171,10 +257,25 @@ class _QuickBatchesListScreenState extends State<QuickBatchesListScreen> {
                     ),
                   ),
                 ),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  size: 16,
-                  color: Colors.grey.shade400,
+                IconButton(
+                  onPressed: () => _navigateToEditBatch(batch),
+                  icon: const Icon(Icons.edit, size: 18),
+                  color: Colors.orange,
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 32, minHeight: 32),
+                  visualDensity: VisualDensity.compact,
+                  tooltip: 'Edit',
+                ),
+                IconButton(
+                  onPressed: () => _deleteBatch(batch),
+                  icon: const Icon(Icons.delete, size: 18),
+                  color: Colors.red,
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 32, minHeight: 32),
+                  visualDensity: VisualDensity.compact,
+                  tooltip: 'Delete',
                 ),
               ],
             ),

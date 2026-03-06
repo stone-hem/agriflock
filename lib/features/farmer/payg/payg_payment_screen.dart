@@ -1,5 +1,11 @@
+import 'package:agriflock/core/utils/log_util.dart';
+import 'package:agriflock/core/utils/secure_storage.dart';
+import 'package:agriflock/core/utils/toast_util.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart' hide Card;
 import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 /// Payment screen for monthly device lease (PAYG) payments.
 /// Separate from subscription payments — this is for device rental fees only.
@@ -12,11 +18,9 @@ class PaygPaymentScreen extends StatefulWidget {
 
 class _PaygPaymentScreenState extends State<PaygPaymentScreen> {
   int _selectedMethod = 0;
+  bool _isProcessing = false;
   final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _cardNumberController = TextEditingController();
-  final TextEditingController _expiryController = TextEditingController();
-  final TextEditingController _cvvController = TextEditingController();
-  final TextEditingController _nameController = TextEditingController();
+  // Card payment handled by Stripe CardField — no manual controllers needed
 
   final List<_PaymentMethod> _paymentMethods = const [
     _PaymentMethod(
@@ -42,18 +46,81 @@ class _PaygPaymentScreenState extends State<PaygPaymentScreen> {
     ),
   ];
 
-  void _processPayment() {
+  Future<void> _processPayment() async {
+    if (_isProcessing) return;
+
+    // For card payments, use Stripe
+    if (_selectedMethod == 1) {
+      await _processStripeCardPayment();
+      return;
+    }
+
+    // For M-Pesa / Bank Transfer — show processing dialog and simulate
+    setState(() => _isProcessing = true);
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => const PaygPaymentProcessingDialog(),
     );
 
-    Future.delayed(const Duration(seconds: 3), () {
+    await Future.delayed(const Duration(seconds: 3));
+    if (!mounted) return;
+    Navigator.pop(context);
+    setState(() => _isProcessing = false);
+    _showPaymentResult(true);
+  }
+
+  Future<void> _processStripeCardPayment() async {
+    setState(() => _isProcessing = true);
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const PaygPaymentProcessingDialog(),
+    );
+
+    try {
+      final paymentMethod = await Stripe.instance.createPaymentMethod(
+        params: const PaymentMethodParams.card(
+          paymentMethodData: PaymentMethodData(
+            billingDetails: BillingDetails(),
+          ),
+        ),
+      );
+
+      LogUtil.success('PAYG card token: ${paymentMethod.id}');
+
+      // POST to API with the payment method token
+      final token = await SecureStorage().getToken();
+      const apiBase = 'https://api.agriflock360.com/api/v1';
+      final res = await http.post(
+        Uri.parse('$apiBase/payg/pay'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'payment_method_id': paymentMethod.id}),
+      );
+
       if (!mounted) return;
-      Navigator.pop(context);
-      _showPaymentResult(true);
-    });
+      Navigator.of(context).pop();
+
+      final success = res.statusCode == 200 || res.statusCode == 201;
+      setState(() => _isProcessing = false);
+      _showPaymentResult(success);
+    } on StripeException catch (e) {
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      setState(() => _isProcessing = false);
+      ToastUtil.showError(
+        e.error.localizedMessage ?? 'Card error. Please try again.',
+      );
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      setState(() => _isProcessing = false);
+      ToastUtil.showError('Unexpected error. Please try again.');
+    }
   }
 
   void _showPaymentResult(bool success) {
@@ -236,56 +303,42 @@ class _PaygPaymentScreenState extends State<PaygPaymentScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Card Details',
-            style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                fontWeight: FontWeight.bold, color: Colors.grey.shade800)),
+        Text(
+          'Card Details',
+          style: Theme.of(context).textTheme.titleLarge!.copyWith(
+              fontWeight: FontWeight.bold, color: Colors.grey.shade800),
+        ),
         const SizedBox(height: 16),
-        TextFormField(
-          controller: _cardNumberController,
-          decoration: InputDecoration(
-            labelText: 'Card Number',
-            border:
-                OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            prefixIcon: const Icon(Icons.credit_card, color: Colors.blue),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade300),
           ),
-          keyboardType: TextInputType.number,
+          child: const CardField(
+            decoration: InputDecoration(border: InputBorder.none),
+          ),
         ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: TextFormField(
-                controller: _expiryController,
-                decoration: InputDecoration(
-                  labelText: 'Expiry Date',
-                  hintText: 'MM/YY',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.blue.shade50,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.blue.shade100),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.lock_outline, color: Colors.blue.shade600, size: 16),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Your card is secured by Stripe. We never store card details.',
+                  style: TextStyle(fontSize: 12, color: Colors.blue.shade700),
                 ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: TextFormField(
-                controller: _cvvController,
-                decoration: InputDecoration(
-                  labelText: 'CVV',
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-                keyboardType: TextInputType.number,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        TextFormField(
-          controller: _nameController,
-          decoration: InputDecoration(
-            labelText: 'Cardholder Name',
-            border:
-                OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            prefixIcon: const Icon(Icons.person, color: Colors.blue),
+            ],
           ),
         ),
       ],
@@ -341,18 +394,28 @@ class _PaygPaymentScreenState extends State<PaygPaymentScreen> {
       width: double.infinity,
       height: 56,
       child: ElevatedButton(
-        onPressed: _processPayment,
+        onPressed: _isProcessing ? null : _processPayment,
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.green,
           foregroundColor: Colors.white,
+          disabledBackgroundColor: Colors.grey.shade300,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           elevation: 0,
         ),
-        child: const Text(
-          'Pay KES 2,500',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
+        child: _isProcessing
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation(Colors.white),
+                ),
+              )
+            : const Text(
+                'Pay KES 2,500',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
       ),
     );
   }
@@ -360,10 +423,6 @@ class _PaygPaymentScreenState extends State<PaygPaymentScreen> {
   @override
   void dispose() {
     _phoneController.dispose();
-    _cardNumberController.dispose();
-    _expiryController.dispose();
-    _cvvController.dispose();
-    _nameController.dispose();
     super.dispose();
   }
 }

@@ -55,13 +55,26 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
   final Map<int, TextEditingController> _unitPriceControllers = {};
 
   void _initUnitPriceControllers(HousingQuotationData data) {
-    for (final c in _unitPriceControllers.values) c.dispose();
+    for (final c in _unitPriceControllers.values) {
+      c.dispose();
+    }
     _unitPriceControllers.clear();
     for (int i = 0; i < data.materials.length; i++) {
       _unitPriceControllers[i] = TextEditingController(
-        text: data.materials[i].unitPrice.toStringAsFixed(2),
+        text: _formatPrice(data.materials[i].unitPrice),
       );
     }
+  }
+
+  /// Formats a price without unnecessary trailing zeros.
+  /// e.g. 9.0 → "9", 9.5 → "9.5", 9.25 → "9.25"
+  String _formatPrice(double value) {
+    if (value == value.truncateToDouble()) {
+      return value.truncate().toString();
+    }
+    // Remove trailing zeros after decimal
+    final raw = value.toString();
+    return raw.endsWith('0') ? raw.replaceAll(RegExp(r'0+$'), '') : raw;
   }
 
   double get _computedSubtotal {

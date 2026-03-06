@@ -1,5 +1,7 @@
+import 'package:agriflock/app_routes.dart';
 import 'package:agriflock/core/utils/date_util.dart';
 import 'package:agriflock/core/utils/result.dart';
+import 'package:agriflock/core/utils/secure_storage.dart';
 import 'package:agriflock/core/widgets/search_input.dart';
 import 'package:agriflock/features/farmer/vet/models/completed_orders_model.dart';
 import 'package:agriflock/features/farmer/vet/models/my_order_list_item.dart';
@@ -9,16 +11,42 @@ import 'package:go_router/go_router.dart';
 
 // ignore_for_file: deprecated_member_use
 
-class MyVetOrdersCombinedScreen extends StatelessWidget {
+class MyVetOrdersCombinedScreen extends StatefulWidget {
   final int initialTab;
 
   const MyVetOrdersCombinedScreen({super.key, this.initialTab = 0});
 
   @override
+  State<MyVetOrdersCombinedScreen> createState() =>
+      _MyVetOrdersCombinedScreenState();
+}
+
+class _MyVetOrdersCombinedScreenState
+    extends State<MyVetOrdersCombinedScreen> {
+  bool _isNoSubscription = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkSubscription();
+  }
+
+  Future<void> _checkSubscription() async {
+    try {
+      final state = await SecureStorage().getSubscriptionState();
+      if (mounted) {
+        setState(() => _isNoSubscription =
+            state == 'no_subscription_plan' ||
+            state == 'expired_subscription_plan');
+      }
+    } catch (_) {}
+  }
+
+  @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
-      initialIndex: initialTab,
+      initialIndex: widget.initialTab,
       child: Scaffold(
         appBar: AppBar(
           title: Row(
@@ -49,6 +77,36 @@ class MyVetOrdersCombinedScreen extends StatelessWidget {
             ],
           ),
         ),
+        bottomNavigationBar: _isNoSubscription
+            ? GestureDetector(
+                onTap: () => context.push(AppRoutes.subscriptionPlans),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 10),
+                  color: Colors.orange.shade50,
+                  child: Row(
+                    children: [
+                      Icon(Icons.workspace_premium,
+                          color: Colors.orange.shade700, size: 18),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'You need a plan to manage your farms and batches. '
+                          'Tap to subscribe and unlock full access.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.orange.shade800,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      Icon(Icons.arrow_forward_ios,
+                          size: 13, color: Colors.orange.shade700),
+                    ],
+                  ),
+                ),
+              )
+            : null,
         body: const TabBarView(
           children: [
             _ActiveOrdersTab(),

@@ -901,7 +901,10 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
                   title: 'Action',
                   message: 'Record all expenditures for accurate reports.',
                   actionLabel:'Add quick expense',
-                 onActionPressed: ()=>context.push('/record-expenditure'),
+                 onActionPressed: () async {
+                   final result = await context.push('/record-expenditure');
+                   if (result == true && mounted) _loadExpenditures(reset: true);
+                 },
               ),
               SizedBox(height: 16,),
               // Search Bar
@@ -946,8 +949,9 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
       ),
       floatingActionButton: _farmsResponse != null && _farmsResponse!.farms.isNotEmpty
           ? FloatingActionButton.extended(
-        onPressed: () {
-          context.push('/record-expenditure');
+        onPressed: () async {
+          final result = await context.push('/record-expenditure');
+          if (result == true && mounted) _loadExpenditures(reset: true);
         },
         icon: const Icon(Icons.add),
         label: const Text('New Expense'),

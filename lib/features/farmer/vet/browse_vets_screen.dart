@@ -48,6 +48,7 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
   bool _hasRecommendedError = false;
   String? _recommendedErrorMessage;
   List<VetFarmerRecommendation> _recommendedVets = [];
+  bool _isNoSubscription = false;
 
   // Key for the "View All Vets" button — popup anchors to it
   final GlobalKey _allVetsBtnKey = GlobalKey();
@@ -65,7 +66,10 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
       final String subscriptionState = await secureStorage.getSubscriptionState();
       LogUtil.warning(subscriptionState);
 
-      final bool isNotSubscribed = subscriptionState == 'no_subscription_plan';
+      final bool isNotSubscribed = subscriptionState == 'no_subscription_plan' ||
+          subscriptionState == 'expired_subscription_plan';
+
+      if (mounted) setState(() => _isNoSubscription = isNotSubscribed);
 
       if (!isNotSubscribed) return;
 
@@ -617,12 +621,42 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              FilledButton.icon(
-                onPressed: ()=>context.push(AppRoutes.subscriptionPlans),
-                label: Text('Click here to Start with a trial plan today!',style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Colors.white),),
-                icon: Icon(Icons.arrow_circle_right_outlined),
-              ),
-              const SizedBox(height: 10),
+              if (_isNoSubscription) ...[
+                GestureDetector(
+                  onTap: () => context.push(AppRoutes.subscriptionPlans),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.orange.shade50, Colors.green.shade50],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.orange.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.workspace_premium, color: Colors.orange.shade700, size: 18),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Subscribe to a plan to manage your farms and batches. Tap to view plans.',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              color: Colors.orange.shade800,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        Icon(Icons.arrow_forward_ios, size: 13, color: Colors.orange.shade700),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
               _buildQuickActions(),
               const SizedBox(height: 20),
 

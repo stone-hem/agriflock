@@ -38,6 +38,8 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
   @override
   void initState() {
     super.initState();
+    // Pre-fill with current time so the field is never blank when submitted
+    _selectedTime = TimeOfDay.now();
     _selectedDateController.addListener(_onDateChanged);
   }
 

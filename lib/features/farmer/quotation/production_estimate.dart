@@ -442,6 +442,17 @@ class _LayersTabState extends State<_LayersTab> {
     return total;
   }
 
+  /// Formats a price without unnecessary trailing zeros.
+  /// e.g. 9.0 → "9", 9.5 → "9.5", 9.25 → "9.25"
+  String _formatPrice(double value) {
+    if (value == value.truncateToDouble()) {
+      return value.truncate().toString();
+    }
+    // Remove trailing zeros after decimal
+    final raw = value.toString();
+    return raw.endsWith('0') ? raw.replaceAll(RegExp(r'0+$'), '') : raw;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -473,13 +484,15 @@ class _LayersTabState extends State<_LayersTab> {
   }
 
   void _initControllers(ProductionQuotationData data) {
-    for (final c in _ctrl.values) c.dispose();
+    for (final c in _ctrl.values) {
+      c.dispose();
+    }
     _ctrl.clear();
     final lb = data.layersBreakdown;
     if (lb == null) return;
     for (int i = 0; i < lb.stage1.items.length; i++) {
       final p = double.tryParse(lb.stage1.items[i].unitPrice) ?? 0.0;
-      _ctrl['s1_$i'] = TextEditingController(text: p.toStringAsFixed(2));
+      _ctrl['s1_$i'] = TextEditingController(text: _formatPrice(p));
     }
   }
 

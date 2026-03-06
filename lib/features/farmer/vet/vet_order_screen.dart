@@ -41,9 +41,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
   bool get _hasNoSubscription =>
       _subscriptionState == _SubscriptionState.noSubscription;
 
-  bool get _hasValidOrExpiredSubscription =>
-      _subscriptionState == _SubscriptionState.hasSubscription ||
-          _subscriptionState == _SubscriptionState.expired;
+
 
   // ── Farm-based selection (has/expired plan) ────────────────────────────────
   String? _selectedFarm;
@@ -1583,18 +1581,41 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
 
               // Subscription nudge
               if (_hasNoSubscription)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: TextButton.icon(
-                    onPressed: () =>
-                        context.push(AppRoutes.subscriptionPlansPreview),
-                    icon: const Icon(Icons.arrow_forward, size: 16),
-                    label: const Text(
-                      'Subscribe to attach your batches directly to vet orders.',
-                      style: TextStyle(fontSize: 13),
+                GestureDetector(
+                  onTap: () => context.push(AppRoutes.subscriptionPlans),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.orange.shade50, Colors.green.shade50],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.orange.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.workspace_premium, color: Colors.orange.shade700, size: 18),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Subscribe to attach your batches directly to vet orders. Tap to view plans.',
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              color: Colors.orange.shade800,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        Icon(Icons.arrow_forward_ios, size: 13, color: Colors.orange.shade700),
+                      ],
                     ),
                   ),
                 ),
+
+              SizedBox(height: 10,),
 
               // ── Step 1: Flock Details ──────────────────────────────────────
               _buildStepSection(

@@ -180,9 +180,9 @@ class _BatchesBottomSheetState extends State<BatchesBottomSheet> {
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
-      initialChildSize: 0.7,
+      initialChildSize: 0.88,
       minChildSize: 0.5,
-      maxChildSize: 0.9,
+      maxChildSize: 0.95,
       expand: false,
       builder: (context, scrollController) {
         return Container(

@@ -802,7 +802,10 @@ class _HomeScreenState extends State<HomeScreen> {
           title: 'Daily Records',
           subtitle: 'Record Feed, Vaccination, Medication, Mortality, Weight, Product',
           color: Colors.green,
-          onTap: () => context.push('/quick-recording'),
+          onTap: () async {
+            final result = await context.push('/quick-recording');
+            if (result == true && mounted) _onRefresh();
+          },
         ),
         _buildQuickActionCard(
           icon: Icons.pets,
