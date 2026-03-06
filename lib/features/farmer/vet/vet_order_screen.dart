@@ -111,6 +111,10 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
 
   final List<String> _priorities = ['NORMAL', 'URGENT', 'EMERGENCY'];
 
+  // ── Stepped UI ─────────────────────────────────────────────────────────────
+  final Set<int> _expandedSteps = {1, 2, 3, 4};
+  bool _useCustomLocation = false;
+
   // ── Lifecycle ──────────────────────────────────────────────────────────────
 
   @override
@@ -331,6 +335,44 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
     return s.pricingType == 'PER_PERSON';
   });
 
+  // ── Step completion ─────────────────────────────────────────────────────────
+
+  bool get _step1Complete {
+    if (_hasNoSubscription) return (_manualBirdsCount ?? 0) > 0;
+    return _hasFarmDetails || (_manualBirdsCount ?? 0) > 0;
+  }
+
+  bool get _step2Complete => _selectedServices.isNotEmpty;
+
+  bool get _step3Complete {
+    if (_hasNoSubscription || _useCustomLocation || !_hasFarmLocation) {
+      return _selectedAddress != null;
+    }
+    return true; // using farm GPS
+  }
+
+  bool get _step4Complete =>
+      _selectedPaymentMode != null && _selectedPriority != null;
+
+  bool get _hasFarmLocation {
+    if (_selectedFarm == null || _farmsResponse == null) return false;
+    try {
+      final farm = _farmsResponse!.farms.firstWhere((f) => f.id == _selectedFarm!);
+      return farm.gpsCoordinates != null;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  String? get _farmDisplayAddress {
+    if (!_hasFarmLocation) return null;
+    try {
+      return _farmsResponse!.farms.firstWhere((f) => f.id == _selectedFarm!).location;
+    } catch (_) {
+      return null;
+    }
+  }
+
   // ── Build request payload ──────────────────────────────────────────────────
 
   VetEstimateRequest _buildRequest() {
@@ -432,8 +474,10 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
   // ── Estimate submission ────────────────────────────────────────────────────
 
   Future<void> _getEstimate() async {
-    // Validation
-    if (_selectedAddress == null) {
+    // Validation — location required unless a farm with GPS is used
+    final bool needsAddress =
+        _hasNoSubscription || _useCustomLocation || !_hasFarmLocation;
+    if (needsAddress && _selectedAddress == null) {
       _showSnack('Please select service location', Colors.orange);
       return;
     }
@@ -1245,6 +1289,237 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
 
   // ── Small helpers ──────────────────────────────────────────────────────────
 
+  // ── Location section (conditional) ────────────────────────────────────────
+
+  Widget _buildLocationSection() {
+    // No-plan users always show picker
+    if (_hasNoSubscription) {
+      return LocationPickerStep(
+        selectedAddress: _selectedAddress,
+        latitude: _latitude,
+        longitude: _longitude,
+        title: 'Service Location',
+        text: 'Select where the vet should visit',
+        onLocationSelected: (address, lat, lng) {
+          setState(() {
+            _selectedAddress = address;
+            _latitude = lat;
+            _longitude = lng;
+          });
+        },
+      );
+    }
+
+    // Subscribed + farm has GPS and not using custom
+    if (_hasFarmLocation && !_useCustomLocation) {
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.green.shade50,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.green.shade200),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.location_on, color: Colors.green.shade700, size: 18),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Using farm location',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        color: Colors.green.shade800),
+                  ),
+                  if (_farmDisplayAddress != null &&
+                      _farmDisplayAddress!.isNotEmpty)
+                    Text(
+                      _farmDisplayAddress!,
+                      style:
+                          TextStyle(fontSize: 12, color: Colors.green.shade600),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                ],
+              ),
+            ),
+            TextButton(
+              onPressed: () => setState(() => _useCustomLocation = true),
+              child: const Text('Change'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Subscribed + no farm GPS or user wants custom location
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_useCustomLocation && _hasFarmLocation) ...[
+          Row(
+            children: [
+              const Expanded(
+                child: Text('Custom location',
+                    style:
+                        TextStyle(fontWeight: FontWeight.w500, fontSize: 13)),
+              ),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _useCustomLocation = false;
+                    if (_selectedFarm != null && _farmsResponse != null) {
+                      try {
+                        final farm = _farmsResponse!.farms
+                            .firstWhere((f) => f.id == _selectedFarm!);
+                        _selectedAddress = farm.location;
+                        _latitude = farm.gpsCoordinates?.latitude;
+                        _longitude = farm.gpsCoordinates?.longitude;
+                      } catch (_) {}
+                    }
+                  });
+                },
+                child: const Text('Use farm location'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+        ],
+        LocationPickerStep(
+          selectedAddress: _selectedAddress,
+          latitude: _latitude,
+          longitude: _longitude,
+          title: 'Service Location',
+          text: 'Select where the vet should visit',
+          onLocationSelected: (address, lat, lng) {
+            setState(() {
+              _selectedAddress = address;
+              _latitude = lat;
+              _longitude = lng;
+            });
+          },
+        ),
+      ],
+    );
+  }
+
+  // ── Stepped section wrapper ─────────────────────────────────────────────────
+
+  Widget _buildStepSection({
+    required int step,
+    required String title,
+    required String subtitle,
+    bool isCompleted = false,
+    String? completedSummary,
+    required Widget child,
+  }) {
+    final isExpanded = _expandedSteps.contains(step);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isCompleted ? Colors.green.shade300 : Colors.grey.shade200,
+          width: isCompleted ? 1.5 : 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: () => setState(() {
+              if (isExpanded) {
+                _expandedSteps.remove(step);
+              } else {
+                _expandedSteps.add(step);
+              }
+            }),
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: isCompleted
+                          ? Colors.green
+                          : (isExpanded
+                              ? Colors.blue.shade600
+                              : Colors.grey.shade300),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: isCompleted
+                          ? const Icon(Icons.check, size: 14, color: Colors.white)
+                          : Text(
+                              '$step',
+                              style: TextStyle(
+                                color: isExpanded
+                                    ? Colors.white
+                                    : Colors.grey.shade600,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(title,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 14)),
+                        if (!isExpanded &&
+                            isCompleted &&
+                            completedSummary != null)
+                          Text(completedSummary,
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.green.shade700),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis)
+                        else
+                          Text(subtitle,
+                              style: TextStyle(
+                                  fontSize: 12, color: Colors.grey.shade500)),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    isExpanded ? Icons.expand_less : Icons.expand_more,
+                    color: Colors.grey.shade400,
+                    size: 20,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (isExpanded)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+              child: child,
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildInfoBanner({
     required IconData icon,
     required MaterialColor color,
@@ -1296,7 +1571,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
           child: Column(
@@ -1304,118 +1579,143 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
             children: [
               // ── Vet info card ──────────────────────────────────────────────
               _buildVetInfoCard(),
-              const SizedBox(height: 24),
+              const SizedBox(height: 12),
 
-              // ── Booking info card ──────────────────────────────────────────
-              _buildBookingInfoCard(),
-              const SizedBox(height: 24),
-              /// Shown for farmers with NO subscription to encourage them to subscribe.
-              if (_hasNoSubscription) ...[
-                TextButton.icon(
-                  onPressed: ()=>context.push(AppRoutes.subscriptionPlansPreview),
-                  icon: const Icon(Icons.arrow_forward),
-                  label:
-                  Text(
-                    'Subscribe to attach your batches directly to vet orders.',
-                    style: TextStyle(
-                      fontSize: 13,
-                      height: 1.45,
+              // Subscription nudge
+              if (_hasNoSubscription)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: TextButton.icon(
+                    onPressed: () =>
+                        context.push(AppRoutes.subscriptionPlansPreview),
+                    icon: const Icon(Icons.arrow_forward, size: 16),
+                    label: const Text(
+                      'Subscribe to attach your batches directly to vet orders.',
+                      style: TextStyle(fontSize: 13),
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
-              ],
 
-              // ── Location ───────────────────────────────────────────────────
-              LocationPickerStep(
-                selectedAddress: _selectedAddress,
-                latitude: _latitude,
-                longitude: _longitude,
-                title: 'Service Location',
-                text: 'Select where the vet should visit',
-                onLocationSelected: (address, lat, lng) {
-                  setState(() {
-                    _selectedAddress = address;
-                    _latitude = lat;
-                    _longitude = lng;
-                  });
-                },
+              // ── Step 1: Flock Details ──────────────────────────────────────
+              _buildStepSection(
+                step: 1,
+                title: 'Step 1 — Flock Details',
+                subtitle: _hasNoSubscription
+                    ? 'Enter number of birds and type'
+                    : 'Select your farm, house and batches',
+                isCompleted: _step1Complete,
+                completedSummary: _hasFarmDetails
+                    ? '${_selectedBatches.length} batch(es) selected'
+                    : (_manualBirdsCount != null
+                        ? '$_manualBirdsCount birds'
+                        : null),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (_hasNoSubscription)
+                      _buildManualBirdsSection()
+                    else
+                      _buildFarmSection(),
+                  ],
+                ),
               ),
-              const SizedBox(height: 24),
 
+              // ── Step 2: Services ───────────────────────────────────────────
+              _buildStepSection(
+                step: 2,
+                title: 'Step 2 — Services',
+                subtitle: 'Select the veterinary services you need',
+                isCompleted: _step2Complete,
+                completedSummary: _step2Complete
+                    ? '${_selectedServices.length} service(s) selected'
+                    : null,
+                child: _buildServiceSelection(),
+              ),
 
+              // ── Step 3: Location ───────────────────────────────────────────
+              _buildStepSection(
+                step: 3,
+                title: 'Step 3 — Service Location',
+                subtitle: 'Where should the vet visit?',
+                isCompleted: _step3Complete,
+                completedSummary: _step3Complete
+                    ? (!_useCustomLocation && _hasFarmLocation
+                        ? 'Farm location: ${_farmDisplayAddress ?? ''}'
+                        : _selectedAddress ?? '')
+                    : null,
+                child: _buildLocationSection(),
+              ),
 
-              // ── Farm section OR manual section ─────────────────────────────
-              if (_hasNoSubscription)
-                _buildManualBirdsSection()
-              else
-                _buildFarmSection(),
-
-              const SizedBox(height: 20),
-
-              // ── Services ───────────────────────────────────────────────────
-              _buildServiceSelection(),
-              const SizedBox(height: 20),
-
-              // ── Payment ────────────────────────────────────────────────────
-              _buildPaymentModeSection(),
-              const SizedBox(height: 20),
-
-              // ── Priority ───────────────────────────────────────────────────
-              ReusableDropdown<String>(
-                topLabel: 'Priority Level',
-                value: _selectedPriority,
-                hintText: 'Select priority level',
-                icon: Icons.priority_high,
-                isExpanded: true,
-                items: _priorities.map((p) {
-                  final color = p == 'EMERGENCY'
-                      ? Colors.red
-                      : p == 'URGENT'
-                      ? Colors.orange
-                      : Colors.green;
-                  
-                  final surcharge = p == 'EMERGENCY'
-                      ? '50%'
-                      : p == 'URGENT'
-                      ? '25%'
-                      : '0%';
-
-                  return DropdownMenuItem<String>(
-                    value: p,
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                              color: color, shape: BoxShape.circle),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(child: Text(p)),
-                        Text(
-                          '$surcharge surcharge of the total cost',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey.shade600,
-                            fontStyle: FontStyle.italic,
+              // ── Step 4: Booking Details ────────────────────────────────────
+              _buildStepSection(
+                step: 4,
+                title: 'Step 4 — Booking Details',
+                subtitle: 'Choose payment method and priority level',
+                isCompleted: _step4Complete,
+                completedSummary: _step4Complete
+                    ? '${_paymentModes.entries.firstWhere((e) => e.value == _selectedPaymentMode, orElse: () => const MapEntry('', '')).key} · $_selectedPriority'
+                    : null,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildPaymentModeSection(),
+                    const SizedBox(height: 16),
+                    ReusableDropdown<String>(
+                      topLabel: 'Priority Level',
+                      value: _selectedPriority,
+                      hintText: 'Select priority level',
+                      icon: Icons.priority_high,
+                      isExpanded: true,
+                      items: _priorities.map((p) {
+                        final color = p == 'EMERGENCY'
+                            ? Colors.red
+                            : p == 'URGENT'
+                                ? Colors.orange
+                                : Colors.green;
+                        final surcharge = p == 'EMERGENCY'
+                            ? '50%'
+                            : p == 'URGENT'
+                                ? '25%'
+                                : '0%';
+                        return DropdownMenuItem<String>(
+                          value: p,
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                    color: color, shape: BoxShape.circle),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(child: Text(p)),
+                              Text(
+                                '$surcharge surcharge',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey.shade600,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
+                        );
+                      }).toList(),
+                      onChanged: (v) => setState(() => _selectedPriority = v),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please select priority level';
+                        }
+                        return null;
+                      },
                     ),
-                  );
-                }).toList(),
-                onChanged: (v) => setState(() => _selectedPriority = v),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please select priority level';
-                  }
-                  return null;
-                },
+                  ],
+                ),
               ),
-              const SizedBox(height: 20),
 
-              // ── Next / estimate button ──────────────────────────────────────
+              const SizedBox(height: 8),
+
+              // ── Get Estimate button ────────────────────────────────────────
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -1428,17 +1728,17 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                   ),
                   icon: _isLoadingEstimate
                       ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor:
-                        AlwaysStoppedAnimation(Colors.white)),
-                  )
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor:
+                                  AlwaysStoppedAnimation(Colors.white)),
+                        )
                       : const Icon(Icons.arrow_forward,
-                      size: 20, color: Colors.white),
+                          size: 20, color: Colors.white),
                   label: Text(
-                    _isLoadingEstimate ? 'Loading...' : 'Next',
+                    _isLoadingEstimate ? 'Loading...' : 'Get Estimate',
                     style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -1446,8 +1746,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 32),
-
+              const SizedBox(height: 20),
               const OrderProcess(),
               const SizedBox(height: 20),
             ],
@@ -1538,36 +1837,4 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
     );
   }
 
-  Widget _buildBookingInfoCard() {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.blue.shade100),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.description, color: Colors.blue.shade600),
-                const SizedBox(width: 8),
-                const Text('Service Booking',
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 16)),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Provide details for your veterinary service request. '
-                  'The veterinarian will review your booking and contact you.',
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

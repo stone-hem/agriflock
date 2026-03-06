@@ -547,7 +547,7 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
                             width: 80,
                             child: TextField(
                               controller: _unitPriceControllers[entry.key],
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              keyboardType: const TextInputType.numberWithOptions(decimal: false),
                               style: const TextStyle(fontSize: 11),
                               decoration: const InputDecoration(
                                 isDense: true,

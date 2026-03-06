@@ -71,6 +71,12 @@ class VetFarmerRepository {
     int page = 1,
     int limit = 10,
     String? search,
+    double? latitude,
+    double? longitude,
+    List<String>? specializations,
+    double? minRating,
+    int? minJobsDone,
+    int? minExperience,
   }) async {
     try {
       // Build query parameters
@@ -99,8 +105,21 @@ class VetFarmerRepository {
         queryParams['search'] = search;
       }
 
-      // Build query string
-      final queryString = Uri(queryParameters: queryParams).query;
+      if (latitude != null) queryParams['latitude'] = latitude.toString();
+      if (longitude != null) queryParams['longitude'] = longitude.toString();
+      if (minRating != null) queryParams['min_rating'] = minRating.toString();
+      if (minJobsDone != null) queryParams['min_jobs_done'] = minJobsDone.toString();
+      if (minExperience != null) queryParams['min_experience'] = minExperience.toString();
+
+      // Build query string (specializations need repeated params)
+      var queryString = Uri(queryParameters: queryParams).query;
+      if (specializations != null && specializations.isNotEmpty) {
+        final specParams = specializations
+            .map((s) => 'specialization[]=${Uri.encodeComponent(s)}')
+            .join('&');
+        queryString = queryString.isNotEmpty ? '$queryString&$specParams' : specParams;
+      }
+
       final endpoint = '/extension-officers${queryString.isNotEmpty ? '?$queryString' : ''}';
 
       final response = await apiClient.get(endpoint);
@@ -320,6 +339,12 @@ class VetFarmerRepository {
     int page = 1,
     int limit = 10,
     String? search,
+    double? latitude,
+    double? longitude,
+    List<String>? specializations,
+    double? minRating,
+    int? minJobsDone,
+    int? minExperience,
   }) async {
     return getVetFarmers(
       officerType: officerType,
@@ -329,6 +354,12 @@ class VetFarmerRepository {
       page: page,
       limit: limit,
       search: search,
+      latitude: latitude,
+      longitude: longitude,
+      specializations: specializations,
+      minRating: minRating,
+      minJobsDone: minJobsDone,
+      minExperience: minExperience,
     );
   }
 

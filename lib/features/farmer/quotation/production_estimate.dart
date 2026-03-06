@@ -754,7 +754,7 @@ class _Stage1Table extends StatelessWidget {
         DataCell(SizedBox(width: 100,
           child: TextField(
             controller: c,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            keyboardType: const TextInputType.numberWithOptions(decimal: false),
             style: const TextStyle(fontSize: 12),
             decoration: const InputDecoration(
                 isDense: true,
