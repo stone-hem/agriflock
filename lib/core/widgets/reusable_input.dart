@@ -28,7 +28,8 @@ class ReusableInput extends StatelessWidget {
   final void Function(String)? onChanged;
   final void Function(String)? onFieldSubmitted;
   final List<TextInputFormatter>? inputFormatters;
-
+  final bool autocorrect;
+  final bool enableSuggestions;
 
   const ReusableInput({
     super.key,
@@ -54,6 +55,8 @@ class ReusableInput extends StatelessWidget {
     this.onFieldSubmitted,
     this.topLabel, this.prefixText,
     this.initialValue, this.focusNode, this.prefixIcon, this.inputFormatters,
+    this.autocorrect = true,
+    this.enableSuggestions = true,
   });
 
   @override
@@ -96,6 +99,8 @@ class ReusableInput extends StatelessWidget {
           onChanged: onChanged,
           onFieldSubmitted: onFieldSubmitted,
           focusNode: focusNode,
+          autocorrect: autocorrect,
+          enableSuggestions: enableSuggestions,
           decoration: InputDecoration(
             labelText: labelText,
             hintText: hintText,

@@ -180,6 +180,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                         label: 'Preferred Date',
                         icon: Icons.calendar_today,
                         required: true,
+                        initialDate: DateTime.now(),
                         minYear: DateTime.now().year,
                         returnFormat: DateReturnFormat.isoString,
                         maxYear: DateTime.now().year + 1,
@@ -188,21 +189,40 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                       const SizedBox(height: 20),
 
                       // Preferred Time
-                      ReusableTimeInput(
-                        topLabel: 'Preferred Time',
-                        showIconOutline: true,
-                        suffixText: '12 hr format',
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a time';
-                          }
-                          return null;
-                        },
-                        onTimeChanged: (time) {
-                          setState(() {
-                            _selectedTime = time;
-                          });
-                        },
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ReusableTimeInput(
+                            topLabel: 'Preferred Time',
+                            showIconOutline: true,
+                            suffixText: '12 hr format',
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter a time';
+                              }
+                              return null;
+                            },
+                            onTimeChanged: (time) {
+                              setState(() {
+                                _selectedTime = time;
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Icon(Icons.info_outline, size: 14, color: Colors.orange.shade700),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Available hours: 7:00 AM – 6:00 PM only',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.orange.shade700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 24),
 
@@ -708,6 +728,16 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
 
     if (_selectedTime == null) {
       ToastUtil.showError('Please select a preferred time');
+      return;
+    }
+
+    // Restrict night hours — vets are only available 7:00 AM to 6:00 PM
+    final hour = _selectedTime!.hour;
+    if (hour < 7 || hour >= 18) {
+      ToastUtil.showError(
+        'Vet services are only available between 7:00 AM and 6:00 PM. '
+        'Night hours are not permitted for safety and welfare reasons.',
+      );
       return;
     }
 

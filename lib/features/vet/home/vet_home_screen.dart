@@ -456,7 +456,7 @@ class _VetHomeScreenState extends State<VetHomeScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Today\'s Appointments',
+          'Today\'s Requests',
           style: Theme.of(context).textTheme.titleLarge!.copyWith(
             fontWeight: FontWeight.bold,
             color: Colors.grey.shade800,
@@ -470,7 +470,7 @@ class _VetHomeScreenState extends State<VetHomeScreen> {
           onStart: () => _handleAppointmentAction(appointment, 'start'),
           onComplete: () => _handleAppointmentAction(appointment, 'complete'),
           onCancel: () => _handleAppointmentAction(appointment, 'cancel'),
-        )).toList(),
+        )),
       ],
     );
   }
@@ -693,7 +693,7 @@ class _AppointmentItem extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      appointment.farmName,
+                      appointment.farmerName,
                       style: TextStyle(
                         color: Colors.grey.shade600,
                         fontSize: 12,

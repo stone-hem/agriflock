@@ -52,8 +52,10 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
   final TextEditingController _vetProfileController = TextEditingController();
   final TextEditingController _vetNationalIdController = TextEditingController();
   final TextEditingController _vetFieldOfStudyController = TextEditingController();
+  final TextEditingController _vetLicenseNumberController = TextEditingController();
   final FocusNode _vetFieldOfStudyFocus = FocusNode();
   final FocusNode _vetNationalIdFocus = FocusNode();
+  final FocusNode _vetLicenseNumberFocus = FocusNode();
   final FocusNode _vetExperienceFocus = FocusNode();
   final FocusNode _vetProfileFocus = FocusNode();
 
@@ -171,6 +173,8 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
     _vetNationalIdFocus.dispose();
     _vetFieldOfStudyController.dispose();
     _vetFieldOfStudyFocus.dispose();
+    _vetLicenseNumberController.dispose();
+    _vetLicenseNumberFocus.dispose();
     super.dispose();
   }
 
@@ -268,6 +272,9 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         additionalDocuments: _uploadedFiles.isNotEmpty ? _uploadedFiles : null,
         nationalId: _vetNationalIdController.text,
         fieldOfStudy: _vetFieldOfStudyController.text,
+        licenseNumber: _vetLicenseNumberController.text.isNotEmpty
+            ? _vetLicenseNumberController.text
+            : null,
       );
 
       if (result['success'] == true) {
@@ -828,9 +835,11 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
       fieldOfStudyController: _vetFieldOfStudyController,
       experienceController: _vetExperienceController,
       profileController: _vetProfileController,
+      licenseNumberController: _vetLicenseNumberController,
       fieldOfStudyFocus: _vetFieldOfStudyFocus,
       experienceFocus: _vetExperienceFocus,
       profileFocus: _vetProfileFocus,
+      licenseNumberFocus: _vetLicenseNumberFocus,
       selectedEducationLevel: _selectedEducationLevel,
       onEducationLevelSelected: (String level) {
         setState(() {

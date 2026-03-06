@@ -158,6 +158,7 @@ class _VetSchedulesScreenState extends State<VetSchedulesScreen> {
                     color: Colors.orange,
                     isSelected: _selectedStatus == VisitStatus.pending.value,
                     onTap: _onStatusChanged,
+                    showCount: false,
                   ),
                   const SizedBox(width: 8),
                   StatusChip(

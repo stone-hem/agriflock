@@ -68,6 +68,7 @@ class OnboardingRepository {
     List<PlatformFile>? additionalDocuments,
     required String nationalId,
     required String fieldOfStudy,
+    String? licenseNumber,
   }) async {
     try {
       // Prepare fields
@@ -85,6 +86,8 @@ class OnboardingRepository {
         'officer_type': 'vet',
         'national_id': nationalId,
         'field_of_study': fieldOfStudy,
+        if (licenseNumber != null && licenseNumber.isNotEmpty)
+          'license_number': licenseNumber,
       };
 
       // Prepare files

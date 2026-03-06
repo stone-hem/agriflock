@@ -22,120 +22,63 @@ class UsageChoiceView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Summary card
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
               border: Border.all(color: Colors.grey.shade200),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Row(
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.inventory_2, color: Colors.green, size: 16),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    item.categoryItemName,
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.inventory_2,
-                        color: Colors.green,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        item.categoryItemName,
+                    Text('${quantity.toStringAsFixed(0)} units',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                    Text('KES ${totalPrice.toStringAsFixed(2)}',
                         style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Divider(color: Colors.grey.shade200),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Quantity:',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                    Text(
-                      '${quantity.toStringAsFixed(0)} units',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Total Cost:',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                    Text(
-                      'KES ${totalPrice.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green,
-                      ),
-                    ),
+                            fontSize: 13, fontWeight: FontWeight.bold, color: Colors.green)),
                   ],
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 14),
 
           // Question
           const Text(
             'What did you do with it?',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Text(
             'Choose how you want to handle this purchase',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 14),
 
           // Option 1: Put in store
           IgnorePointer(
@@ -146,18 +89,11 @@ class UsageChoiceView extends StatelessWidget {
                 onTap: () => onChoice(false),
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.blue.shade200, width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.blue.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,53 +101,33 @@ class UsageChoiceView extends StatelessWidget {
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                               color: Colors.blue.shade50,
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                            child: Icon(
-                              Icons.inventory,
-                              color: Colors.blue.shade700,
-                              size: 28,
-                            ),
+                            child: Icon(Icons.inventory, color: Colors.blue.shade700, size: 20),
                           ),
-                          const SizedBox(width: 16),
-                          const Expanded(
+                          const SizedBox(width: 12),
+                          Expanded(
                             child: Text(
-                              'PUT IN STORE',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
+                              isSubmitting ? 'Saving to store...' : 'PUT IN STORE',
+                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                             ),
                           ),
                           if (isSubmitting)
                             const SizedBox(
-                              width: 20,
-                              height: 20,
+                              width: 18,
+                              height: 18,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           else
-                            Icon(
-                              Icons.arrow_forward_ios,
-                              size: 20,
-                              color: Colors.grey.shade400,
-                            ),
+                            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey.shade400),
                         ],
                       ),
-                      const SizedBox(height: 16),
-                      Text(
-                        isSubmitting ? 'Saving to store...' : 'Keep for later use',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade700,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                         decoration: BoxDecoration(
                           color: Colors.blue.shade50,
                           borderRadius: BorderRadius.circular(8),
@@ -219,20 +135,11 @@ class UsageChoiceView extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildBulletPoint(
-                              '→ Adds to inventory',
-                              Colors.blue.shade700,
-                            ),
-                            const SizedBox(height: 6),
-                            _buildBulletPoint(
-                              '→ Records expense only',
-                              Colors.blue.shade700,
-                            ),
-                            const SizedBox(height: 6),
-                            _buildBulletPoint(
-                              '→ Use later for any batch',
-                              Colors.blue.shade700,
-                            ),
+                            _buildBulletPoint('→ Adds to inventory', Colors.blue.shade700),
+                            const SizedBox(height: 3),
+                            _buildBulletPoint('→ Records expense only', Colors.blue.shade700),
+                            const SizedBox(height: 3),
+                            _buildBulletPoint('→ Use later for any batch', Colors.blue.shade700),
                           ],
                         ),
                       ),
@@ -242,7 +149,7 @@ class UsageChoiceView extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
 
           // Option 2: Used it now
           IgnorePointer(
@@ -253,18 +160,11 @@ class UsageChoiceView extends StatelessWidget {
                 onTap: () => onChoice(true),
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.green.shade200, width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.green.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -272,46 +172,30 @@ class UsageChoiceView extends StatelessWidget {
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                               color: Colors.green.shade50,
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(10),
                             ),
                             child: Icon(
                               Icons.now_widgets_outlined,
                               color: Theme.of(context).primaryColor,
-                              size: 28,
+                              size: 20,
                             ),
                           ),
-                          const SizedBox(width: 16),
+                          const SizedBox(width: 12),
                           const Expanded(
                             child: Text(
                               'USED IMMEDIATELY',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                             ),
                           ),
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            size: 20,
-                            color: Colors.grey.shade400,
-                          ),
+                          Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey.shade400),
                         ],
                       ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Applied to chickens today',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade700,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                         decoration: BoxDecoration(
                           color: Colors.green.shade50,
                           borderRadius: BorderRadius.circular(8),
@@ -319,20 +203,11 @@ class UsageChoiceView extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildBulletPoint(
-                              '→ Adds to batch cost',
-                              Colors.green.shade700,
-                            ),
-                            const SizedBox(height: 6),
-                            _buildBulletPoint(
-                              '→ Records usage activity',
-                              Colors.green.shade700,
-                            ),
-                            const SizedBox(height: 6),
-                            _buildBulletPoint(
-                              '→ Updates schedules if applicable',
-                              Colors.green.shade700,
-                            ),
+                            _buildBulletPoint('→ Adds to batch cost', Colors.green.shade700),
+                            const SizedBox(height: 3),
+                            _buildBulletPoint('→ Records usage activity', Colors.green.shade700),
+                            const SizedBox(height: 3),
+                            _buildBulletPoint('→ Updates schedules if applicable', Colors.green.shade700),
                           ],
                         ),
                       ),

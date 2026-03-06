@@ -51,6 +51,7 @@ class VisitCard extends StatelessWidget {
         );
 
 
+      case 'pending_payments':
       case 'payment_pending':
         return PendingPaymentsVisitCard(
           visit: visit,
@@ -59,6 +60,7 @@ class VisitCard extends StatelessWidget {
           onStatusChanged: onStatusChanged,
         );
 
+      case 'completed':
       case 'paid':
       case 'declined':
       case 'cancelled':

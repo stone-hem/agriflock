@@ -112,6 +112,37 @@ class NotificationService {
     _emit();
   }
 
+  // ── Fetch from REST and seed (call after connect on startup) ──────────────
+  Future<void> fetchAndSeed() async {
+    if (_storage == null) return;
+    try {
+      final token = await _storage!.getToken();
+      if (token == null || token.isEmpty) return;
+      final res = await http.get(
+        Uri.parse('$_restBaseUrl/notifications'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+      if (res.statusCode == 200) {
+        final body = jsonDecode(res.body);
+        final List<dynamic> items = body is List
+            ? body
+            : (body as Map<String, dynamic>)['data'] ??
+                body['notifications'] ??
+                [];
+        seedNotifications(
+          items
+              .map((e) => AppNotification.fromJson(e as Map<String, dynamic>))
+              .toList(),
+        );
+      }
+    } catch (e) {
+      LogUtil.error('NotificationService: fetchAndSeed error — $e');
+    }
+  }
+
   // ── Mark single notification as read ──────────────────────────────────────
   Future<void> markAsRead(String id) async {
     final idx = _notifications.indexWhere((n) => n.id == id);

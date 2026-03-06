@@ -594,6 +594,85 @@ class VetFarmerRepository {
     }
   }
 
+  Future<Result<void>> payVetService({
+    required String orderId,
+    required String cardToken,
+  }) async {
+    try {
+      final response = await apiClient.post(
+        '/payments/vet-order',
+        body: {
+          'orderId': orderId,
+          'paymentMethod': 'stripe',
+          'cardToken': cardToken,
+        },
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      final jsonResponse = jsonDecode(response.body);
+      LogUtil.info('Pay Vet Service API Response: $jsonResponse');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return const Success(null);
+      } else {
+        return Failure(
+          message: jsonResponse is Map
+              ? (jsonResponse['message'] ?? 'Payment failed')
+              : 'Payment failed',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException {
+      return const Failure(
+          message: 'No internet connection. Please try again.', statusCode: 0);
+    } catch (e) {
+      LogUtil.error('Error in payVetService: $e');
+      return Failure(message: e.toString());
+    }
+  }
+
+  Future<Result<void>> rateVetOrder({
+    required String vetId,
+    required String orderId,
+    required double rating,
+    String? reviewComment,
+  }) async {
+    try {
+      final response = await apiClient.post(
+        '/rating',
+        body: {
+          'vet_id': vetId,
+          'order_id': orderId,
+          'rating': rating,
+          if (reviewComment != null && reviewComment.isNotEmpty)
+            'review_comment': reviewComment,
+        },
+      );
+
+      final jsonResponse = jsonDecode(response.body);
+      LogUtil.info('Rate Vet Order API Response: $jsonResponse');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return const Success(null);
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to submit rating',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException {
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
+    } catch (e) {
+      LogUtil.error('Error in rateVetOrder: $e');
+      return Failure(message: e.toString());
+    }
+  }
+
   /// Refresh farmer vet orders (same as getFarmerVetOrders but semantically clearer for pull-to-refresh)
   Future<Result<List<MyOrderListItem>>> refreshFarmerVetOrders({
     String? status,

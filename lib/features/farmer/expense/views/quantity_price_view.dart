@@ -381,6 +381,7 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
                     label: 'Date *',
                     icon: Icons.calendar_today,
                     required: true,
+                    initialDate: DateTime.now(),
                     minYear: DateTime.now().year - 1,
                     maxYear: DateTime.now().year,
                     returnFormat: DateReturnFormat.isoString,

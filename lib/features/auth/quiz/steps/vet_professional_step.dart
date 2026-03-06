@@ -6,9 +6,11 @@ class VetProfessionalStep extends StatelessWidget {
   final TextEditingController fieldOfStudyController;
   final TextEditingController experienceController;
   final TextEditingController profileController;
+  final TextEditingController licenseNumberController;
   final FocusNode fieldOfStudyFocus;
   final FocusNode experienceFocus;
   final FocusNode profileFocus;
+  final FocusNode licenseNumberFocus;
   final String? selectedEducationLevel;
   final Function(String) onEducationLevelSelected;
 
@@ -17,11 +19,13 @@ class VetProfessionalStep extends StatelessWidget {
     required this.fieldOfStudyController,
     required this.experienceController,
     required this.profileController,
+    required this.licenseNumberController,
     required this.fieldOfStudyFocus,
     required this.experienceFocus,
     required this.profileFocus,
     required this.selectedEducationLevel,
     required this.onEducationLevelSelected,
+    required this.licenseNumberFocus,
   });
 
   @override
@@ -55,10 +59,25 @@ class VetProfessionalStep extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
+          // License Number of Study
+          AuthTextField(
+            controller: licenseNumberController,
+            topLabel: 'License Number(Optional)',
+            labelText: 'License Number(applies for vet doctors)',
+            hintText: 'Enter Your License Number',
+            icon: Icons.local_police,
+            focusNode: licenseNumberFocus,
+            nextFocusNode: fieldOfStudyFocus,
+            maxLength: 100,
+            value: '',
+          ),
+          const SizedBox(height: 20),
+
           // Field of Study
           AuthTextField(
             controller: fieldOfStudyController,
-            labelText: 'Field of Study*',
+            topLabel: 'Field of Study*',
+            labelText: 'e.g. Poultry Health and Management',
             hintText: 'e.g. Poultry Health and Management',
             icon: Icons.school,
             focusNode: fieldOfStudyFocus,
@@ -71,7 +90,8 @@ class VetProfessionalStep extends StatelessWidget {
           // Years of Experience
           AuthTextField(
             controller: experienceController,
-            labelText: 'Years of Experience*',
+            topLabel: 'Years of Experience*',
+            labelText: 'Enter your years of veterinary experience(Max 50)',
             hintText: 'Enter your years of veterinary experience',
             icon: Icons.work,
             focusNode: experienceFocus,
@@ -85,7 +105,8 @@ class VetProfessionalStep extends StatelessWidget {
           // Professional Profile
           AuthTextField(
             controller: profileController,
-            labelText: 'Professional Summary*',
+            topLabel: 'Professional Summary*',
+            labelText: 'My Professional Summary',
             hintText: 'Brief description of your expertise and qualifications',
             icon: Icons.description,
             focusNode: profileFocus,

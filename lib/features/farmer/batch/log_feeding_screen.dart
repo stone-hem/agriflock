@@ -383,6 +383,7 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
             CustomDateTextField(
               label: 'Feeding Date',
               icon: Icons.calendar_today,
+              initialDate: DateTime.now(),
               required: true,
               minYear: DateTime.now().year - 1,
               maxYear: DateTime.now().year,

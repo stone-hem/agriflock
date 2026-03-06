@@ -23,6 +23,7 @@ class AuthTextField extends StatelessWidget {
   final FocusNode? nextFocusNode;
   final int? maxLength;
   final String? value;
+  final String? topLabel;
 
   const AuthTextField({
     super.key,
@@ -47,64 +48,87 @@ class AuthTextField extends StatelessWidget {
     this.focusNode,
     this.nextFocusNode,
     this.maxLength,
-    this.value,
+    this.value, this.topLabel,
   });
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      obscureText: obscureText,
-      keyboardType: keyboardType,
-      validator: validator,
-      onTap: onTap,
-      readOnly: readOnly,
-      enabled: enabled,
-      maxLines: maxLines,
-      minLines: minLines,
-      textInputAction: textInputAction,
-      onChanged: onChanged,
-      onFieldSubmitted: onFieldSubmitted,
-      maxLength: maxLength,
-      decoration: InputDecoration(
-        labelText: labelText,
-        hintText: hintText,
-        prefixIcon: Icon(
-          icon,
-        ),
-        suffixIcon: suffixIcon,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: Theme.of(context).primaryColor,
-            width: 2,
+    return Column(
+      children: [
+        if (topLabel != null)...[
+          Row(
+            children: [
+              Icon(icon, size: 16, color: Colors.grey.shade600),
+              const SizedBox(width: 8),
+              Text(
+                topLabel!,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade800,
+                ),
+              ),
+
+            ],
+          ),
+          const SizedBox(height: 10),
+        ],
+
+        TextFormField(
+          controller: controller,
+          obscureText: obscureText,
+          keyboardType: keyboardType,
+          validator: validator,
+          onTap: onTap,
+          readOnly: readOnly,
+          enabled: enabled,
+          maxLines: maxLines,
+          minLines: minLines,
+          textInputAction: textInputAction,
+          onChanged: onChanged,
+          onFieldSubmitted: onFieldSubmitted,
+          maxLength: maxLength,
+          decoration: InputDecoration(
+            labelText: labelText,
+            hintText: hintText,
+            prefixIcon: Icon(
+              icon,
+            ),
+            suffixIcon: suffixIcon,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: Theme.of(context).primaryColor,
+                width: 2,
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.red.shade400),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: Colors.red.shade600,
+                width: 2,
+              ),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
+            floatingLabelBehavior: FloatingLabelBehavior.auto,
           ),
         ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.red.shade400),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: Colors.red.shade600,
-            width: 2,
-          ),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 16,
-        ),
-        floatingLabelBehavior: FloatingLabelBehavior.auto,
-      ),
+      ],
     );
   }
 }

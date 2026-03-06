@@ -450,6 +450,9 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
                     _info(Icons.location_on, 'Location', address,
                         Colors.red.shade400,
                         maxLines: 2),
+                    if (vet.licenseNumber != null && vet.licenseNumber!.isNotEmpty)
+                      _info(Icons.credit_card, 'License No.',
+                          vet.licenseNumber!, Colors.blueGrey.shade600),
                     if (vet.profileBio.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(vet.profileBio,
@@ -536,7 +539,8 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TextButton.icon(onPressed: ()=>context.push(AppRoutes.subscriptionPlans), label: Text('Start with a trial plan today!'),icon: Icon(Icons.arrow_circle_right_outlined), ),
+
+        SizedBox(height: 10,),
 
         Row(children: [
           Icon(Icons.flash_on, size: 17, color: Colors.grey.shade700),
@@ -613,6 +617,12 @@ class _BrowseVetsScreenState extends State<BrowseVetsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              FilledButton.icon(
+                onPressed: ()=>context.push(AppRoutes.subscriptionPlans),
+                label: Text('Click here to Start with a trial plan today!',style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Colors.white),),
+                icon: Icon(Icons.arrow_circle_right_outlined),
+              ),
+              const SizedBox(height: 10),
               _buildQuickActions(),
               const SizedBox(height: 20),
 

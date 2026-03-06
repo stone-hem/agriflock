@@ -131,7 +131,7 @@ class HelpSupportScreen extends StatelessWidget {
               children: [
                 _FAQItem(
                   question: 'How do I add a new batch?',
-                  answer: 'Go to the Home screen and tap "Add Flock" in the Quick Actions section. Fill in the required details about your birds.',
+                  answer: 'Go to the Farms and tap "View houses" and then click add batch. Fill in the required details about your birds.',
                 ),
                 _FAQItem(
                   question: 'How does PAYG service work?',
@@ -139,7 +139,7 @@ class HelpSupportScreen extends StatelessWidget {
                 ),
                 _FAQItem(
                   question: 'Can I use multiple farms?',
-                  answer: 'Yes, you can manage multiple farms from one account. Go to Settings to add new farm locations.',
+                  answer: 'Yes, you can manage multiple farms from one account. Go to farms to add new farm locations.',
                 ),
                 _FAQItem(
                   question: 'How do I reset my password?',

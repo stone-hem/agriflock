@@ -45,6 +45,7 @@ class FarmerDetailsStep extends StatelessWidget {
           const SizedBox(height: 16),
           AuthTextField(
             labelText: 'Years of experience',
+            topLabel: 'Years of experience',
             hintText: 'Enter your years of experience in poultry farming',
             icon: Icons.work,
             keyboardType: TextInputType.number,

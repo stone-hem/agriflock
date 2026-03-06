@@ -76,42 +76,6 @@ class _ScheduledVisitCardState extends State<ScheduledVisitCard> {
     }
   }
 
-  Future<void> _cancelVisit(String reason) async {
-    if (_isProcessing) return;
-
-    setState(() => _isProcessing = true);
-
-    final result = await widget.repository.cancelVisit(
-      visitId: widget.visit.id,
-      body: {'reason': reason},
-    );
-
-    if (mounted) {
-      result.when(
-        success: (data) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Visit cancelled successfully'),
-              backgroundColor: Colors.orange,
-            ),
-          );
-          widget.onActionCompleted();
-          widget.onStatusChanged?.call(VisitStatus.cancelled.value);
-          setState(() => _isProcessing = false);
-        },
-        failure: (message, _, __) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(message),
-              backgroundColor: Colors.red,
-            ),
-          );
-          setState(() => _isProcessing = false);
-        },
-      );
-    }
-  }
-
   void _showStartVisitDialog() {
     showDialog(
       context: context,
@@ -173,85 +137,6 @@ class _ScheduledVisitCardState extends State<ScheduledVisitCard> {
     );
   }
 
-  void _showCancelDialog() {
-    final reasonController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-            title: const Text('Cancel Visit'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Cancel scheduled visit for ${widget.visit.farmerName}?',
-                  style: TextStyle(color: Colors.grey.shade700),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Scheduled for:',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-                Text(
-                  '${widget.visit.preferredDate} at ${_formatTime(widget.visit.preferredTime)}',
-                  style: TextStyle(color: Colors.grey.shade700),
-                ),
-                const SizedBox(height: 20),
-                TextField(
-                  controller: reasonController,
-                  decoration: const InputDecoration(
-                    labelText: 'Reason for cancellation',
-                    hintText: 'Please provide a reason',
-                    border: OutlineInputBorder(),
-                  ),
-                  maxLines: 3,
-                  enabled: !_isProcessing,
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: _isProcessing ? null : () => Navigator.pop(context),
-                child: const Text('Back'),
-              ),
-              ElevatedButton(
-                onPressed: _isProcessing ? null : () async {
-                  if (reasonController.text.trim().isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please provide a reason')),
-                    );
-                    return;
-                  }
-
-                  final reason = reasonController.text.trim();
-                  Navigator.pop(context);
-                  await _cancelVisit(reason);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                ),
-                child: _isProcessing
-                    ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-                    : const Text('Cancel Visit'),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -294,20 +179,6 @@ class _ScheduledVisitCardState extends State<ScheduledVisitCard> {
                           color: Colors.grey.shade600,
                           fontSize: 14,
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(Icons.phone, size: 12, color: Colors.grey.shade600),
-                          const SizedBox(width: 4),
-                          Text(
-                            widget.visit.farmerPhone,
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
                       ),
                     ],
                   ),
@@ -374,53 +245,41 @@ class _ScheduledVisitCardState extends State<ScheduledVisitCard> {
                   ),
                 ],
                 const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _isProcessing ? null : _showCancelDialog,
-                        icon: const Icon(Icons.cancel_outlined, size: 18),
-                        label: _isProcessing
-                            ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                            : const Text('Cancel'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.red,
-                          side: const BorderSide(color: Colors.red),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                Builder(
+                  builder: (context) {
+                    final scheduledDate = DateTime.tryParse(widget.visit.preferredDate);
+                    final isToday = scheduledDate != null && DateUtil.isToday(scheduledDate);
+                    return Tooltip(
+                      message: isToday
+                          ? ''
+                          : 'You can only start the visit on the scheduled day (${widget.visit.preferredDate})',
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: (_isProcessing || !isToday) ? null : _showStartVisitDialog,
+                          icon: const Icon(Icons.play_arrow, size: 18),
+                          label: _isProcessing
+                              ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                              : Text(isToday ? 'Start Visit' : 'Visit on ${widget.visit.preferredDate}'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            foregroundColor: Colors.white,
+                            disabledBackgroundColor: Colors.grey.shade300,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: _isProcessing ? null : _showStartVisitDialog,
-                        icon: const Icon(Icons.play_arrow, size: 18),
-                        label: _isProcessing
-                            ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                            : const Text('Start Visit'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                    );
+                  },
                 ),
               ],
             ),

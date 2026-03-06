@@ -29,9 +29,12 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
   String? _selectedProductType = 'eggs';
   final List<Map<String, String>> _productTypes = [
     {'value': 'eggs', 'label': 'Eggs'},
-    {'value': 'meat', 'label': 'Meat (Birds Sold)'},
+    {'value': 'chicken', 'label': 'Chicken'},
+    {'value': 'manure', 'label': 'Manure'},
     {'value': 'other', 'label': 'Other'},
   ];
+
+  bool _isSold = false;
 
   final _quantityController = TextEditingController();
   final _crackedEggsController = TextEditingController();
@@ -41,9 +44,6 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
   final _selectedDateController = TextEditingController();
   final _smallDeformedEggsController = TextEditingController();
 
-
-
-
   TimeOfDay _selectedTime = TimeOfDay.now();
   bool _isSaving = false;
 
@@ -51,9 +51,6 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
   void initState() {
     super.initState();
   }
-
-
-
 
   Future<void> _saveRecord() async {
     if (!_formKey.currentState!.validate()) {
@@ -63,56 +60,56 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
     setState(() => _isSaving = true);
 
     try {
-
       DateTime selectedScheduledDate = DateTime.parse(_selectedDateController.text);
-      DateTime selectedCompletedTime=DateTime(
+      DateTime selectedCompletedTime = DateTime(
         selectedScheduledDate.year,
         selectedScheduledDate.month,
         selectedScheduledDate.day,
         _selectedTime.hour,
-        _selectedTime.hour,
+        _selectedTime.minute,
       );
 
-      // Create request based on product type
       CreateProductRequest request;
 
       if (_selectedProductType == 'eggs') {
         request = CreateProductRequest(
           productType: _selectedProductType!,
           batchId: widget.batchId,
+          isSold: _isSold,
           eggsCollected: int.parse(_quantityController.text),
           crackedEggs: int.tryParse(_crackedEggsController.text) ?? 0,
           partialBrokenEggs: int.tryParse(_crackedEggsController.text) ?? 0,
           smallDeformedEggs: int.tryParse(_smallDeformedEggsController.text) ?? 0,
-          price: num.parse(_priceController.text),
+          price: _isSold ? num.parse(_priceController.text) : null,
           collectionDate: selectedCompletedTime.toUtc().toIso8601String(),
           notes: _notesController.text.isNotEmpty ? _notesController.text : null,
         );
-      } else if (_selectedProductType == 'meat') {
+      } else if (_selectedProductType == 'chicken') {
         request = CreateProductRequest(
           productType: _selectedProductType!,
           batchId: widget.batchId,
+          isSold: _isSold,
           birdsSold: int.parse(_quantityController.text),
           weight: _weightController.text.isNotEmpty
               ? num.parse(_weightController.text)
               : null,
-          price: num.parse(_priceController.text),
+          price: _isSold ? num.parse(_priceController.text) : null,
           collectionDate: selectedCompletedTime.toUtc().toIso8601String(),
           notes: _notesController.text.isNotEmpty ? _notesController.text : null,
         );
       } else {
-        // other
+        // manure or other
         request = CreateProductRequest(
           productType: _selectedProductType!,
           batchId: widget.batchId,
+          isSold: _isSold,
           quantity: num.parse(_quantityController.text),
-          price: num.parse(_priceController.text),
+          price: _isSold ? num.parse(_priceController.text) : null,
           collectionDate: selectedCompletedTime.toUtc().toIso8601String(),
           notes: _notesController.text.isNotEmpty ? _notesController.text : null,
         );
       }
 
-      // Call repository with proper Result pattern handling
       final result = await _repository.createProduct(request);
 
       switch (result) {
@@ -126,11 +123,10 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
               ),
             );
 
-            // Delay pop slightly to show success message
             await Future.delayed(const Duration(milliseconds: 500));
 
             if (mounted) {
-              context.pop(true); // Return true to indicate success
+              context.pop(true);
             }
           }
 
@@ -146,7 +142,6 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
           }
       }
     } catch (e) {
-      // Fallback for unexpected errors
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -165,13 +160,12 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
 
   String _getProductLabel() {
     final type = _productTypes.firstWhere(
-          (t) => t['value'] == _selectedProductType,
+      (t) => t['value'] == _selectedProductType,
       orElse: () => {'label': 'Product'},
     );
     return type['label']!;
   }
 
-  // Validation functions
   String? _validatePositiveNumber(String? value, String fieldName) {
     if (value == null || value.isEmpty) {
       return '$fieldName is required';
@@ -201,6 +195,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
   }
 
   String? _validatePrice(String? value) {
+    if (!_isSold) return null;
     if (value == null || value.isEmpty) {
       return 'Price is required';
     }
@@ -335,7 +330,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
               ReusableDropdown<String>(
                 topLabel: 'Product Type',
                 value: _selectedProductType,
-               icon: Icons.category,
+                icon: Icons.category,
                 items: _productTypes.map((type) {
                   return DropdownMenuItem(
                     value: type['value'],
@@ -345,12 +340,12 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
                 onChanged: (value) {
                   setState(() {
                     _selectedProductType = value;
-                    // Reset cracked eggs when switching product types
-                    if (value == 'eggs') {
-                      _crackedEggsController.text = '0';
-                    }
+                    _quantityController.clear();
+                    _crackedEggsController.clear();
+                    _weightController.clear();
                   });
-                }, hintText: 'type',
+                },
+                hintText: 'type',
               ),
               const SizedBox(height: 24),
 
@@ -363,6 +358,8 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
                   hintText: 'e.g., 245',
                   keyboardType: TextInputType.number,
                   icon: Icons.egg,
+                  autocorrect: false,
+                  enableSuggestions: false,
                   validator: (value) => _validatePositiveNumber(value, 'Eggs collected'),
                 ),
                 const SizedBox(height: 20),
@@ -373,29 +370,35 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
                   hintText: 'e.g., 5',
                   keyboardType: TextInputType.number,
                   icon: Icons.broken_image,
+                  autocorrect: false,
+                  enableSuggestions: false,
                   validator: (value) => _validateNonNegativeNumber(value, 'Cracked eggs'),
                 ),
                 const SizedBox(height: 20),
                 ReusableInput(
-                  topLabel: 'Small or deformed Eggs',
+                  topLabel: 'Small or Deformed Eggs',
                   controller: _smallDeformedEggsController,
-                  labelText: 'Small or deformed Eggs',
+                  labelText: 'Small or Deformed Eggs',
                   hintText: 'e.g., 5',
                   keyboardType: TextInputType.number,
                   icon: Icons.shape_line,
-                  validator: (value) => _validateNonNegativeNumber(value, 'Cracked eggs'),
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  validator: (value) => _validateNonNegativeNumber(value, 'Small/deformed eggs'),
                 ),
               ],
 
-              if (_selectedProductType == 'meat') ...[
+              if (_selectedProductType == 'chicken') ...[
                 ReusableInput(
                   controller: _quantityController,
-                  topLabel: 'Number of Birds Sold',
-                  labelText: 'Number of Birds Sold',
+                  topLabel: 'Number of Chickens',
+                  labelText: 'Number of Chickens',
                   hintText: 'e.g., 12',
                   keyboardType: TextInputType.number,
                   icon: Icons.agriculture,
-                  validator: (value) => _validatePositiveNumber(value, 'Birds sold'),
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  validator: (value) => _validatePositiveNumber(value, 'Number of chickens'),
                 ),
                 const SizedBox(height: 20),
                 ReusableInput(
@@ -408,6 +411,25 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
                     signed: false,
                   ),
                   icon: Icons.monitor_weight,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                ),
+              ],
+
+              if (_selectedProductType == 'manure') ...[
+                ReusableInput(
+                  controller: _quantityController,
+                  topLabel: 'Quantity (Bags)',
+                  labelText: 'Quantity (Bags)',
+                  hintText: 'e.g., 10',
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: false,
+                    signed: false,
+                  ),
+                  icon: Icons.inventory_2,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  validator: (value) => _validatePositiveNumber(value, 'Quantity'),
                 ),
               ],
 
@@ -422,40 +444,87 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
                     signed: false,
                   ),
                   icon: Icons.inventory,
+                  autocorrect: false,
+                  enableSuggestions: false,
                   validator: (value) => _validatePositiveNumber(value, 'Quantity'),
                 ),
               ],
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
 
-              // Price (common for all types)
-              ReusableInput(
-                controller: _priceController,
-                topLabel: 'Price per Tray',
-                labelText: 'Price per Tray',
-                hintText: 'e.g., 10.50',
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                  signed: false,
+              // Was this product sold?
+              Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: Colors.grey.shade200),
                 ),
-                icon: Icons.attach_money,
-                validator: _validatePrice,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.sell, size: 18, color: Colors.grey.shade600),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Was this product sold?',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey.shade800,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Switch(
+                        value: _isSold,
+                        activeColor: Colors.green,
+                        onChanged: (value) {
+                          setState(() {
+                            _isSold = value;
+                            if (!value) _priceController.clear();
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
               ),
+
+              if (_isSold) ...[
+                const SizedBox(height: 16),
+                ReusableInput(
+                  controller: _priceController,
+                  topLabel: 'Price',
+                  labelText: 'Price',
+                  hintText: 'e.g., 10.50',
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                    signed: false,
+                  ),
+                  icon: Icons.attach_money,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  validator: _validatePrice,
+                ),
+              ],
 
               const SizedBox(height: 24),
 
               // Date & Time
-
-                  CustomDateTextField(
-                    label: 'Date',
-                    icon: Icons.calendar_today,
-                    required: true,
-                    minYear: DateTime.now().year - 1,
-                    returnFormat: DateReturnFormat.isoString,
-                    maxYear: DateTime.now().year,
-                    controller: _selectedDateController,
-                  ),
-                  const SizedBox(height: 12),
+              CustomDateTextField(
+                label: 'Date',
+                icon: Icons.calendar_today,
+                required: true,
+                initialDate: DateTime.now(),
+                minYear: DateTime.now().year - 1,
+                returnFormat: DateReturnFormat.isoString,
+                maxYear: DateTime.now().year,
+                controller: _selectedDateController,
+              ),
+              const SizedBox(height: 12),
 
               ReusableTimeInput(
                 topLabel: 'Time',
@@ -468,10 +537,9 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
                   return null;
                 },
                 onTimeChanged: (time) {
-                  _selectedTime=time;
+                  _selectedTime = time;
                 },
               ),
-
 
               const SizedBox(height: 24),
 
@@ -483,6 +551,8 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
                 hintText: 'e.g., Grade A eggs, sold to local market...',
                 maxLines: 3,
                 icon: Icons.note_add,
+                autocorrect: false,
+                enableSuggestions: false,
               ),
 
               const SizedBox(height: 40),
@@ -503,20 +573,20 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
                   ),
                   child: _isSaving
                       ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
                       : const Text(
-                    'Record Product',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                          'Record Product',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                 ),
               ),
             ],
@@ -530,15 +600,16 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
     switch (_selectedProductType) {
       case 'eggs':
         return Icons.egg;
-      case 'meat':
+      case 'chicken':
         return Icons.agriculture;
+      case 'manure':
+        return Icons.inventory_2;
       case 'other':
         return Icons.inventory;
       default:
         return Icons.production_quantity_limits;
     }
   }
-
 
   @override
   void dispose() {
@@ -548,6 +619,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
     _priceController.dispose();
     _notesController.dispose();
     _selectedDateController.dispose();
+    _smallDeformedEggsController.dispose();
     super.dispose();
   }
 }

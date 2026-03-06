@@ -7,6 +7,7 @@ class StatusChip extends StatelessWidget {
   final Color color;
   final bool isSelected;
   final Function(String) onTap;
+  final bool showCount;
 
   const StatusChip({
     super.key,
@@ -16,6 +17,7 @@ class StatusChip extends StatelessWidget {
     required this.color,
     required this.isSelected,
     required this.onTap,
+    this.showCount = true,
   });
 
   @override
@@ -43,7 +45,7 @@ class StatusChip extends StatelessWidget {
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
               ),
             ),
-            if (count > 0) ...[
+            if (showCount && count > 0) ...[
               const SizedBox(width: 6),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),

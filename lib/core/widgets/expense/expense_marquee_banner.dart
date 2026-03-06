@@ -1,3 +1,4 @@
+import 'package:agriflock/core/utils/secure_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -16,10 +17,12 @@ class _ExpenseMarqueeBannerCompactState extends State<ExpenseMarqueeBannerCompac
   late ScrollController _scrollController;
   double _textWidth = 0;
   bool _isDisposed = false;
+  bool _shouldShow = true;
 
   @override
   void initState() {
     super.initState();
+    _checkSubscription();
     _scrollController = ScrollController();
     _animationController = AnimationController(
       duration: const Duration(seconds: 20),
@@ -33,6 +36,15 @@ class _ExpenseMarqueeBannerCompactState extends State<ExpenseMarqueeBannerCompac
         _startAnimation();
       }
     });
+  }
+
+  Future<void> _checkSubscription() async {
+    final state = await SecureStorage().getSubscriptionState();
+    if (!_isDisposed && mounted) {
+      setState(() {
+        _shouldShow = state != 'no_subscription_plan' && state != 'expired_subscription_plan';
+      });
+    }
   }
 
   void _startAnimation() {
@@ -65,6 +77,7 @@ class _ExpenseMarqueeBannerCompactState extends State<ExpenseMarqueeBannerCompac
 
   @override
   Widget build(BuildContext context) {
+    if (!_shouldShow) return const SizedBox.shrink();
     return GestureDetector(
       onTap: () => context.push('/record-expenditure'),
       child: Container(

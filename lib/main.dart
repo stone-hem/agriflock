@@ -62,6 +62,7 @@ void main() async {
     final isLoggedIn = await secureStorage.isLoggedIn();
     if (isLoggedIn) {
       NotificationService.instance.connect();
+      NotificationService.instance.fetchAndSeed();
     }
 
     print('=== App Initialization Complete ===');

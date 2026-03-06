@@ -586,109 +586,58 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Chick Cost',
-                            style: Theme.of(context).textTheme.titleMedium!
-                                .copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey.shade800,
-                            ),
-                          ),
-                          Switch(
-                            value: _hasChickCost,
-                            onChanged: (value) {
-                              setState(() {
-                                _hasChickCost = value;
-                                if (!value) {
-                                  _chickCostController.text = '0';
-                                }
-                              });
-                            },
-                            activeThumbColor: Colors.green,
-                          ),
-                        ],
+                      Text(
+                        'Chick Cost',
+                        style: Theme.of(context).textTheme.titleMedium!
+                            .copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey.shade800,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _isOwnHatch
+                            ? 'Cost incurred for hatching (enter 0 if none)'
+                            : 'Purchase cost per chick',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 12,
+                        ),
                       ),
                       const SizedBox(height: 8),
-                      if (_hasChickCost) ...[
-                        Text(
-                          _isOwnHatch
-                              ? 'If there were any costs incurred for hatching (optional)'
-                              : 'Cost of purchased chicks (optional)',
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 12,
-                          ),
+                      ReusableInput(
+                        controller: _chickCostController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                          signed: false,
                         ),
-                        const SizedBox(height: 8),
-                        ReusableInput(
-                          controller: _chickCostController,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                            signed: false,
-                          ),
-                          validator: (value) {
-                            if (_hasChickCost &&
-                                (value == null || value.isEmpty)) {
-                              return 'Please enter chick cost or set to 0';
-                            }
-                            if (value != null && value.isNotEmpty) {
-                              final cost = double.tryParse(value);
-                              if (cost == null) {
-                                return 'Please enter a valid amount';
-                              }
-                              if (cost < 0) {
-                                return 'Cost cannot be negative';
-                              }
-                            }
-                            return null;
-                          },
-                          labelText: 'Cost per chick ($_currency)',
-                          hintText: _isOwnHatch
-                              ? 'e.g., 0 (no cost)'
-                              : 'e.g., 50, 75, 100',
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter chick cost (use 0 if none)';
+                          }
+                          final cost = double.tryParse(value);
+                          if (cost == null) {
+                            return 'Please enter a valid amount';
+                          }
+                          if (cost < 0) {
+                            return 'Cost cannot be negative';
+                          }
+                          return null;
+                        },
+                        labelText: 'Cost per chick ($_currency)',
+                        hintText: _isOwnHatch ? 'e.g., 0 (no cost)' : 'e.g., 50, 75, 100',
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _chickCostController.text.isNotEmpty &&
+                            _initialQuantityController.text.isNotEmpty
+                            ? 'Total cost: $_currency ${_calculateTotalChickCost().toStringAsFixed(2)}'
+                            : 'Total cost: $_currency 0.00',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green.shade700,
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          _chickCostController.text.isNotEmpty &&
-                              _initialQuantityController.text.isNotEmpty
-                              ? 'Total cost: $_currency ${_calculateTotalChickCost().toStringAsFixed(2)}'
-                              : 'Total cost: $_currency 0.00',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green.shade700,
-                          ),
-                        ),
-                      ] else ...[
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.info,
-                                color: Colors.grey.shade600,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  'Chick cost field is set to 0. Enable if there are costs.',
-                                  style: TextStyle(
-                                    color: Colors.grey.shade700,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                      ),
                     ],
                   ),
                 ),

@@ -185,154 +185,6 @@ class _ItemSelectionViewState extends State<ItemSelectionView> {
                 ),
                 const SizedBox(height: 20),
 
-                // Other / Add Custom Item option — shown for ALL categories
-                if (widget.onCustomItemSelected != null) ...[
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _showCustomInput = true;
-                        _isCustomSelected = true;
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      margin: const EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(
-                        color: _isCustomSelected ? categoryColor.withOpacity(0.1) : Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: _isCustomSelected ? categoryColor : Colors.green.shade300,
-                          width: _isCustomSelected ? 2 : 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.green.shade100,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              Icons.add,
-                              size: 24,
-                              color: Colors.green.shade700,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Other',
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.green.shade700,
-                                  ),
-                                ),
-                                Text(
-                                  _isOthersCategory
-                                      ? 'Enter a custom expense name'
-                                      : 'Add another item not listed above',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (_isCustomSelected)
-                            Icon(
-                              Icons.check_circle,
-                              color: categoryColor,
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Custom name input field
-                  if (_showCustomInput)
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      margin: const EdgeInsets.only(bottom: 20),
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.green.shade200),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _isOthersCategory ? 'Custom Item Name' : 'Item Name',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey.shade700,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          ReusableInput(
-                            controller: _customNameController,
-                            hintText: 'Enter item name',
-                          ),
-                          const SizedBox(height: 12),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                final customName = _customNameController.text.trim();
-                                if (customName.isNotEmpty) {
-                                  widget.onCustomItemSelected!(customName);
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              child: const Text('Continue'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                  if (items.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Row(
-                        children: [
-                          Expanded(child: Divider(color: Colors.grey.shade300)),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Text(
-                              'Or select existing',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade500,
-                              ),
-                            ),
-                          ),
-                          Expanded(child: Divider(color: Colors.grey.shade300)),
-                        ],
-                      ),
-                    ),
-                ],
-
                 if (items.isEmpty && !_isOthersCategory)
                   Center(
                     child: Padding(
@@ -380,9 +232,7 @@ class _ItemSelectionViewState extends State<ItemSelectionView> {
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: isSelected
-                                  ? categoryColor
-                                  : Colors.grey.shade200,
+                              color: isSelected ? categoryColor : Colors.grey.shade200,
                               width: isSelected ? 2 : 1,
                             ),
                             boxShadow: [
@@ -417,69 +267,150 @@ class _ItemSelectionViewState extends State<ItemSelectionView> {
                                       style: TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w600,
-                                        color: isSelected
-                                            ? categoryColor
-                                            : Colors.grey.shade800,
+                                        color: isSelected ? categoryColor : Colors.grey.shade800,
                                       ),
                                     ),
-                                    if (item.description!=null)
+                                    if (item.description != null)
                                       Padding(
                                         padding: const EdgeInsets.only(top: 4),
                                         child: Text(
                                           item.description!,
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey.shade600,
-                                          ),
+                                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                                         ),
                                       ),
-                                    // if (item.components != null && item.components is List && (item.components as List).isNotEmpty)
-                                    //   Padding(
-                                    //     padding: const EdgeInsets.only(top: 6),
-                                    //     child: Wrap(
-                                    //       spacing: 6,
-                                    //       runSpacing: 6,
-                                    //       children: (item.components as List).take(3).map<Widget>((component) {
-                                    //         return Container(
-                                    //           padding: const EdgeInsets.symmetric(
-                                    //             horizontal: 8,
-                                    //             vertical: 3,
-                                    //           ),
-                                    //           decoration: BoxDecoration(
-                                    //             color: categoryColor.withOpacity(0.1),
-                                    //             borderRadius: BorderRadius.circular(6),
-                                    //             border: Border.all(
-                                    //               color: categoryColor.withOpacity(0.3),
-                                    //             ),
-                                    //           ),
-                                    //           child: Text(
-                                    //             component.toString(),
-                                    //             style: TextStyle(
-                                    //               fontSize: 10,
-                                    //               color: categoryColor,
-                                    //               fontWeight: FontWeight.w500,
-                                    //             ),
-                                    //           ),
-                                    //         );
-                                    //       }).toList(),
-                                    //     ),
-                                    //   ),
                                   ],
                                 ),
                               ),
-                              if (isSelected)
-                                Icon(
-                                  Icons.check_circle,
-                                  color: categoryColor,
-                                ),
+                              if (isSelected) Icon(Icons.check_circle, color: categoryColor),
                             ],
                           ),
                         ),
                       );
                     },
                   ),
+
+                // Other / Add Custom Item — always at the bottom
+                if (widget.onCustomItemSelected != null) ...[
+                  if (items.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Row(
+                        children: [
+                          Expanded(child: Divider(color: Colors.grey.shade300)),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text('Or add custom',
+                                style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                          ),
+                          Expanded(child: Divider(color: Colors.grey.shade300)),
+                        ],
+                      ),
+                    ),
+                  GestureDetector(
+                    onTap: () => setState(() {
+                      _showCustomInput = true;
+                      _isCustomSelected = true;
+                    }),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: _isCustomSelected ? categoryColor.withOpacity(0.1) : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _isCustomSelected ? categoryColor : Colors.green.shade300,
+                          width: _isCustomSelected ? 2 : 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.green.shade100,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(Icons.add, size: 24, color: Colors.green.shade700),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Other',
+                                    style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.green.shade700)),
+                                Text(
+                                  _isOthersCategory
+                                      ? 'Enter a custom expense name'
+                                      : 'Add another item not listed above',
+                                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (_isCustomSelected) Icon(Icons.check_circle, color: categoryColor),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (_showCustomInput)
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      margin: const EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.green.shade200),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _isOthersCategory ? 'Custom Item Name' : 'Item Name',
+                            style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey.shade700),
+                          ),
+                          const SizedBox(height: 8),
+                          ReusableInput(
+                              controller: _customNameController,
+                              hintText: 'Enter item name'),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                final customName = _customNameController.text.trim();
+                                if (customName.isNotEmpty) {
+                                  widget.onCustomItemSelected!(customName);
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8)),
+                              ),
+                              child: const Text('Continue'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
               ],
             ),
           ),

@@ -191,12 +191,13 @@ class WeeklyProduction {
 class CreateProductRequest {
   final String productType;
   final String batchId;
+  final bool isSold;
   final int? eggsCollected;
   final int? crackedEggs;
   final int? birdsSold;
   final num? weight;
   final num? quantity;
-  final num price;
+  final num? price;
   final String collectionDate;
   final String? notes;
   final int? smallDeformedEggs;
@@ -205,12 +206,13 @@ class CreateProductRequest {
   const CreateProductRequest({
     required this.productType,
     required this.batchId,
+    required this.isSold,
     this.eggsCollected,
     this.crackedEggs,
     this.birdsSold,
     this.weight,
     this.quantity,
-    required this.price,
+    this.price,
     required this.collectionDate,
     this.notes,
     this.smallDeformedEggs,
@@ -221,9 +223,13 @@ class CreateProductRequest {
     final Map<String, dynamic> data = {
       'product_type': productType,
       'batch_id': batchId,
-      'price': price,
+      'is_sold': isSold,
       'collection_date': collectionDate,
     };
+
+    if (isSold && price != null) {
+      data['price'] = price;
+    }
 
     if (notes != null && notes!.isNotEmpty) {
       data['notes'] = notes;
@@ -237,11 +243,14 @@ class CreateProductRequest {
         data['small_deformed_eggs'] = smallDeformedEggs ?? 0;
         data['partial_broken_eggs'] = partialBrokenEggs ?? 0;
         break;
-      case 'meat':
+      case 'chicken':
         data['birds_sold'] = birdsSold;
         if (weight != null) {
           data['weight'] = weight;
         }
+        break;
+      case 'manure':
+        data['quantity'] = quantity;
         break;
       case 'other':
         data['quantity'] = quantity;

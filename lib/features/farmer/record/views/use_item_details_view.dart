@@ -757,6 +757,7 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                       label: 'Date Used',
                       icon: Icons.calendar_today,
                       required: true,
+                      initialDate: DateTime.now(),
                       minYear: DateTime.now().year - 1,
                       maxYear: DateTime.now().year,
                       returnFormat: DateReturnFormat.isoString,

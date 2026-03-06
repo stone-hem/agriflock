@@ -34,7 +34,7 @@ class _EducationLevelSelectorState extends State<EducationLevelSelector> {
         const Row(
           children: [
             Text(
-              'Highest Level of Education *',
+              'Highest Level of Education',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,

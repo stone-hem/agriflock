@@ -517,8 +517,6 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
             if (_currentPage < 3) ...[
               LinearProgressIndicator(
                 value: (_currentPage + 1) / 3,
-                backgroundColor: Colors.grey.shade200,
-                valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
@@ -567,20 +565,20 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: isCurrent
-            ? Colors.green
+            ? Theme.of(context).primaryColor
             : isActive
                 ? Colors.green.shade50
                 : Colors.grey.shade100,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isActive ? Colors.green : Colors.grey.shade300,
+          color: isActive ? Theme.of(context).primaryColor : Colors.grey.shade300,
         ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (isActive && !isCurrent)
-            const Icon(Icons.check_circle, size: 14, color: Colors.green)
+             Icon(Icons.check_circle, size: 14, color: Theme.of(context).primaryColor)
           else
             Text(
               '${step + 1}',
@@ -599,7 +597,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
               color: isCurrent
                   ? Colors.white
                   : isActive
-                      ? Colors.green
+                      ? Theme.of(context).primaryColor
                       : Colors.grey.shade600,
             ),
           ),
@@ -621,7 +619,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
           children: [
             _buildInfoCard(
               icon: Icons.agriculture_rounded,
-              color: Colors.green,
+              color: Theme.of(context).primaryColor,
               title: 'What is a Farm?',
               description:
                   'A farm is your main operation — the physical location where you '
@@ -635,7 +633,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
               onFileSelected: (File? file) => setState(() => _farmPhotoFile = file),
               title: 'Farm Photo (Optional)',
               description: 'Upload a photo of your farm',
-              primaryColor: Colors.green,
+              primaryColor:Theme.of(context).primaryColor,
                 isRequired:false
             ),
             const SizedBox(height: 24),
@@ -665,7 +663,6 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                   _longitude = lng;
                 });
               },
-              primaryColor: Colors.green,
             ),
             const SizedBox(height: 20),
 
@@ -724,7 +721,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.check_circle, size: 18, color: Colors.green.shade700),
+                    Icon(Icons.check_circle, size: 18, color:Theme.of(context).primaryColor),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -732,7 +729,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: Colors.green.shade800,
+                          color: Theme.of(context).primaryColor,
                         ),
                       ),
                     ),
@@ -824,7 +821,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.check_circle, size: 18, color: Colors.green.shade700),
+                    Icon(Icons.check_circle, size: 18, color: Theme.of(context).primaryColor),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -832,7 +829,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: Colors.green.shade800,
+                          color: Theme.of(context).primaryColor,
                         ),
                       ),
                     ),
@@ -847,7 +844,6 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
               onFileSelected: (File? file) => setState(() => _batchPhotoFile = file),
               title: 'Batch Photo (Optional)',
               description: 'Upload a photo of your batch',
-              primaryColor: Colors.green,
             ),
             const SizedBox(height: 32),
 
@@ -866,7 +862,6 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -978,13 +973,13 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 13),
                         decoration: BoxDecoration(
                           color: _isOwnHatch
-                              ? Colors.green.shade600
+                              ? Theme.of(context).primaryColor
                               : Colors.transparent,
                           borderRadius: BorderRadius.circular(9),
                           boxShadow: _isOwnHatch
                               ? [
                                   BoxShadow(
-                                    color: Colors.green.withOpacity(0.2),
+                                    color: Theme.of(context).primaryColor.withOpacity(0.2),
                                     blurRadius: 6,
                                     offset: const Offset(0, 2),
                                   ),
@@ -1092,98 +1087,58 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Chick Cost',
-                          style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey.shade800,
-                              ),
-                        ),
-                        Switch(
-                          value: _hasChickCost,
-                          onChanged: (value) {
-                            setState(() {
-                              _hasChickCost = value;
-                              if (!value) _chickCostController.text = '0';
-                            });
-                          },
-                          activeThumbColor: Colors.green,
-                        ),
-                      ],
+                    Text(
+                      'Chick Cost',
+                      style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey.shade800,
+                          ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _isOwnHatch
+                          ? 'Cost incurred for hatching (enter 0 if none)'
+                          : 'Purchase cost per chick',
+                      style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                     ),
                     const SizedBox(height: 8),
-                    if (_hasChickCost) ...[
-                      Text(
-                        _isOwnHatch
-                            ? 'If there were any costs incurred for hatching (optional)'
-                            : 'Cost of purchased chicks (optional)',
-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                    ReusableInput(
+                      controller: _chickCostController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: false,
                       ),
-                      const SizedBox(height: 8),
-                      ReusableInput(
-                        controller: _chickCostController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                          signed: false,
-                        ),
-                        validator: (value) {
-                          if (_hasChickCost && (value == null || value.isEmpty)) {
-                            return 'Please enter chick cost or set to 0';
-                          }
-                          if (value != null && value.isNotEmpty) {
-                            final cost = double.tryParse(value);
-                            if (cost == null) return 'Please enter a valid amount';
-                            if (cost < 0) return 'Cost cannot be negative';
-                          }
-                          return null;
-                        },
-                        labelText: 'Cost per chick${_currency.isNotEmpty ? ' ($_currency)' : ''}',
-                        hintText: _isOwnHatch ? 'e.g., 0 (no cost)' : 'e.g., 50, 75, 100',
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter chick cost (use 0 if none)';
+                        }
+                        final cost = double.tryParse(value);
+                        if (cost == null) return 'Please enter a valid amount';
+                        if (cost < 0) return 'Cost cannot be negative';
+                        return null;
+                      },
+                      labelText: 'Cost per chick${_currency.isNotEmpty ? ' ($_currency)' : ''}',
+                      hintText: _isOwnHatch ? 'e.g., 0 (no cost)' : 'e.g., 50, 75, 100',
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _chickCostController.text.isNotEmpty &&
+                              _initialQuantityController.text.isNotEmpty
+                          ? 'Total cost: $_currency ${_calculateTotalChickCost().toStringAsFixed(2)}'
+                          : 'Total cost: $_currency 0.00',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).primaryColor,
                       ),
-                      const SizedBox(height: 8),
+                    ),
+                    if (_chickCostController.text.isNotEmpty)
                       Text(
-                        _chickCostController.text.isNotEmpty &&
-                                _initialQuantityController.text.isNotEmpty
-                            ? 'Total cost: $_currency ${_calculateTotalChickCost().toStringAsFixed(2)}'
-                            : 'Total cost: $_currency 0.00',
+                        'Remember to add other expenses after batch placement to get the accurate financial report',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Colors.green.shade700,
+                          color: Theme.of(context).primaryColor,
                         ),
                       ),
-                      Text(
-                        _chickCostController.text.isNotEmpty
-                            ? 'Remember to add other expenses after batch placement to get the accurate financial report'
-                            : '',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green.shade700,
-                        ),
-                      ),
-                    ] else ...[
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.info, color: Colors.grey.shade600, size: 20),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                'Chick cost field is set to 0. Enable if there are costs.',
-                                style: TextStyle(color: Colors.grey.shade700, fontSize: 14),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
                   ],
                 ),
               ),
@@ -1273,7 +1228,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                           color: isSelected ? Colors.green.shade50 : Colors.grey.shade50,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: isSelected ? Colors.green : Colors.grey.shade300,
+                            color: isSelected ? Theme.of(context).primaryColor : Colors.grey.shade300,
                             width: isSelected ? 2 : 1,
                           ),
                         ),
@@ -1281,7 +1236,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                           children: [
                             Icon(
                               isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
-                              color: isSelected ? Colors.green : Colors.grey,
+                              color: isSelected ? Theme.of(context).primaryColor : Colors.grey,
                             ),
                             const SizedBox(width: 12),
                             Expanded(
@@ -1290,7 +1245,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                                 style: TextStyle(
                                   fontWeight: FontWeight.w500,
                                   color: isSelected
-                                      ? Colors.green.shade800
+                                      ? Theme.of(context).primaryColor
                                       : Colors.grey.shade800,
                                 ),
                               ),
@@ -1313,9 +1268,9 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                       Text(
                         'Selected Feeding Times:',
-                        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor),
                       ),
                       const SizedBox(height: 8),
                       Wrap(
@@ -1324,7 +1279,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                         children: _selectedFeedingTimes[_selectedFeedingTimeCategory]!
                             .map((t) => Chip(
                                   label: Text(t, style: const TextStyle(color: Colors.white)),
-                                  backgroundColor: Colors.green,
+                                  backgroundColor: Theme.of(context).primaryColor,
                                 ))
                             .toList(),
                       ),
@@ -1408,9 +1363,9 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
               decoration: BoxDecoration(
                 color: Colors.green.shade50,
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.green, width: 3),
+                border: Border.all(color: Theme.of(context).primaryColor, width: 3),
               ),
-              child: const Icon(Icons.check_rounded, size: 50, color: Colors.green),
+              child:  Icon(Icons.check_rounded, size: 50, color: Theme.of(context).primaryColor),
             ),
             const SizedBox(height: 24),
 
@@ -1433,7 +1388,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
             // Summary cards
             _buildSummaryRow(
               Icons.agriculture_rounded,
-              Colors.green,
+              Theme.of(context).primaryColor,
               'Farm',
               _createdFarmName ?? 'Your Farm',
             ),
@@ -1522,7 +1477,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
               child: ElevatedButton(
                 onPressed: () => context.push(AppRoutes.home),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
+                  backgroundColor: Theme.of(context).primaryColor,
                   foregroundColor: Colors.white,
                   minimumSize: const Size(double.infinity, 52),
                   shape: RoundedRectangleBorder(
@@ -1605,7 +1560,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.green,
+          backgroundColor: Theme.of(context).primaryColor,
           foregroundColor: Colors.white,
           minimumSize: const Size(double.infinity, 52),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

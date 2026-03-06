@@ -52,10 +52,10 @@ import 'package:agriflock/features/farmer/report/batch/batch_report_screen.dart'
 import 'package:agriflock/features/farmer/report/farm_reports_screen.dart';
 import 'package:agriflock/features/farmer/report/reports_flow_screen.dart';
 import 'package:agriflock/features/farmer/vet/all_vets_screen.dart';
-import 'package:agriflock/features/farmer/vet/completed_orders_screen.dart';
 import 'package:agriflock/features/farmer/vet/models/my_order_list_item.dart';
 import 'package:agriflock/features/farmer/vet/models/vet_farmer_model.dart';
-import 'package:agriflock/features/farmer/vet/my_orders_screen.dart';
+import 'package:agriflock/features/farmer/vet/my_vet_orders_combined_screen.dart';
+import 'package:agriflock/features/farmer/vet/farmer_vet_payment_screen.dart';
 import 'package:agriflock/features/farmer/vet/vet_details_screen.dart';
 import 'package:agriflock/features/farmer/vet/vet_order_screen.dart';
 import 'package:agriflock/features/farmer/vet/my_order_tracking_screen.dart';
@@ -710,13 +710,26 @@ class AppRoutes {
         GoRoute(
           path: '/my-vet-orders',
           builder: (context, state) {
-            return MyVetOrdersScreen();
+            return const MyVetOrdersCombinedScreen();
           },
         ),
         GoRoute(
           path: '/my-completed-orders',
           builder: (context, state) {
-            return CompletedOrdersScreen();
+            return const MyVetOrdersCombinedScreen(initialTab: 1);
+          },
+        ),
+        GoRoute(
+          path: '/vet-service-payment',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>;
+            return FarmerVetPaymentScreen(
+              orderId: extra['orderId'] as String,
+              orderNumber: extra['orderNumber'] as String,
+              vetName: extra['vetName'] as String,
+              amount: extra['amount'] as double,
+              currency: extra['currency'] as String,
+            );
           },
         ),
         GoRoute(
