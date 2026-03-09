@@ -27,31 +27,30 @@ class _RecordMortalityScreenState extends State<RecordMortalityScreen> {
   final _formKey = GlobalKey<FormState>();
   final _batchMgtRepository = BatchMgtRepository();
 
-  // Form controllers
   final TextEditingController _countController = TextEditingController();
-  final TextEditingController _reasonController = TextEditingController();
+  final TextEditingController _otherReasonController = TextEditingController();
 
-  // State
   List<BatchListItem> _batches = [];
   BatchListItem? _selectedBatch;
-  String? _selectedReason;
   bool _isLoadingBatches = true;
   bool _isSubmitting = false;
 
-  // Common mortality reasons
-  final List<String> _mortalityReasons = [
-  'Temperature(heat/cold)',
-  'Wet litter',
-  'Overcrowding',
-  'Disease related eg,Coccidiosis,NCD etc.',
-  'Predator attack eg snake etc',
-  'Cannibalism',
-  'Sudden death.',
-  'Starvation / lack of feed',
- ' Poor quality feed.',
-  'Lack of water.',
-  'Aflatoxin poisoning.',
-  'Other'
+  // Multi-select reasons
+  final Set<String> _selectedReasons = {};
+
+  static const List<String> _mortalityReasons = [
+    'Temperature (heat/cold)',
+    'Wet litter',
+    'Overcrowding',
+    'Disease related e.g. Coccidiosis, NCD etc.',
+    'Predator attack e.g. snake etc.',
+    'Cannibalism',
+    'Sudden death',
+    'Starvation / lack of feed',
+    'Poor quality feed',
+    'Lack of water',
+    'Aflatoxin poisoning',
+    'Other',
   ];
 
   @override
@@ -67,24 +66,20 @@ class _RecordMortalityScreenState extends State<RecordMortalityScreen> {
 
   Future<void> _loadBatches() async {
     setState(() => _isLoadingBatches = true);
-
     try {
       final result = await _batchMgtRepository.getBatches(
         farmId: widget.farm?.id,
         currentStatus: 'active',
       );
-
       switch (result) {
         case Success<BatchListResponse>(data: final response):
           setState(() {
             _batches = response.batches;
             _isLoadingBatches = false;
           });
-          break;
         case Failure(message: final error):
           setState(() => _isLoadingBatches = false);
           ApiErrorHandler.handle(error);
-          break;
       }
     } catch (e) {
       setState(() => _isLoadingBatches = false);
@@ -93,21 +88,30 @@ class _RecordMortalityScreenState extends State<RecordMortalityScreen> {
   }
 
   Future<void> _submitMortality() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
     if (_selectedBatch == null) {
       ToastUtil.showError('Please select a batch');
       return;
     }
 
-    final reason = _selectedReason == 'Other'
-        ? _reasonController.text.trim()
-        : _selectedReason;
+    if (_selectedReasons.isEmpty) {
+      ToastUtil.showError('Please select at least one reason');
+      return;
+    }
 
-    if (reason == null || reason.isEmpty) {
-      ToastUtil.showError('Please provide a reason');
+    // Build the reasons list — replace 'Other' with the custom text
+    final List<String> reasons = _selectedReasons.map((r) {
+      if (r == 'Other') {
+        final custom = _otherReasonController.text.trim();
+        return custom.isNotEmpty ? custom : 'Other';
+      }
+      return r;
+    }).toList();
+
+    if (_selectedReasons.contains('Other') &&
+        _otherReasonController.text.trim().isEmpty) {
+      ToastUtil.showError('Please specify the "Other" reason');
       return;
     }
 
@@ -117,26 +121,20 @@ class _RecordMortalityScreenState extends State<RecordMortalityScreen> {
       final result = await _batchMgtRepository.recordMortality(
         batchId: _selectedBatch!.id,
         changeAmount: int.parse(_countController.text),
-        reason: reason,
+        reasons: reasons,
       );
 
       switch (result) {
         case Success():
           ToastUtil.showSuccess('Mortality recorded successfully');
-          if (mounted) {
-            context.pop(true);
-          }
-          break;
+          if (mounted) context.pop(true);
         case Failure(message: final error):
           ApiErrorHandler.handle(error);
-          break;
       }
     } catch (e) {
       ToastUtil.showError('Failed to record mortality: $e');
     } finally {
-      if (mounted) {
-        setState(() => _isSubmitting = false);
-      }
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
@@ -157,7 +155,7 @@ class _RecordMortalityScreenState extends State<RecordMortalityScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Info card
+              // Mortality info banner
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -174,34 +172,54 @@ class _RecordMortalityScreenState extends State<RecordMortalityScreen> {
                         color: Colors.red.shade100,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(
-                        Icons.warning_amber_rounded,
-                        color: Colors.red.shade700,
-                        size: 24,
-                      ),
+                      child: Icon(Icons.warning_amber_rounded,
+                          color: Colors.red.shade700, size: 24),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Record Bird Mortality',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.red.shade700,
-                            ),
-                          ),
+                          Text('Record Bird Mortality',
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.red.shade700)),
                           const SizedBox(height: 4),
                           Text(
-                            'Track bird losses to maintain accurate flock records',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.red.shade600,
-                            ),
-                          ),
+                              'Track bird losses to maintain accurate flock records',
+                              style: TextStyle(
+                                  fontSize: 12, color: Colors.red.shade600)),
                         ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Weight disclaimer banner
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.amber.shade300),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.info_outline,
+                        color: Colors.amber.shade800, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Weigh at least 10 chicks and record the average weight for accurate growth tracking.',
+                        style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.amber.shade900,
+                            fontWeight: FontWeight.w500),
                       ),
                     ),
                   ],
@@ -211,36 +229,30 @@ class _RecordMortalityScreenState extends State<RecordMortalityScreen> {
 
               // Batch Selection
               if (widget.batch == null) ...[
-                Text(
-                  'Select Batch',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade700,
-                  ),
-                ),
+                Text('Select Batch',
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade700)),
                 const SizedBox(height: 8),
                 if (_isLoadingBatches)
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade200),
-                    ),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade200)),
                     child: Row(
                       children: [
                         const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2)),
                         const SizedBox(width: 12),
-                        Text(
-                          'Loading batches...',
-                          style: TextStyle(color: Colors.grey.shade600),
-                        ),
+                        Text('Loading batches...',
+                            style:
+                                TextStyle(color: Colors.grey.shade600)),
                       ],
                     ),
                   )
@@ -249,14 +261,11 @@ class _RecordMortalityScreenState extends State<RecordMortalityScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.orange.shade50,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.orange.shade200),
-                    ),
-                    child: Text(
-                      'No active batches found',
-                      style: TextStyle(color: Colors.orange.shade700),
-                    ),
+                        color: Colors.orange.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.orange.shade200)),
+                    child: Text('No active batches found',
+                        style: TextStyle(color: Colors.orange.shade700)),
                   )
                 else
                   ReusableDropdown<BatchListItem>(
@@ -266,87 +275,60 @@ class _RecordMortalityScreenState extends State<RecordMortalityScreen> {
                     items: _batches.map((batch) {
                       return DropdownMenuItem<BatchListItem>(
                         value: batch,
-                        child: Row(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    batch.batchNumber,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  Text(
-                                    '${batch.currentCount} birds | ${batch.ageInDays} days old',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                            Text(batch.batchNumber,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w600)),
+                            Text(
+                                '${batch.currentCount} birds | ${batch.ageInDays} days old',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey.shade600)),
                           ],
                         ),
                       );
                     }).toList(),
-                    onChanged: (value) {
-                      setState(() => _selectedBatch = value);
-                    },
-                    validator: (value) {
-                      if (value == null) {
-                        return 'Please select a batch';
-                      }
-                      return null;
-                    },
+                    onChanged: (value) =>
+                        setState(() => _selectedBatch = value),
+                    validator: (value) =>
+                        value == null ? 'Please select a batch' : null,
                   ),
                 const SizedBox(height: 20),
               ] else ...[
-                // Show selected batch info
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade200),
-                  ),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade200)),
                   child: Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: Colors.orange.shade100,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.pets,
-                          color: Colors.orange.shade700,
-                          size: 20,
-                        ),
+                            color: Colors.orange.shade100,
+                            shape: BoxShape.circle),
+                        child: Icon(Icons.pets,
+                            color: Colors.orange.shade700, size: 20),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Text(widget.batch!.batchNumber,
+                                style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold)),
                             Text(
-                              widget.batch!.batchNumber,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              '${widget.batch!.currentCount} birds | ${widget.batch!.ageInDays} days old',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
+                                '${widget.batch!.currentCount} birds | ${widget.batch!.ageInDays} days old',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade600)),
                           ],
                         ),
                       ),
@@ -371,7 +353,8 @@ class _RecordMortalityScreenState extends State<RecordMortalityScreen> {
                   if (count == null || count <= 0) {
                     return 'Please enter a valid number';
                   }
-                  if (_selectedBatch != null && count > _selectedBatch!.currentCount) {
+                  if (_selectedBatch != null &&
+                      count > _selectedBatch!.currentCount) {
                     return 'Cannot exceed current bird count (${_selectedBatch!.currentCount})';
                   }
                   return null;
@@ -383,63 +366,87 @@ class _RecordMortalityScreenState extends State<RecordMortalityScreen> {
                   child: Text(
                     'Current flock size: ${_selectedBatch!.currentCount} birds',
                     style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                    ),
+                        fontSize: 12, color: Colors.grey.shade600),
                   ),
                 ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
 
-              // Reason dropdown
-              ReusableDropdown<String>(
-                value: _selectedReason,
-                topLabel: 'Reason for Mortality *',
-                hintText: 'Select a reason',
-                icon: Icons.help_outline,
-                items: _mortalityReasons.map((reason) {
-                  return DropdownMenuItem<String>(
-                    value: reason,
-                    child: Text(reason),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() => _selectedReason = value);
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please select a reason';
-                  }
-                  return null;
-                },
+              // Reasons — multi-select checkboxes
+              Text('Reason(s) for Mortality *',
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade700)),
+              const SizedBox(height: 4),
+              Text('Select all that apply',
+                  style: TextStyle(
+                      fontSize: 12, color: Colors.grey.shade500)),
+              const SizedBox(height: 8),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Column(
+                  children: _mortalityReasons.map((reason) {
+                    final isLast =
+                        reason == _mortalityReasons.last;
+                    return Column(
+                      children: [
+                        CheckboxListTile(
+                          value: _selectedReasons.contains(reason),
+                          onChanged: (checked) {
+                            setState(() {
+                              if (checked == true) {
+                                _selectedReasons.add(reason);
+                              } else {
+                                _selectedReasons.remove(reason);
+                              }
+                            });
+                          },
+                          title: Text(reason,
+                              style: const TextStyle(fontSize: 14)),
+                          controlAffinity:
+                              ListTileControlAffinity.leading,
+                          activeColor: Colors.red.shade600,
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 0),
+                          dense: true,
+                        ),
+                        if (!isLast)
+                          Divider(
+                              height: 1,
+                              indent: 12,
+                              endIndent: 12,
+                              color: Colors.grey.shade100),
+                      ],
+                    );
+                  }).toList(),
+                ),
               ),
 
-              // Custom reason input (if "Other" selected)
-              if (_selectedReason == 'Other') ...[
+              // Custom "Other" input
+              if (_selectedReasons.contains('Other')) ...[
                 const SizedBox(height: 16),
                 ReusableInput(
-                  topLabel: 'Specify Reason * (max 3 words)',
+                  topLabel: 'Specify "Other" reason *',
                   icon: Icons.edit_note,
-                  controller: _reasonController,
-                  hintText: 'Enter specific reason (max 3 words)',
+                  controller: _otherReasonController,
+                  hintText: 'Enter specific reason',
                   maxLines: 2,
                   validator: (value) {
-                    if (_selectedReason == 'Other' &&
+                    if (_selectedReasons.contains('Other') &&
                         (value == null || value.trim().isEmpty)) {
                       return 'Please specify the reason';
-                    }
-                    if (value != null && value.trim().isNotEmpty) {
-                      final wordCount = value.trim().split(RegExp(r'\s+')).length;
-                      if (wordCount > 3) {
-                        return 'Reason must be 3 words or fewer';
-                      }
                     }
                     return null;
                   },
                 ),
               ],
+
               const SizedBox(height: 32),
 
-              // Submit button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -448,8 +455,7 @@ class _RecordMortalityScreenState extends State<RecordMortalityScreen> {
                     backgroundColor: Colors.red,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                        borderRadius: BorderRadius.circular(12)),
                     elevation: 0,
                   ),
                   child: _isSubmitting
@@ -457,39 +463,26 @@ class _RecordMortalityScreenState extends State<RecordMortalityScreen> {
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text(
-                          'Record Mortality',
+                              strokeWidth: 2, color: Colors.white))
+                      : const Text('Record Mortality',
                           style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600)),
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Cancel button
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
                   onPressed: () => context.pop(),
                   style: OutlinedButton.styleFrom(
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                        borderRadius: BorderRadius.circular(12)),
                     side: BorderSide(color: Colors.grey.shade300),
                   ),
-                  child: Text(
-                    'Cancel',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
+                  child: Text('Cancel',
+                      style: TextStyle(
+                          fontSize: 16, color: Colors.grey.shade600)),
                 ),
               ),
             ],
@@ -502,7 +495,7 @@ class _RecordMortalityScreenState extends State<RecordMortalityScreen> {
   @override
   void dispose() {
     _countController.dispose();
-    _reasonController.dispose();
+    _otherReasonController.dispose();
     super.dispose();
   }
 }

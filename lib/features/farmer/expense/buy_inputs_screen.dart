@@ -47,6 +47,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
   CategoryItem? _selectedItem;
   String? _customOtherName; // For "Others" category custom items
   double? _quantity;
+  double? _usedQuantity;
   double? _unitPrice;
   double? _totalPrice;
   DateTime _selectedDate = DateTime.now();
@@ -182,6 +183,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
             'quantity': _quantity?.toInt() ?? 1,
             'unit': _selectedPackagingOption,
             'date': _selectedDate.toUtc().toIso8601String(),
+            if (_useNow) 'used_quantity': _usedQuantity ?? _quantity,
             if (widget.farm != null) 'farm_id': widget.farm!.id,
             if (_selectedBatch != null) 'batch_id': _selectedBatch!.id,
             if (_selectedBatch != null && _selectedBatch!.houseId != null) 'house_id': _selectedBatch!.houseId,
@@ -196,6 +198,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
             'quantity': _quantity?.toInt() ?? 1,
             'unit': _selectedPackagingOption,
             'date': _selectedDate.toUtc().toIso8601String(),
+            if (_useNow) 'used_quantity': _usedQuantity ?? _quantity,
             if (widget.farm != null) 'farm_id': widget.farm!.id,
             if (_selectedBatch != null) 'batch_id': _selectedBatch!.id,
             if (_selectedBatch != null && _selectedBatch!.houseId != null) 'house_id': _selectedBatch!.houseId,
@@ -212,6 +215,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
           'quantity': _quantity,
           'unit': _selectedPackagingOption,
           'date': _selectedDate.toUtc().toIso8601String(),
+          'used_quantity': _usedQuantity ?? _quantity,
           'notes': null,
           if (_selectedBatch != null) 'batch_id': _selectedBatch!.id,
           if (_selectedBatch != null && _selectedBatch!.houseId != null) 'house_id': _selectedBatch!.houseId,
@@ -424,7 +428,8 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
                     onBatchSelected: (batch) {
                       setState(() => _selectedBatch = batch);
                     },
-                    onSave: () {
+                    onSave: (usedQty) {
+                      setState(() => _usedQuantity = usedQty);
                       _submitExpense();
                     },
                     onBack: _previousPage,

@@ -160,8 +160,10 @@ class _VetPendingPaymentsScreenState extends State<VetPendingPaymentsScreen> {
           // Payment cards
           ...payments.map((p) => _PaymentCard(
                 payment: p,
-                onRemit: () =>
-                    context.push('/vet/payment/remit', extra: p),
+                onRemit: () async {
+                  await context.push('/vet/payment/remit', extra: p);
+                  if (mounted) _load();
+                },
               )),
         ],
       ),

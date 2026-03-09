@@ -671,7 +671,7 @@ class VetFarmerRepository {
   }) async {
     try {
       final response = await apiClient.post(
-        '/rating',
+        '/ratings',
         body: {
           'vet_id': vetId,
           'order_id': orderId,

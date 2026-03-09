@@ -666,21 +666,21 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                       _buildVaccineStatusChip(
                         icon: Icons.warning_amber,
                         color: Colors.amber,
-                        label: '${batch.vaccination.vaccinesUpcoming.where((v) => v.dayDue == int.parse(batch.ageDays)).length} due today',
+                        label: '${batch.vaccination.vaccinesUpcoming.where((v) => v.dayDue != null && v.dayDue == (int.tryParse(batch.ageDays) ?? 0)).length} due today',
                       ),
 
                       // Count of upcoming (Stay ○)
                       _buildVaccineStatusChip(
                         icon: Icons.access_time,
                         color: Colors.blue,
-                        label: '${batch.vaccination.vaccinesUpcoming.where((v) => v.dayDue != int.parse(batch.ageDays)).length} upcoming',
+                        label: '${batch.vaccination.vaccinesUpcoming.where((v) => v.dayDue != null && v.dayDue! > (int.tryParse(batch.ageDays) ?? 0)).length} upcoming',
                       ),
 
-                      // Count of not done (Red ✗) - Calculate based on schedule
+                      // Count of overdue (Red ✗)
                       _buildVaccineStatusChip(
                         icon: Icons.cancel,
                         color: Colors.red,
-                        label: '${batch.vaccination.vaccinesUpcoming.where((v) => v.dayDue! < int.parse(batch.ageDays)).length} overdue',
+                        label: '${batch.vaccination.vaccinesUpcoming.where((v) => v.dayDue != null && v.dayDue! < (int.tryParse(batch.ageDays) ?? 0)).length} overdue',
                       ),
                     ],
                   ),
@@ -705,51 +705,54 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    ...batch.vaccination.vaccinesUpcoming
-                        .where((v) => v.dayDue! >= int.parse(batch.ageDays))
-                        .take(2)
-                        .map((v) => Padding(
-                      padding: const EdgeInsets.only(bottom: 2),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 4,
-                            height: 4,
-                            decoration: BoxDecoration(
-                              color: v.dayDue == batch.ageDays
-                                  ? Colors.amber
-                                  : Colors.blue,
-                              shape: BoxShape.circle,
-                            ),
+                    ...() {
+                        final ageDays = int.tryParse(batch.ageDays) ?? 0;
+                        final sorted = batch.vaccination.vaccinesUpcoming
+                            .where((v) => v.dayDue != null && v.dayDue! >= ageDays)
+                            .toList()
+                          ..sort((a, b) => (a.dayDue ?? 0).compareTo(b.dayDue ?? 0));
+                        return sorted.take(2).map((v) => Padding(
+                          padding: const EdgeInsets.only(bottom: 2),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 4,
+                                height: 4,
+                                decoration: BoxDecoration(
+                                  color: v.dayDue == ageDays
+                                      ? Colors.amber
+                                      : Colors.blue,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  '${v.name} (Day ${v.dayDue})',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey.shade800,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (v.dayDue == ageDays)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber.shade100,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: const Text(
+                                    'Due today',
+                                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                            ],
                           ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              '${v.name} (Day ${v.dayDue})',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.grey.shade800,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (v.dayDue == batch.ageDays)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                              decoration: BoxDecoration(
-                                color: Colors.amber.shade100,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: const Text(
-                                'Due today',
-                                style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ))
-                        .toList(),
+                        )).toList();
+                      }(),
                   ],
                 ],
               ),

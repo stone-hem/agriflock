@@ -1,3 +1,4 @@
+import 'package:agriflock/core/widgets/reusable_input.dart';
 import 'package:agriflock/features/farmer/batch/model/batch_list_model.dart';
 import 'package:agriflock/features/farmer/expense/model/expense_category.dart';
 import 'package:agriflock/features/farmer/farm/models/farm_model.dart';
@@ -12,7 +13,7 @@ class BatchSelectionView extends StatefulWidget {
   final InventoryCategory category;
   final double quantity;
   final Function(BatchListItem?) onBatchSelected;
-  final Function() onSave;
+  final Function(double usedQuantity) onSave;
   final VoidCallback onBack;
   final bool isSubmitting;
 
@@ -37,6 +38,17 @@ class BatchSelectionView extends StatefulWidget {
 
 class _BatchSelectionViewState extends State<BatchSelectionView> {
   final _formKey = GlobalKey<FormState>();
+  late TextEditingController _usedQuantityController;
+
+  @override
+  void initState() {
+    super.initState();
+    _usedQuantityController = TextEditingController(
+      text: widget.quantity.toStringAsFixed(
+        widget.quantity == widget.quantity.truncateToDouble() ? 0 : 2,
+      ),
+    );
+  }
 
   bool get _isVaccineOrMedicine {
     final categoryLower = widget.category.name.toLowerCase();
@@ -66,8 +78,10 @@ class _BatchSelectionViewState extends State<BatchSelectionView> {
       return;
     }
 
+    if (!_formKey.currentState!.validate()) return;
 
-    widget.onSave();
+    final usedQty = double.parse(_usedQuantityController.text);
+    widget.onSave(usedQty);
   }
 
   @override
@@ -287,6 +301,37 @@ class _BatchSelectionViewState extends State<BatchSelectionView> {
 
 
 
+                  const SizedBox(height: 24),
+
+                  // Used quantity
+                  ReusableInput(
+                    topLabel: 'Quantity Used *',
+                    icon: Icons.output,
+                    controller: _usedQuantityController,
+                    hintText: 'Enter amount used',
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter quantity used';
+                      }
+                      final v = double.tryParse(value);
+                      if (v == null || v <= 0) {
+                        return 'Please enter a valid number';
+                      }
+                      if (v > widget.quantity) {
+                        return 'Cannot exceed purchased quantity (${widget.quantity.toStringAsFixed(0)})';
+                      }
+                      return null;
+                    },
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4, left: 4),
+                    child: Text(
+                      'Max: ${widget.quantity.toStringAsFixed(0)} units purchased',
+                      style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                    ),
+                  ),
+
                   const SizedBox(height: 32),
 
                   // Save button
@@ -349,6 +394,7 @@ class _BatchSelectionViewState extends State<BatchSelectionView> {
 
   @override
   void dispose() {
+    _usedQuantityController.dispose();
     super.dispose();
   }
 }

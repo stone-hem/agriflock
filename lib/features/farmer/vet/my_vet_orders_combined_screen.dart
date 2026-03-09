@@ -1132,49 +1132,9 @@ class _CompletedOrdersTabState extends State<_CompletedOrdersTab>
                         fontSize: 16)),
               ],
             ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(
-                  order.isPaid ? Icons.payment : Icons.payment_outlined,
-                  size: 16,
-                  color: order.isPaid ? Colors.green : Colors.orange,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  order.isPaid ? 'Payment Complete' : 'Payment Pending',
-                  style: TextStyle(
-                      color: order.isPaid ? Colors.green : Colors.orange,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14),
-                ),
-              ],
-            ),
             const SizedBox(height: 16),
             Row(
               children: [
-                if (!order.isPaid) ...[
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => _showPaymentDialog(order),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.payment, size: 18),
-                          SizedBox(width: 8),
-                          Text('Pay Now'),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                ],
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () => _showRatingDialog(order),

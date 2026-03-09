@@ -269,14 +269,14 @@ class BatchMgtRepository {
   Future<Result<void>> recordMortality({
     required String batchId,
     required int changeAmount,
-    required String reason,
+    required List<String> reasons,
     String changeType = 'mortality',
   }) async {
     try {
       final requestBody = {
         'change_type': changeType,
         'change_amount': changeAmount,
-        'reason': reason,
+        'reason': reasons,
       };
 
       LogUtil.info('Recording mortality for batch $batchId: $requestBody');
