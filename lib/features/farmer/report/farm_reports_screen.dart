@@ -189,7 +189,7 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.light(
-              primary: Colors.blue.shade700,
+              primary: Colors.green.shade700,
               onPrimary: Colors.white,
               surface: Colors.white,
               onSurface: Colors.black87,
@@ -232,9 +232,9 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
         elevation: 0,
         bottom: TabBar(
           controller: _tabController,
-          labelColor: Colors.blue.shade700,
+          labelColor: Colors.green.shade700,
           unselectedLabelColor: Colors.grey.shade600,
-          indicatorColor: Colors.blue.shade700,
+          indicatorColor: Colors.green.shade700,
           tabs: const [
             Tab(text: 'Production Report'),
             Tab(text: 'Financial Report'),
@@ -262,67 +262,94 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
         // Fixed Filter Section
         Container(
           color: Colors.white,
+          padding: const EdgeInsets.fromLTRB(0, 12, 0, 12),
           child: Column(
-            crossAxisAlignment: .start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 12),
-              Align(
-                alignment: .topRight,
-                child: FilledButton.icon(
-                  onPressed: _showDateRangePicker,
-                  icon: const Icon(Icons.edit_calendar, size: 20),
-                  style: IconButton.styleFrom(
-                    padding: const EdgeInsets.all(8),
-                    minimumSize: const Size(36, 36),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ), label: Text('Select Date range'),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                margin: EdgeInsets.only(left: 20),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.shade300),
-                ),
+              // Period chips row + calendar icon button
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.date_range, size: 16, color: Colors.grey.shade700),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        physics: const ClampingScrollPhysics(),
+                        child: Row(
+                          children: [
+                            _buildPeriodChip('Daily', 'daily'),
+                            const SizedBox(width: 8),
+                            _buildPeriodChip('Weekly', 'weekly'),
+                            const SizedBox(width: 8),
+                            _buildPeriodChip('Monthly', 'monthly'),
+                            const SizedBox(width: 8),
+                            _buildPeriodChip('Yearly', 'yearly'),
+                            const SizedBox(width: 8),
+                            _buildPeriodChip('All Time', 'all_time'),
+                          ],
+                        ),
+                      ),
+                    ),
                     const SizedBox(width: 8),
-                    Text(
-                      'Period ${DateUtil.toShortDateWithDay(_startDate)} - ${DateUtil.toShortDateWithDay(_endDate)}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.green.shade700),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: IconButton(
+                        onPressed: _showDateRangePicker,
+                        icon: Icon(Icons.edit_calendar, color: Colors.green.shade700, size: 20),
+                        padding: const EdgeInsets.all(6),
+                        constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                        style: IconButton.styleFrom(
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 40,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  physics: const ClampingScrollPhysics(),
-                  children: [
-                    _buildPeriodChip('Daily', 'daily'),
-                    const SizedBox(width: 8),
-                    _buildPeriodChip('Weekly', 'weekly'),
-                    const SizedBox(width: 8),
-                    _buildPeriodChip('Monthly', 'monthly'),
-                    const SizedBox(width: 8),
-                    _buildPeriodChip('Yearly', 'yearly'),
-                    const SizedBox(width: 8),
-                    _buildPeriodChip('All Time', 'all_time'),
-                  ],
+              const SizedBox(height: 10),
+              // Date range display with period badge
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.date_range, size: 16, color: Colors.green.shade700),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '${DateUtil.toShortDateWithDay(_startDate)} – ${DateUtil.toShortDateWithDay(_endDate)}',
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade100,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          _selectedPeriod.replaceAll('_', ' ').toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.green.shade800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 12),
             ],
           ),
         ),
@@ -339,10 +366,10 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.blue.shade700 : Colors.grey.shade100,
+          color: isSelected ? Colors.green.shade700 : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? Colors.blue.shade700 : Colors.grey.shade300,
+            color: isSelected ? Colors.green.shade700 : Colors.grey.shade300,
           ),
         ),
         child: Text(
@@ -420,7 +447,7 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.blue.shade700,
+                      color: Colors.green.shade700,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
@@ -702,139 +729,153 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
     );
   }
 
+  Widget _buildInfoRow(IconData icon, Color iconColor, String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 14, color: iconColor),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
+              Text(value,
+                  style: TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey.shade800)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildBatchReportCard(BatchReport batch) {
+    final typeColor = _getBatchTypeColor(batch.birdType);
+    final hasMortality = batch.mortality.total24hrs > 0;
     return Container(
-      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(10),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: _getBatchTypeColor(batch.birdType).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+          // Header
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: typeColor.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(_getBatchTypeIcon(batch.birdType), color: typeColor, size: 16),
                 ),
-                child: Icon(
-                  _getBatchTypeIcon(batch.birdType),
-                  color: _getBatchTypeColor(batch.birdType),
-                  size: 18,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(batch.batchNumber,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                      Text('${batch.birdType} · ${batch.houseName}',
+                          style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(
-                      batch.batchNumber,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: typeColor.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: typeColor.withOpacity(0.3)),
                       ),
+                      child: Text('${batch.ageDays}d',
+                          style: TextStyle(
+                              fontSize: 11, fontWeight: FontWeight.w600, color: typeColor)),
                     ),
-                    Text(
-                      '${batch.birdType} - ${batch.houseName}',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
+                    const SizedBox(height: 3),
+                    Text('${batch.totalBirds} birds',
+                        style: TextStyle(fontSize: 10, color: Colors.grey.shade500)),
                   ],
                 ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      '${batch.totalBirds} birds',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${batch.ageDays} days',
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: Colors.grey.shade500,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _buildBatchStatChip(
-                'Mortality',
-                '${batch.mortality.cumulativeTotal}',
-                batch.mortality.cumulativeTotal > 0 ? Colors.red : Colors.grey,
-              ),
-              _buildBatchStatChip(
-                'Feed',
-                '${batch.feed.bagsConsumed} kgs',
-                Colors.orange,
-              ),
-              _buildBatchStatChip(
-                'Vaccines',
-                '${batch.vaccination.vaccinesDone.length}',
-                Colors.blue,
-              ),
-              if (batch.medication.medicationsAvailable.isNotEmpty)
-                _buildBatchStatChip(
-                  'Medications',
-                  '${batch.medication.medicationsAvailable.length}',
-                  Colors.purple,
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBatchStatChip(String label, String value, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: color,
+              ],
             ),
           ),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 9,
-              color: Colors.grey.shade600,
+          Divider(height: 1, color: Colors.grey.shade100),
+          // Stats
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                        child: _buildInfoRow(
+                            hasMortality
+                                ? Icons.warning_amber_rounded
+                                : Icons.check_circle_outline,
+                            hasMortality ? Colors.red.shade600 : Colors.green.shade600,
+                            'Mortality (24h)',
+                            '${batch.mortality.total24hrs}')),
+                    Expanded(
+                        child: _buildInfoRow(Icons.fastfood, Colors.brown.shade600, 'Feed (kgs)',
+                            '${batch.feed.bagsConsumed}')),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Expanded(
+                        child: _buildInfoRow(Icons.vaccines, Colors.teal.shade600, 'Vaccines Done',
+                            '${batch.vaccination.vaccinesDone.length}')),
+                    if (batch.vaccination.vaccinesUpcoming.isNotEmpty)
+                      Expanded(
+                          child: _buildInfoRow(Icons.schedule, Colors.orange.shade600,
+                              'Vaccines Upcoming', '${batch.vaccination.vaccinesUpcoming.length}'))
+                    else
+                      Expanded(
+                          child: _buildInfoRow(Icons.inventory_2_outlined, Colors.brown.shade400,
+                              'Feed in Store', '${batch.feed.balanceInStore} kgs')),
+                  ],
+                ),
+                if (batch.medication.inUse.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Row(children: [
+                    Expanded(
+                        child: _buildInfoRow(Icons.medical_services, Colors.purple.shade600,
+                            'Medication in Use', '${batch.medication.inUse.length}')),
+                    const Expanded(child: SizedBox()),
+                  ]),
+                ],
+                if (batch.eggProduction != null &&
+                    batch.eggProduction!.totalEggsCollected > 0) ...[
+                  const SizedBox(height: 6),
+                  Row(children: [
+                    Expanded(
+                        child: _buildInfoRow(Icons.inbox, Colors.amber.shade700, 'Trays Collected',
+                            '${batch.eggProduction!.traysCollected}')),
+                    Expanded(
+                        child: _buildInfoRow(Icons.egg_outlined, Colors.amber.shade800,
+                            'Production %',
+                            '${batch.eggProduction!.productionPercentage.toStringAsFixed(1)}%')),
+                  ]),
+                ],
+              ],
             ),
           ),
         ],
@@ -1025,7 +1066,7 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
                   Row(
                     children: [
                       Icon(Icons.account_balance_wallet,
-                          size: 24, color: Colors.blue.shade700),
+                          size: 24, color: Colors.green.shade700),
                       const SizedBox(width: 12),
                       const Text(
                         'Summary',

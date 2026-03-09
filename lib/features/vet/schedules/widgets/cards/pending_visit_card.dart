@@ -310,20 +310,6 @@ class _PendingVisitCardState extends State<PendingVisitCard> {
                           fontSize: 14,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(Icons.phone, size: 12, color: Colors.grey.shade600),
-                          const SizedBox(width: 4),
-                          Text(
-                            widget.visit.farmerPhone,
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
                     ],
                   ),
                 ),

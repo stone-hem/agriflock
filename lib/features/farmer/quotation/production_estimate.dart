@@ -472,6 +472,12 @@ class _LayersTabState extends State<_LayersTab> {
       switch (result) {
         case Success(data: final types):
           setState(() { _birdTypes = types; _isLoadingBirdTypes = false; });
+          // Auto-select when there is only one laying breed
+          if (_layerBreeds.length == 1) {
+            _selectedBreed = _layerBreeds.first;
+            _selectedCapacity = _quantities.first;
+            _generateQuotation();
+          }
         case Failure(:final response, :final message):
           if (response != null) ApiErrorHandler.handle(response);
           else ToastUtil.showError(message);
@@ -529,14 +535,17 @@ class _LayersTabState extends State<_LayersTab> {
         sliver: SliverList(
           delegate: SliverChildListDelegate([
             // ── Breed Selection ──
-            Text('Select to continue',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey.shade800)),
-            const SizedBox(height: 8),
             if (_isLoadingBirdTypes)
               const Center(child: CircularProgressIndicator(color: primaryColor))
             else if (_layerBreeds.isEmpty)
               const Center(child: Text('No laying breeds available'))
-            else
+            else if (_layerBreeds.length == 1)
+              // Single breed — auto-selected; show nothing here, content loads below
+              const SizedBox.shrink()
+            else ...[
+              Text('Select to continue',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey.shade800)),
+              const SizedBox(height: 8),
               SizedBox(
                 height: 170,
                 child: ListView.builder(
@@ -553,6 +562,7 @@ class _LayersTabState extends State<_LayersTab> {
                   ),
                 ),
               ),
+            ],
             const SizedBox(height: 24),
 
             // ── Flock Size ──

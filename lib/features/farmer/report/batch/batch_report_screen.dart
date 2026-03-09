@@ -396,25 +396,11 @@ class _BatchReportScreenState extends State<BatchReportScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          gradient: isSelected
-              ? LinearGradient(
-            colors: [Colors.green.shade600, Colors.green.shade400],
-          )
-              : null,
-          color: isSelected ? null : Colors.grey.shade100,
+          color: isSelected ? Colors.green.shade700 : Colors.grey.shade100,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected ? Colors.green.shade700 : Colors.grey.shade300,
           ),
-          boxShadow: isSelected
-              ? [
-            BoxShadow(
-              color: Colors.green.shade200,
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            )
-          ]
-              : null,
         ),
         child: Text(
           label,
@@ -512,55 +498,39 @@ class _BatchReportScreenState extends State<BatchReportScreen>
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Date Header with Gradient
+            // Date Header
             Padding(
-              padding: EdgeInsets.only(bottom: 12, top: index == 0 ? 0 : 16),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.green.shade600, Colors.green.shade400],
-                  ),
-                  borderRadius: BorderRadius.circular(30),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.green.shade200,
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
+              padding: EdgeInsets.only(bottom: 12, top: index == 0 ? 0 : 20),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade700,
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.calendar_today, size: 16, color: Colors.white),
-                    const SizedBox(width: 8),
-                    Text(
-                      DateUtil.toShortDateWithDay(reportDate),
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        '${dateReports.length}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.calendar_today, size: 13, color: Colors.white),
+                        const SizedBox(width: 6),
+                        Text(
+                          DateUtil.toShortDateWithDay(reportDate),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '(${dateReports.length})',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                  ),
+                ],
               ),
             ),
             // Report Cards for this date
@@ -574,89 +544,67 @@ class _BatchReportScreenState extends State<BatchReportScreen>
     );
   }
 
+  Widget _buildInfoRow(IconData icon, Color iconColor, String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 14, color: iconColor),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
+              Text(value, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey.shade800)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildReportCard(BatchReportData report) {
-    final isLayers = report.birdType.toLowerCase().contains('layers');
+    final isLayers = report.birdType.toLowerCase().contains('layer');
+    final typeColor = isLayers ? Colors.amber.shade700 : Colors.blue.shade700;
 
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white,
-            isLayers ? Colors.amber.shade50 : Colors.blue.shade50,
-          ],
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isLayers ? Colors.amber.shade200 : Colors.blue.shade200,
-          width: 1.5,
-        ),
+        border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: (isLayers ? Colors.amber : Colors.blue).withOpacity(0.1),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Batch Header with Gradient
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  isLayers ? Colors.amber.shade100 : Colors.blue.shade100,
-                  isLayers ? Colors.orange.shade100 : Colors.indigo.shade100,
-                ],
-              ),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(14),
-                topRight: Radius.circular(14),
-              ),
-            ),
+          // ── Header ──
+          Padding(
+            padding: const EdgeInsets.all(14),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(9),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: typeColor.withOpacity(0.1),
                     shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 4,
-                      ),
-                    ],
                   ),
-                  child: Icon(
-                    isLayers ? Icons.egg : Icons.pets,
-                    color: isLayers ? Colors.amber.shade700 : Colors.blue.shade700,
-                    size: 20,
-                  ),
+                  child: Icon(isLayers ? Icons.egg : Icons.pets, color: typeColor, size: 18),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        report.batchNumber,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        '${report.farmName} - ${report.houseName}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade700,
-                        ),
-                      ),
+                      Text(report.batchNumber,
+                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                      Text('${report.farmName} · ${report.houseName}',
+                          style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
                     ],
                   ),
                 ),
@@ -666,87 +614,143 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: typeColor.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.grey.shade300),
+                        border: Border.all(color: typeColor.withOpacity(0.3)),
                       ),
-                      child: Text(
-                        '${report.ageDays} days',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: isLayers ? Colors.amber.shade800 : Colors.blue.shade800,
-                        ),
-                      ),
+                      child: Text('${report.ageDays}d / ${report.ageWeeks}wk',
+                          style: TextStyle(
+                              fontSize: 11, fontWeight: FontWeight.w600, color: typeColor)),
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      '${report.totalBirds} birds',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
+                    Text('${report.totalBirds} birds',
+                        style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
                   ],
                 ),
               ],
             ),
           ),
 
-          // Report Sections
+          // ── Production Stage ──
+          if (report.productionStage.stage.isNotEmpty) ...[
+            Divider(height: 1, color: Colors.grey.shade100),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.indigo.shade50,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.indigo.shade200),
+                    ),
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      Icon(Icons.timeline, size: 12, color: Colors.indigo.shade700),
+                      const SizedBox(width: 4),
+                      Text(report.productionStage.stage,
+                          style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.indigo.shade700)),
+                    ]),
+                  ),
+                  if (report.productionStage.description.isNotEmpty) ...[
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(report.productionStage.description,
+                          style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                          overflow: TextOverflow.ellipsis),
+                    ),
+                  ],
+                  if (report.productionStage.expectedMilestone.daysRemaining > 0) ...[
+                    const SizedBox(width: 6),
+                    Text(
+                      '${report.productionStage.expectedMilestone.daysRemaining}d to ${report.productionStage.expectedMilestone.type}',
+                      style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+
+          Divider(height: 1, color: Colors.grey.shade100),
+
+          // ── Sections ──
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             child: Column(
               children: [
-                // Mortality Section
-                _buildMortalityCard(report.mortality),
-                const SizedBox(height: 12),
-
-                // Feed Section
-                _buildFeedCard(report.feed),
-                const SizedBox(height: 12),
-
-                // Weight Info Row
-                // if (report.expectedWeight != null || report.actualWeight != null)
-                //   _buildWeightCard(report),
-
-                const SizedBox(height: 12),
-
-                // Vaccination Section
-                _buildVaccinationCard(report.vaccination),
-                const SizedBox(height: 12),
-
-                // Medication Section
-                _buildMedicationCard(report.medication),
-
-                // Egg Production for Layers
-                if (report.eggProduction != null && report.eggProduction!.totalEggsCollected > 0) ...[
-                  const SizedBox(height: 12),
-                  _buildEggProductionCard(report.eggProduction!),
+                _buildMortalitySection(report.mortality),
+                const SizedBox(height: 10),
+                _buildFeedSection(report.feed),
+                const SizedBox(height: 10),
+                _buildFeedingPlanSection(report.feedingPlan),
+                const SizedBox(height: 10),
+                _buildVaccinationSection(report.vaccination),
+                if (report.medication.inUse.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  _buildMedicationSection(report.medication),
+                ],
+                if (report.eggProduction.totalEggsCollected > 0) ...[
+                  const SizedBox(height: 10),
+                  _buildEggSection(report.eggProduction),
                 ],
               ],
             ),
           ),
+
+          // ── Footer ──
+          if (report.reportBy.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(16),
+                  bottomRight: Radius.circular(16),
+                ),
+                border: Border(top: BorderSide(color: Colors.grey.shade100)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.person_outline, size: 12, color: Colors.grey.shade400),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text('Recorded by: ${report.reportBy}',
+                        style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade100,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(report.reportPeriod.toUpperCase(),
+                        style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.green.shade700)),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildMortalityCard(BatchMortality mortality) {
+  Widget _buildMortalitySection(BatchMortality mortality) {
     final hasMortality = mortality.total24hrs > 0;
-
+    final labelColor = hasMortality ? Colors.red.shade700 : Colors.green.shade700;
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: hasMortality
-              ? [Colors.red.shade50, Colors.orange.shade50]
-              : [Colors.green.shade50, Colors.blue.shade50],
-        ),
+        color: hasMortality ? Colors.red.shade50 : Colors.green.shade50,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: hasMortality ? Colors.red.shade200 : Colors.green.shade200,
-        ),
+        border: Border.all(color: hasMortality ? Colors.red.shade200 : Colors.green.shade200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -754,18 +758,23 @@ class _BatchReportScreenState extends State<BatchReportScreen>
           Row(
             children: [
               Icon(
-                hasMortality ? Icons.warning_amber : Icons.check_circle,
-                color: hasMortality ? Colors.red.shade700 : Colors.green.shade700,
-                size: 16,
+                hasMortality ? Icons.warning_amber_rounded : Icons.check_circle_outline,
+                size: 14,
+                color: labelColor,
               ),
-              const SizedBox(width: 8),
-              Text(
-                'Mortality',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: hasMortality ? Colors.red.shade800 : Colors.green.shade800,
+              const SizedBox(width: 6),
+              Text('Mortality',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: labelColor)),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: (hasMortality ? Colors.red : Colors.green).withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                child: Text('Total 24h: ${mortality.total24hrs}',
+                    style: TextStyle(
+                        fontSize: 11, fontWeight: FontWeight.w700, color: labelColor)),
               ),
             ],
           ),
@@ -773,86 +782,42 @@ class _BatchReportScreenState extends State<BatchReportScreen>
           Row(
             children: [
               Expanded(
-                child: _buildStatChip(
-                  'Day',
-                  '${mortality.day}',
-                  icon: Icons.wb_sunny,
-                  color: Colors.orange,
-                ),
-              ),
-              const SizedBox(width: 8),
+                  child: _buildInfoRow(
+                      Icons.wb_sunny_outlined, Colors.orange.shade600, 'Day', '${mortality.day}')),
               Expanded(
-                child: _buildStatChip(
-                  'Night',
-                  '${mortality.night}',
-                  icon: Icons.nightlight_round,
-                  color: Colors.indigo,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildStatChip(
-                  '24hrs',
-                  '${mortality.total24hrs}',
-                  icon: Icons.access_time,
-                  color: hasMortality ? Colors.red : Colors.green,
-                ),
-              ),
+                  child: _buildInfoRow(Icons.nightlight_round, Colors.indigo.shade400, 'Night',
+                      '${mortality.night}')),
             ],
           ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.5),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Total: ${mortality.cumulativeTotal} | Alive: ${mortality.birdsRemaining}',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade800,
-                    ),
-                  ),
-                ),
-                if (mortality.reason.isNotEmpty)
-                  Flexible(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade200,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        mortality.reason,
-                        style: TextStyle(
-                          fontSize: 9,
-                          color: Colors.grey.shade700,
-                          fontStyle: FontStyle.italic,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Expanded(
+                  child: _buildInfoRow(Icons.show_chart, Colors.grey.shade600, 'Cumulative',
+                      '${mortality.cumulativeTotal}')),
+              Expanded(
+                  child: _buildInfoRow(
+                      Icons.group_outlined, Colors.green.shade600, 'Birds Alive',
+                      '${mortality.birdsRemaining}')),
+            ],
           ),
+          if (mortality.reason.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text('Reason: ${mortality.reason}',
+                style: TextStyle(
+                    fontSize: 11, color: Colors.grey.shade600, fontStyle: FontStyle.italic)),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildFeedCard(BatchFeed feed) {
+  Widget _buildFeedSection(BatchFeed feed) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.brown.shade50, Colors.orange.shade50],
-        ),
+        color: Colors.brown.shade50,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.brown.shade200),
       ),
@@ -861,263 +826,81 @@ class _BatchReportScreenState extends State<BatchReportScreen>
         children: [
           Row(
             children: [
-              Icon(Icons.fastfood, color: Colors.brown.shade700, size: 16),
-              const SizedBox(width: 8),
-              Text(
-                'Feed',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.brown.shade800,
-                ),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.brown.shade100,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  feed.feedType,
+              Icon(Icons.fastfood, size: 14, color: Colors.brown.shade700),
+              const SizedBox(width: 6),
+              Text('Feed',
                   style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.brown.shade800,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatChip(
-                  'Consumed',
-                  '${feed.bagsConsumed} kg',
-                  icon: Icons.restaurant,
-                  color: Colors.orange,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildStatChip(
-                  'In Store',
-                  '${feed.balanceInStore} kg',
-                  icon: Icons.inventory,
-                  color: Colors.brown,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.5),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.access_time, size: 12, color: Colors.grey.shade600),
-                const SizedBox(width: 4),
-                Text(
-                  'Day: ${feed.bagsConsumedDay} kg | Night: ${feed.bagsConsumedNight} kg',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Colors.grey.shade700,
-                  ),
-                ),
-                const Spacer(),
-                if (feed.feedVariance.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: feed.feedVariance.toLowerCase().contains('above')
-                          ? Colors.orange.shade100
-                          : Colors.green.shade100,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      feed.feedVariance,
-                      style: TextStyle(
-                        fontSize: 9,
-                        color: feed.feedVariance.toLowerCase().contains('above')
-                            ? Colors.orange.shade800
-                            : Colors.green.shade800,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWeightCard(BatchReportData report) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.purple.shade50, Colors.indigo.shade50],
-        ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.purple.shade200),
-      ),
-      child: Row(
-        children: [
-          // Expanded(
-          //   child: _buildStatChip(
-          //     'Expected',
-          //     '${report.expectedWeight?.toStringAsFixed(2) ?? '0.00'} kg',
-          //     icon: Icons.monitor_weight,
-          //     color: Colors.purple,
-          //   ),
-          // ),
-          // const SizedBox(width: 8),
-          // Expanded(
-          //   child: _buildStatChip(
-          //     'Actual',
-          //     '${report.actualWeight?.toStringAsFixed(2) ?? '0.00'} kg',
-          //     icon: Icons.scale,
-          //     color: Colors.indigo,
-          //   ),
-          // ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildVaccinationCard(BatchVaccination vaccination) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.blue.shade50, Colors.cyan.shade50],
-        ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.vaccines, color: Colors.blue.shade700, size: 16),
-              const SizedBox(width: 8),
-              Text(
-                'Vaccination',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue.shade800,
-                ),
-              ),
+                      fontSize: 13, fontWeight: FontWeight.bold, color: Colors.brown.shade800)),
               const Spacer(),
-              Row(
-                children: [
-                  _buildStatusDot(Colors.green, vaccination.vaccinesDone.length),
-                  const SizedBox(width: 4),
-                  _buildStatusDot(Colors.orange, vaccination.vaccinesUpcoming.length),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Column(
-            children: [
-              if (vaccination.vaccinesDone.isNotEmpty)
-                ...vaccination.vaccinesDone.map((v) => Container(
-                  margin: const EdgeInsets.only(right: 4),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade100,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.green.shade300),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.check, color: Colors.green, size: 10),
-                      const SizedBox(width: 2),
-                      Flexible(
-                        child: Text(
-                          v.toString(),
-                          style: TextStyle(
-                            fontSize: 9,
-                            color: Colors.green.shade800,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                )),
-              if (vaccination.vaccinesUpcoming.isNotEmpty && vaccination.vaccinesDone.isNotEmpty)
-                const SizedBox(width: 4),
-              if (vaccination.vaccinesUpcoming.isNotEmpty)
-                ...vaccination.vaccinesUpcoming.map((v) => Container(
-                  margin: const EdgeInsets.only(bottom: 4),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.shade100,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.orange.shade300),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.access_time, color: Colors.orange, size: 10),
-                      const SizedBox(width: 2),
-                      Flexible(
-                        child: Text(
-                          v.toString(),
-                          style: TextStyle(
-                            fontSize: 9,
-                            color: Colors.orange.shade800,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                )),
-              if (vaccination.vaccinesDone.length + vaccination.vaccinesUpcoming.length > 5)
+              if (feed.feedType.isNotEmpty)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Text(
-                    '+${vaccination.vaccinesDone.length + vaccination.vaccinesUpcoming.length - 5} more',
-                    style: TextStyle(
-                      fontSize: 9,
-                      color: Colors.grey.shade700,
-                    ),
-                  ),
+                      color: Colors.brown.shade100, borderRadius: BorderRadius.circular(12)),
+                  child: Text(feed.feedType,
+                      style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.brown.shade800)),
                 ),
             ],
-          )
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                  child: _buildInfoRow(Icons.restaurant, Colors.orange.shade600, 'Consumed (kgs)',
+                      '${feed.bagsConsumed}')),
+              Expanded(
+                  child: _buildInfoRow(Icons.inventory_2_outlined, Colors.brown.shade600,
+                      'In Store (kgs)', '${feed.balanceInStore}')),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Expanded(
+                  child: _buildInfoRow(Icons.wb_sunny_outlined, Colors.orange.shade400,
+                      'Day (kgs)', '${feed.bagsConsumedDay}')),
+              Expanded(
+                  child: _buildInfoRow(Icons.nightlight_round, Colors.indigo.shade400,
+                      'Night (kgs)', '${feed.bagsConsumedNight}')),
+            ],
+          ),
+          if (feed.feedVariance.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: feed.feedVariance.toLowerCase().contains('above')
+                    ? Colors.orange.shade100
+                    : Colors.green.shade100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'Variance: ${feed.feedVariance}',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: feed.feedVariance.toLowerCase().contains('above')
+                      ? Colors.orange.shade800
+                      : Colors.green.shade800,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildMedicationCard(BatchMedication medication) {
-    final inUse = medication.inUse;
-    if (inUse.isEmpty) return const SizedBox.shrink();
-
+  Widget _buildFeedingPlanSection(FeedingPlan plan) {
+    if (plan.expectedFeedPerDayKg == 0 && plan.feedTypeInUse.isEmpty) return const SizedBox.shrink();
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.teal.shade50, Colors.green.shade50],
-        ),
+        color: Colors.teal.shade50,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.teal.shade200),
       ),
@@ -1126,92 +909,230 @@ class _BatchReportScreenState extends State<BatchReportScreen>
         children: [
           Row(
             children: [
-              Icon(Icons.medical_services, color: Colors.teal.shade700, size: 16),
-              const SizedBox(width: 8),
-              Text(
-                'Medication',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.teal.shade800,
+              Icon(Icons.schedule, size: 14, color: Colors.teal.shade700),
+              const SizedBox(width: 6),
+              Text('Feeding Plan',
+                  style: TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.bold, color: Colors.teal.shade800)),
+              const Spacer(),
+              if (plan.stageName.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                      color: Colors.teal.shade100, borderRadius: BorderRadius.circular(12)),
+                  child: Text(plan.stageName,
+                      style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.teal.shade800)),
                 ),
-              ),
             ],
           ),
           const SizedBox(height: 8),
-          ...inUse.take(2).map((med) => Container(
-            margin: const EdgeInsets.only(bottom: 6),
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.7),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.teal.shade100),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        med.medicineName,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
+          Row(
+            children: [
+              Expanded(
+                  child: _buildInfoRow(Icons.scale_outlined, Colors.teal.shade600,
+                      'Feed/Day (kg)', plan.expectedFeedPerDayKg.toStringAsFixed(1))),
+              Expanded(
+                  child: _buildInfoRow(Icons.calculate_outlined, Colors.teal.shade600,
+                      'Feed/Bird (g)', plan.feedPerBirdPerDayGrams.toStringAsFixed(1))),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Expanded(
+                  child: _buildInfoRow(Icons.inventory_outlined, Colors.brown.shade500,
+                      'Bags/Week', '${plan.expectedFeedPerWeekBags}')),
+              Expanded(
+                  child: _buildInfoRow(
+                      Icons.repeat, Colors.teal.shade600, 'Times/Day', '${plan.timesPerDay}')),
+            ],
+          ),
+          if (plan.feedingTimes.slots.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 4,
+              runSpacing: 4,
+              children: plan.feedingTimes.slots
+                  .map((slot) => Container(
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.teal.shade100,
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${med.dosage} - ${med.quantityUsed} ${med.unit}',
-                        style: TextStyle(
-                          fontSize: 9,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.teal.shade100,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    'In Use',
-                    style: TextStyle(
-                      fontSize: 8,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.teal.shade800,
-                    ),
-                  ),
-                ),
-              ],
+                        child: Text(slot,
+                            style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.teal.shade800,
+                                fontWeight: FontWeight.w500)),
+                      ))
+                  .toList(),
             ),
-          )),
-          if (inUse.length > 2)
-            Center(
-              child: Text(
-                '+${inUse.length - 2} more medications',
-                style: TextStyle(
-                  fontSize: 9,
-                  color: Colors.grey.shade600,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildEggProductionCard(EggProduction production) {
+  Widget _buildVaccinationSection(BatchVaccination vaccination) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.amber.shade100, Colors.orange.shade100],
-        ),
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.vaccines, size: 14, color: Colors.grey.shade600),
+              const SizedBox(width: 6),
+              Text('Vaccination',
+                  style: TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.bold, color: Colors.grey.shade700)),
+              const Spacer(),
+              if (vaccination.vaccinesDone.isNotEmpty)
+                Text('${vaccination.vaccinesDone.length} done',
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.green.shade600,
+                        fontWeight: FontWeight.w600)),
+              if (vaccination.vaccinesUpcoming.isNotEmpty) ...[
+                const SizedBox(width: 8),
+                Text('${vaccination.vaccinesUpcoming.length} upcoming',
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.orange.shade600,
+                        fontWeight: FontWeight.w600)),
+              ],
+            ],
+          ),
+          if (vaccination.vaccinesDone.isNotEmpty || vaccination.vaccinesUpcoming.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            if (vaccination.vaccinesDone.isNotEmpty)
+              Wrap(
+                spacing: 4,
+                runSpacing: 4,
+                children: vaccination.vaccinesDone
+                    .map((v) => _buildVaccineChip(v.toString(), true))
+                    .toList(),
+              ),
+            if (vaccination.vaccinesUpcoming.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Wrap(
+                spacing: 4,
+                runSpacing: 4,
+                children: vaccination.vaccinesUpcoming.map((v) {
+                  final name = v is Map ? (v['name'] ?? v.toString()) : v.toString();
+                  return _buildVaccineChip(name, false);
+                }).toList(),
+              ),
+            ],
+          ] else ...[
+            const SizedBox(height: 6),
+            Text('No vaccinations recorded',
+                style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVaccineChip(String name, bool isDone) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: isDone ? Colors.green.shade600 : Colors.orange.shade600,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Icon(isDone ? Icons.check : Icons.schedule, size: 10, color: Colors.white),
+        const SizedBox(width: 3),
+        Text(name,
+            style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.w500)),
+      ]),
+    );
+  }
+
+  Widget _buildMedicationSection(BatchMedication medication) {
+    final inUse = medication.inUse;
+    if (inUse.isEmpty) return const SizedBox.shrink();
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.purple.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.purple.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.medical_services, size: 14, color: Colors.purple.shade700),
+              const SizedBox(width: 6),
+              Text('Medication',
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.purple.shade800)),
+              const Spacer(),
+              Text('${inUse.length} in use',
+                  style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.purple.shade600,
+                      fontWeight: FontWeight.w600)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ...inUse.map((med) => Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(med.medicineName,
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                          Text('${med.dosage}  ·  ${med.quantityUsed} ${med.unit}',
+                              style: TextStyle(fontSize: 10, color: Colors.grey.shade600)),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.purple.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text('In Use',
+                          style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.purple.shade800)),
+                    ),
+                  ],
+                ),
+              )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEggSection(EggProduction egg) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.amber.shade50,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.amber.shade300),
       ),
@@ -1220,31 +1141,23 @@ class _BatchReportScreenState extends State<BatchReportScreen>
         children: [
           Row(
             children: [
-              Icon(Icons.egg, color: Colors.amber.shade800, size: 16),
-              const SizedBox(width: 8),
-              Text(
-                'Egg Production',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.amber.shade800,
-                ),
-              ),
+              Icon(Icons.egg, size: 14, color: Colors.amber.shade800),
+              const SizedBox(width: 6),
+              Text('Egg Production',
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.amber.shade800)),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${production.productionPercentage.toStringAsFixed(1)}%',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.amber.shade800,
-                  ),
-                ),
+                    color: Colors.amber.shade100, borderRadius: BorderRadius.circular(12)),
+                child: Text('${egg.productionPercentage.toStringAsFixed(1)}%',
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.amber.shade900)),
               ),
             ],
           ),
@@ -1252,77 +1165,46 @@ class _BatchReportScreenState extends State<BatchReportScreen>
           Row(
             children: [
               Expanded(
-                child: _buildStatChip(
-                  'Trays',
-                  '${production.traysCollected}',
-                  icon: Icons.inbox,
-                  color: Colors.brown,
-                ),
-              ),
-              const SizedBox(width: 8),
+                  child: _buildInfoRow(Icons.inbox, Colors.brown.shade500, 'Trays Collected',
+                      '${egg.traysCollected}')),
               Expanded(
-                child: _buildStatChip(
-                  'Eggs',
-                  '${production.totalEggsCollected}',
-                  icon: Icons.circle,
-                  color: Colors.amber,
-                ),
-              ),
+                  child: _buildInfoRow(
+                      Icons.egg_outlined, Colors.amber.shade700, 'Total Eggs',
+                      '${egg.totalEggsCollected}')),
             ],
           ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.5),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Expanded(
+                  child: _buildInfoRow(
+                      Icons.check_circle_outline, Colors.green.shade600, 'Good Eggs',
+                      '${egg.goodEggs}')),
+              Expanded(
+                  child: _buildInfoRow(Icons.inventory_outlined, Colors.brown.shade500,
+                      'In Store', '${egg.traysInStore} trays')),
+            ],
+          ),
+          if (egg.partialBroken > 0 || egg.completeBroken > 0 || egg.smallDeformed > 0) ...[
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 4,
+              runSpacing: 4,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Good: ${production.goodEggs}',
-                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(height: 2),
-                      Wrap(
-                        spacing: 4,
-                        runSpacing: 2,
-                        children: [
-                          if (production.partialBroken > 0)
-                            _buildDefectChip('Partial', production.partialBroken, Colors.orange),
-                          if (production.completeBroken > 0)
-                            _buildDefectChip('Broken', production.completeBroken, Colors.red),
-                          if (production.smallDeformed > 0)
-                            _buildDefectChip('Small', production.smallDeformed, Colors.purple),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'Value',
-                      style: TextStyle(fontSize: 9, color: Colors.grey.shade600),
-                    ),
-                    Text(
-                      '$_currency ${production.totalValue.toStringAsFixed(0)}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green.shade700,
-                      ),
-                    ),
-                  ],
-                ),
+                if (egg.partialBroken > 0)
+                  _buildDefectChip('Partial', egg.partialBroken, Colors.orange),
+                if (egg.completeBroken > 0)
+                  _buildDefectChip('Broken', egg.completeBroken, Colors.red),
+                if (egg.smallDeformed > 0)
+                  _buildDefectChip('Deformed', egg.smallDeformed, Colors.purple),
               ],
             ),
-          ),
+          ],
+          if (egg.totalValue > 0) ...[
+            const SizedBox(height: 6),
+            _buildInfoRow(Icons.attach_money, Colors.green.shade700, 'Value',
+                '$_currency ${egg.totalValue.toStringAsFixed(0)}'),
+          ],
         ],
       ),
     );
@@ -1330,82 +1212,14 @@ class _BatchReportScreenState extends State<BatchReportScreen>
 
   Widget _buildDefectChip(String label, int count, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withOpacity(0.4)),
       ),
-      child: Text(
-        '$label: $count',
-        style: TextStyle(
-          fontSize: 8,
-          color: color,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatusDot(Color color, int count) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Text(
-        '$count',
-        style: TextStyle(
-          fontSize: 9,
-          color: color,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatChip(String label, String value, {required IconData icon, required Color color}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: color),
-          const SizedBox(width: 4),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 8,
-                    color: Colors.grey.shade600,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      child: Text('$label: $count',
+          style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w500)),
     );
   }
 
@@ -1452,22 +1266,9 @@ class _BatchReportScreenState extends State<BatchReportScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.green.shade600, Colors.green.shade400],
-              ),
-              borderRadius: BorderRadius.circular(30),
-            ),
-            child: const Text(
-              'Financial Overview',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
+          const Text(
+            'Financial Overview',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
 
