@@ -66,6 +66,9 @@ import 'package:agriflock/features/vet/home/vet_home_screen.dart';
 import 'package:agriflock/features/vet/payments/vet_payments_history_screen.dart';
 import 'package:agriflock/features/vet/payments/vet_payments_screen.dart';
 import 'package:agriflock/features/vet/payments/vet_service_payments_screen.dart';
+import 'package:agriflock/features/vet/payments/vet_pending_payments_screen.dart';
+import 'package:agriflock/features/vet/payments/vet_remit_payment_screen.dart';
+import 'package:agriflock/features/vet/payments/models/vet_pending_payment.dart';
 import 'package:agriflock/features/vet/profile/vet_profile_screen.dart';
 import 'package:agriflock/features/vet/schedules/vet_schedules_screen.dart';
 import 'package:agriflock/features/vet/schedules/widgets/vet_visit_form.dart';
@@ -833,6 +836,17 @@ class AppRoutes {
           ),
         ),
 
+        GoRoute(
+          path: '/vet/payments/pending',
+          builder: (context, state) => const VetPendingPaymentsScreen(),
+        ),
+        GoRoute(
+          path: '/vet/payment/remit',
+          builder: (context, state) {
+            final payment = state.extra as VetPendingPayment;
+            return VetRemitPaymentScreen(payment: payment);
+          },
+        ),
         GoRoute(
           path: '/vet-visit-form',
           builder: (context, state) {

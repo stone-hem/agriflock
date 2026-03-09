@@ -315,6 +315,12 @@ class _ActiveOrdersTabState extends State<_ActiveOrdersTab>
         return Colors.blue;
       case 'SCHEDULED':
         return Colors.purple;
+      case 'ACCEPTED':
+        return Colors.teal;
+      case 'IN_PROGRESS':
+        return Colors.indigo;
+      case 'PAYMENT_PENDING':
+        return Colors.amber.shade700;
       case 'COMPLETED':
         return Colors.green;
       case 'CANCELLED':
@@ -332,6 +338,12 @@ class _ActiveOrdersTabState extends State<_ActiveOrdersTab>
         return 'Reviewed';
       case 'SCHEDULED':
         return 'Scheduled';
+      case 'ACCEPTED':
+        return 'Accepted';
+      case 'IN_PROGRESS':
+        return 'In Progress';
+      case 'PAYMENT_PENDING':
+        return 'Payment Pending';
       case 'COMPLETED':
         return 'Completed';
       case 'CANCELLED':
@@ -544,12 +556,26 @@ class _ActiveOrdersTabState extends State<_ActiveOrdersTab>
                     ),
                     child: const Text('Cancel'),
                   ),
-                const SizedBox(width: 8),
-                Tooltip(
-                  message: isToday
-                      ? ''
-                      : 'Tracking is only available on the scheduled day',
-                  child: ElevatedButton(
+                if (order.status == 'PAYMENT_PENDING') ...[
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () => context.push('/vet-service-payment', extra: {
+                      'orderId': order.id,
+                      'orderNumber': order.orderNumber,
+                      'vetName': order.vetName,
+                      'amount': order.totalEstimatedCost,
+                      'currency': 'KES',
+                    }),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber.shade700,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                    ),
+                    child: const Text('Pay'),
+                  ),
+                ],
+                if (order.status == 'ACCEPTED' || order.status == 'IN_PROGRESS') ...[
+                  const SizedBox(width: 8),
+                  ElevatedButton(
                     onPressed: isToday
                         ? () => context.push('/my-order-tracking', extra: order)
                         : null,
@@ -560,21 +586,16 @@ class _ActiveOrdersTabState extends State<_ActiveOrdersTab>
                     ),
                     child: const Text('Track'),
                   ),
-                ),
+                ],
               ],
             ),
             const SizedBox(height: 8),
-            if (!isToday)
+            if ((order.status == 'ACCEPTED' || order.status == 'IN_PROGRESS') && !isToday)
               Text('* Tracking is only available on the scheduled day',
                   style: Theme.of(context)
                       .textTheme
                       .labelLarge
                       ?.copyWith(color: Colors.red)),
-            Text('* You can\'t cancel orders that are in progress',
-                style: Theme.of(context)
-                    .textTheme
-                    .labelLarge
-                    ?.copyWith(color: Colors.red)),
           ],
         ),
       ),
@@ -1259,19 +1280,6 @@ class _CompletedOrdersTabState extends State<_CompletedOrdersTab>
                     ],
                   ),
                   const SizedBox(height: 12),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _filterChip('All', 'all', Colors.blue),
-                        const SizedBox(width: 8),
-                        _filterChip('Needs Payment', 'needs_payment', Colors.orange),
-                        const SizedBox(width: 8),
-                        _filterChip('Paid', 'paid_rated', Colors.green),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
                 ],
               ),
             ),

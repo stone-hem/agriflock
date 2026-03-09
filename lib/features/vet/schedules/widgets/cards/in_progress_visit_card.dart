@@ -201,7 +201,6 @@ class _InProgressVisitCardState extends State<InProgressVisitCard> {
 
                   // Prepare data for API
                   final data = {
-                    "actual_cost": widget.visit.serviceFee,
                     "notes": notesController.text.trim().isEmpty
                         ? "string"
                         : notesController.text.trim(),

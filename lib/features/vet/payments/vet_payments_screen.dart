@@ -1,9 +1,56 @@
 import 'package:agriflock/core/widgets/alert_button.dart';
+import 'package:agriflock/features/vet/payments/models/vet_pending_payment.dart';
+import 'package:agriflock/features/vet/schedules/repo/visit_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class VetPaymentsScreen extends StatelessWidget {
+String _fmtAmt(double v) => v.toStringAsFixed(2);
+
+String _fmtDt(DateTime dt) {
+  const m = [
+    'Jan','Feb','Mar','Apr','May','Jun',
+    'Jul','Aug','Sep','Oct','Nov','Dec'
+  ];
+  return '${m[dt.month - 1]} ${dt.day}, ${dt.year}';
+}
+
+class VetPaymentsScreen extends StatefulWidget {
   const VetPaymentsScreen({super.key});
+
+  @override
+  State<VetPaymentsScreen> createState() => _VetPaymentsScreenState();
+}
+
+class _VetPaymentsScreenState extends State<VetPaymentsScreen> {
+  final VisitsRepository _repo = VisitsRepository();
+  bool _isLoading = true;
+  String? _error;
+  VetPaymentsSummary? _summary;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    final result = await _repo.getVetPaymentsSummary();
+    if (!mounted) return;
+    result.when(
+      success: (data) => setState(() {
+        _summary = data;
+        _isLoading = false;
+      }),
+      failure: (message, _, __) => setState(() {
+        _error = message;
+        _isLoading = false;
+      }),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,17 +63,12 @@ class VetPaymentsScreen extends StatelessWidget {
               fit: BoxFit.cover,
               width: 40,
               height: 40,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: Colors.green,
-                  child: const Icon(
-                    Icons.image,
-                    size: 100,
-                    color: Colors.white54,
-                  ),
-                );
-              },
+              errorBuilder: (_, __, ___) => Container(
+                color: Colors.green,
+                child: const Icon(Icons.image, size: 40, color: Colors.white54),
+              ),
             ),
+            const SizedBox(width: 8),
             const Text('My Payments'),
           ],
         ),
@@ -34,48 +76,82 @@ class VetPaymentsScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _load,
+          ),
           const Padding(
             padding: EdgeInsets.only(right: 8),
             child: AlertsButton(),
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+              ? _buildError()
+              : RefreshIndicator(
+                  onRefresh: _load,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildOverview(),
+                        const SizedBox(height: 24),
+                        if (_summary!.overdueCount > 0) ...[
+                          _buildOverdueAlert(),
+                          const SizedBox(height: 24),
+                        ],
+                        _buildPendingSection(),
+                        const SizedBox(height: 24),
+                        _buildCompletedSection(),
+                      ],
+                    ),
+                  ),
+                ),
+    );
+  }
+
+  Widget _buildError() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Payment Overview
-            _buildPaymentOverview(),
-            const SizedBox(height: 32),
-
-            // Pending Payments
-            _buildPendingPayments(context),
-
-            const SizedBox(height: 32),
-
-            // Recent Transactions
-            _buildRecentTransactions(context),
-
-
+            Icon(Icons.error_outline, size: 56, color: Colors.red.shade400),
+            const SizedBox(height: 16),
+            Text(_error!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 15)),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: _load, child: const Text('Retry')),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildPaymentOverview() {
+  // ── Overview card ──────────────────────────────────────────────────────────
+
+  Widget _buildOverview() {
+    final acc = _summary!.account;
+    final sym = acc.currencySymbol.isNotEmpty ? acc.currencySymbol : acc.currency;
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Colors.green.shade50, Colors.lightGreen.shade50],
+          colors: [Colors.green.shade600, Colors.green.shade800],
         ),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -83,218 +159,328 @@ class VetPaymentsScreen extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Total Earnings',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade700,
-                    ),
-                  ),
+                  const Text('This Month\'s Earnings',
+                      style: TextStyle(color: Colors.white70, fontSize: 13)),
                   const SizedBox(height: 4),
                   Text(
-                    '\$2,850.00',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green.shade800,
-                    ),
-                  ),
-                  Text(
-                    'This month',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.green.shade600,
-                    ),
+                    '$sym ${_fmt(acc.totalEarningsThisMonth)}',
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.3),
+                  color: Colors.white.withOpacity(0.15),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  Icons.account_balance_wallet,
-                  size: 32,
-                  color: Colors.green.shade700,
-                ),
+                child: const Icon(Icons.account_balance_wallet,
+                    size: 32, color: Colors.white),
               ),
             ],
           ),
           const SizedBox(height: 20),
+          const Divider(color: Colors.white24, height: 1),
+          const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Completed',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade700,
-                      ),
-                    ),
-                    Text(
-                      '\$2,150.00',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green.shade800,
-                      ),
-                    ),
-                  ],
+                child: _OverviewStat(
+                  label: 'Last Month',
+                  value: '$sym ${_fmt(acc.totalEarningsLastMonth)}',
                 ),
               ),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Pending',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade700,
-                      ),
-                    ),
-                    Text(
-                      '\$700.00',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange.shade800,
-                      ),
-                    ),
-                  ],
+                child: _OverviewStat(
+                  label: 'Total Remitted',
+                  value: '$sym ${_fmt(acc.totalRemitted)}',
+                ),
+              ),
+              Expanded(
+                child: _OverviewStat(
+                  label: 'Pending Remit',
+                  value: '$sym ${_fmt(_summary!.pendingRemittance)}',
+                  highlight: true,
                 ),
               ),
             ],
+          ),
+          if (acc.lastRemittanceDate != null) ...[
+            const SizedBox(height: 12),
+            Text(
+              'Last remittance: ${_fmtDate(acc.lastRemittanceDate!)}',
+              style:
+                  const TextStyle(color: Colors.white60, fontSize: 11),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // ── Overdue alert ──────────────────────────────────────────────────────────
+
+  Widget _buildOverdueAlert() {
+    final acc = _summary!.account;
+    final sym = acc.currencySymbol.isNotEmpty ? acc.currencySymbol : acc.currency;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.red.shade200),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.warning_amber_rounded, color: Colors.red.shade700),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              '${_summary!.overdueCount} overdue payment${_summary!.overdueCount > 1 ? 's' : ''} — $sym ${_fmt(_summary!.overdueAmount)} outstanding',
+              style: TextStyle(
+                  color: Colors.red.shade800, fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
     );
   }
 
+  // ── Pending remittances ────────────────────────────────────────────────────
 
-  Widget _buildRecentTransactions(BuildContext context) {
+  Widget _buildPendingSection() {
+    final pending = _summary!.pendingPayments;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Recent Transactions',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
+            Text('Pending Remittances',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.shade800)),
+            if (pending.length > 2)
+              TextButton(
+                onPressed: () => context.push('/vet/payments/pending'),
+                child: const Text('View all'),
               ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (pending.isEmpty)
+          _emptyBanner(Icons.check_circle, Colors.green,
+              'No pending remittances — you\'re all caught up!')
+        else ...[
+          ...pending.take(2).map((p) => _PendingCard(
+                payment: p,
+                currencySymbol: _summary!.account.currencySymbol,
+                onRemit: () async {
+                  await context.push('/vet/payment/remit', extra: p);
+                  if (mounted) _load();
+                },
+              )),
+          if (pending.length > 2)
+            TextButton(
+              onPressed: () => context.push('/vet/payments/pending'),
+              child: Text('+ ${pending.length - 2} more pending'),
             ),
+        ],
+      ],
+    );
+  }
+
+  // ── Completed transactions ─────────────────────────────────────────────────
+
+  Widget _buildCompletedSection() {
+    final completed = _summary!.completedPayments;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Recent Transactions',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.shade800)),
             TextButton(
               onPressed: () => context.push('/vet/payments/history'),
               child: const Text('View all'),
             ),
           ],
         ),
-        const SizedBox(height: 16),
-        _TransactionItem(
-          farmerName: 'John Peterson',
-          service: 'Regular Checkup',
-          amount: 150.00,
-          date: 'Dec 10, 2023',
-          status: 'Completed',
-          isCredit: true,
-        ),
-        _TransactionItem(
-          farmerName: 'Maria Rodriguez',
-          service: 'Vaccination Service',
-          amount: 200.00,
-          date: 'Dec 9, 2023',
-          status: 'Completed',
-          isCredit: true,
-        ),
-        _TransactionItem(
-          farmerName: 'Robert Chen',
-          service: 'Emergency Visit',
-          amount: 300.00,
-          date: 'Dec 8, 2023',
-          status: 'Pending',
-          isCredit: false,
-        ),
-        _TransactionItem(
-          farmerName: 'Platform Fee',
-          service: 'Service Charge',
-          amount: 15.00,
-          date: 'Dec 8, 2023',
-          status: 'Completed',
-          isCredit: false,
-          isFee: true,
-        ),
+        const SizedBox(height: 12),
+        if (completed.isEmpty)
+          _emptyBanner(
+              Icons.receipt_long, Colors.grey, 'No completed transactions yet')
+        else
+          ...completed.take(5).map((p) => _TransactionCard(
+                payment: p,
+                currencySymbol: _summary!.account.currencySymbol,
+              )),
       ],
     );
   }
 
-  Widget _buildPendingPayments(BuildContext context) {
+  Widget _emptyBanner(IconData icon, Color color, String text) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.07),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color.withOpacity(0.7)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(text,
+                style:
+                    TextStyle(color: color.withOpacity(0.85), fontSize: 14)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _fmt(double v) => v.toStringAsFixed(2);
+
+  String _fmtDate(DateTime dt) {
+    const months = [
+      'Jan','Feb','Mar','Apr','May','Jun',
+      'Jul','Aug','Sep','Oct','Nov','Dec'
+    ];
+    return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
+  }
+}
+
+// ── Overview stat tile ─────────────────────────────────────────────────────
+
+class _OverviewStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool highlight;
+
+  const _OverviewStat(
+      {required this.label, required this.value, this.highlight = false});
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Pending Payments',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey.shade800,
-          ),
-        ),
-        const SizedBox(height: 16),
-        _PendingPaymentItem(
-          farmerName: 'David Wilson',
-          service: 'Health Inspection',
-          amount: 180.00,
-          visitDate: 'Dec 7, 2023',
-          dueDate: 'Dec 14, 2023',
-          onPay: () {},
-        ),
-        _PendingPaymentItem(
-          farmerName: 'Sarah Miller',
-          service: 'Follow-up Visit',
-          amount: 120.00,
-          visitDate: 'Dec 6, 2023',
-          dueDate: 'Dec 13, 2023',
-          onPay: () {},
-        ),
+        Text(label,
+            style:
+                const TextStyle(color: Colors.white60, fontSize: 11)),
+        const SizedBox(height: 2),
+        Text(value,
+            style: TextStyle(
+                color: highlight ? Colors.orange.shade200 : Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.bold)),
       ],
     );
   }
 }
 
+// ── Pending remittance card ────────────────────────────────────────────────
 
-class _TransactionItem extends StatelessWidget {
-  final String farmerName;
-  final String service;
-  final double amount;
-  final String date;
-  final String status;
-  final bool isCredit;
-  final bool isFee;
+class _PendingCard extends StatelessWidget {
+  final VetPendingPayment payment;
+  final String currencySymbol;
+  final VoidCallback onRemit;
 
-  const _TransactionItem({
-    required this.farmerName,
-    required this.service,
-    required this.amount,
-    required this.date,
-    required this.status,
-    required this.isCredit,
-    this.isFee = false,
-  });
+  const _PendingCard(
+      {required this.payment,
+      required this.currencySymbol,
+      required this.onRemit});
 
   @override
   Widget build(BuildContext context) {
+    final isOverdue = payment.remittanceDueDate != null &&
+        payment.remittanceDueDate!.isBefore(DateTime.now());
+    final sym = currencySymbol.isNotEmpty ? currencySymbol : payment.currency;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isOverdue ? Colors.red.shade50 : Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+            color: isOverdue ? Colors.red.shade200 : Colors.orange.shade100),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(payment.paymentNumber,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 13)),
+                const SizedBox(height: 4),
+                Text(
+                  'Commission: $sym ${_fmtAmt(payment.platformCommission)}',
+                  style: TextStyle(
+                      color: isOverdue
+                          ? Colors.red.shade700
+                          : Colors.orange.shade800,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15),
+                ),
+                if (payment.remittanceDueDate != null)
+                  Text(
+                    '${isOverdue ? 'Overdue' : 'Due'}: ${_fmtDt(payment.remittanceDueDate!)}',
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: isOverdue
+                            ? Colors.red.shade600
+                            : Colors.grey.shade600),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          ElevatedButton(
+            onPressed: onRemit,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            ),
+            child:
+                const Text('Remit', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Completed transaction card ─────────────────────────────────────────────
+
+class _TransactionCard extends StatelessWidget {
+  final VetPendingPayment payment;
+  final String currencySymbol;
+
+  const _TransactionCard(
+      {required this.payment, required this.currencySymbol});
+
+  @override
+  Widget build(BuildContext context) {
+    final sym = currencySymbol.isNotEmpty ? currencySymbol : payment.currency;
+    final date = payment.vetRemittedAt ?? payment.farmerPaidAt;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -305,48 +491,35 @@ class _TransactionItem extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: isCredit ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+              color: Colors.green.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              isCredit ? Icons.arrow_downward : Icons.arrow_upward,
-              size: 18,
-              color: isCredit ? Colors.green : Colors.orange,
-            ),
+            child: const Icon(Icons.arrow_downward,
+                size: 18, color: Colors.green),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  farmerName,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-                Text(
-                  service,
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 12,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(Icons.calendar_today, size: 12, color: Colors.grey.shade500),
-                    const SizedBox(width: 4),
-                    Text(
-                      date,
+                Text(payment.paymentNumber,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 13)),
+                if (payment.vetRemittanceMethod != null)
+                  Text('via ${payment.vetRemittanceMethod}',
                       style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
+                          color: Colors.grey.shade600, fontSize: 12)),
+                if (date != null)
+                  Row(
+                    children: [
+                      Icon(Icons.calendar_today,
+                          size: 11, color: Colors.grey.shade500),
+                      const SizedBox(width: 4),
+                      Text(_fmtDt(date),
+                          style: TextStyle(
+                              color: Colors.grey.shade600, fontSize: 11)),
+                    ],
+                  ),
               ],
             ),
           ),
@@ -354,136 +527,28 @@ class _TransactionItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '${isCredit ? '+' : '-'}\$${amount.toStringAsFixed(2)}',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: isCredit ? Colors.green : Colors.grey.shade800,
-                ),
+                '+$sym ${_fmtAmt(payment.vetEarnings)}',
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: Colors.green),
               ),
               const SizedBox(height: 4),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: status == 'Completed'
-                      ? Colors.green.withOpacity(0.1)
-                      : Colors.orange.withOpacity(0.1),
+                  color: Colors.green.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
-                child: Text(
-                  status,
-                  style: TextStyle(
-                    color: status == 'Completed' ? Colors.green : Colors.orange,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PendingPaymentItem extends StatelessWidget {
-  final String farmerName;
-  final String service;
-  final double amount;
-  final String visitDate;
-  final String dueDate;
-  final VoidCallback onPay;
-
-  const _PendingPaymentItem({
-    required this.farmerName,
-    required this.service,
-    required this.amount,
-    required this.visitDate,
-    required this.dueDate,
-    required this.onPay,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.orange.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.orange.shade100),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                farmerName,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-              ),
-              Text(
-                '\$${amount.toStringAsFixed(2)}',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: Colors.orange.shade800,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            service,
-            style: TextStyle(
-              color: Colors.grey.shade600,
-              fontSize: 12,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.calendar_today, size: 12, color: Colors.grey.shade500),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Visit: $visitDate',
+                child: const Text('Remitted',
                     style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 16),
-              Row(
-                children: [
-                  Icon(Icons.warning, size: 12, color: Colors.orange.shade500),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Due: $dueDate',
-                    style: TextStyle(
-                      color: Colors.orange.shade600,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
+                        color: Colors.green,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600)),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          ElevatedButton(
-            onPressed: onPay,
-            child: const Text('Pay Now ...'),
-          )
-
         ],
       ),
     );

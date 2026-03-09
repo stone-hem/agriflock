@@ -291,29 +291,7 @@ class PendingPaymentsVisitCard extends StatelessWidget {
     );
   }
 
-  Future<void> _processPayment(BuildContext context) async {
-    // Show payment processing dialog or navigate to payment screen
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Process Payment'),
-        content: const Text('This will open payment processing.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // Handle payment processing
-              // After successful payment, update status to completed
-              // and call onActionCompleted()
-            },
-            child: const Text('Process'),
-          ),
-        ],
-      ),
-    );
+  void _processPayment(BuildContext context) {
+    context.push('/vet/payments/pending');
   }
 }

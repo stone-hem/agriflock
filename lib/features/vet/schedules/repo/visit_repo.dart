@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:agriflock/core/utils/log_util.dart';
 import 'package:agriflock/core/utils/result.dart';
+import 'package:agriflock/features/vet/payments/models/vet_pending_payment.dart';
 import 'package:agriflock/features/vet/schedules/models/visit_model.dart';
 import 'package:agriflock/features/vet/schedules/models/visit_stats.dart';
 import 'package:agriflock/main.dart';
@@ -283,6 +284,99 @@ class VisitsRepository {
     }
   }
 
+
+  /// Fetch full payments summary (overview + pending + completed + overdue)
+  Future<Result<VetPaymentsSummary>> getVetPaymentsSummary() async {
+    try {
+      final response = await apiClient.get('/order-payments/vets/summary');
+      final jsonResponse = jsonDecode(response.body);
+      LogUtil.info('Get Vet Payments Summary Response: $jsonResponse');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return Success(VetPaymentsSummary.fromJson(
+            jsonResponse as Map<String, dynamic>));
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to fetch payments summary',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException {
+      return const Failure(
+          message: 'No internet connection. Please try again.', statusCode: 0);
+    } catch (e) {
+      LogUtil.error('Error in getVetPaymentsSummary: $e');
+      return Failure(message: e.toString());
+    }
+  }
+
+  /// Fetch vet's pending payment remittances
+  Future<Result<VetPendingPaymentsResponse>> getVetPendingPayments() async {
+    try {
+      final response = await apiClient.get('/order-payments/vet/pending');
+      final jsonResponse = jsonDecode(response.body);
+      LogUtil.info('Get Vet Pending Payments Response: $jsonResponse');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return Success(VetPendingPaymentsResponse.fromJson(
+            jsonResponse as Map<String, dynamic>));
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to fetch pending payments',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException {
+      return const Failure(
+          message: 'No internet connection. Please try again.', statusCode: 0);
+    } catch (e) {
+      LogUtil.error('Error in getVetPendingPayments: $e');
+      return Failure(message: e.toString());
+    }
+  }
+
+  /// Remit payment to organization via Stripe (vet side)
+  Future<Result<void>> remitVetPayment({
+    required String paymentId,
+    required String cardToken,
+    required String email,
+  }) async {
+    try {
+      final response = await apiClient.post(
+        '/order-payments/vet/remit',
+        body: {
+          'paymentId': paymentId,
+          'paymentMethod': 'stripe',
+          'cardToken': cardToken,
+          'email': email,
+        },
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      final jsonResponse = jsonDecode(response.body);
+      LogUtil.info('Remit Vet Payment API Response: $jsonResponse');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return Success(null);
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to remit payment',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException {
+      return const Failure(
+        message: 'No internet connection. Please try again.',
+        statusCode: 0,
+      );
+    } catch (e) {
+      LogUtil.error('Error in remitVetPayment: $e');
+      return Failure(message: e.toString());
+    }
+  }
 
   /// Get visit statistics (counts by status)
   Future<Result<VisitStats>> getVisitStats() async {
