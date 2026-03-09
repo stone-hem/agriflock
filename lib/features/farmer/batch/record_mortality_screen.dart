@@ -149,7 +149,9 @@ class _RecordMortalityScreenState extends State<RecordMortalityScreen> {
         elevation: 0,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        physics: const AlwaysScrollableScrollPhysics(),
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
         child: Form(
           key: _formKey,
           child: Column(
@@ -440,7 +442,6 @@ class _RecordMortalityScreenState extends State<RecordMortalityScreen> {
               // Submit button
               SizedBox(
                 width: double.infinity,
-                height: 50,
                 child: ElevatedButton(
                   onPressed: _isSubmitting ? null : _submitMortality,
                   style: ElevatedButton.styleFrom(
@@ -474,7 +475,6 @@ class _RecordMortalityScreenState extends State<RecordMortalityScreen> {
               // Cancel button
               SizedBox(
                 width: double.infinity,
-                height: 50,
                 child: OutlinedButton(
                   onPressed: () => context.pop(),
                   style: OutlinedButton.styleFrom(

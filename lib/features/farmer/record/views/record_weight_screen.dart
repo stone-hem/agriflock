@@ -94,7 +94,9 @@ class _RecordWeightScreenState extends State<RecordWeightScreen> {
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        physics: const AlwaysScrollableScrollPhysics(),
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
         child: Form(
           key: _formKey,
           child: Column(
@@ -214,7 +216,6 @@ class _RecordWeightScreenState extends State<RecordWeightScreen> {
               // Save Button
               SizedBox(
                 width: double.infinity,
-                height: 50,
                 child: ElevatedButton(
                   onPressed: _isSaving ? null : _saveWeightRecord,
                   style: ElevatedButton.styleFrom(

@@ -150,9 +150,8 @@ class _BatchesBottomSheetState extends State<BatchesBottomSheet> {
     });
 
     if (result != null && result != false) {
-      await _refreshBatches();
       if (mounted) {
-        // Close the bottom sheet, passing the new batch back to HousesScreen
+        // Close immediately — HousesScreen will refresh and navigate to details
         Navigator.of(context).pop(result);
       }
     }

@@ -124,7 +124,9 @@ class UseCategorySelectionView extends StatelessWidget {
           child: isLoading
               ? const Center(child: CircularProgressIndicator())
               : SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            physics: const AlwaysScrollableScrollPhysics(),
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -181,7 +183,13 @@ class UseCategorySelectionView extends StatelessWidget {
                   subtitle: 'Log eggs, chickens and manure sold Options Eggs',
                   color: Colors.amber.shade700,
                   onTap: () {
-                    context.push('/batches/${batch.id}/record-product');
+                    context.push(
+                      '/batches/${batch.id}/record-product',
+                      extra: {
+                        'batchNumber': batch.batchNumber,
+                        'batchAge': int.tryParse(batch.age ?? ''),
+                      },
+                    );
                   },
                 ),
 
