@@ -360,16 +360,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: _buildInfoRow(
-                        'Expected avg feeding',
-                        '${batch.expectedFoodPerBirdPerDayG.toStringAsFixed(0)}g/bird = ${batch.totalExpectedFoodPerDayKg.toStringAsFixed(1)} kgs',
-                        Icons.restaurant_outlined,
-                        Colors.orange,
-                      ),
-                    ),
                     if (!isLayers) ...[
-                      const SizedBox(width: 10),
                       Expanded(
                         child: _buildInfoRow(
                           'Production cost/bird',
@@ -385,67 +376,6 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
             ),
             const SizedBox(height: 8),
 
-
-            // ── Feed Card (consolidated, at top) ───────────────────────────
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.brown.shade50,
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: Colors.brown.shade300),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: _buildInfoRow(
-                          'Total feeds in store',
-                          '${batch.foodInStoreKg} kgs\n${batch.foodInStoreBags} bags (50kgs)',
-                          Icons.inventory_2_outlined,
-                          Colors.brown,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _buildInfoRow(
-                          'Actual feeds consumed',
-                          '${batch.actualFoodPerBirdPerDayG.toStringAsFixed(0)}g/bird\n= ${batch.totalActualFoodPerDayKg.toStringAsFixed(1)} kgs',
-                          Icons.restaurant_menu_outlined,
-                          Colors.teal,
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (batch.feed != null) ...[
-                    const SizedBox(height: 8),
-                    _buildInfoRow(
-                      'Bags consumed (50 Kgs)',
-                      '${batch.feed!.totalBagsConsumed} (Day: ${batch.feed!.bagsConsumedDay}${!isLayers ? ', Night: ${batch.feed!.bagsConsumedNight}' : ''})',
-                      Icons.restaurant,
-                      Colors.orange.shade700,
-                    ),
-                    const SizedBox(height: 8),
-                    _buildInfoRow(
-                      'Variance',
-                      batch.feed!.feedVariance,
-                      Icons.trending_flat,
-                      batch.feed!.feedVariance.toLowerCase().contains('above')
-                          ? Colors.orange
-                          : Colors.green,
-                    ),
-                  ],
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-
-
-
             // Feeding Plan from new feeding_plan object
             if (batch.feedingPlan != null) ...[
               Container(
@@ -458,6 +388,22 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Row(
+                      children: [
+                        Icon(Icons.info_outline, size: 12, color: Colors.brown.shade400),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Bag size: 50 kgs',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.brown.shade500,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+
                     _buildInfoRow(
                       'Feed type',
                       batch.feedingPlan!.feedTypeInUse,
@@ -473,8 +419,15 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                     ),
                     const SizedBox(height: 8),
                     _buildInfoRow(
+                      'Expected avg feeding per day',
+                      '${batch.expectedFoodPerBirdPerDayG.toStringAsFixed(0)}g/bird = ${batch.totalExpectedFoodPerDayKg.toStringAsFixed(1)} kgs / ${ batch.totalExpectedFoodPerDayKg==0?0:(batch.totalExpectedFoodPerDayKg / 50).ceil()} bags',
+                      Icons.restaurant_outlined,
+                      Colors.orange,
+                    ),
+                    const SizedBox(height: 8),
+                    _buildInfoRow(
                       'Expected feeds per week',
-                      '${batch.feedingPlan!.expectedFeedPerWeekBags} bags(50kgs)',
+                      '${batch.feedingPlan!.expectedFeedPerWeekBags} bags',
                       Icons.calendar_today,
                       Colors.teal.shade700,
                     ),
@@ -483,6 +436,79 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
               ),
               const SizedBox(height: 8),
             ],
+            // ── Feed Card (consolidated, at top) ───────────────────────────
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.brown.shade50,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: Colors.brown.shade300),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Bag size note
+                  Row(
+                    children: [
+                      Icon(Icons.info_outline, size: 12, color: Colors.brown.shade400),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Bag size: 50 kgs',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.brown.shade500,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+
+
+                  _buildInfoRow(
+                    'Actual feeds consumed',
+                    '${batch.actualFoodPerBirdPerDayG.toStringAsFixed(0)}g/bird = ${batch.totalActualFoodPerDayKg.toStringAsFixed(1)} kgs / ${batch.totalActualFoodPerDayKg == 0 ? 0 : (batch.totalActualFoodPerDayKg / 50).ceil()} bags',
+                    Icons.restaurant_menu_outlined,
+                    Colors.teal,
+                  ),
+
+                  if (batch.feed != null) ...[
+                    const SizedBox(height: 8),
+                    _buildInfoRow(
+                      'Bags consumed',
+                      '${batch.feed!.totalBagsConsumed} (Day: ${batch.feed!.bagsConsumedDay}${!isLayers ? ', Night: ${batch.feed!.bagsConsumedNight}' : ''})',
+                      Icons.restaurant,
+                      Colors.orange.shade700,
+                    ),
+                    const SizedBox(height: 8),
+                    _buildInfoRow(
+                      'Variance',
+                      batch.feed!.feedVariance,
+                      Icons.trending_flat,
+                      batch.feed!.feedVariance.toLowerCase().contains('above')
+                          ? Colors.orange
+                          : Colors.green,
+                    ),
+                  ],
+                  const SizedBox(height: 8),
+                  _buildInfoRow(
+                    'Total feeds in store',
+                    '${batch.foodInStoreKg} kgs / ${batch.foodInStoreBags} bags',
+                    Icons.inventory_2_outlined,
+                    Colors.brown,
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+
+
+
+
 
             // Second Row - Weight Info
             Container(

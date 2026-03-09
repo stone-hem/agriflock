@@ -376,33 +376,50 @@ class _VetHomeScreenState extends State<VetHomeScreen> {
   }
 
   Widget _buildStatsOverview() {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: _StatCard(
-            value: '${_dashboardStats?.todayVisits ?? 0}',
-            label: 'Today\'s Visits',
-            color: Colors.blue.shade100,
-            textColor: Colors.blue.shade800,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: _StatCard(
+                value: '${_dashboardStats?.todayVisits ?? 0}',
+                label: 'Today\'s Visits',
+                color: Colors.blue.shade100,
+                textColor: Colors.blue.shade800,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _StatCard(
+                value: '${_dashboardStats?.weekVisits ?? 0}',
+                label: 'This Week',
+                color: Colors.purple.shade100,
+                textColor: Colors.purple.shade800,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _StatCard(
-            value: '${_dashboardStats?.weekVisits ?? 0}',
-            label: 'This Week',
-            color: Colors.purple.shade100,
-            textColor: Colors.purple.shade800,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _StatCard(
-            value: '${_dashboardStats?.pendingReports ?? 0}',
-            label: 'Pending Reports',
-            color: Colors.orange.shade100,
-            textColor: Colors.orange.shade800,
-          ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _StatCard(
+                value: '${_dashboardStats?.pendingRequests ?? 0}',
+                label: 'Pending Requests',
+                color: Colors.red.shade100,
+                textColor: Colors.red.shade800,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _StatCard(
+                value: '${_dashboardStats?.pendingReports ?? 0}',
+                label: 'Pending Reports',
+                color: Colors.orange.shade100,
+                textColor: Colors.orange.shade800,
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -564,6 +581,11 @@ class _AppointmentItem extends StatelessWidget {
         textColor = Colors.orange;
         displayText = 'Pending';
         break;
+      case 'ACCEPTED':
+        backgroundColor = Colors.green.withOpacity(0.1);
+        textColor = Colors.green;
+        displayText = 'Accepted';
+        break;
       case 'IN_PROGRESS':
         backgroundColor = Colors.blue.withOpacity(0.1);
         textColor = Colors.blue;
@@ -620,6 +642,19 @@ class _AppointmentItem extends StatelessWidget {
             ),
           ),
         ],
+      );
+    } else if (status == 'ACCEPTED') {
+      return SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: onStart,
+          icon: const Icon(Icons.play_circle_outline, size: 18),
+          label: const Text('Start Visit'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue,
+            foregroundColor: Colors.white,
+          ),
+        ),
       );
     } else if (status == 'IN_PROGRESS') {
       return Row(
@@ -693,7 +728,7 @@ class _AppointmentItem extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      appointment.farmerName,
+                      appointment.farmName,
                       style: TextStyle(
                         color: Colors.grey.shade600,
                         fontSize: 12,

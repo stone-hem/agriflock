@@ -14,46 +14,7 @@ class VisitDetailsSection extends StatelessWidget {
     this.accentColor = Colors.green,
   });
 
-  static const _dayNames = [
-    'Monday', 'Tuesday', 'Wednesday', 'Thursday',
-    'Friday', 'Saturday', 'Sunday',
-  ];
 
-  static const _monthNames = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-  ];
-
-  String _formatTime(String time24) {
-    try {
-      final parts = time24.split(':');
-      final hour = int.parse(parts[0]);
-      final minute = parts[1];
-      final period = hour >= 12 ? 'PM' : 'AM';
-      final hour12 = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
-      return '$hour12:$minute $period';
-    } catch (e) {
-      return time24;
-    }
-  }
-
-  String _getDayOfWeek(String dateStr) {
-    try {
-      final date = DateTime.parse(dateStr);
-      return _dayNames[date.weekday - 1];
-    } catch (_) {
-      return '';
-    }
-  }
-
-  String _formatDate(String dateStr) {
-    try {
-      final date = DateTime.parse(dateStr);
-      return '${_monthNames[date.month - 1]} ${date.day}, ${date.year}';
-    } catch (_) {
-      return dateStr;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +34,7 @@ class VisitDetailsSection extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 2),
                   child:Text(
-                    info + (visit.ageInDays != null ? ' - Age ${visit.ageInDays} days old' : ''),
+                    info,
                     style: TextStyle(
                       color: Colors.grey.shade700,
                       fontSize: 13,
@@ -81,10 +42,12 @@ class VisitDetailsSection extends StatelessWidget {
                     ),
                   ),
                 ),
+
+             Text(' Age ${visit.ageInDays??1} days old')
             ],
           ),
         ],
-        if (visit.mortality !=null)
+
         _SectionRow(
           icon: Icons.reduce_capacity,
           iconColor: accentColor,
@@ -92,7 +55,7 @@ class VisitDetailsSection extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 2),
               child:Text(
-                'Mortality count - ${visit.mortality}',
+                'Mortality count - ${visit.mortality ?? 0}',
                 style: TextStyle(
                   color: Colors.grey.shade700,
                   fontSize: 13,
@@ -104,6 +67,98 @@ class VisitDetailsSection extends StatelessWidget {
         ),
         const SizedBox(height: 10),
 
+        _SectionRow(
+          icon: Icons.reduce_capacity,
+          iconColor: accentColor,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child: Text(' Age ${visit.ageInDays??1} days old', style: TextStyle(
+    color: Colors.grey.shade700,
+    fontSize: 13,
+    height: 1.4,
+    ),)
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+
+        // Expected Visit Date/Time
+        _SectionRow(
+          icon: Icons.event_outlined,
+          iconColor: accentColor,
+          children: [
+            Text(
+              'Expected Visit',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Text(
+                  DateUtil.toShortDateWithDay(DateTime.parse(visit.preferredDate)),
+                  style: TextStyle(
+                    color: Colors.grey.shade700,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Time: ${DateUtil.to12HourTime(DateTime.parse(visit.preferredDate))}',
+                  style: TextStyle(
+                    color: Colors.grey.shade700,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+
+          ],
+        ),
+        // Requested Visit Date/Time
+        _SectionRow(
+          icon: Icons.event_outlined,
+          iconColor: accentColor,
+          children: [
+            Text(
+              'Date Visit Requested',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Text(
+                  DateUtil.toShortDateWithDay(visit.submittedAt),
+                  style: TextStyle(
+                    color: Colors.grey.shade700,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Time: ${DateUtil.to12HourTime(visit.submittedAt)}',
+                  style: TextStyle(
+                    color: Colors.grey.shade700,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+
+          ],
+        ),
 
         // Requested Services with costs
         if (visit.serviceCosts.isNotEmpty) ...[
@@ -197,82 +252,6 @@ class VisitDetailsSection extends StatelessWidget {
         ),
         const SizedBox(height: 10),
 
-        // Expected Visit Date/Time
-        _SectionRow(
-          icon: Icons.event_outlined,
-          iconColor: accentColor,
-          children: [
-            Text(
-              'Expected Visit',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade500,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Text(
-                  DateUtil.toShortDateWithDay(DateTime.parse(visit.preferredDate)),
-                  style: TextStyle(
-                    color: Colors.grey.shade700,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  'Time: ${DateUtil.to12HourTime(DateTime.parse(visit.preferredDate))}',
-                  style: TextStyle(
-                    color: Colors.grey.shade700,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-
-          ],
-        ),
-        // Requested Visit Date/Time
-        _SectionRow(
-          icon: Icons.event_outlined,
-          iconColor: accentColor,
-          children: [
-            Text(
-              'Date Visit Requested',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade500,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Text(
-                  DateUtil.toShortDateWithDay(visit.submittedAt),
-                  style: TextStyle(
-                    color: Colors.grey.shade700,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  'Time: ${DateUtil.to12HourTime(visit.submittedAt)}',
-                  style: TextStyle(
-                    color: Colors.grey.shade700,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-
-          ],
-        ),
 
 
 

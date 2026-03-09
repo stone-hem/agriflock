@@ -5,6 +5,7 @@ class VetDashboardStats {
   final int todayVisits;
   final int weekVisits;
   final int pendingReports;
+  final int pendingRequests;
   final double totalEarningsThisMonth;
   final double completedEarnings;
   final double pendingEarnings;
@@ -14,6 +15,7 @@ class VetDashboardStats {
     required this.todayVisits,
     required this.weekVisits,
     required this.pendingReports,
+    required this.pendingRequests,
     required this.totalEarningsThisMonth,
     required this.completedEarnings,
     required this.pendingEarnings,
@@ -27,6 +29,7 @@ class VetDashboardStats {
       todayVisits: TypeUtils.toIntSafe(json['today_visits']),
       weekVisits: TypeUtils.toIntSafe(json['week_visits']),
       pendingReports: TypeUtils.toIntSafe(json['pending_reports']),
+      pendingRequests: TypeUtils.toIntSafe(json['pending_requests']),
       totalEarningsThisMonth: TypeUtils.toDoubleSafe(json['total_earnings_this_month']),
       completedEarnings: TypeUtils.toDoubleSafe(json['completed_earnings']),
       pendingEarnings: TypeUtils.toDoubleSafe(json['pending_earnings']),
@@ -42,6 +45,7 @@ class VetDashboardStats {
       'today_visits': todayVisits,
       'week_visits': weekVisits,
       'pending_reports': pendingReports,
+      'pending_requests': pendingRequests,
       'total_earnings_this_month': totalEarningsThisMonth,
       'completed_earnings': completedEarnings,
       'pending_earnings': pendingEarnings,
@@ -156,12 +160,12 @@ class VisitDashboard {
     };
   }
 
-  // Status checking utilities - only for statuses we actually get
+  // Status checking utilities
   bool get isPending => status.toUpperCase() == 'PENDING';
+  bool get isAccepted => status.toUpperCase() == 'ACCEPTED';
   bool get isInProgress => status.toUpperCase() == 'IN_PROGRESS';
 
-  // Simplified utilities since API only gives PENDING and IN_PROGRESS
-  bool get isActive => isInProgress;
+  bool get isActive => isInProgress || isAccepted;
   bool get needsAction => isPending;
 
   // Time utilities
@@ -188,6 +192,14 @@ class VisitDashboard {
   // Get display time (scheduled if available, otherwise preferred)
   String get displayTime {
     if (hasScheduledTime && scheduledTime != null) {
+      // Handle ISO 8601 timestamps (e.g. "2026-03-10T00:00:00.000Z")
+      if (scheduledTime!.contains('T')) {
+        try {
+          final dt = DateTime.parse(scheduledTime!).toLocal();
+          if (dt.hour == 0 && dt.minute == 0) return preferredTime;
+          return '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}:00';
+        } catch (_) {}
+      }
       return scheduledTime!;
     }
     return preferredTime;
@@ -198,6 +210,8 @@ class VisitDashboard {
     switch (status.toUpperCase()) {
       case 'PENDING':
         return 'Pending';
+      case 'ACCEPTED':
+        return 'Accepted';
       case 'IN_PROGRESS':
         return 'In Progress';
       default:
@@ -210,6 +224,8 @@ class VisitDashboard {
     switch (status.toUpperCase()) {
       case 'PENDING':
         return Colors.orange;
+      case 'ACCEPTED':
+        return Colors.green;
       case 'IN_PROGRESS':
         return Colors.blue;
       default:
