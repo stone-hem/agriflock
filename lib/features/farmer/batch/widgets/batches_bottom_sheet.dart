@@ -144,13 +144,17 @@ class _BatchesBottomSheetState extends State<BatchesBottomSheet> {
   }
 
   Future<void> _navigateToAddBatch() async {
-    final result = await context.push('/batches/add', extra: {
+    final result = await context.push<dynamic>('/batches/add', extra: {
       'farm': widget.farm,
       'house': widget.house,
     });
 
-    if (result == true) {
+    if (result != null && result != false) {
       await _refreshBatches();
+      if (mounted) {
+        // Close the bottom sheet, passing the new batch back to HousesScreen
+        Navigator.of(context).pop(result);
+      }
     }
   }
 

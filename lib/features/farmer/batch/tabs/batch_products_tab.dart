@@ -104,7 +104,13 @@ class _BatchProductsTabState extends State<BatchProductsTab> {
   }
 
   Future<void> _navigateToRecordProduct() async {
-    final result = await context.push('/batches/${widget.batch.id}/record-product');
+    final result = await context.push(
+      '/batches/${widget.batch.id}/record-product',
+      extra: {
+        'batchNumber': widget.batch.batchNumber,
+        'batchAge': widget.batch.age,
+      },
+    );
 
     // Refresh data if product was recorded successfully
     if (result == true) {

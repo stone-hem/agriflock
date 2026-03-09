@@ -1064,10 +1064,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
         case Success<BatchModel>(data: final batch):
           ToastUtil.showSuccess('Batch created successfully!');
           if (context.mounted) {
-            context.pushReplacement(
-              '/batches/details',
-              extra: {'farm': widget.farm, 'batch': batch},
-            );
+            context.pop(batch);
           }
 
         case Failure<BatchModel>(:final response, :final message):

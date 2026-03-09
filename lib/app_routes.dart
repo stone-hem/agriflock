@@ -567,7 +567,12 @@ class AppRoutes {
               path: ':id/record-product',
               builder: (context, state) {
                 final batchId = state.pathParameters['id']!;
-                return RecordProductScreen(batchId: batchId);
+                final extra = state.extra as Map<String, dynamic>?;
+                return RecordProductScreen(
+                  batchId: batchId,
+                  batchNumber: extra?['batchNumber'] as String?,
+                  batchAge: extra?['batchAge'] as int?,
+                );
               },
             ),
           ],

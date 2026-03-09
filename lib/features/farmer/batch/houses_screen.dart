@@ -127,8 +127,8 @@ class _HousesScreenState extends State<HousesScreen> {
     );
   }
 
-  void _showBatchesBottomSheet(BuildContext context, House house) {
-    showModalBottomSheet(
+  Future<void> _showBatchesBottomSheet(BuildContext context, House house) async {
+    final result = await showModalBottomSheet<dynamic>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -138,6 +138,21 @@ class _HousesScreenState extends State<HousesScreen> {
         onDataChanged: _loadData,
       ),
     );
+
+    // Reload houses to update batch counts whenever the sheet closes
+    if (mounted) {
+      _loadData();
+    }
+
+    // If a batch was just added, navigate directly to its details
+    if (result is BatchModel && mounted) {
+      await context.push('/batches/details', extra: {
+        'farm': widget.farm,
+        'batch': result,
+      });
+      // Refresh again after returning from batch details
+      if (mounted) _loadData();
+    }
   }
 
   @override

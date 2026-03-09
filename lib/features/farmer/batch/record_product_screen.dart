@@ -10,12 +10,14 @@ import 'package:go_router/go_router.dart';
 
 class RecordProductScreen extends StatefulWidget {
   final String batchId;
-  final Map<String, dynamic>? batch; // Optional: pass batch for name display
+  final String? batchNumber;
+  final int? batchAge;
 
   const RecordProductScreen({
     super.key,
     required this.batchId,
-    this.batch,
+    this.batchNumber,
+    this.batchAge,
   });
 
   @override
@@ -209,10 +211,21 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
     return null;
   }
 
+  String _formatAge(int days) {
+    if (days >= 365) {
+      final years = days ~/ 365;
+      final rem = days % 365;
+      return rem > 0 ? '$years yr ${rem}d' : '$years yr';
+    } else if (days >= 30) {
+      final months = days ~/ 30;
+      final rem = days % 30;
+      return rem > 0 ? '$months mo ${rem}d' : '$months mo';
+    }
+    return '${days}d';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final batchName = widget.batch?['name'] ?? 'Batch #${widget.batchId}';
-
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -304,12 +317,22 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              batchName,
+                              widget.batchNumber != null
+                                  ? 'Batch #${widget.batchNumber}'
+                                  : 'Record Product',
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
+                            if (widget.batchAge != null)
+                              Text(
+                                '${_formatAge(widget.batchAge!)} old',
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 13,
+                                ),
+                              ),
                             Text(
                               'Recording ${_getProductLabel().toLowerCase()} for this batch',
                               style: TextStyle(
