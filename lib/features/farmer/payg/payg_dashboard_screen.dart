@@ -221,13 +221,6 @@ class PaygDashboardScreen extends StatelessWidget {
               onTap: () => context.push(AppRoutes.paygHistory),
             ),
             _ActionTile(
-              icon: Icons.receipt_long_rounded,
-              title: 'View Invoice',
-              subtitle: 'Download receipts',
-              color: Colors.orange,
-              onTap: () => context.push(AppRoutes.paygInvoice),
-            ),
-            _ActionTile(
               icon: Icons.help_outline,
               title: 'Get Support',
               subtitle: 'Contact help desk',
