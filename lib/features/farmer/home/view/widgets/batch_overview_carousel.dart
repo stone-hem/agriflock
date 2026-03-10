@@ -420,7 +420,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                     const SizedBox(height: 8),
                     _buildInfoRow(
                       'Expected avg feeding per day',
-                      '${batch.expectedFoodPerBirdPerDayG.toStringAsFixed(0)}g/bird = ${batch.totalExpectedFoodPerDayKg.toStringAsFixed(1)} kgs / ${ batch.totalExpectedFoodPerDayKg==0?0:(batch.totalExpectedFoodPerDayKg / 50).ceil()} bags',
+                      '${batch.totalExpectedFoodPerDayKg.toStringAsFixed(1)} kgs / ${ batch.totalExpectedFoodPerDayKg==0?0:(batch.totalExpectedFoodPerDayKg / 50).ceil()} bags',
                       Icons.restaurant_outlined,
                       Colors.orange,
                     ),
@@ -468,7 +468,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
 
                   _buildInfoRow(
                     'Actual feeds consumed',
-                    '${batch.actualFoodPerBirdPerDayG.toStringAsFixed(0)}g/bird = ${batch.totalActualFoodPerDayKg.toStringAsFixed(1)} kgs / ${batch.totalActualFoodPerDayKg == 0 ? 0 : (batch.totalActualFoodPerDayKg / 50).ceil()} bags',
+                    '${batch.totalActualFoodPerDayKg.toStringAsFixed(1)} kgs / ${batch.totalActualFoodPerDayKg == 0 ? 0 : (batch.totalActualFoodPerDayKg / 50).ceil()} bags',
                     Icons.restaurant_menu_outlined,
                     Colors.teal,
                   ),
@@ -477,7 +477,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                     const SizedBox(height: 8),
                     _buildInfoRow(
                       'Bags consumed',
-                      '${batch.feed!.totalBagsConsumed} (Day: ${batch.feed!.bagsConsumedDay}${!isLayers ? ', Night: ${batch.feed!.bagsConsumedNight}' : ''})',
+                      '${batch.feed!.totalBagsConsumed} Kgs (Day: ${batch.feed!.bagsConsumedDay} Kgs ${!isLayers ? ', Night: ${batch.feed!.bagsConsumedNight} Kgs' : ''})',
                       Icons.restaurant,
                       Colors.orange.shade700,
                     ),
