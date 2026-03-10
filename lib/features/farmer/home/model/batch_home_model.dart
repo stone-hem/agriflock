@@ -206,6 +206,7 @@ class Feed {
   final int bagsConsumedNight;
   final int totalBagsConsumed;
   final int balanceInStore;
+  final List<FeedItemInStore> feedItemsInStore;
   final String feedType;
   final String feedVariance;
 
@@ -215,17 +216,23 @@ class Feed {
     required this.bagsConsumedNight,
     required this.totalBagsConsumed,
     required this.balanceInStore,
+    required this.feedItemsInStore,
     required this.feedType,
     required this.feedVariance,
   });
 
   factory Feed.fromJson(Map<String, dynamic> json) {
+    final itemsList = TypeUtils.toListSafe<dynamic>(json['feed_items_in_store']);
     return Feed(
       bagsConsumed: TypeUtils.toIntSafe(json['bags_consumed']),
       bagsConsumedDay: TypeUtils.toIntSafe(json['bags_consumed_day']),
       bagsConsumedNight: TypeUtils.toIntSafe(json['bags_consumed_night']),
       totalBagsConsumed: TypeUtils.toIntSafe(json['total_bags_consumed']),
       balanceInStore: TypeUtils.toIntSafe(json['balance_in_store']),
+      feedItemsInStore: itemsList
+          .whereType<Map<String, dynamic>>()
+          .map((e) => FeedItemInStore.fromJson(e))
+          .toList(),
       feedType: TypeUtils.toStringSafe(json['feed_type']),
       feedVariance: TypeUtils.toStringSafe(json['feed_variance']),
     );
@@ -238,8 +245,37 @@ class Feed {
       'bags_consumed_night': bagsConsumedNight,
       'total_bags_consumed': totalBagsConsumed,
       'balance_in_store': balanceInStore,
+      'feed_items_in_store': feedItemsInStore.map((e) => e.toJson()).toList(),
       'feed_type': feedType,
       'feed_variance': feedVariance,
+    };
+  }
+}
+
+class FeedItemInStore {
+  final String itemName;
+  final double quantity;
+  final String unit;
+
+  FeedItemInStore({
+    required this.itemName,
+    required this.quantity,
+    required this.unit,
+  });
+
+  factory FeedItemInStore.fromJson(Map<String, dynamic> json) {
+    return FeedItemInStore(
+      itemName: TypeUtils.toStringSafe(json['item_name']),
+      quantity: TypeUtils.toDoubleSafe(json['quantity']),
+      unit: TypeUtils.toStringSafe(json['unit']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'item_name': itemName,
+      'quantity': quantity,
+      'unit': unit,
     };
   }
 }

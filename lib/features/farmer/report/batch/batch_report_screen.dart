@@ -544,6 +544,20 @@ class _BatchReportScreenState extends State<BatchReportScreen>
     );
   }
 
+  String _formatKg(num kg) {
+    if (kg >= 50) {
+      final bags = (kg / 50).floor();
+      final remainder = kg - bags * 50;
+      final bagLabel = bags == 1 ? 'bag' : 'bags';
+      if (remainder == 0) return '$bags $bagLabel';
+      final remStr = remainder == remainder.truncate()
+          ? remainder.toInt().toString()
+          : remainder.toStringAsFixed(1);
+      return '$bags $bagLabel ${remStr}kgs';
+    }
+    return kg == kg.truncate() ? '${kg.toInt()}kgs' : '${kg.toStringAsFixed(1)}kgs';
+  }
+
   Widget _buildInfoRow(IconData icon, Color iconColor, String label, String value) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -849,11 +863,11 @@ class _BatchReportScreenState extends State<BatchReportScreen>
           Row(
             children: [
               Expanded(
-                  child: _buildInfoRow(Icons.restaurant, Colors.orange.shade600, 'Consumed (kgs)',
-                      '${feed.bagsConsumed}')),
+                  child: _buildInfoRow(Icons.restaurant, Colors.orange.shade600, 'Consumed',
+                      _formatKg(feed.bagsConsumed))),
               Expanded(
                   child: _buildInfoRow(Icons.inventory_2_outlined, Colors.brown.shade600,
-                      'In Store (kgs)', '${feed.balanceInStore}')),
+                      'In Store', _formatKg(feed.balanceInStore))),
             ],
           ),
           const SizedBox(height: 4),
@@ -861,10 +875,10 @@ class _BatchReportScreenState extends State<BatchReportScreen>
             children: [
               Expanded(
                   child: _buildInfoRow(Icons.wb_sunny_outlined, Colors.orange.shade400,
-                      'Day (kgs)', '${feed.bagsConsumedDay}')),
+                      'Day', _formatKg(feed.bagsConsumedDay))),
               Expanded(
                   child: _buildInfoRow(Icons.nightlight_round, Colors.indigo.shade400,
-                      'Night (kgs)', '${feed.bagsConsumedNight}')),
+                      'Night', _formatKg(feed.bagsConsumedNight))),
             ],
           ),
           if (feed.feedVariance.isNotEmpty) ...[

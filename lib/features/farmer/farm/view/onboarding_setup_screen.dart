@@ -53,6 +53,9 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
   final _birdsAliveController = TextEditingController();
 
   String? _selectedBirdTypeId;
+  bool _showLayersSubType = false;
+  String? _selectedLayersSubTypeId;
+  static const String _layersCategoryId = '__layers_category__';
   String? _selectedBatchType;
   String? _selectedFeedingTimeCategory;
   File? _batchPhotoFile;
@@ -327,6 +330,11 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
   // ── Step 3: Batch creation ─────────────────────────────
   Future<void> _createBatch() async {
     if (!_batchFormKey.currentState!.validate()) return;
+
+    if (_showLayersSubType && _selectedLayersSubTypeId == null) {
+      ToastUtil.showError('Please select the type of layers');
+      return;
+    }
 
     // Hatch date / chick age validation
     if (_isOwnHatch) {
@@ -869,16 +877,101 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                       ],
                     ),
                   )
-                : ReusableDropdown<String>(
-                    topLabel: 'Bird Type',
-                    value: _selectedBirdTypeId,
-                    hintText: 'Select bird type',
-                    items: _birdTypes
-                        .map((t) => DropdownMenuItem(value: t.id, child: Text(t.name)))
-                        .toList(),
-                    onChanged: (v) => setState(() => _selectedBirdTypeId = v),
-                    validator: (v) =>
-                        (v == null || v.isEmpty) ? 'Please select a bird type' : null,
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ReusableDropdown<String>(
+                        topLabel: 'Bird Type',
+                        value: _showLayersSubType ? _layersCategoryId : _selectedBirdTypeId,
+                        hintText: 'Select bird type',
+                        items: [
+                          ..._birdTypes
+                              .where((t) =>
+                                  !t.name.toLowerCase().contains('layers') &&
+                                  !t.name.toLowerCase().contains('growers'))
+                              .map((t) => DropdownMenuItem(value: t.id, child: Text(t.name))),
+                          const DropdownMenuItem<String>(
+                            value: _layersCategoryId,
+                            child: Text('Layers'),
+                          ),
+                        ],
+                        onChanged: (v) {
+                          setState(() {
+                            if (v == _layersCategoryId) {
+                              _showLayersSubType = true;
+                              _selectedBirdTypeId = null;
+                              _selectedLayersSubTypeId = null;
+                            } else {
+                              _showLayersSubType = false;
+                              _selectedBirdTypeId = v;
+                              _selectedLayersSubTypeId = null;
+                            }
+                          });
+                        },
+                        validator: (v) =>
+                            (v == null || v.isEmpty) ? 'Please select a bird type' : null,
+                      ),
+                      if (_showLayersSubType) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.shade50,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.amber.shade300),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Icons.info_outline,
+                                      size: 14, color: Colors.amber.shade700),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Select the type of layers',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.amber.shade900,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              ..._birdTypes
+                                  .where((t) =>
+                                      t.name.toLowerCase().contains('layers') ||
+                                      t.name.toLowerCase().contains('growers'))
+                                  .map((t) => RadioListTile<String>(
+                                        value: t.id,
+                                        groupValue: _selectedLayersSubTypeId,
+                                        title: Text(t.name,
+                                            style: const TextStyle(fontSize: 13)),
+                                        onChanged: (val) {
+                                          setState(() {
+                                            _selectedLayersSubTypeId = val;
+                                            _selectedBirdTypeId = val;
+                                          });
+                                        },
+                                        activeColor: Colors.amber.shade700,
+                                        contentPadding: EdgeInsets.zero,
+                                        dense: true,
+                                      )),
+                              if (_selectedLayersSubTypeId == null)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    'Please select a layers type',
+                                    style: TextStyle(
+                                        color: Colors.red.shade600, fontSize: 12),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
             const SizedBox(height: 20),
 

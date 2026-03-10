@@ -55,6 +55,7 @@ import 'package:agriflock/features/farmer/vet/all_vets_screen.dart';
 import 'package:agriflock/features/farmer/vet/models/my_order_list_item.dart';
 import 'package:agriflock/features/farmer/vet/models/vet_farmer_model.dart';
 import 'package:agriflock/features/farmer/vet/my_vet_orders_combined_screen.dart';
+import 'package:agriflock/features/farmer/vet/my_disputes_screen.dart';
 import 'package:agriflock/features/farmer/vet/farmer_vet_payment_screen.dart';
 import 'package:agriflock/features/farmer/vet/vet_details_screen.dart';
 import 'package:agriflock/features/farmer/vet/vet_order_screen.dart';
@@ -728,6 +729,10 @@ class AppRoutes {
           },
         ),
         GoRoute(
+          path: '/my-disputes',
+          builder: (context, state) => const MyDisputesScreen(),
+        ),
+        GoRoute(
           path: '/vet-service-payment',
           builder: (context, state) {
             final extra = state.extra as Map<String, dynamic>;
@@ -850,7 +855,11 @@ class AppRoutes {
         GoRoute(
           path: '/vet-visit-form',
           builder: (context, state) {
-            return VetVisitFormPage();
+            final extra = state.extra as Map<String, dynamic>? ?? {};
+            return VetVisitFormPage(
+              orderId: extra['orderId'] as String? ?? '',
+              farmerId: extra['farmerId'] as String? ?? '',
+            );
           },
         ),
       ],

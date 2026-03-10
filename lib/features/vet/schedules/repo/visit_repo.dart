@@ -378,6 +378,74 @@ class VisitsRepository {
     }
   }
 
+  /// Submit a visit report after completing a visit
+  Future<Result<void>> submitVisitReport({
+    required String orderId,
+    required String farmerId,
+    required String visitDate,
+    required String visitType,
+    required List<String> farmerComplaints,
+    String? farmerComplaintOther,
+    required Map<String, String> observations,
+    String? abnormalFindingsNotes,
+    required List<String> suspectedIssues,
+    required List<String> actionsTaken,
+    String? recommendation1,
+    String? recommendation2,
+    String? followUpDate,
+    String? followUpNotes,
+  }) async {
+    try {
+      final body = <String, dynamic>{
+        'order_id': orderId,
+        'farmer_id': farmerId,
+        'visit_date': visitDate,
+        'visit_type': visitType,
+        'requested_by': 'FARMER',
+        'farmer_complaints': farmerComplaints,
+        if (farmerComplaintOther != null && farmerComplaintOther.isNotEmpty)
+          'farmer_complaint_other': farmerComplaintOther,
+        'observations': observations,
+        if (abnormalFindingsNotes != null && abnormalFindingsNotes.isNotEmpty)
+          'abnormal_findings_notes': abnormalFindingsNotes,
+        'suspected_issues': suspectedIssues,
+        'actions_taken': actionsTaken,
+        if (recommendation1 != null && recommendation1.isNotEmpty)
+          'recommendation_1': recommendation1,
+        if (recommendation2 != null && recommendation2.isNotEmpty)
+          'recommendation_2': recommendation2,
+        if (followUpDate != null && followUpDate.isNotEmpty)
+          'follow_up_date': followUpDate,
+        if (followUpNotes != null && followUpNotes.isNotEmpty)
+          'follow_up_notes': followUpNotes,
+      };
+
+      final response = await apiClient.post(
+        '/visit-reports',
+        body: body,
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      final jsonResponse = jsonDecode(response.body);
+      LogUtil.info('Submit Visit Report API Response: $jsonResponse');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return Success(null);
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to submit visit report',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException {
+      return const Failure(message: 'No internet connection', statusCode: 0);
+    } catch (e) {
+      LogUtil.error('Error in submitVisitReport: $e');
+      return Failure(message: e.toString());
+    }
+  }
+
   /// Get visit statistics (counts by status)
   Future<Result<VisitStats>> getVisitStats() async {
     try {

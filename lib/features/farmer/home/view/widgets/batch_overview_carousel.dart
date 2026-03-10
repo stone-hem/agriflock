@@ -420,7 +420,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                     const SizedBox(height: 8),
                     _buildInfoRow(
                       'Expected avg feeding per day',
-                      '${batch.totalExpectedFoodPerDayKg.toStringAsFixed(1)} kgs / ${ batch.totalExpectedFoodPerDayKg==0?0:(batch.totalExpectedFoodPerDayKg / 50).ceil()} bags',
+                      _formatKg(batch.totalExpectedFoodPerDayKg),
                       Icons.restaurant_outlined,
                       Colors.orange,
                     ),
@@ -468,7 +468,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
 
                   _buildInfoRow(
                     'Actual feeds consumed',
-                    '${batch.totalActualFoodPerDayKg.toStringAsFixed(1)} kgs / ${batch.totalActualFoodPerDayKg == 0 ? 0 : (batch.totalActualFoodPerDayKg / 50).ceil()} bags',
+                    _formatKg(batch.totalActualFoodPerDayKg),
                     Icons.restaurant_menu_outlined,
                     Colors.teal,
                   ),
@@ -477,7 +477,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                     const SizedBox(height: 8),
                     _buildInfoRow(
                       'Bags consumed',
-                      '${batch.feed!.totalBagsConsumed} Kgs (Day: ${batch.feed!.bagsConsumedDay} Kgs ${!isLayers ? ', Night: ${batch.feed!.bagsConsumedNight} Kgs' : ''})',
+                      '${_formatKg(batch.feed!.totalBagsConsumed)} (Day: ${_formatKg(batch.feed!.bagsConsumedDay)}${!isLayers ? ', Night: ${_formatKg(batch.feed!.bagsConsumedNight)}' : ''})',
                       Icons.restaurant,
                       Colors.orange.shade700,
                     ),
@@ -494,10 +494,50 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                   const SizedBox(height: 8),
                   _buildInfoRow(
                     'Total feeds in store',
-                    '${batch.foodInStoreKg} kgs / ${batch.foodInStoreBags} bags',
+                    _formatKg(batch.foodInStoreKg),
                     Icons.inventory_2_outlined,
                     Colors.brown,
                   ),
+                  // Itemized feed list
+                  if (batch.feed != null && batch.feed!.feedItemsInStore.any((f) => f.quantity > 0)) ...[
+                    const SizedBox(height: 6),
+                    ...batch.feed!.feedItemsInStore
+                        .where((f) => f.quantity > 0)
+                        .map((f) => Padding(
+                              padding: const EdgeInsets.only(left: 21, bottom: 4),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 4,
+                                    height: 4,
+                                    margin: const EdgeInsets.only(right: 6, top: 1),
+                                    decoration: BoxDecoration(
+                                      color: Colors.brown.shade400,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      f.itemName,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.grey.shade700,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  Text(
+                                    _formatKg(f.quantity),
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.brown.shade700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )),
+                  ],
                   const SizedBox(height: 8),
                 ],
               ),
@@ -810,6 +850,24 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
         ),
       ),
     );
+  }
+
+  /// Formats kg using 50 kg bag units.
+  /// e.g. 56 → "1 bag 6 kgs", 100 → "2 bags", 40 → "40 kgs"
+  static String _formatKg(num kg) {
+    if (kg >= 50) {
+      final bags = (kg / 50).floor();
+      final remainder = kg - bags * 50;
+      final bagLabel = bags == 1 ? 'bag' : 'bags';
+      if (remainder == 0) return '$bags $bagLabel';
+      final remStr = remainder == remainder.truncate()
+          ? remainder.toInt().toString()
+          : remainder.toStringAsFixed(1);
+      return '$bags $bagLabel ${remStr}kgs';
+    }
+    return kg == kg.truncate()
+        ? '${kg.toInt()}kgs'
+        : '${kg.toStringAsFixed(1)}kgs';
   }
 
   Widget _buildVaccineStatusChip({

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:agriflock/core/utils/log_util.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/features/farmer/vet/models/completed_orders_model.dart';
+import 'package:agriflock/features/farmer/vet/models/dispute_model.dart';
 import 'package:agriflock/features/farmer/vet/models/my_order_list_item.dart';
 import 'package:agriflock/features/farmer/vet/models/vet_farmer_model.dart';
 import 'package:agriflock/features/farmer/vet/models/vet_order_model.dart';
@@ -700,6 +701,74 @@ class VetFarmerRepository {
       );
     } catch (e) {
       LogUtil.error('Error in rateVetOrder: $e');
+      return Failure(message: e.toString());
+    }
+  }
+
+  /// Submit a dispute for a completed order
+  Future<Result<void>> submitDispute({
+    required String orderId,
+    required String reason,
+    required String description,
+  }) async {
+    try {
+      final response = await apiClient.post(
+        '/disputes',
+        body: {
+          'order_id': orderId,
+          'reason': reason,
+          'description': description,
+        },
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      final jsonResponse = jsonDecode(response.body);
+      LogUtil.info('Submit Dispute API Response: $jsonResponse');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return Success(null);
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to submit dispute',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException {
+      return const Failure(message: 'No internet connection', statusCode: 0);
+    } catch (e) {
+      LogUtil.error('Error in submitDispute: $e');
+      return Failure(message: e.toString());
+    }
+  }
+
+  /// Fetch the farmer's disputes
+  Future<Result<List<DisputeModel>>> getMyDisputes() async {
+    try {
+      final response = await apiClient.get('/disputes/my');
+      final jsonResponse = jsonDecode(response.body);
+      LogUtil.info('Get My Disputes API Response: $jsonResponse');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final list = jsonResponse is List
+            ? jsonResponse
+            : (jsonResponse['data'] as List? ?? []);
+        final disputes = list
+            .whereType<Map<String, dynamic>>()
+            .map((e) => DisputeModel.fromJson(e))
+            .toList();
+        return Success(disputes);
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to fetch disputes',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException {
+      return const Failure(message: 'No internet connection', statusCode: 0);
+    } catch (e) {
+      LogUtil.error('Error in getMyDisputes: $e');
       return Failure(message: e.toString());
     }
   }

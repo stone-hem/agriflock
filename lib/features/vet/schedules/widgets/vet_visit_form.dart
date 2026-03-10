@@ -1,7 +1,19 @@
+import 'package:agriflock/core/utils/result.dart';
+import 'package:agriflock/features/vet/schedules/repo/visit_repo.dart';
 import 'package:flutter/material.dart';
 
 class VetVisitFormPage extends StatefulWidget {
-  const VetVisitFormPage({super.key});
+  /// The order ID this report is for.
+  final String orderId;
+
+  /// The farmer's user ID.
+  final String farmerId;
+
+  const VetVisitFormPage({
+    super.key,
+    required this.orderId,
+    required this.farmerId,
+  });
 
   @override
   State<VetVisitFormPage> createState() => _VetVisitFormPageState();
@@ -60,7 +72,12 @@ class _VetVisitFormPageState extends State<VetVisitFormPage> {
   // F. Recommendations & Signature
   final TextEditingController _rec1 = TextEditingController();
   final TextEditingController _rec2 = TextEditingController();
+  final TextEditingController _followUpNotes = TextEditingController();
+  DateTime? _followUpDate;
   bool _farmerConfirmed = false;
+  bool _isSubmitting = false;
+
+  final _repo = VisitsRepository();
 
   static const List<_StepMeta> _steps = [
     _StepMeta(icon: Icons.medical_services_outlined, label: 'Visit Type'),
@@ -93,6 +110,7 @@ class _VetVisitFormPageState extends State<VetVisitFormPage> {
     _abnormalFindings.dispose();
     _rec1.dispose();
     _rec2.dispose();
+    _followUpNotes.dispose();
     super.dispose();
   }
 
@@ -146,7 +164,12 @@ class _VetVisitFormPageState extends State<VetVisitFormPage> {
                 _PageF(
                   rec1: _rec1,
                   rec2: _rec2,
+                  followUpNotes: _followUpNotes,
+                  followUpDate: _followUpDate,
+                  onFollowUpDateChanged: (d) =>
+                      setState(() => _followUpDate = d),
                   confirmed: _farmerConfirmed,
+                  isSubmitting: _isSubmitting,
                   onConfirm: (v) => setState(() => _farmerConfirmed = v!),
                   onSubmit: _submit,
                 ),
@@ -166,30 +189,57 @@ class _VetVisitFormPageState extends State<VetVisitFormPage> {
     );
   }
 
-  void _submit() {
-    final data = {
-      'visitType': _visitType,
-      'complaints':
-      _complaints.entries.where((e) => e.value).map((e) => e.key).toList(),
-      'observations': _observations,
-      'abnormalFindings': _abnormalFindings.text,
-      'suspectedIssues': _suspectedIssues.entries
+  Future<void> _submit() async {
+    if (_isSubmitting) return;
+    setState(() => _isSubmitting = true);
+
+    final selectedComplaints = _complaints.entries
+        .where((e) => e.value && e.key != 'Other')
+        .map((e) => e.key)
+        .toList();
+
+    final result = await _repo.submitVisitReport(
+      orderId: widget.orderId,
+      farmerId: widget.farmerId,
+      visitDate: DateTime.now().toUtc().toIso8601String(),
+      visitType: _visitType.toUpperCase(),
+      farmerComplaints: selectedComplaints,
+      farmerComplaintOther:
+          _complaints['Other'] == true ? 'Other' : null,
+      observations: _observations,
+      abnormalFindingsNotes: _abnormalFindings.text.trim(),
+      suspectedIssues: _suspectedIssues.entries
           .where((e) => e.value)
           .map((e) => e.key)
           .toList(),
-      'actions':
-      _actions.entries.where((e) => e.value).map((e) => e.key).toList(),
-      'rec1': _rec1.text,
-      'rec2': _rec2.text,
-      'farmerConfirmed': _farmerConfirmed,
-    };
-    debugPrint('Form Data: $data');
+      actionsTaken: _actions.entries
+          .where((e) => e.value)
+          .map((e) => e.key)
+          .toList(),
+      recommendation1: _rec1.text.trim(),
+      recommendation2: _rec2.text.trim(),
+      followUpDate: _followUpDate?.toUtc().toIso8601String(),
+      followUpNotes: _followUpNotes.text.trim(),
+    );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('✅ Visit record submitted successfully'),
-        backgroundColor: Color(0xFF2E7D32),
-      ),
+    if (!mounted) return;
+    setState(() => _isSubmitting = false);
+
+    result.when(
+      success: (_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Visit report submitted successfully'),
+            backgroundColor: Color(0xFF2E7D32),
+          ),
+        );
+        Navigator.of(context).pop();
+      },
+      failure: (msg, _, __) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(msg), backgroundColor: Colors.red),
+        );
+      },
     );
   }
 }
@@ -614,15 +664,22 @@ class _PageE extends StatelessWidget {
 }
 
 class _PageF extends StatelessWidget {
-  final TextEditingController rec1, rec2;
+  final TextEditingController rec1, rec2, followUpNotes;
+  final DateTime? followUpDate;
+  final ValueChanged<DateTime?> onFollowUpDateChanged;
   final bool confirmed;
+  final bool isSubmitting;
   final ValueChanged<bool?> onConfirm;
   final VoidCallback onSubmit;
 
   const _PageF({
     required this.rec1,
     required this.rec2,
+    required this.followUpNotes,
+    required this.followUpDate,
+    required this.onFollowUpDateChanged,
     required this.confirmed,
+    required this.isSubmitting,
     required this.onConfirm,
     required this.onSubmit,
   });
@@ -640,43 +697,55 @@ class _PageF extends StatelessWidget {
           TextField(
               controller: rec1,
               decoration:
-              const InputDecoration(labelText: 'Recommendation 1')),
+                  const InputDecoration(labelText: 'Recommendation 1')),
           const SizedBox(height: 12),
           TextField(
               controller: rec2,
               decoration:
-              const InputDecoration(labelText: 'Recommendation 2')),
-          const SizedBox(height: 24),
+                  const InputDecoration(labelText: 'Recommendation 2')),
+          const SizedBox(height: 20),
           const Divider(),
           const SizedBox(height: 12),
 
-          // Digital Signature Placeholder
-          // Container(
-          //   width: double.infinity,
-          //   height: 120,
-          //   decoration: BoxDecoration(
-          //     border: Border.all(color: Colors.grey.shade300),
-          //     borderRadius: BorderRadius.circular(10),
-          //     color: Colors.grey.shade50,
-          //   ),
-          //   child: const Center(
-          //     child: Column(
-          //       mainAxisSize: MainAxisSize.min,
-          //       children: [
-          //         Icon(Icons.draw_outlined, size: 36, color: Colors.grey),
-          //         SizedBox(height: 6),
-          //         Text('Vet Digital Signature',
-          //             style: TextStyle(color: Colors.grey)),
-          //         Text('(Tap to sign)',
-          //             style: TextStyle(fontSize: 11, color: Colors.grey)),
-          //       ],
-          //     ),
-          //   ),
-          // ),
+          // Follow-up
+          const Text('Follow-up (Optional)',
+              style: TextStyle(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: () async {
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: followUpDate ??
+                    DateTime.now().add(const Duration(days: 7)),
+                firstDate: DateTime.now(),
+                lastDate:
+                    DateTime.now().add(const Duration(days: 365)),
+              );
+              if (picked != null) onFollowUpDateChanged(picked);
+            },
+            icon: const Icon(Icons.calendar_today, size: 16),
+            label: Text(followUpDate == null
+                ? 'Select follow-up date'
+                : 'Follow-up: ${followUpDate!.toLocal().toString().split(' ')[0]}'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFF2E7D32),
+              side: const BorderSide(color: Color(0xFF2E7D32)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: followUpNotes,
+            maxLines: 2,
+            decoration: const InputDecoration(
+                labelText: 'Follow-up notes',
+                hintText: 'Any notes for the next visit…'),
+          ),
 
           const SizedBox(height: 20),
 
-          // Farmer Confirmation
+          // Vet Confirmation
           Card(
             elevation: 0,
             shape: RoundedRectangleBorder(
@@ -709,23 +778,33 @@ class _PageF extends StatelessWidget {
             width: double.infinity,
             height: 52,
             child: ElevatedButton.icon(
-              icon: const Icon(Icons.send_rounded),
-              label: const Text('Submit Repert',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              icon: isSubmitting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Icon(Icons.send_rounded),
+              label: Text(
+                isSubmitting ? 'Submitting…' : 'Submit Report',
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF2E7D32),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14)),
               ),
-              onPressed: confirmed ? onSubmit : null,
+              onPressed: (confirmed && !isSubmitting) ? onSubmit : null,
             ),
           ),
           if (!confirmed)
             const Padding(
               padding: EdgeInsets.only(top: 8),
               child: Text(
-                'Farmer confirmation required to submit.',
+                'Vet confirmation required to submit.',
                 style: TextStyle(color: Colors.grey, fontSize: 12),
                 textAlign: TextAlign.center,
               ),

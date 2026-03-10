@@ -288,7 +288,18 @@ class CompletedVisitCard extends StatelessWidget {
                 ],
                 const SizedBox(height: 8),
                 if (visit.completedAt != null) ...[
-                  TextButton.icon(onPressed: ()=>context.push('/vet-visit-form'), label: Text('Complete Visit form'),icon: Icon(Icons.arrow_forward),)]
+                  TextButton.icon(
+                    onPressed: () => context.push('/vet-visit-form', extra: {
+                      'orderId': visit.id,
+                      'farmerId': visit.farmerId,
+                    }),
+                    label: const Text('Submit Visit Report'),
+                    icon: const Icon(Icons.assignment_outlined, size: 16),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.green.shade700,
+                    ),
+                  ),
+                ]
               ],
             ),
           ),

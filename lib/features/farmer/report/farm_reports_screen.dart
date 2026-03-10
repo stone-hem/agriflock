@@ -212,6 +212,20 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
     }
   }
 
+  String _formatKg(num kg) {
+    if (kg >= 50) {
+      final bags = (kg / 50).floor();
+      final remainder = kg - bags * 50;
+      final bagLabel = bags == 1 ? 'bag' : 'bags';
+      if (remainder == 0) return '$bags $bagLabel';
+      final remStr = remainder == remainder.truncate()
+          ? remainder.toInt().toString()
+          : remainder.toStringAsFixed(1);
+      return '$bags $bagLabel ${remStr}kgs';
+    }
+    return kg == kg.truncate() ? '${kg.toInt()}kgs' : '${kg.toStringAsFixed(1)}kgs';
+  }
+
   String _formatDate(DateTime date) {
     return DateUtil.toDDMMYYYY(date);
   }
@@ -850,7 +864,7 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
                     else
                       Expanded(
                           child: _buildInfoRow(Icons.inventory_2_outlined, Colors.brown.shade400,
-                              'Feed in Store', '${batch.feed.balanceInStore} kgs')),
+                              'Feed in Store', _formatKg(batch.feed.balanceInStore))),
                   ],
                 ),
                 if (batch.medication.inUse.isNotEmpty) ...[

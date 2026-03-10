@@ -11,6 +11,8 @@ import 'package:go_router/go_router.dart';
 
 // ignore_for_file: deprecated_member_use
 
+// ignore_for_file: deprecated_member_use
+
 class MyVetOrdersCombinedScreen extends StatefulWidget {
   final int initialTab;
 
@@ -904,78 +906,131 @@ class _CompletedOrdersTabState extends State<_CompletedOrdersTab>
     );
   }
 
-  void _showReportDialog(CompletedOrder order) {
-    String? selectedReason;
-    String otherText = '';
-    final otherController = TextEditingController();
-    const reasons = [
-      'Vet did not show up',
-      'Service quality was poor',
-      'Other',
-    ];
+  static const _disputeReasons = [
+    ('vet_no_show', 'Vet did not show up'),
+    ('poor_service_quality', 'Poor service quality'),
+    ('payment_not_received', 'Payment not received'),
+    ('incorrect_charges', 'Incorrect charges'),
+    ('other', 'Other'),
+  ];
+
+  void _showDisputeDialog(CompletedOrder order) {
+    String? selectedReasonCode;
+    final descController = TextEditingController();
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Report an Issue'),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setD) => AlertDialog(
+          title: const Text('File a Dispute'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('What went wrong with your visit from ${order.vetName}?',
-                    style: TextStyle(color: Colors.grey.shade700)),
-                const SizedBox(height: 16),
-                ...reasons.map((reason) => RadioListTile<String>(
-                      value: reason,
-                      groupValue: selectedReason,
-                      title: Text(reason),
-                      onChanged: (v) => setDialogState(() {
-                        selectedReason = v;
-                        if (v != 'Other') otherText = '';
-                      }),
+                Text('Order: ${order.orderNumber}',
+                    style: TextStyle(
+                        color: Colors.grey.shade600, fontSize: 13)),
+                Text('Vet: ${order.vetName}',
+                    style: TextStyle(
+                        color: Colors.grey.shade600, fontSize: 13)),
+                const SizedBox(height: 14),
+                const Text('Reason',
+                    style: TextStyle(fontWeight: FontWeight.w600)),
+                const SizedBox(height: 6),
+                ..._disputeReasons.map((r) => RadioListTile<String>(
+                      value: r.$1,
+                      groupValue: selectedReasonCode,
+                      title: Text(r.$2, style: const TextStyle(fontSize: 13)),
+                      onChanged: (v) => setD(() => selectedReasonCode = v),
                       contentPadding: EdgeInsets.zero,
+                      dense: true,
                     )),
-                if (selectedReason == 'Other') ...[
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: otherController,
-                    maxLines: 3,
-                    decoration: const InputDecoration(
-                      hintText: 'Please describe the issue...',
-                      border: OutlineInputBorder(),
-                    ),
-                    onChanged: (v) => otherText = v,
+                const SizedBox(height: 12),
+                const Text('Description',
+                    style: TextStyle(fontWeight: FontWeight.w600)),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: descController,
+                  maxLines: 4,
+                  maxLength: 500,
+                  decoration: const InputDecoration(
+                    hintText:
+                        'Describe the issue in detail (e.g. vet did not arrive at scheduled time)…',
+                    border: OutlineInputBorder(),
+                    counterText: '',
                   ),
-                ],
+                ),
               ],
             ),
           ),
           actions: [
             TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => Navigator.pop(ctx),
                 child: const Text('Cancel')),
             ElevatedButton(
-              onPressed: selectedReason == null
+              onPressed: selectedReasonCode == null ||
+                      descController.text.trim().isEmpty
                   ? null
-                  : (selectedReason == 'Other' && otherText.trim().isEmpty)
-                      ? null
-                      : () {
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Report submitted. We will review it shortly.'),
-                              backgroundColor: Colors.orange,
-                            ),
-                          );
-                        },
+                  : () {
+                      final reason = selectedReasonCode!;
+                      final description = descController.text.trim();
+                      Navigator.pop(ctx);
+                      _submitDispute(order, reason, description);
+                    },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text('Submit Report'),
+              child: const Text('Submit Dispute'),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Future<void> _submitDispute(
+      CompletedOrder order, String reason, String description) async {
+    final loadingCtrl = showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const AlertDialog(
+        content: Row(
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(width: 16),
+            Text('Submitting dispute…'),
+          ],
+        ),
+      ),
+    );
+
+    final result = await _repository.submitDispute(
+      orderId: order.id,
+      reason: reason,
+      description: description,
+    );
+
+    if (!mounted) return;
+    Navigator.pop(context); // close loading dialog
+
+    result.when(
+      success: (_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Dispute submitted. We will review it shortly.'),
+            backgroundColor: Colors.orange.shade700,
+            action: SnackBarAction(
+              label: 'View Disputes',
+              textColor: Colors.white,
+              onPressed: () => context.push('/my-disputes'),
+            ),
+          ),
+        );
+      },
+      failure: (msg, _, __) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(msg), backgroundColor: Colors.red),
+        );
+      },
     );
   }
 
@@ -1156,7 +1211,7 @@ class _CompletedOrdersTabState extends State<_CompletedOrdersTab>
                 ),
                 const SizedBox(width: 8),
                 OutlinedButton(
-                  onPressed: () => _showReportDialog(order),
+                  onPressed: () => _showDisputeDialog(order),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.red,
                     side: const BorderSide(color: Colors.red),
@@ -1240,6 +1295,20 @@ class _CompletedOrdersTabState extends State<_CompletedOrdersTab>
                     ],
                   ),
                   const SizedBox(height: 12),
+                  // Disputes shortcut
+                  OutlinedButton.icon(
+                    onPressed: () => context.push('/my-disputes'),
+                    icon: const Icon(Icons.gavel_outlined, size: 16),
+                    label: const Text('View My Disputes'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red.shade700,
+                      side: BorderSide(color: Colors.red.shade300),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                      minimumSize: const Size(double.infinity, 40),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                 ],
               ),
             ),
