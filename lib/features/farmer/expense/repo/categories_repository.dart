@@ -10,12 +10,14 @@ class CategoriesRepository {
   /// Get all inventory categories
   Future<Result<List<InventoryCategory>>> getCategories({
     String? breedId,
+    int? age,
   }) async {
     try {
       final response = await apiClient.get(
         '/category-items/all',
         queryParameters: {
-          if (breedId != null && breedId.isNotEmpty) 'breed_id': breedId,
+          if (breedId != null && breedId.isNotEmpty) 'breedId': breedId,
+          if (age != null) 'age_in_days': age.toString(),
         },
       );
       final jsonResponse = jsonDecode(response.body);

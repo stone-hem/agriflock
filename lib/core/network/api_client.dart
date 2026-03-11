@@ -153,6 +153,8 @@ class ApiClient {
       final uri = Uri.parse('${AppConstants.baseUrl}$endpoint')
           .replace(queryParameters: queryParameters);
 
+      LogUtil.info('GET $uri');
+
       Future<http.Response> makeRequest() async {
         return await http.get(
           uri,

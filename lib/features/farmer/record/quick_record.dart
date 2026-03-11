@@ -52,6 +52,8 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
 
   // Vaccination/Medicine details
   double? _dosesUsed;
+  bool _usedFromStore = true;
+  double? _price;
 
   // Loading states
   bool _isLoadingCategories = true;
@@ -92,11 +94,11 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
     }
   }
 
-  Future<void> _loadCategories({String? breedId}) async {
+  Future<void> _loadCategories({String? breedId, int? age}) async {
     setState(() => _isLoadingCategories = true);
 
     try {
-      final result = await _categoriesRepository.getCategories(breedId: breedId);
+      final result = await _categoriesRepository.getCategories(breedId: breedId, age: age);
 
       switch (result) {
         case Success<List<InventoryCategory>>(data: final categories):
@@ -179,7 +181,9 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
           'unit': 'kgs',
           'date': _selectedDate.toUtc().toIso8601String(),
           if (_notes != null && _notes!.isNotEmpty) 'notes': _notes,
-          'mortality_today': 0, // Default to 0, can be updated if UI captures this
+          'mortality_today': 0,
+          'use_from_store': _usedFromStore,
+          if (!_usedFromStore && _price != null) 'price': _price,
         };
 
         LogUtil.warning('Feed Record Payload: $recordData');
@@ -199,8 +203,10 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
           if (_methodOfAdministration != null) 'method_of_administration': _methodOfAdministration,
           'doses_used': _dosesUsed?.toInt() ?? _quantity?.toInt() ?? 1,
           'birds_vaccinated': _dosesUsed?.toInt() ?? _quantity?.toInt() ?? 1,
-          'cost': 0,
+          'cost': _usedFromStore ? 0 : (_price ?? 0),
           'supplier': '',
+          'use_from_store': _usedFromStore,
+          if (!_usedFromStore && _price != null) 'price': _price,
         };
 
         LogUtil.warning('Vaccination Record Payload: $recordData');
@@ -221,9 +227,11 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
           'birds_treated': _dosesUsed?.toInt() ?? 0,
           'treatment_duration_days': 1,
           'withdrawal_period_days': 0,
-          'cost': 0,
+          'cost': _usedFromStore ? 0 : (_price ?? 0),
           'supplier': '',
           if (_notes != null && _notes!.isNotEmpty) 'notes': _notes,
+          'use_from_store': _usedFromStore,
+          if (!_usedFromStore && _price != null) 'price': _price,
         };
 
         LogUtil.warning('Medication Record Payload: $recordData');
@@ -315,7 +323,7 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
                   onBatchSelected: (batch) {
                     setState(() => _selectedBatch = batch);
                     // Fetch categories filtered by this batch's breed
-                    _loadCategories(breedId: batch.birdTypeId);
+                    _loadCategories(breedId: batch.birdTypeId, age: batch.ageInDays);
                     _nextPage();
                   },
                 ),
@@ -357,6 +365,8 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
                       String? notes,
                       required DateTime selectedDate,
                       double? dosesUsed,
+                      bool usedFromStore = true,
+                      double? price,
                     }) {
                       setState(() {
                         _quantity = quantity;
@@ -364,6 +374,8 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
                         _notes = notes;
                         _selectedDate = selectedDate;
                         _dosesUsed = dosesUsed;
+                        _usedFromStore = usedFromStore;
+                        _price = price;
                       });
                       _saveRecord();
                     },

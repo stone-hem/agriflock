@@ -420,7 +420,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                     const SizedBox(height: 8),
                     _buildInfoRow(
                       'Expected avg feeding per day',
-                      '${batch.actualFoodPerBirdPerDayG}g/per/bird/day = ${_formatKg(batch.totalExpectedFoodPerDayKg)}',
+                      '${batch.expectedFoodPerBirdPerDayG}g/per/bird/day = ${_formatKg(batch.totalExpectedFoodPerDayKg)}',
                       Icons.restaurant_outlined,
                       Colors.orange,
                     ),
@@ -463,8 +463,6 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                     ],
                   ),
                   const SizedBox(height: 8),
-
-
 
                   _buildInfoRow(
                     'Actual feeds consumed',
@@ -566,14 +564,14 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                       children: [
                         _buildInfoRow(
                           'Expected avg weight',
-                          '${batch.expectedWeight?.toStringAsFixed(2) ?? '0.00'} kgs',
+                          '${batch.feedingPlan?.expectedAvgWeight ?? '0.00'} kgs',
                           Icons.monitor_weight_outlined,
                           Colors.purple,
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 10),],
+                  const SizedBox(width: 4),],
                   Expanded(
                     child: Column(
                       children: [
@@ -903,7 +901,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
   Widget _buildInfoRow(
       String label,
       String value,
-      IconData icon,
+      IconData? icon,
       Color iconColor, {
         Color? valueColor,
       }) {

@@ -8,6 +8,7 @@ import 'package:agriflock/core/widgets/photo_upload.dart';
 import 'package:agriflock/core/widgets/reusable_decimal_input.dart';
 import 'package:agriflock/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock/core/widgets/reusable_input.dart';
+import 'package:agriflock/features/farmer/batch/batch_created_screen.dart';
 import 'package:agriflock/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock/features/farmer/batch/model/bird_type.dart';
 import 'package:agriflock/features/farmer/batch/repo/batch_house_repo.dart';
@@ -1182,9 +1183,13 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
 
       switch (result) {
         case Success<BatchModel>(data: final batch):
-          ToastUtil.showSuccess('Batch created successfully!');
           if (context.mounted) {
-            context.pop(batch);
+            final result = await Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (_) => BatchCreatedScreen(batch: batch, farm: widget.farm),
+              ),
+            );
+            if (context.mounted) context.pop(result ?? true);
           }
 
         case Failure<BatchModel>(:final response, :final message):

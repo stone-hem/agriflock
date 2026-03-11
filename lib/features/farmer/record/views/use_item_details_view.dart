@@ -23,6 +23,8 @@ class UseItemDetailsView extends StatefulWidget {
   String? notes,
   required DateTime selectedDate,
   double? dosesUsed,
+  bool usedFromStore,
+  double? price,
   }) onSave;
   final VoidCallback onBack;
   final bool isSubmitting;
@@ -55,10 +57,12 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
   final TextEditingController _notesController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
+  final TextEditingController _priceController = TextEditingController();
 
   String _searchQuery = '';
   String? _selectedMethodOfAdministration;
   TimeOfDay _selectedTime = TimeOfDay.now();
+  bool _usedFromStore = true;
 
   // Packaging options
 
@@ -155,10 +159,26 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
       return;
     }
 
+    if (!_usedFromStore) {
+      if (_priceController.text.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter the purchase price')),
+        );
+        return;
+      }
+      if (double.tryParse(_priceController.text) == null || double.parse(_priceController.text) <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter a valid price')),
+        );
+        return;
+      }
+    }
+
     final quantity = double.parse(_quantityController.text);
     final dosesUsed = _isVaccineOrMedicine && _dosesController.text.isNotEmpty
         ? double.tryParse(_dosesController.text)
         : null;
+    final price = !_usedFromStore ? double.tryParse(_priceController.text) : null;
 
     // Parse date from controller (ISO format from CustomDateTextField)
     DateTime selectedDate = DateTime.now();
@@ -186,6 +206,8 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
       notes: _notesController.text.isNotEmpty ? _notesController.text : null,
       selectedDate: combinedDateTime,
       dosesUsed: dosesUsed,
+      usedFromStore: _usedFromStore,
+      price: price,
     );
   }
 
@@ -638,6 +660,138 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                     const SizedBox(height: 24),
 
 
+                    // Source choice
+                    const Text(
+                      'Where is this coming from?',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => setState(() => _usedFromStore = true),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: _usedFromStore ? Colors.green.shade50 : Colors.white,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: _usedFromStore ? Colors.green : Colors.grey.shade200,
+                                  width: _usedFromStore ? 2 : 1,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.04),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: _usedFromStore ? Colors.green.withOpacity(0.15) : Colors.grey.shade100,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.inventory_2_rounded,
+                                      size: 26,
+                                      color: _usedFromStore ? Colors.green : Colors.grey.shade500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    'From Store',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: _usedFromStore ? Colors.green.shade700 : Colors.grey.shade700,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Deduct from stored inventory',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: _usedFromStore ? Colors.green.shade600 : Colors.grey.shade500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => setState(() => _usedFromStore = false),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: !_usedFromStore ? Colors.orange.shade50 : Colors.white,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: !_usedFromStore ? Colors.orange : Colors.grey.shade200,
+                                  width: !_usedFromStore ? 2 : 1,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.04),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: !_usedFromStore ? Colors.orange.withOpacity(0.15) : Colors.grey.shade100,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.shopping_cart_rounded,
+                                      size: 26,
+                                      color: !_usedFromStore ? Colors.orange : Colors.grey.shade500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    'Fresh Purchase',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: !_usedFromStore ? Colors.orange.shade700 : Colors.grey.shade700,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Bought & used now',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: !_usedFromStore ? Colors.orange.shade600 : Colors.grey.shade500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
                     const Text(
                       'How much did you use?',
                       style: TextStyle(
@@ -667,6 +821,18 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                       },
                     ),
                     const SizedBox(height: 16),
+
+                    // Price field (only when fresh purchase)
+                    if (!_usedFromStore) ...[
+                      ReusableInput(
+                        topLabel: 'Total Purchase Price',
+                        icon: Icons.payments_rounded,
+                        controller: _priceController,
+                        hintText: 'Enter total amount paid',
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
 
                     // Method of administration (for vaccines/medicines)
                     if (_isVaccineOrMedicine) ...[
@@ -838,6 +1004,7 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
     _notesController.dispose();
     _searchController.dispose();
     _dateController.dispose();
+    _priceController.dispose();
     super.dispose();
   }
 }

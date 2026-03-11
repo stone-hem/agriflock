@@ -195,97 +195,22 @@ class UseCategorySelectionView extends StatelessWidget {
 
                 if (filteredCategories.isNotEmpty) ...[
                   const SizedBox(height: 24),
-                  Text(
-                    'Use from store',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade700,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Category grid
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 1.1, maxCrossAxisExtent: 250,
-                    ),
-                    itemCount: filteredCategories.length,
-                    itemBuilder: (context, index) {
-                      final category = filteredCategories[index];
-                      final color = _getCategoryColor(category.name);
-                      final icon = _getCategoryIcon(category.name);
-                      final isSelected = selectedCategory?.id == category.id;
-
-                      return GestureDetector(
+                  ...filteredCategories.map((category) {
+                    final color = _getCategoryColor(category.name);
+                    final icon = _getCategoryIcon(category.name);
+                    final count = _getUsableItemsCount(category);
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _buildSpecialActionCard(
+                        context: context,
+                        icon: icon,
+                        title: category.name,
+                        subtitle: count > 0 ? '$count item${count != 1 ? 's' : ''} available in store' : 'Tap to record',
+                        color: color,
                         onTap: () => onCategorySelected(category),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: isSelected ? color : Colors.grey.shade200,
-                              width: isSelected ? 2 : 1,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: color.withOpacity(0.1),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  icon,
-                                  size: 32,
-                                  color: color,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 8),
-                                child: Text(
-                                  category.name,
-                                  textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                                    color: isSelected ? color : Colors.grey.shade800,
-                                  ),
-                                ),
-                              ),
-                              if (_getUsableItemsCount(category) > 0)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 4),
-                                  child: Text(
-                                    '${_getUsableItemsCount(category)} items',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: Colors.grey.shade500,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  }),
                 ],
               ],
             ),
