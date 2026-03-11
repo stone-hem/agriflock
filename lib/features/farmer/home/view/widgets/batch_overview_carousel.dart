@@ -420,7 +420,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                     const SizedBox(height: 8),
                     _buildInfoRow(
                       'Expected avg feeding per day',
-                      _formatKg(batch.totalExpectedFoodPerDayKg),
+                      '${batch.actualFoodPerBirdPerDayG}g/per/bird/day = ${_formatKg(batch.totalExpectedFoodPerDayKg)}',
                       Icons.restaurant_outlined,
                       Colors.orange,
                     ),

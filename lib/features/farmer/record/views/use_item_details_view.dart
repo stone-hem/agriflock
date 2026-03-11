@@ -126,7 +126,9 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
   }
 
   String _getUnitDisplay() {
-    return widget.selectedItem?.categoryItemUnit ?? 'units';
+    return widget.category.name.toLowerCase().contains('feed')
+        ? 'kgs'
+        : 'units';
   }
 
   List<CategoryItem> get _filteredItems {

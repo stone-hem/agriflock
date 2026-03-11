@@ -64,9 +64,9 @@ class BatchHomeData {
   final double? expectedWeight;
   final double? actualWeight;
   final Vaccination vaccination;
-  final Feed? feed;                       // NEW: Feed object
-  final FeedingPlan? feedingPlan;         // NEW: Feeding plan object
-  final double? totalMeatProduction;       // NEW: Total meat production
+  final Feed? feed;
+  final FeedingPlan? feedingPlan;
+  final double? totalMeatProduction;
   final int? totalEggProduction;
   final int? productionPercentage;
   final double? eggCost;

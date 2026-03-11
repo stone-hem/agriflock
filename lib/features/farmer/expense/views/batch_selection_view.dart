@@ -305,7 +305,7 @@ class _BatchSelectionViewState extends State<BatchSelectionView> {
 
                   // Used quantity
                   ReusableInput(
-                    topLabel: 'Quantity Used *',
+                    topLabel: 'Quantity Used  in Kgs*',
                     icon: Icons.output,
                     controller: _usedQuantityController,
                     hintText: 'Enter amount used',
@@ -318,9 +318,9 @@ class _BatchSelectionViewState extends State<BatchSelectionView> {
                       if (v == null || v <= 0) {
                         return 'Please enter a valid number';
                       }
-                      if (v > widget.quantity) {
-                        return 'Cannot exceed purchased quantity (${widget.quantity.toStringAsFixed(0)})';
-                      }
+                      // if (v > widget.quantity) {
+                      //   return 'Cannot exceed purchased quantity (${widget.quantity.toStringAsFixed(0)})';
+                      // }
                       return null;
                     },
                   ),
