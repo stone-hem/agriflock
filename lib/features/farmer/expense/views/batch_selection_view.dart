@@ -308,7 +308,7 @@ class _BatchSelectionViewState extends State<BatchSelectionView> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'All ${_formatQty(widget.quantity)} $_unit used',
+                                  'All ${_formatQty(widget.quantity)} units used',
                                   style: TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w600,
