@@ -182,5 +182,32 @@ class RecordingRepo {
     }
   }
 
+  Future<Result<double>> getRecommendedWeight(String batchId) async {
+    try {
+      final response = await apiClient.get(
+        '/batches/$batchId/weight-samples/recommended-weight',
+      );
+
+      LogUtil.info('Recommended Weight API Response: ${response.body}');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final value = double.tryParse(response.body.trim());
+        if (value != null) return Success(value);
+        return const Failure(message: 'Invalid response format');
+      } else {
+        final jsonResponse = jsonDecode(response.body);
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to fetch recommended weight',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException {
+      return const Failure(message: 'No internet connection', statusCode: 0);
+    } catch (e) {
+      LogUtil.error('Error in getRecommendedWeight: $e');
+      return Failure(message: e.toString());
+    }
+  }
 
 }

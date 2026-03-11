@@ -495,15 +495,15 @@ Widget _toggleRow(String label, String value, ValueChanged<String> onChanged) {
         Expanded(
           flex: 3,
           child:
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+          Text(label, style:  TextStyle(fontWeight: FontWeight.w500,fontSize: 12)),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 6),
         Expanded(
           flex: 4,
           child: SegmentedButton<String>(
-            segments: const [
-              ButtonSegment(value: 'Normal', label: Text('Normal')),
-              ButtonSegment(value: 'Abnormal', label: Text('Abnormal')),
+            segments:  [
+              ButtonSegment(value: 'Normal', label: Text('Normal',style: TextStyle(fontSize: 11),)),
+              ButtonSegment(value: 'Abnormal', label: Text('Abnormal',style: TextStyle(fontSize: 11))),
             ],
             selected: {value},
             onSelectionChanged: (s) => onChanged(s.first),

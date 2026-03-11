@@ -24,12 +24,31 @@ class _RecordWeightScreenState extends State<RecordWeightScreen> {
   final _formKey = GlobalKey<FormState>();
   final _recordingRepo = RecordingRepo();
 
-
   final _averageKgsController = TextEditingController();
   final _notesController = TextEditingController();
   final _dateController = TextEditingController();
 
   bool _isSaving = false;
+  double? _recommendedWeight;
+  bool _isLoadingRecommended = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRecommendedWeight();
+  }
+
+  Future<void> _fetchRecommendedWeight() async {
+    final result = await _recordingRepo.getRecommendedWeight(widget.batch.id);
+    if (mounted) {
+      setState(() {
+        _isLoadingRecommended = false;
+        if (result case Success<double>(data: final weight)) {
+          _recommendedWeight = weight;
+        }
+      });
+    }
+  }
 
   Future<void> _saveWeightRecord() async {
     if (!_formKey.currentState!.validate()) return;
@@ -146,6 +165,83 @@ class _RecordWeightScreenState extends State<RecordWeightScreen> {
                   ],
                 ),
               ),
+              const SizedBox(height: 16),
+
+              // Recommended weight banner
+              if (_isLoadingRecommended)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.indigo.shade300,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Fetching recommended weight...',
+                        style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+                      ),
+                    ],
+                  ),
+                )
+              else if (_recommendedWeight != null)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.indigo.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.indigo.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.indigo.shade100,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.recommend_rounded, size: 18, color: Colors.indigo.shade700),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Recommended weight at day ${widget.batch.ageInDays}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.indigo.shade600,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '${_recommendedWeight!.toStringAsFixed(3)} kg / bird',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.indigo.shade800,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
               const SizedBox(height: 24),
 
               const Text(

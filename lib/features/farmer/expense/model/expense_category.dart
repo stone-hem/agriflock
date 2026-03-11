@@ -61,6 +61,7 @@ class CategoryItem {
   final List<String> vaccineCatalogIds;
   final bool isSuggestedForAge;
   final String? suggestionContext;
+  final Map<String, dynamic>? recommendedQuantity;
 
   CategoryItem({
     required this.id,
@@ -77,6 +78,7 @@ class CategoryItem {
     required this.vaccineCatalogIds,
     required this.isSuggestedForAge,
     this.suggestionContext,
+    this.recommendedQuantity,
   });
 
   factory CategoryItem.fromJson(Map<String, dynamic> json) {
@@ -127,6 +129,9 @@ class CategoryItem {
           .toList(),
       isSuggestedForAge: TypeUtils.toBoolSafe(json['is_suggested_for_age']),
       suggestionContext: TypeUtils.toNullableStringSafe(json['suggestion_context']),
+      recommendedQuantity: json['recommended_quantity'] is Map<String, dynamic>
+          ? json['recommended_quantity'] as Map<String, dynamic>
+          : null,
     );
   }
 
@@ -146,6 +151,7 @@ class CategoryItem {
       'vaccine_catalog_ids': vaccineCatalogIds,
       'is_suggested_for_age': isSuggestedForAge,
       'suggestion_context': suggestionContext,
+      'recommended_quantity': recommendedQuantity,
     };
   }
 }

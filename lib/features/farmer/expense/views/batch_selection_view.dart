@@ -13,7 +13,7 @@ class BatchSelectionView extends StatefulWidget {
   final InventoryCategory category;
   final double quantity;
   final Function(BatchListItem?) onBatchSelected;
-  final Function(double usedQuantity) onSave;
+  final Function(double? usedQuantity) onSave;
   final VoidCallback onBack;
   final bool isSubmitting;
 
@@ -38,36 +38,26 @@ class BatchSelectionView extends StatefulWidget {
 
 class _BatchSelectionViewState extends State<BatchSelectionView> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _usedQuantityController;
+  final TextEditingController _usedQuantityController = TextEditingController();
+  bool _didNotUseAll = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _usedQuantityController = TextEditingController(
-      text: widget.quantity.toStringAsFixed(
-        widget.quantity == widget.quantity.truncateToDouble() ? 0 : 2,
-      ),
-    );
-  }
+  String get _unit => widget.item.categoryItemUnit.isNotEmpty
+      ? widget.item.categoryItemUnit
+      : 'units';
 
-  bool get _isVaccineOrMedicine {
-    final categoryLower = widget.category.name.toLowerCase();
-    return categoryLower.contains('vaccine') ||
-        categoryLower.contains('medicine') ||
-        categoryLower.contains('medication');
+  String _formatQty(double value) {
+    if (value == value.truncateToDouble()) return value.toInt().toString();
+    return value.toStringAsFixed(2).replaceAll(RegExp(r'\.?0+$'), '');
   }
 
   Color _getCategoryColor() {
     final lowerName = widget.category.name.toLowerCase();
-    if (lowerName.contains('feed')) {
-      return Colors.orange;
-    } else if (lowerName.contains('vaccine')) {
-      return Colors.blue;
-    } else if (lowerName.contains('medication') || lowerName.contains('medicine')) {
+    if (lowerName.contains('feed')) return Colors.orange;
+    if (lowerName.contains('vaccine')) return Colors.blue;
+    if (lowerName.contains('medication') || lowerName.contains('medicine')) {
       return Colors.red;
-    } else {
-      return Colors.green;
     }
+    return Colors.green;
   }
 
   void _handleSave() {
@@ -78,10 +68,14 @@ class _BatchSelectionViewState extends State<BatchSelectionView> {
       return;
     }
 
-    if (!_formKey.currentState!.validate()) return;
-
-    final usedQty = double.parse(_usedQuantityController.text);
-    widget.onSave(usedQty);
+    if (_didNotUseAll) {
+      if (!_formKey.currentState!.validate()) return;
+      final usedQty = double.tryParse(_usedQuantityController.text);
+      widget.onSave(usedQty);
+    } else {
+      // All used — don't send used_quantity
+      widget.onSave(null);
+    }
   }
 
   @override
@@ -95,11 +89,9 @@ class _BatchSelectionViewState extends State<BatchSelectionView> {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: categoryColor.withOpacity(0.1),
+            color: categoryColor.withValues(alpha: 0.1),
             border: Border(
-              bottom: BorderSide(
-                color: categoryColor.withOpacity(0.2),
-              ),
+              bottom: BorderSide(color: categoryColor.withValues(alpha: 0.2)),
             ),
           ),
           child: Column(
@@ -114,11 +106,8 @@ class _BatchSelectionViewState extends State<BatchSelectionView> {
                 ),
               ),
               Text(
-                '${widget.quantity.toStringAsFixed(0)} units available',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade700,
-                ),
+                '${_formatQty(widget.quantity)} $_unit purchased',
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
               ),
             ],
           ),
@@ -134,10 +123,7 @@ class _BatchSelectionViewState extends State<BatchSelectionView> {
                 children: [
                   const Text(
                     'Which batch did you use it on?',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   if (widget.farm != null)
                     Padding(
@@ -145,14 +131,12 @@ class _BatchSelectionViewState extends State<BatchSelectionView> {
                       child: Text(
                         'Farm: ${widget.farm!.farmName}',
                         style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade600,
-                        ),
+                            fontSize: 14, color: Colors.grey.shade600),
                       ),
                     ),
                   const SizedBox(height: 24),
 
-                  // Batch selection
+                  // Batch list
                   if (widget.isLoadingBatches)
                     const Center(
                       child: Padding(
@@ -170,7 +154,8 @@ class _BatchSelectionViewState extends State<BatchSelectionView> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.info_outline, color: Colors.orange.shade700),
+                          Icon(Icons.info_outline,
+                              color: Colors.orange.shade700),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
@@ -204,7 +189,8 @@ class _BatchSelectionViewState extends State<BatchSelectionView> {
                               boxShadow: [
                                 if (isSelected)
                                   BoxShadow(
-                                    color: categoryColor.withOpacity(0.2),
+                                    color:
+                                        categoryColor.withValues(alpha: 0.15),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   ),
@@ -239,47 +225,32 @@ class _BatchSelectionViewState extends State<BatchSelectionView> {
                                   ],
                                 ),
                                 const SizedBox(height: 12),
-
-                                // Batch info
                                 Wrap(
                                   spacing: 16,
                                   runSpacing: 8,
                                   children: [
-                                    _buildBatchInfo(
-                                      Icons.pets,
-                                      '${batch.currentCount} birds',
-                                      Colors.blue,
-                                    ),
-                                    _buildBatchInfo(
-                                      Icons.calendar_today,
-                                      'Day ${batch.ageInDays}',
-                                      Colors.orange,
-                                    ),
+                                    _buildBatchInfo(Icons.pets,
+                                        '${batch.currentCount} birds',
+                                        Colors.blue),
+                                    _buildBatchInfo(Icons.calendar_today,
+                                        'Day ${batch.ageInDays}', Colors.orange),
                                     if (batch.farm != null)
-                                      _buildBatchInfo(
-                                        Icons.agriculture,
-                                        batch.farm!.farmName,
-                                        Colors.green,
-                                      ),
+                                      _buildBatchInfo(Icons.agriculture,
+                                          batch.farm!.farmName, Colors.green),
                                     if (batch.house != null)
-                                      _buildBatchInfo(
-                                        Icons.home,
-                                        batch.house!.name,
-                                        Colors.purple,
-                                      ),
+                                      _buildBatchInfo(Icons.home,
+                                          batch.house!.name, Colors.purple),
                                   ],
                                 ),
-
                                 if (batch.birdType != null)
                                   Padding(
                                     padding: const EdgeInsets.only(top: 8),
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
+                                          horizontal: 8, vertical: 4),
                                       decoration: BoxDecoration(
-                                        color: categoryColor.withOpacity(0.1),
+                                        color: categoryColor.withValues(
+                                            alpha: 0.1),
                                         borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: Text(
@@ -297,40 +268,146 @@ class _BatchSelectionViewState extends State<BatchSelectionView> {
                           ),
                         ),
                       );
-                    }).toList(),
+                    }),
 
+                  const SizedBox(height: 8),
 
-
-                  const SizedBox(height: 24),
-
-                  // Used quantity
-                  ReusableInput(
-                    topLabel: 'Quantity Used  in Kgs*',
-                    icon: Icons.output,
-                    controller: _usedQuantityController,
-                    hintText: 'Enter amount used',
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter quantity used';
-                      }
-                      final v = double.tryParse(value);
-                      if (v == null || v <= 0) {
-                        return 'Please enter a valid number';
-                      }
-                      // if (v > widget.quantity) {
-                      //   return 'Cannot exceed purchased quantity (${widget.quantity.toStringAsFixed(0)})';
-                      // }
-                      return null;
-                    },
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4, left: 4),
-                    child: Text(
-                      'Max: ${widget.quantity.toStringAsFixed(0)} units purchased',
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                  // ── Usage section ──────────────────────────────────────────
+                  const Text(
+                    'How much was used?',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
+                  const SizedBox(height: 12),
+
+                  // "All used" summary card
+                  if (!_didNotUseAll)
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.green.shade200),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.green.shade100,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.check_circle_outline,
+                                color: Colors.green.shade700, size: 20),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'All ${_formatQty(widget.quantity)} $_unit used',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.green.shade800,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'The full purchased amount will be recorded',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.green.shade600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  // "Didn't use all?" row
+                  if (!_didNotUseAll) ...[
+                    const SizedBox(height: 10),
+                    GestureDetector(
+                      onTap: () => setState(() => _didNotUseAll = true),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border:
+                              Border.all(color: Colors.grey.shade200),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit_outlined,
+                                size: 18, color: Colors.grey.shade500),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                "Didn't use all of it? Tap to specify amount",
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ),
+                            Icon(Icons.chevron_right,
+                                size: 18, color: Colors.grey.shade400),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+
+                  // Partial quantity input (visible only when "didn't use all")
+                  if (_didNotUseAll) ...[
+                    ReusableInput(
+                      topLabel: 'Amount Used ($_unit)',
+                      icon: Icons.output,
+                      controller: _usedQuantityController,
+                      hintText: 'Enter amount used',
+                      keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter amount used';
+                        }
+                        final v = double.tryParse(value);
+                        if (v == null || v <= 0) {
+                          return 'Please enter a valid number';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: () {
+                        _usedQuantityController.clear();
+                        setState(() => _didNotUseAll = false);
+                      },
+                      child: Row(
+                        children: [
+                          Icon(Icons.undo,
+                              size: 14, color: Colors.grey.shade500),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Actually, all was used',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
 
                   const SizedBox(height: 32),
 
@@ -350,20 +427,20 @@ class _BatchSelectionViewState extends State<BatchSelectionView> {
                       ),
                       child: widget.isSubmitting
                           ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
                           : const Text(
-                        'Save Record',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                              'Save Record',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                     ),
                   ),
                 ],
@@ -383,10 +460,7 @@ class _BatchSelectionViewState extends State<BatchSelectionView> {
         const SizedBox(width: 4),
         Text(
           text,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey.shade700,
-          ),
+          style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
         ),
       ],
     );

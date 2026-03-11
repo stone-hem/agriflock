@@ -279,13 +279,13 @@ class AppRoutes {
                 currentPath == signup ||
                 currentPath == welcome)) {
           // Ensure WebSocket is connected when user is authenticated
-          NotificationService.instance.connect();
+          NotificationService.instance.connect().ignore();
           return await _getHomeRoute(secureStorage);
         }
 
         // Connect WS whenever a protected route is navigated to (no-op if already connected)
         if (isLoggedIn && isProtectedRoute) {
-          NotificationService.instance.connect();
+          NotificationService.instance.connect().ignore();
         }
 
         // Disconnect WS on logout / redirect to auth

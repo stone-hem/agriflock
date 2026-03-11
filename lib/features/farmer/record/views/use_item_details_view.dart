@@ -89,7 +89,35 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
   @override
   void didUpdateWidget(UseItemDetailsView oldWidget) {
     super.didUpdateWidget(oldWidget);
+  }
 
+  /// Returns the recommended quantity already converted to the field's unit
+  /// (kg for feeds, doses for vaccines). Returns null if not available.
+  double? _recommendedQtyInFieldUnit(CategoryItem item) {
+    final rec = item.recommendedQuantity;
+    if (rec == null) return null;
+
+    final qtyPerBird = (rec['quantity_per_bird_per_day'] as num?)?.toDouble();
+    if (qtyPerBird == null) return null;
+
+    final numBirds = widget.batch.currentCount;
+    final unit = (rec['unit'] as String?)?.toLowerCase();
+    final itemUnit = item.categoryItemUnit.toLowerCase();
+
+    double total = qtyPerBird * numBirds;
+
+    // Convert grams → kg when the item unit is kg
+    if (unit == 'g' && (itemUnit == 'kg' || itemUnit == 'kgs')) {
+      total = total / 1000;
+    }
+
+    return total;
+  }
+
+  String _formatQty(double value) {
+    if (value == value.truncateToDouble()) return value.toInt().toString();
+    // up to 3 decimal places, strip trailing zeros
+    return value.toStringAsFixed(3).replaceAll(RegExp(r'\.?0+$'), '');
   }
 
   bool get _isVaccineOrMedicine {
@@ -820,6 +848,82 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                         return null;
                       },
                     ),
+
+                    // Feed recommendation banner
+                    if (!_isVaccineOrMedicine && widget.selectedItem != null) ...[
+                      Builder(builder: (context) {
+                        final item = widget.selectedItem!;
+                        final rec = item.recommendedQuantity;
+                        if (rec == null) return const SizedBox.shrink();
+
+                        final qtyPerBird = (rec['quantity_per_bird_per_day'] as num?)?.toDouble();
+                        final timesPerDay = (rec['times_per_day'] as num?)?.toInt();
+                        final unit = (rec['unit'] as String?) ?? item.categoryItemUnit;
+                        if (qtyPerBird == null) return const SizedBox.shrink();
+
+                        final recQty = _recommendedQtyInFieldUnit(item)!;
+                        final fieldUnit = _getUnitDisplay();
+
+                        return GestureDetector(
+                          onTap: () => setState(
+                            () => _quantityController.text = _formatQty(recQty),
+                          ),
+                          child: Container(
+                            margin: const EdgeInsets.only(top: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: Colors.green.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.green.shade200),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.lightbulb_outline,
+                                    color: Colors.green.shade700, size: 18),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: RichText(
+                                    text: TextSpan(
+                                      style: TextStyle(
+                                          fontSize: 12, color: Colors.green.shade800),
+                                      children: [
+                                        const TextSpan(
+                                          text: 'Recommended: ',
+                                          style: TextStyle(fontWeight: FontWeight.w600),
+                                        ),
+                                        TextSpan(
+                                          text: '${_formatQty(recQty)} $fieldUnit'
+                                              ' (${qtyPerBird.toStringAsFixed(3).replaceAll(RegExp(r'\.?0+$'), '')}$unit'
+                                              ' × ${widget.batch.currentCount} birds'
+                                              '${timesPerDay != null ? ', $timesPerDay×/day' : ''})',
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.shade100,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    'Use',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.green.shade700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
                     const SizedBox(height: 16),
 
                     // Price field (only when fresh purchase)

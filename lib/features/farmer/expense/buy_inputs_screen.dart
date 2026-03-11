@@ -183,7 +183,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
             'quantity': _quantity?.toInt() ?? 1,
             'unit': _selectedPackagingOption,
             'date': _selectedDate.toUtc().toIso8601String(),
-            if (_useNow) 'used_quantity': _usedQuantity ?? _quantity,
+            if (_useNow && _usedQuantity != null) 'used_quantity': _usedQuantity,
             if (widget.farm != null) 'farm_id': widget.farm!.id,
             if (_selectedBatch != null) 'batch_id': _selectedBatch!.id,
             if (_selectedBatch != null && _selectedBatch!.houseId != null) 'house_id': _selectedBatch!.houseId,
@@ -198,7 +198,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
             'quantity': _quantity?.toInt() ?? 1,
             'unit': _selectedPackagingOption,
             'date': _selectedDate.toUtc().toIso8601String(),
-            if (_useNow) 'used_quantity': _usedQuantity ?? _quantity,
+            if (_useNow && _usedQuantity != null) 'used_quantity': _usedQuantity,
             if (widget.farm != null) 'farm_id': widget.farm!.id,
             if (_selectedBatch != null) 'batch_id': _selectedBatch!.id,
             if (_selectedBatch != null && _selectedBatch!.houseId != null) 'house_id': _selectedBatch!.houseId,
@@ -215,7 +215,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
           'quantity': _quantity,
           'unit': _selectedPackagingOption,
           'date': _selectedDate.toUtc().toIso8601String(),
-          'used_quantity': _usedQuantity ?? _quantity,
+          if (_usedQuantity != null) 'used_quantity': _usedQuantity,
           'notes': null,
           if (_selectedBatch != null) 'batch_id': _selectedBatch!.id,
           if (_selectedBatch != null && _selectedBatch!.houseId != null) 'house_id': _selectedBatch!.houseId,
@@ -429,7 +429,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
                       setState(() => _selectedBatch = batch);
                     },
                     onSave: (usedQty) {
-                      setState(() => _usedQuantity = usedQty);
+                      setState(() => _usedQuantity = usedQty); // null = all used
                       _submitExpense();
                     },
                     onBack: _previousPage,
