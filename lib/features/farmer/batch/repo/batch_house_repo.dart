@@ -276,10 +276,10 @@ class BatchHouseRepository {
     }
   }
 
-  Future<Result<void>> deleteBatch(String farmId, String batchId) async {
+  Future<Result<void>> deleteBatch(String batchId) async {
     try {
       final response = await apiClient.delete(
-        '/farms/$farmId/batches/$batchId',
+        '/batches/soft-delete/$batchId',
       );
 
       if (response.statusCode >= 200 && response.statusCode < 300) {

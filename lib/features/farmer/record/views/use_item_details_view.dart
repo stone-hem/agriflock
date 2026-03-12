@@ -5,6 +5,7 @@ import 'package:agriflock/core/widgets/reusable_time_input.dart';
 import 'package:agriflock/features/farmer/batch/model/batch_list_model.dart';
 import 'package:agriflock/features/farmer/expense/model/expense_category.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class UseItemDetailsView extends StatefulWidget {
   final BatchListItem batch;
@@ -101,16 +102,12 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
     if (qtyPerBird == null) return null;
 
     final numBirds = widget.batch.currentCount;
-    final unit = (rec['unit'] as String?)?.toLowerCase();
-    final itemUnit = item.categoryItemUnit.toLowerCase();
+    final total = qtyPerBird * numBirds;
 
-    double total = qtyPerBird * numBirds;
-
-    // Convert grams → kg when the item unit is kg
-    if (unit == 'g' && (itemUnit == 'kg' || itemUnit == 'kgs')) {
-      total = total / 1000;
+    // qtyPerBird comes in grams from API; convert to kgs for feed categories
+    if (_getUnitDisplay().toLowerCase() == 'kgs') {
+      return total / 1000;
     }
-
     return total;
   }
 
@@ -543,7 +540,7 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                                               ),
                                               const SizedBox(width: 4),
                                               Text(
-                                                'In Store: ${item.quantityInStore}',
+                                                'In Store: ${item.quantityInStore} ${item.categoryItemUnit}',
                                                 style: TextStyle(
                                                   fontSize: 11,
                                                   fontWeight: FontWeight.w500,
@@ -795,7 +792,7 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                                   ),
                                   const SizedBox(height: 10),
                                   Text(
-                                    'Fresh Purchase',
+                                    'New Purchase',
                                     style: TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w700,
@@ -829,12 +826,42 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                     ),
                     const SizedBox(height: 16),
 
+                    // In-store availability badge
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.blue.shade100),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.inventory_2, size: 14, color: Colors.blue.shade700),
+                          const SizedBox(width: 6),
+                          Text(
+                            'In Store: ${widget.selectedItem!.quantityInStore} ${widget.selectedItem!.categoryItemUnit}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.blue.shade700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                     ReusableInput(
                       topLabel: 'Quantity Used (${_getUnitDisplay()})',
                       icon: Icons.inventory_2,
                       controller: _quantityController,
                       hintText: 'Enter quantity in ${_getUnitDisplay()}',
-                      keyboardType: TextInputType.number,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true,signed: false),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'^\d+\.?\d{0,2}'),
+                        ),
+                      ],
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter quantity';
@@ -864,6 +891,7 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                         final recQty = _recommendedQtyInFieldUnit(item)!;
                         final fieldUnit = _getUnitDisplay();
 
+
                         return GestureDetector(
                           onTap: () => setState(
                             () => _quantityController.text = _formatQty(recQty),
@@ -888,12 +916,12 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                                           fontSize: 12, color: Colors.green.shade800),
                                       children: [
                                         const TextSpan(
-                                          text: 'Recommended: ',
+                                          text: 'Recommended feeds per day: ',
                                           style: TextStyle(fontWeight: FontWeight.w600),
                                         ),
                                         TextSpan(
                                           text: '${_formatQty(recQty)} $fieldUnit'
-                                              ' (${qtyPerBird.toStringAsFixed(3).replaceAll(RegExp(r'\.?0+$'), '')}$unit'
+                                              ' (${_formatQty(qtyPerBird)}g'
                                               ' × ${widget.batch.currentCount} birds'
                                               '${timesPerDay != null ? ', $timesPerDay×/day' : ''})',
                                         ),
@@ -932,8 +960,13 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                         topLabel: 'Total Purchase Price',
                         icon: Icons.payments_rounded,
                         controller: _priceController,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true,signed: false),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d+\.?\d{0,2}'),
+                          ),
+                        ],
                         hintText: 'Enter total amount paid',
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       ),
                       const SizedBox(height: 16),
                     ],

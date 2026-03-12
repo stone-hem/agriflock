@@ -1,4 +1,5 @@
 import 'package:agriflock/core/utils/api_error_handler.dart';
+import 'package:agriflock/core/utils/refresh_bus.dart';
 import 'package:agriflock/core/utils/log_util.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/utils/toast_util.dart';
@@ -183,7 +184,7 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
           if (_notes != null && _notes!.isNotEmpty) 'notes': _notes,
           'mortality_today': 0,
           'use_from_store': _usedFromStore,
-          if (!_usedFromStore && _price != null) 'price': _price,
+          if (!_usedFromStore && _price != null) 'cost': _price,
         };
 
         LogUtil.warning('Feed Record Payload: $recordData');
@@ -206,7 +207,7 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
           'cost': _usedFromStore ? 0 : (_price ?? 0),
           'supplier': '',
           'use_from_store': _usedFromStore,
-          if (!_usedFromStore && _price != null) 'price': _price,
+          if (!_usedFromStore && _price != null) 'cost': _price,
         };
 
         LogUtil.warning('Vaccination Record Payload: $recordData');
@@ -231,7 +232,7 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
           'supplier': '',
           if (_notes != null && _notes!.isNotEmpty) 'notes': _notes,
           'use_from_store': _usedFromStore,
-          if (!_usedFromStore && _price != null) 'price': _price,
+          if (!_usedFromStore && _price != null) 'cost': _price,
         };
 
         LogUtil.warning('Medication Record Payload: $recordData');
@@ -240,6 +241,7 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
 
       switch (result) {
         case Success():
+          RefreshBus.instance.fire(RefreshEvent.recordCreated);
           ToastUtil.showSuccess('Record saved successfully!');
           if (mounted) {
             // Move to success page

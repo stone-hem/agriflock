@@ -1,6 +1,5 @@
 import 'package:agriflock/features/farmer/batch/batch_details_screen.dart';
 import 'package:agriflock/features/farmer/batch/model/batch_model.dart';
-import 'package:agriflock/features/farmer/expense/buy_inputs_screen.dart';
 import 'package:agriflock/features/farmer/farm/models/farm_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -100,19 +99,6 @@ class BatchCreatedScreen extends StatelessWidget {
               ),
               const SizedBox(height: 32),
 
-              // Action cards
-              _ActionCard(
-                icon: Icons.receipt_long_rounded,
-                iconColor: Colors.orange,
-                title: 'Record batch expenses',
-                subtitle: 'Log feeds, vaccines or other startup costs for this batch',
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => BuyInputsPageView(farm: farm),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 14),
               _ActionCard(
                 icon: Icons.add_shopping_cart_rounded,
                 iconColor: Colors.purple,

@@ -235,6 +235,15 @@ class _RecordWeightScreenState extends State<RecordWeightScreen> {
                                 color: Colors.indigo.shade800,
                               ),
                             ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Weigh at least 15% of your chicken at your farm',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.indigo.shade800,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -267,6 +276,7 @@ class _RecordWeightScreenState extends State<RecordWeightScreen> {
                 label: 'Sample Date',
                 icon: Icons.calendar_today,
                 required: true,
+                initialDate: DateTime.now(),
                 minYear: DateTime.now().year - 1,
                 maxYear: DateTime.now().year,
                 returnFormat: DateReturnFormat.isoString,

@@ -118,9 +118,15 @@ class _QuickBatchesListScreenState extends State<QuickBatchesListScreen> {
     );
     if (confirmed == true && mounted) {
       try {
-        await _batchHouseRepository.deleteBatch(batch.farmId, batch.id);
-        ToastUtil.showSuccess('Batch deleted');
-        _loadBatches();
+        final res=await _batchHouseRepository.deleteBatch(batch.id);
+        switch(res) {
+          case Success<void>():
+            ToastUtil.showSuccess('Batch deleted');
+            _loadBatches();
+          case Failure<void>():
+            ToastUtil.showError('Batch not deleted');
+        }
+
       } catch (e) {
         ApiErrorHandler.handle(e);
       }

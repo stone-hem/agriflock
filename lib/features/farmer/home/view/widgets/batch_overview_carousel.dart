@@ -577,7 +577,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                       children: [
                         _buildInfoRow(
                           'Actual avg weight',
-                          '${batch.actualWeight?.toStringAsFixed(2) ?? '0.00'} kgs',
+                          '${batch.actualWeight ?? '0.00'} kgs',
                           Icons.scale_outlined,
                           accentColor,
                         ),

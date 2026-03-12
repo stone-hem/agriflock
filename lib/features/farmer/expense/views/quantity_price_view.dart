@@ -5,6 +5,7 @@ import 'package:agriflock/core/widgets/reusable_time_input.dart';
 import 'package:agriflock/features/farmer/expense/model/expense_category.dart';
 import 'package:agriflock/main.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class QuantityPriceView extends StatefulWidget {
   final CategoryItem item;
@@ -305,7 +306,12 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
                     icon: Icons.format_list_numbered,
                     controller: _quantityController,
                     hintText: 'Enter quantity in ${_getUnitDisplay()}',
-                    keyboardType: TextInputType.number,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d+\.?\d{0,2}'),
+                      ),
+                    ],
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter quantity';
@@ -326,7 +332,12 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
                     icon: Icons.attach_money,
                     controller: _unitPriceController,
                     hintText: '0.00',
-                    keyboardType: TextInputType.number,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d+\.?\d{0,2}'),
+                      ),
+                    ],
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter unit price';

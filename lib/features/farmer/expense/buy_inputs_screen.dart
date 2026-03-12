@@ -1,4 +1,5 @@
 import 'package:agriflock/core/utils/api_error_handler.dart';
+import 'package:agriflock/core/utils/refresh_bus.dart';
 import 'package:agriflock/core/utils/log_util.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/utils/toast_util.dart';
@@ -230,7 +231,8 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
 
       switch (result) {
         case Success():
-        // Move to success page
+          RefreshBus.instance.fire(RefreshEvent.expenseCreated);
+          // Move to success page
           _nextPage();
           break;
         case Failure(message: final error):

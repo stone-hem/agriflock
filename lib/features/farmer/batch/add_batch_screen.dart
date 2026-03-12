@@ -12,6 +12,7 @@ import 'package:agriflock/features/farmer/batch/batch_created_screen.dart';
 import 'package:agriflock/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock/features/farmer/batch/model/bird_type.dart';
 import 'package:agriflock/features/farmer/batch/repo/batch_house_repo.dart';
+import 'package:agriflock/core/utils/refresh_bus.dart';
 import 'package:agriflock/features/farmer/farm/models/farm_model.dart';
 import 'package:agriflock/main.dart';
 import 'package:flutter/material.dart';
@@ -57,6 +58,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
   bool _isLoadingBirdTypes = false;
   bool _hasChickCost = true;
   bool _isOwnHatch = false;
+  bool _ageInWeeks = false;
 
   List<BirdType> _birdTypes = [];
   final List<String> _batchTypes = [
@@ -612,13 +614,82 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
 
               // Chick Age - Only shown for purchased chicks
               if (!_isOwnHatch) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Chick Age',
+                      style: Theme.of(context).textTheme.titleSmall!.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade800,
+                      ),
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      padding: const EdgeInsets.all(2),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          GestureDetector(
+                            onTap: () => setState(() {
+                              _ageInWeeks = false;
+                              _chickAgeController.clear();
+                            }),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 150),
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: !_ageInWeeks ? Colors.blue.shade600 : Colors.transparent,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                'Days',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: !_ageInWeeks ? Colors.white : Colors.grey.shade700,
+                                ),
+                              ),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => setState(() {
+                              _ageInWeeks = true;
+                              _chickAgeController.clear();
+                            }),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 150),
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: _ageInWeeks ? Colors.blue.shade600 : Colors.transparent,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                'Weeks',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: _ageInWeeks ? Colors.white : Colors.grey.shade700,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
                 ReusableInput(
-                  topLabel: 'Chick Age (Days)',
                   controller: _chickAgeController,
                   keyboardType: TextInputType.number,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter chick age in days';
+                      return 'Please enter chick age';
                     }
                     if (int.tryParse(value) == null) {
                       return 'Please enter a valid number';
@@ -627,13 +698,16 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                     if (age < 0) {
                       return 'Age cannot be negative';
                     }
-                    if (age > 365) {
-                      return 'Age cannot be more than 1 year';
+                    if (_ageInWeeks && age > 52) {
+                      return 'Age cannot be more than 52 weeks';
+                    }
+                    if (!_ageInWeeks && age > 365) {
+                      return 'Age cannot be more than 1 year (365 days)';
                     }
                     return null;
                   },
                   labelText: 'Right age will help track vaccinations and send you alerts.',
-                  hintText: 'e.g., 1, 7, 14',
+                  hintText: _ageInWeeks ? 'e.g., 1, 2, 4' : 'e.g., 1, 7, 14',
                 ),
                 const SizedBox(height: 20),
 
@@ -942,7 +1016,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
 
               // Current Weight
               ReusableDecimalInput(
-                topLabel: 'Average weight (kg)  Per bird(Optional)',
+                topLabel: 'Actual Avg weight (kg)  Per bird(Optional)',
                 controller: _currentWeightController,
                 labelText: 'Current average weight',
                 hintText: 'e.g., 0.0',
@@ -1120,13 +1194,18 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
         ToastUtil.showError('Chick age cannot be negative');
         return;
       }
-      if (age > 365) {
+      if (_ageInWeeks && age > 52) {
+        ToastUtil.showError('Age cannot be more than 52 weeks');
+        return;
+      }
+      if (!_ageInWeeks && age > 365) {
         ToastUtil.showError('Chick age cannot be more than 1 year');
         return;
       }
 
-      // Calculate hatch date for purchased chicks
-      _hatchController.text = DateTime.now().subtract(Duration(days: age)).toIso8601String();
+      // Calculate hatch date for purchased chicks (weeks converted to days)
+      final ageInDays = _ageInWeeks ? age * 7 : age;
+      _hatchController.text = DateTime.now().subtract(Duration(days: ageInDays)).toIso8601String();
     }
 
     // Validate feeding times selection
@@ -1151,12 +1230,16 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
         'batch_type': _selectedBatchType,
         'initial_count': int.parse(_initialQuantityController.text.trim()),
         'current_count': int.parse(_birdsAliveController.text.trim()),
-        'hatch_date': DateTime.parse(_hatchController.text).toUtc().toIso8601String(), // Date only
+        //dont send this when is purchase
+        if(_isOwnHatch)'hatch_date': DateTime.parse(_hatchController.text).toUtc().toIso8601String(), // Date only
         'birds_alive': int.parse(_birdsAliveController.text.trim()),
         'current_weight': _currentWeightController.text.isNotEmpty?double.parse(_currentWeightController.text.trim()):null,
         'expected_weight': _expectedWeightController.text.isNotEmpty?double.parse(_expectedWeightController.text.trim()):null,
         'cost_per_bird':double.tryParse(_chickCostController.text.trim()) ?? 0,
-        'age_at_purchase': _isOwnHatch ? null : (int.tryParse(_chickAgeController.text.trim()) ?? 1),
+        if (!_isOwnHatch)
+          'age_at_purchase': _ageInWeeks
+              ? (int.tryParse(_chickAgeController.text.trim()) ?? 1) * 7
+              : (int.tryParse(_chickAgeController.text.trim()) ?? 1),
         'hatchery_source': !_isOwnHatch && _selectedHatcherySource != null
             ? (_selectedHatcherySource == 'Others'
                 ? (_hatchSourceController.text.trim().isNotEmpty ? _hatchSourceController.text.trim() : null)
@@ -1183,6 +1266,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
 
       switch (result) {
         case Success<BatchModel>(data: final batch):
+          RefreshBus.instance.fire(RefreshEvent.batchCreated);
           if (context.mounted) {
             final result = await Navigator.of(context).pushReplacement(
               MaterialPageRoute(

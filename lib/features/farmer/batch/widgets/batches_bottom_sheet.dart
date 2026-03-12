@@ -132,9 +132,14 @@ class _BatchesBottomSheetState extends State<BatchesBottomSheet> {
     if (confirmed == true) {
       try {
         setState(() => _isLoading = true);
-        await _repository.deleteBatch(widget.farm.id, batch.id);
-        ToastUtil.showSuccess('Batch deleted successfully');
-        await _refreshBatches();
+        final res=await _repository.deleteBatch(batch.id);
+        switch(res) {
+          case Success<void>():
+            ToastUtil.showSuccess('Batch deleted');
+            await _refreshBatches();
+          case Failure<void>():
+            ToastUtil.showError('Batch not deleted');
+        }
       } catch (e) {
         ApiErrorHandler.handle(e);
       } finally {
