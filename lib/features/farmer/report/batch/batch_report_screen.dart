@@ -369,7 +369,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          _selectedPeriod.toUpperCase(),
+                          '${_selectedPeriod.toUpperCase()} reports',
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
@@ -600,52 +600,65 @@ class _BatchReportScreenState extends State<BatchReportScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── Header ──
-          Padding(
-            padding: const EdgeInsets.all(14),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            margin: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.green.shade200),
+            ),
             child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(9),
-                  decoration: BoxDecoration(
-                    color: typeColor.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(isLayers ? Icons.egg : Icons.pets, color: typeColor, size: 18),
-                ),
-                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(report.batchNumber,
-                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                      Text('${report.farmName} · ${report.houseName}',
-                          style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                        child: Text('${report.birdType} ',
+                            style: TextStyle(fontSize: 15, color: Colors.green,fontWeight: FontWeight.bold)),
+                      ),
+
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: typeColor.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: typeColor.withOpacity(0.3)),
+                        ),
+                        child: Text('Age :  ${report.ageDays}d / ${report.ageWeeks}wk',
+                            style: TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.w700, color: typeColor)),
+                      ),
+                      const SizedBox(height: 4),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        child: Text('Number of birds - ${report.totalBirds} birds',
+                            style: TextStyle(fontSize: 15, color: Colors.black,fontWeight: FontWeight.bold)),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text('Farm - ${report.farmName} | House - ${report.houseName}',
+                            style: TextStyle(fontSize: 14, color: Colors.green,fontWeight: FontWeight.bold)),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(report.batchNumber,
+                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                      ),
+
                     ],
                   ),
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: typeColor.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: typeColor.withOpacity(0.3)),
-                      ),
-                      child: Text('${report.ageDays}d / ${report.ageWeeks}wk',
-                          style: TextStyle(
-                              fontSize: 11, fontWeight: FontWeight.w600, color: typeColor)),
-                    ),
-                    const SizedBox(height: 4),
-                    Text('${report.totalBirds} birds',
-                        style: TextStyle(fontSize: 13, color: Colors.black)),
-                  ],
-                ),
+
               ],
             ),
           ),
+
+
 
 
           Divider(height: 1, color: Colors.grey.shade100),
@@ -655,21 +668,22 @@ class _BatchReportScreenState extends State<BatchReportScreen>
             padding: const EdgeInsets.all(12),
             child: Column(
               children: [
-                _buildMortalitySection(report.mortality),
+                if (report.eggProduction.totalEggsCollected > 0) ...[
+                  _buildEggSection(report.eggProduction),
+                  const SizedBox(height: 10),
+                ],
+                _buildFeedingPlanSection(report.feedingPlan),
                 const SizedBox(height: 10),
                 _buildFeedSection(report.feed),
                 const SizedBox(height: 10),
-                _buildFeedingPlanSection(report.feedingPlan),
+                _buildMortalitySection(report.mortality),
                 const SizedBox(height: 10),
                 _buildVaccinationSection(report.vaccination),
                 if (report.medication.inUse.isNotEmpty) ...[
                   const SizedBox(height: 10),
                   _buildMedicationSection(report.medication),
                 ],
-                if (report.eggProduction.totalEggsCollected > 0) ...[
-                  const SizedBox(height: 10),
-                  _buildEggSection(report.eggProduction),
-                ],
+
               ],
             ),
           ),
@@ -904,12 +918,13 @@ class _BatchReportScreenState extends State<BatchReportScreen>
           const SizedBox(height: 8),
           Row(
             children: [
-              Expanded(
-                  child: _buildInfoRow(Icons.scale_outlined, Colors.teal.shade600,
-                      'Feed/Day (kg)', plan.expectedFeedPerDayKg.toStringAsFixed(1))),
+
               Expanded(
                   child: _buildInfoRow(Icons.calculate_outlined, Colors.teal.shade600,
-                      'Feed/Bird (g)', plan.feedPerBirdPerDayGrams.toStringAsFixed(1))),
+                      'Expected Feed/Bird (g)', plan.feedPerBirdPerDayGrams.toStringAsFixed(1))),
+              Expanded(
+                  child: _buildInfoRow(Icons.scale_outlined, Colors.teal.shade600,
+                      'Expected Feed/Day (kg)', plan.expectedFeedPerDayKg.toStringAsFixed(1))),
             ],
           ),
           const SizedBox(height: 4),
@@ -917,10 +932,10 @@ class _BatchReportScreenState extends State<BatchReportScreen>
             children: [
               Expanded(
                   child: _buildInfoRow(Icons.inventory_outlined, Colors.brown.shade500,
-                      'Quantity/Week', '${plan.expectedFeedPerWeekBags} Bags')),
+                      'Expected Quantity/Week', '${plan.expectedFeedPerWeekBags} Bags')),
               Expanded(
                   child: _buildInfoRow(
-                      Icons.repeat, Colors.teal.shade600, 'Times/Day', '${plan.timesPerDay}')),
+                      Icons.repeat, Colors.teal.shade600, 'Feeding Times/Day', '${plan.timesPerDay}')),
             ],
           ),
           if (plan.feedingTimes.slots.isNotEmpty) ...[
@@ -1125,17 +1140,19 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                       fontWeight: FontWeight.bold,
                       color: Colors.amber.shade800)),
               const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                    color: Colors.amber.shade100, borderRadius: BorderRadius.circular(12)),
-                child: Text('${egg.productionPercentage.toStringAsFixed(1)}%',
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.amber.shade900)),
-              ),
+
             ],
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+                color: Colors.amber.shade100, borderRadius: BorderRadius.circular(12)),
+            child: Text('Production percentage - ${egg.productionPercentage.toStringAsFixed(1)}%',
+                style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.amber.shade900)),
           ),
           const SizedBox(height: 8),
           Row(
@@ -1165,14 +1182,14 @@ class _BatchReportScreenState extends State<BatchReportScreen>
             const SizedBox(height: 6),
             Wrap(
               spacing: 4,
-              runSpacing: 4,
+              runSpacing: 6,
               children: [
                 if (egg.partialBroken > 0)
-                  _buildDefectChip('Partial', egg.partialBroken, Colors.orange),
+                  _buildDefectChip('Partially broken', egg.partialBroken, Colors.orange),
                 if (egg.completeBroken > 0)
-                  _buildDefectChip('Broken', egg.completeBroken, Colors.red),
+                  _buildDefectChip('Broken eggs', egg.completeBroken, Colors.red),
                 if (egg.smallDeformed > 0)
-                  _buildDefectChip('Deformed', egg.smallDeformed, Colors.purple),
+                  _buildDefectChip('Deformed eggs', egg.smallDeformed, Colors.purple),
               ],
             ),
           ],
