@@ -1,3 +1,4 @@
+import 'package:agriflock/core/utils/refresh_bus.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock/features/farmer/batch/model/batch_model.dart';
@@ -606,6 +607,7 @@ class _AdoptScheduleScreenState extends State<AdoptScheduleScreen> {
           );
 
           // Navigate back
+          RefreshBus.instance.fire(RefreshEvent.recordCreated);
           if (context.mounted) {
             context.pop();
           }

@@ -51,7 +51,6 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
   bool _showLayersSubType = false;
   String? _selectedLayersSubTypeId;
   static const String _layersCategoryId = '__layers_category__';
-  String? _selectedBatchType;
   String? _selectedFeedingTimeCategory;
   File? _batchPhotoFile;
   bool _isLoading = false;
@@ -61,12 +60,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
   bool _ageInWeeks = false;
 
   List<BirdType> _birdTypes = [];
-  final List<String> _batchTypes = [
-    'Meat Production',
-    'Egg Production',
-    'Breeding',
-    'Dual Purpose',
-  ];
+
   String _currency='';
 
   final Map<String, List<String>> _feedingTimeOptions = {
@@ -450,30 +444,6 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Batch Type Selection
-              ReusableDropdown<String>(
-                value: _selectedBatchType,
-                hintText: 'Select batch type',
-                topLabel: 'Batch Type',
-                items: _batchTypes.map((String type) {
-                  return DropdownMenuItem<String>(
-                    value: type,
-                    child: Text(type),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedBatchType = newValue;
-                  });
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please select a batch type';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
 
               // Hatch Source Selection
               Text(
@@ -714,7 +684,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                 // Hatch Source (Optional) - Only for purchased chicks
                 ReusableDropdown<String>(
                   value: _selectedHatcherySource,
-                  topLabel: 'Hatchery/Source (Optional)',
+                  topLabel: 'Hatchery/Source',
                   hintText: 'Select hatchery or source',
                   onChanged: (String? newValue) {
                     setState(() {
@@ -1227,7 +1197,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
       final batchData = {
         'house_id': widget.house.id,
         'bird_type_id': _selectedBirdTypeId,
-        'batch_type': _selectedBatchType,
+        // 'batch_type': '',
         'initial_count': int.parse(_initialQuantityController.text.trim()),
         'current_count': int.parse(_birdsAliveController.text.trim()),
         //dont send this when is purchase

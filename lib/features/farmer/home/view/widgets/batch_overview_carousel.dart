@@ -838,8 +838,8 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                 ),
               ),
               label: const Text(
-                'Click for detail reports →',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                'Click for detailed reports →',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
               ),
               icon: const Icon(Icons.arrow_forward, size: 16),
             ),

@@ -1,5 +1,6 @@
 import 'package:agriflock/core/utils/date_util.dart';
 import 'package:agriflock/core/utils/result.dart';
+import 'package:agriflock/core/widgets/expense/expense_button.dart';
 import 'package:agriflock/core/widgets/expense/expense_marquee_banner.dart';
 import 'package:agriflock/features/farmer/batch/model/batch_mgt_model.dart';
 import 'package:agriflock/features/farmer/batch/repo/batch_mgt_repo.dart';
@@ -7,6 +8,7 @@ import 'package:agriflock/features/farmer/report/models/batch_report_model.dart'
 import 'package:agriflock/features/farmer/report/repo/report_repo.dart';
 import 'package:agriflock/main.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class BatchReportScreen extends StatefulWidget {
   final String batchId;
@@ -638,56 +640,13 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                     ),
                     const SizedBox(height: 4),
                     Text('${report.totalBirds} birds',
-                        style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+                        style: TextStyle(fontSize: 13, color: Colors.black)),
                   ],
                 ),
               ],
             ),
           ),
 
-          // ── Production Stage ──
-          if (report.productionStage.stage.isNotEmpty) ...[
-            Divider(height: 1, color: Colors.grey.shade100),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.indigo.shade50,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.indigo.shade200),
-                    ),
-                    child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      Icon(Icons.timeline, size: 12, color: Colors.indigo.shade700),
-                      const SizedBox(width: 4),
-                      Text(report.productionStage.stage,
-                          style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.indigo.shade700)),
-                    ]),
-                  ),
-                  if (report.productionStage.description.isNotEmpty) ...[
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(report.productionStage.description,
-                          style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
-                          overflow: TextOverflow.ellipsis),
-                    ),
-                  ],
-                  if (report.productionStage.expectedMilestone.daysRemaining > 0) ...[
-                    const SizedBox(width: 6),
-                    Text(
-                      '${report.productionStage.expectedMilestone.daysRemaining}d to ${report.productionStage.expectedMilestone.type}',
-                      style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
 
           Divider(height: 1, color: Colors.grey.shade100),
 
@@ -851,7 +810,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                       color: Colors.brown.shade100, borderRadius: BorderRadius.circular(12)),
-                  child: Text(feed.feedType,
+                  child: Text('Current feed : ${feed.feedType}',
                       style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
@@ -892,9 +851,9 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                'Variance: ${feed.feedVariance}',
+                'Variance of feed consumed: ${feed.feedVariance}',
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 12,
                   fontWeight: FontWeight.w500,
                   color: feed.feedVariance.toLowerCase().contains('above')
                       ? Colors.orange.shade800
@@ -958,7 +917,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
             children: [
               Expanded(
                   child: _buildInfoRow(Icons.inventory_outlined, Colors.brown.shade500,
-                      'Bags/Week', '${plan.expectedFeedPerWeekBags}')),
+                      'Quantity/Week', '${plan.expectedFeedPerWeekBags} Bags')),
               Expanded(
                   child: _buildInfoRow(
                       Icons.repeat, Colors.teal.shade600, 'Times/Day', '${plan.timesPerDay}')),
@@ -966,6 +925,9 @@ class _BatchReportScreenState extends State<BatchReportScreen>
           ),
           if (plan.feedingTimes.slots.isNotEmpty) ...[
             const SizedBox(height: 6),
+            Text('Feeding Times:'),
+            const SizedBox(height: 6),
+
             Wrap(
               spacing: 4,
               runSpacing: 4,
@@ -1506,7 +1468,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                   ),
                   const SizedBox(height: 8),
                   _buildCostBar(
-                    label: 'Inventory',
+                    label: 'Other Expenses',
                     amount: stats.inventoryCost,
                     percentage: totalExpenditure > 0 ? stats.inventoryCost / totalExpenditure : 0,
                     color: Colors.purple,
@@ -1520,7 +1482,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                       const Text(
                         'Total Expenditure',
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 13,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -1533,13 +1495,15 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                         child: Text(
                           '$_currency ${totalExpenditure.toStringAsFixed(2)}',
                           style: const TextStyle(
-                            fontSize: 14,
+                            fontSize: 13,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
                     ],
                   ),
+                  const SizedBox(height: 20),
+                  ExpenseActionButton(onPressed: ()=>context.push('/record-expenditure'))
                 ],
               ),
             ),

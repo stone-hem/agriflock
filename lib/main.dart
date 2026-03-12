@@ -76,7 +76,7 @@ void main() async {
     runApp(MaterialApp(
       home: Scaffold(
         body: Center(
-          child: Text('Initialization Error: $e'),
+          child: Text('Application crashed please report this to the developers'),
         ),
       ),
     ));

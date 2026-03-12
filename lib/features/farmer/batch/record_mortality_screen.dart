@@ -1,4 +1,5 @@
 import 'package:agriflock/core/utils/api_error_handler.dart';
+import 'package:agriflock/core/utils/refresh_bus.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/utils/toast_util.dart';
 import 'package:agriflock/core/widgets/reusable_dropdown.dart';
@@ -127,6 +128,7 @@ class _RecordMortalityScreenState extends State<RecordMortalityScreen> {
       switch (result) {
         case Success():
           ToastUtil.showSuccess('Mortality recorded successfully');
+          RefreshBus.instance.fire(RefreshEvent.recordCreated);
           if (mounted) context.pop(true);
         case Failure(message: final error):
           ApiErrorHandler.handle(error);
@@ -198,34 +200,7 @@ class _RecordMortalityScreenState extends State<RecordMortalityScreen> {
               ),
               const SizedBox(height: 12),
 
-              // Weight disclaimer banner
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.amber.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.amber.shade300),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.info_outline,
-                        color: Colors.amber.shade800, size: 20),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Weigh at least 10 chicks and record the average weight for accurate growth tracking.',
-                        style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.amber.shade900,
-                            fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
+
 
               // Batch Selection
               if (widget.batch == null) ...[

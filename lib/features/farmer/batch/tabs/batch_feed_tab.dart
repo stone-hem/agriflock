@@ -1,3 +1,4 @@
+import 'package:agriflock/core/utils/refresh_bus.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock/features/farmer/batch/model/feeding_model.dart';
@@ -41,6 +42,14 @@ class _BatchFeedTabState extends State<BatchFeedTab> {
     super.initState();
     _scrollController.addListener(_handleScroll);
     _loadDashboard();
+    RefreshBus.instance.addListener(_onRefreshBus);
+  }
+
+  void _onRefreshBus() {
+    if (!mounted) return;
+    if (RefreshBus.instance.lastEvent == RefreshEvent.recordCreated) {
+      _loadDashboard();
+    }
   }
 
   Future<void> _loadDashboard() async {
@@ -215,6 +224,7 @@ class _BatchFeedTabState extends State<BatchFeedTab> {
 
   @override
   void dispose() {
+    RefreshBus.instance.removeListener(_onRefreshBus);
     _scrollController.dispose();
     super.dispose();
   }
@@ -258,12 +268,8 @@ class _BatchFeedTabState extends State<BatchFeedTab> {
           duration: const Duration(milliseconds: 300),
           opacity: _isFabVisible ? 1 : 0,
           child: FloatingActionButton.extended(
-            onPressed: () async {
-              final result =
-              await context.push('/batches/${widget.batch.id}/feed', extra: widget.batch.birdTypeId);
-              if (result == true) {
-                _loadDashboard();
-              }
+            onPressed: () {
+              context.push('/batches/${widget.batch.id}/feed', extra: widget.batch.birdTypeId);
             },
             icon: const Icon(Icons.add),
             label: const Text('Log Feeding'),

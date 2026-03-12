@@ -1,3 +1,4 @@
+import 'package:agriflock/core/utils/refresh_bus.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock/core/widgets/reusable_dropdown.dart';
@@ -665,6 +666,7 @@ class _UpdateVaccinationStatusScreenState
           _showSuccessMessage();
 
           // Navigate back with success indicator
+          RefreshBus.instance.fire(RefreshEvent.recordCreated);
           if (mounted) {
             context.pop(true);
           }

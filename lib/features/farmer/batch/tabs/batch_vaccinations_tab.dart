@@ -1,4 +1,5 @@
 import 'package:agriflock/core/utils/date_util.dart';
+import 'package:agriflock/core/utils/refresh_bus.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock/features/farmer/batch/model/vaccination_list_model.dart';
@@ -53,6 +54,14 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
     // Load only the history data which contains all stats we need
     _loadVaccinationsHistory();
     _loadRecommendations();
+    RefreshBus.instance.addListener(_onRefreshBus);
+  }
+
+  void _onRefreshBus() {
+    if (!mounted) return;
+    if (RefreshBus.instance.lastEvent == RefreshEvent.recordCreated) {
+      _onRefresh();
+    }
   }
 
   Future<void> _loadVaccinationsHistory() async {
@@ -171,6 +180,7 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
 
   @override
   void dispose() {
+    RefreshBus.instance.removeListener(_onRefreshBus);
     _tabController.removeListener(_handleTabChange);
     _tabController.dispose();
     for (var controller in _scrollControllers.values) {
@@ -261,12 +271,8 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
           duration: const Duration(milliseconds: 300),
           opacity: _isFabVisible ? 1 : 0,
           child: FloatingActionButton.extended(
-            onPressed: () async {
-              final result =
-              await context.push('/batches/${widget.batch.id}/record-vaccination', extra: widget.batch.birdTypeId);
-              if (result == true) {
-                _onRefresh();
-              }
+            onPressed: () {
+              context.push('/batches/${widget.batch.id}/record-vaccination', extra: widget.batch.birdTypeId);
             },
             icon: const Icon(Icons.add),
             label: const Text('Record Vaccination'),
@@ -500,15 +506,12 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
           Container(
             margin: const EdgeInsets.only(bottom: 16),
             child: FilledButton.icon(
-              onPressed: () async {
-                final result = await context.push(
+              onPressed: () {
+                context.push(
                   '/batches/adopt-schedule', extra: {
                   'batch': widget.batch,
                   'schedule': _recommendations,
-                },);
-                if (result == true) {
-                  _onRefresh();
-                }
+                });
               },
               icon: const Icon(Icons.download),
               label: const Text('Adopt Schedule'),
@@ -655,17 +658,14 @@ class _BatchVaccinationsTabState extends State<BatchVaccinationsTab>
     );
   }
 
-  void _navigateToUpdateStatus(VaccinationListItem vaccination) async {
-    final result = await context.push(
+  void _navigateToUpdateStatus(VaccinationListItem vaccination) {
+    context.push(
       '/batches/update-status',
       extra: {
         'batch': widget.batch,
         'vaccination': vaccination,
       },
     );
-    if (result == true) {
-      _onRefresh();
-    }
   }
 }
 

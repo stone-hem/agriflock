@@ -1,5 +1,6 @@
 import 'package:agriflock/core/utils/api_error_handler.dart';
 import 'package:agriflock/core/utils/log_util.dart';
+import 'package:agriflock/core/utils/refresh_bus.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/utils/toast_util.dart';
 import 'package:agriflock/core/widgets/custom_date_text_field.dart';
@@ -167,6 +168,7 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
       switch (result) {
         case Success():
           ToastUtil.showSuccess('Feeding logged successfully!');
+          RefreshBus.instance.fire(RefreshEvent.recordCreated);
           if (mounted) context.pop(true);
           break;
         case Failure(response: final response):

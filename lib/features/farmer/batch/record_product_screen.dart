@@ -1,3 +1,4 @@
+import 'package:agriflock/core/utils/refresh_bus.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock/core/widgets/reusable_dropdown.dart';
@@ -128,6 +129,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
             await Future.delayed(const Duration(milliseconds: 500));
 
             if (mounted) {
+              RefreshBus.instance.fire(RefreshEvent.recordCreated);
               context.pop(true);
             }
           }
@@ -522,9 +524,9 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
                 const SizedBox(height: 16),
                 ReusableInput(
                   controller: _priceController,
-                  topLabel: 'Price',
-                  labelText: 'Price',
-                  hintText: 'e.g., 10.50',
+                  topLabel: _selectedProductType == 'eggs'?"How much for total eggs?":" Price for all units",
+                  labelText: 'Put whole amount for accurate financial reports',
+                  hintText: 'e.g., 4000',
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                     signed: false,

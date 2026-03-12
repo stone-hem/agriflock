@@ -119,32 +119,30 @@ class UseBatchSelectionView extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Icon(
-                              isSelected
-                                  ? Icons.radio_button_checked
-                                  : Icons.radio_button_unchecked,
-                              color: isSelected
-                                  ? Colors.green
-                                  : Colors.grey.shade400,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
+                        if (batch.birdType != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
                               child: Text(
-                                batch.batchNumber,
-                                style: TextStyle(
+                                batch.birdType!.name,
+                                style: const TextStyle(
                                   fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: isSelected
-                                      ? Colors.green
-                                      : Colors.grey.shade800,
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
+                          ),
+                        SizedBox(height: 15,),
+
 
                         // Batch info
                         Wrap(
@@ -175,29 +173,35 @@ class UseBatchSelectionView extends StatelessWidget {
                               ),
                           ],
                         ),
+                        const SizedBox(height: 12),
 
-                        if (batch.birdType != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.green.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
+                        Row(
+                          children: [
+                            Icon(
+                              isSelected
+                                  ? Icons.radio_button_checked
+                                  : Icons.radio_button_unchecked,
+                              color: isSelected
+                                  ? Colors.green
+                                  : Colors.grey.shade400,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
                               child: Text(
-                                batch.birdType!.name,
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.green,
-                                  fontWeight: FontWeight.w600,
+                                batch.batchNumber,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.normal,
+                                  color: isSelected
+                                      ? Colors.green
+                                      : Colors.grey.shade800,
                                 ),
                               ),
                             ),
-                          ),
+                          ],
+                        ),
+
+
                       ],
                     ),
                   ),

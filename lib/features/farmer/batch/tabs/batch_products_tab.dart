@@ -1,4 +1,5 @@
 import 'package:agriflock/core/utils/date_util.dart';
+import 'package:agriflock/core/utils/refresh_bus.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock/features/farmer/batch/model/product_model.dart';
@@ -31,6 +32,20 @@ class _BatchProductsTabState extends State<BatchProductsTab> {
   void initState() {
     super.initState();
     _loadProductData();
+    RefreshBus.instance.addListener(_onRefreshBus);
+  }
+
+  void _onRefreshBus() {
+    if (!mounted) return;
+    if (RefreshBus.instance.lastEvent == RefreshEvent.recordCreated) {
+      _onRefresh();
+    }
+  }
+
+  @override
+  void dispose() {
+    RefreshBus.instance.removeListener(_onRefreshBus);
+    super.dispose();
   }
 
   Future<void> _loadProductData() async {
@@ -103,19 +118,14 @@ class _BatchProductsTabState extends State<BatchProductsTab> {
     await _loadProductData();
   }
 
-  Future<void> _navigateToRecordProduct() async {
-    final result = await context.push(
+  void _navigateToRecordProduct() {
+    context.push(
       '/batches/${widget.batch.id}/record-product',
       extra: {
         'batchNumber': widget.batch.batchNumber,
         'batchAge': widget.batch.age,
       },
     );
-
-    // Refresh data if product was recorded successfully
-    if (result == true) {
-      _loadProductData();
-    }
   }
 
   Widget _buildErrorWidget(String error, VoidCallback onRetry) {
