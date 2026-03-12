@@ -1,4 +1,5 @@
 import 'package:agriflock/core/utils/date_util.dart';
+import 'package:agriflock/core/utils/refresh_bus.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/features/farmer/farm/models/farm_model.dart';
 import 'package:flutter/material.dart';
@@ -11,13 +12,11 @@ import 'package:agriflock/features/farmer/batch/repo/batch_house_repo.dart';
 class BatchesBottomSheet extends StatefulWidget {
   final House house;
   final FarmModel farm;
-  final VoidCallback onDataChanged;
 
   const BatchesBottomSheet({
     super.key,
     required this.house,
     required this.farm,
-    required this.onDataChanged,
   });
 
   @override
@@ -35,6 +34,20 @@ class _BatchesBottomSheetState extends State<BatchesBottomSheet> {
   void initState() {
     super.initState();
     _batches = List.from(widget.house.batches);
+    RefreshBus.instance.addListener(_onRefreshBus);
+  }
+
+  void _onRefreshBus() {
+    final event = RefreshBus.instance.lastEvent;
+    if (event == RefreshEvent.batchCreated || event == RefreshEvent.batchUpdated) {
+      if (mounted) _refreshBatches();
+    }
+  }
+
+  @override
+  void dispose() {
+    RefreshBus.instance.removeListener(_onRefreshBus);
+    super.dispose();
   }
 
   bool _onScrollNotification(ScrollNotification notification) {
@@ -61,7 +74,7 @@ class _BatchesBottomSheetState extends State<BatchesBottomSheet> {
           setState(() {
             _batches = updatedHouse.batches;
           });
-          widget.onDataChanged();
+          RefreshBus.instance.fire(RefreshEvent.batchUpdated);
         case Failure(message: final error):
           ApiErrorHandler.handle(error);
       }
@@ -154,35 +167,25 @@ class _BatchesBottomSheetState extends State<BatchesBottomSheet> {
       'house': widget.house,
     });
 
-    if (result != null && result != false) {
-      if (mounted) {
-        // Close immediately — HousesScreen will refresh and navigate to details
-        Navigator.of(context).pop(result);
-      }
+    // Close the sheet passing the new batch so HousesScreen can navigate to details
+    if (result != null && result != false && mounted) {
+      Navigator.of(context).pop(result);
     }
   }
 
   Future<void> _navigateToEditBatch(BatchModel batch) async {
-    final result = await context.push('/batches/edit', extra: {
+    context.push('/batches/edit', extra: {
       'batch': batch,
       'farm': widget.farm,
       'house': widget.house,
     });
-
-    if (result == true) {
-      await _refreshBatches();
-    }
   }
 
   Future<void> _navigateToBatchDetails(BatchModel batch) async {
-    final result = await context.push('/batches/details', extra: {
+    context.push('/batches/details', extra: {
       'batch': batch,
       'farm': widget.farm,
     });
-
-    if (result == true) {
-      await _refreshBatches();
-    }
   }
 
   @override

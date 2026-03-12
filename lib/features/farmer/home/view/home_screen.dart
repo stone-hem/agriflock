@@ -1,4 +1,5 @@
 import 'package:agriflock/core/model/user_model.dart';
+import 'package:agriflock/core/utils/refresh_bus.dart';
 import 'package:agriflock/core/utils/log_util.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/utils/shared_prefs.dart';
@@ -68,10 +69,24 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadActivities();
     _loadFinancialOverview();
     _loadBatches();
+    RefreshBus.instance.addListener(_onRefreshBus);
+  }
+
+  void _onRefreshBus() {
+    if (!mounted) return;
+    final event = RefreshBus.instance.lastEvent;
+    if (event == RefreshEvent.farmCreated || event == RefreshEvent.farmUpdated) {
+      // Farm changes only affect top stats
+      _loadSummary();
+    } else {
+      // Batch / record / expense changes → full refresh
+      _onRefresh();
+    }
   }
 
   @override
   void dispose() {
+    RefreshBus.instance.removeListener(_onRefreshBus);
     _scrollController.dispose();
     super.dispose();
   }
@@ -802,10 +817,7 @@ class _HomeScreenState extends State<HomeScreen> {
           title: 'Daily Records',
           subtitle: 'Record Feed, Vaccination, Medication, Mortality, Weight, Product',
           color: Colors.green,
-          onTap: () async {
-            final result = await context.push('/quick-recording');
-            if (result == true && mounted) _onRefresh();
-          },
+          onTap: () => context.push('/quick-recording'),
         ),
         _buildQuickActionCard(
           icon: Icons.pets,

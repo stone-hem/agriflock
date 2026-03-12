@@ -1,4 +1,5 @@
 import 'package:agriflock/core/utils/api_error_handler.dart';
+import 'package:agriflock/core/utils/refresh_bus.dart';
 import 'package:agriflock/core/utils/date_util.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/utils/toast_util.dart';
@@ -31,6 +32,7 @@ class _HousesScreenState extends State<HousesScreen> {
   void initState() {
     super.initState();
     _loadData();
+    RefreshBus.instance.addListener(_onRefreshBus);
 
     // Listen to scroll to hide/show FAB
     _scrollController.addListener(() {
@@ -46,8 +48,17 @@ class _HousesScreenState extends State<HousesScreen> {
     });
   }
 
+  void _onRefreshBus() {
+    if (!mounted) return;
+    final event = RefreshBus.instance.lastEvent;
+    if (event == RefreshEvent.batchCreated || event == RefreshEvent.batchUpdated) {
+      _loadData();
+    }
+  }
+
   @override
   void dispose() {
+    RefreshBus.instance.removeListener(_onRefreshBus);
     _scrollController.dispose();
     super.dispose();
   }
@@ -135,23 +146,15 @@ class _HousesScreenState extends State<HousesScreen> {
       builder: (context) => BatchesBottomSheet(
         house: house,
         farm: widget.farm,
-        onDataChanged: _loadData,
       ),
     );
 
-    // Reload houses to update batch counts whenever the sheet closes
-    if (mounted) {
-      _loadData();
-    }
-
     // If a batch was just added, navigate directly to its details
     if (result is BatchModel && mounted) {
-      await context.push('/batches/details', extra: {
+      context.push('/batches/details', extra: {
         'farm': widget.farm,
         'batch': result,
       });
-      // Refresh again after returning from batch details
-      if (mounted) _loadData();
     }
   }
 

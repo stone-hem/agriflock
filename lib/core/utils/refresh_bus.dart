@@ -5,11 +5,23 @@ enum RefreshEvent {
   /// A batch was created → dashboard, houses, farms
   batchCreated,
 
+  /// A batch was edited, completed, or deleted → dashboard, houses, farms
+  batchUpdated,
+
   /// A daily record (feed/vaccine/medication) was saved → dashboard
   recordCreated,
 
   /// An expense / purchase was recorded → dashboard, expenditures
   expenseCreated,
+
+  /// A farm was created → dashboard top stats, farms screen
+  farmCreated,
+
+  /// A farm was edited or deleted → dashboard top stats, farms screen
+  farmUpdated,
+
+  /// User completed their profile → quotation screen
+  profileCompleted,
 }
 
 /// Global event bus for cross-screen refresh signals.

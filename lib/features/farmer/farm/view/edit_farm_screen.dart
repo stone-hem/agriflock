@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:agriflock/app_routes.dart';
 import 'package:agriflock/core/utils/api_error_handler.dart';
+import 'package:agriflock/core/utils/refresh_bus.dart';
 import 'package:agriflock/core/utils/log_util.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/utils/toast_util.dart';
@@ -219,6 +220,7 @@ class _EditFarmScreenState extends State<EditFarmScreen> {
 
       switch(res) {
         case Success<bool>():
+          RefreshBus.instance.fire(RefreshEvent.farmUpdated);
           ToastUtil.showSuccess('Farm updated successfully!');
           if (context.mounted) {
             context.pushReplacement(AppRoutes.farms);

@@ -1,4 +1,5 @@
 import 'package:agriflock/app_routes.dart';
+import 'package:agriflock/core/utils/refresh_bus.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/widgets/alert_button.dart';
 import 'package:agriflock/core/widgets/expense/expense_marquee_banner.dart';
@@ -39,6 +40,14 @@ class _QuotationScreenState extends State<QuotationScreen>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _fetchAndCheckProfileCompletion();
+    RefreshBus.instance.addListener(_onRefreshBus);
+  }
+
+  void _onRefreshBus() {
+    if (!mounted) return;
+    if (RefreshBus.instance.lastEvent == RefreshEvent.profileCompleted) {
+      _fetchAndCheckProfileCompletion();
+    }
   }
 
   Future<void> _fetchAndCheckProfileCompletion() async {
@@ -310,12 +319,7 @@ class _QuotationScreenState extends State<QuotationScreen>
                   onPressed: () {
                     // Navigate to complete profile screen
                     // This will push and wait for result if profile is updated
-                    context.push('/complete-profile',extra: _profileData).then((value) {
-                      // Refresh profile data after returning from complete profile screen
-                      if (value == true) {
-                        _fetchAndCheckProfileCompletion();
-                      }
-                    });
+                    context.push('/complete-profile', extra: _profileData);
                   },
 
                   child: const Text(
@@ -372,6 +376,7 @@ class _QuotationScreenState extends State<QuotationScreen>
 
   @override
   void dispose() {
+    RefreshBus.instance.removeListener(_onRefreshBus);
     _tabController.dispose();
     super.dispose();
   }

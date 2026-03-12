@@ -1,3 +1,4 @@
+import 'package:agriflock/core/utils/refresh_bus.dart';
 import 'package:agriflock/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock/core/widgets/disclaimer_widget.dart';
 import 'package:agriflock/core/widgets/expense/expense_button.dart';
@@ -71,6 +72,14 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
     _loadCurrency();
     _initializeData();
     _setupScrollListener();
+    RefreshBus.instance.addListener(_onRefreshBus);
+  }
+
+  void _onRefreshBus() {
+    if (!mounted) return;
+    if (RefreshBus.instance.lastEvent == RefreshEvent.expenseCreated) {
+      _loadExpenditures(reset: true);
+    }
   }
 
   Future<void> _loadCurrency() async {
@@ -82,6 +91,7 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
 
   @override
   void dispose() {
+    RefreshBus.instance.removeListener(_onRefreshBus);
     _scrollController.dispose();
     _searchController.dispose();
     _startDateController.dispose();

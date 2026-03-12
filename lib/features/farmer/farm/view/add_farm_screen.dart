@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:agriflock/app_routes.dart';
 import 'package:agriflock/core/utils/api_error_handler.dart';
+import 'package:agriflock/core/utils/refresh_bus.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/utils/toast_util.dart';
 import 'package:agriflock/core/widgets/reusable_input.dart';
@@ -215,12 +216,10 @@ class _AddFarmScreenState extends State<AddFarmScreen> {
 
       switch (res) {
         case Success():
-          // Success
+          RefreshBus.instance.fire(RefreshEvent.farmCreated);
           ToastUtil.showSuccess(
             'Farm "${_nameController.text}" created successfully!',
           );
-
-          // Pop the screen with success result
           if (context.mounted) {
             context.pushReplacement(AppRoutes.farms);
           }

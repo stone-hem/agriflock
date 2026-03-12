@@ -1,4 +1,5 @@
 import 'package:agriflock/app_routes.dart';
+import 'package:agriflock/core/utils/refresh_bus.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/utils/toast_util.dart';
 import 'package:agriflock/core/widgets/alert_button.dart';
@@ -32,6 +33,7 @@ class _FarmsHomeScreenState extends State<FarmsHomeScreen> {
   void initState() {
     super.initState();
     _loadData();
+    RefreshBus.instance.addListener(_onRefreshBus);
 
     // Listen to scroll events to hide/show FAB
     _scrollController.addListener(() {
@@ -88,8 +90,20 @@ class _FarmsHomeScreenState extends State<FarmsHomeScreen> {
     _loadData();
   }
 
+  void _onRefreshBus() {
+    if (!mounted) return;
+    final event = RefreshBus.instance.lastEvent;
+    if (event == RefreshEvent.batchCreated ||
+        event == RefreshEvent.batchUpdated ||
+        event == RefreshEvent.farmCreated ||
+        event == RefreshEvent.farmUpdated) {
+      _loadData();
+    }
+  }
+
   @override
   void dispose() {
+    RefreshBus.instance.removeListener(_onRefreshBus);
     _scrollController.dispose();
     super.dispose();
   }
@@ -130,12 +144,7 @@ class _FarmsHomeScreenState extends State<FarmsHomeScreen> {
       bottomNavigationBar: const ExpenseMarqueeBannerCompact(),
       floatingActionButton: _showFab
           ? FloatingActionButton.extended(
-        onPressed: () async {
-          final result = await context.push('/farms/add');
-          if (result == true) {
-            _refreshData();
-          }
-        },
+        onPressed: () => context.push('/farms/add'),
         label: Row(
       children: [
       Text('Add Farm'),
@@ -388,12 +397,7 @@ class _FarmsHomeScreenState extends State<FarmsHomeScreen> {
             ),
             const SizedBox(height: 24),
             FilledButton.icon(
-              onPressed: () async {
-                final result = await context.push('/farms/add');
-                if (result == true) {
-                  _refreshData();
-                }
-              },
+              onPressed: () => context.push('/farms/add'),
               icon: const Icon(Icons.add),
               label: const Text('Add Farm'),
             ),
@@ -411,7 +415,6 @@ class _FarmsHomeScreenState extends State<FarmsHomeScreen> {
             farm: farms[index],
             onDeleted: _refreshData,
             onEdited: _refreshData,
-            onRefresh: _refreshData,
           );
         },
         childCount: farms.length,
@@ -470,13 +473,11 @@ class _FarmCard extends StatelessWidget {
   final FarmModel farm;
   final VoidCallback onDeleted;
   final VoidCallback onEdited;
-  final VoidCallback onRefresh;
 
   const _FarmCard({
     required this.farm,
     required this.onDeleted,
     required this.onEdited,
-    required this.onRefresh,
   });
 
   @override
@@ -493,10 +494,7 @@ class _FarmCard extends StatelessWidget {
         side: BorderSide(color: Colors.grey.shade200),
       ),
       child: InkWell(
-        onTap: () async {
-          await context.push('/batches', extra: farm);
-          onRefresh();
-        },
+        onTap: () => context.push('/batches', extra: farm),
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -631,10 +629,7 @@ class _FarmCard extends StatelessWidget {
                       AddEditHouseDialog.show(
                         context: context,
                         farm: farm,
-                        onSuccess: () async {
-                          await context.push(AppRoutes.batches, extra: farm);
-                          onRefresh();
-                        },
+                        onSuccess: () => context.push(AppRoutes.batches, extra: farm),
                       );
                     },
                     icon: Icon(Icons.add_home, size: 18),
@@ -643,10 +638,7 @@ class _FarmCard extends StatelessWidget {
                   ),
                   SizedBox(width: 4,),
                   FilledButton.icon(
-                    onPressed: () async {
-                      await context.push('/batches', extra: farm);
-                      onRefresh();
-                    },
+                    onPressed: () => context.push('/batches', extra: farm),
                     icon: Icon(Icons.arrow_forward, size: 18),
                     style: FilledButton.styleFrom(
                       backgroundColor: Colors.orange,
@@ -670,7 +662,7 @@ class _FarmCard extends StatelessWidget {
         _navigateToEdit(context);
         break;
       case 'view_batches':
-        context.push(AppRoutes.batches, extra: farm).then((_) => onRefresh());
+        context.push(AppRoutes.batches, extra: farm);
         break;
       case 'delete':
         _showDeleteDialog(context);

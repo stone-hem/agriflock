@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:agriflock/core/utils/api_error_handler.dart';
+import 'package:agriflock/core/utils/refresh_bus.dart';
 import 'package:agriflock/core/utils/date_util.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/utils/toast_util.dart';
@@ -647,6 +648,7 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
 
       switch (result) {
         case Success():
+          RefreshBus.instance.fire(RefreshEvent.batchUpdated);
           ToastUtil.showSuccess('Batch updated successfully!');
           if (context.mounted) {
             context.pushReplacement('/batches/details', extra: {

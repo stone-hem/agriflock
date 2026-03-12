@@ -1268,12 +1268,11 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
         case Success<BatchModel>(data: final batch):
           RefreshBus.instance.fire(RefreshEvent.batchCreated);
           if (context.mounted) {
-            final result = await Navigator.of(context).pushReplacement(
+            Navigator.of(context).pushReplacement(
               MaterialPageRoute(
                 builder: (_) => BatchCreatedScreen(batch: batch, farm: widget.farm),
               ),
             );
-            if (context.mounted) context.pop(result ?? true);
           }
 
         case Failure<BatchModel>(:final response, :final message):

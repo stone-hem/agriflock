@@ -1,4 +1,5 @@
 import 'package:agriflock/core/utils/api_error_handler.dart';
+import 'package:agriflock/core/utils/refresh_bus.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/utils/toast_util.dart';
 import 'package:agriflock/features/farmer/batch/model/batch_list_model.dart' hide House;
@@ -27,6 +28,20 @@ class _QuickBatchesListScreenState extends State<QuickBatchesListScreen> {
   void initState() {
     super.initState();
     _loadBatches();
+    RefreshBus.instance.addListener(_onRefreshBus);
+  }
+
+  void _onRefreshBus() {
+    final event = RefreshBus.instance.lastEvent;
+    if (event == RefreshEvent.batchCreated || event == RefreshEvent.batchUpdated) {
+      if (mounted) _loadBatches();
+    }
+  }
+
+  @override
+  void dispose() {
+    RefreshBus.instance.removeListener(_onRefreshBus);
+    super.dispose();
   }
 
   Future<void> _loadBatches() async {
@@ -56,11 +71,10 @@ class _QuickBatchesListScreenState extends State<QuickBatchesListScreen> {
   }
 
   Future<void> _navigateToAddBatch() async {
-    final result = await context.push('/batches/add', extra: {
+    context.push('/batches/add', extra: {
       'farm': null,
       'house': null,
     });
-    if (result == true && mounted) _loadBatches();
   }
 
   Future<void> _navigateToEditBatch(BatchListItem batch) async {
@@ -88,12 +102,11 @@ class _QuickBatchesListScreenState extends State<QuickBatchesListScreen> {
       feedingTime: batch.feedingTime ?? '',
       feedingSchedule: [?batch.feedingSchedule],
     );
-    final result = await context.push('/batches/edit', extra: {
+    context.push('/batches/edit', extra: {
       'batch': batchCopy,
       'farm': farmCopy,
       'house': houseCopy,
     });
-    if (result == true && mounted) _loadBatches();
   }
 
   Future<void> _deleteBatch(BatchListItem batch) async {

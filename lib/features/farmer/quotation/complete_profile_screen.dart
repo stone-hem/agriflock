@@ -1,4 +1,5 @@
 import 'package:agriflock/core/model/user_model.dart';
+import 'package:agriflock/core/utils/refresh_bus.dart';
 import 'package:agriflock/core/utils/log_util.dart';
 import 'package:agriflock/core/utils/secure_storage.dart';
 import 'package:agriflock/core/widgets/custom_date_text_field.dart';
@@ -324,6 +325,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         );
 
         if (context.mounted) {
+          RefreshBus.instance.fire(RefreshEvent.profileCompleted);
           context.pop(true);
         }
       } else {

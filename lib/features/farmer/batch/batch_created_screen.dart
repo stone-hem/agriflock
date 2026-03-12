@@ -19,7 +19,7 @@ class BatchCreatedScreen extends StatelessWidget {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) context.pop(true);
+        if (!didPop) Navigator.of(context).pop();
       },
       child: Scaffold(
         appBar: AppBar(
@@ -27,7 +27,7 @@ class BatchCreatedScreen extends StatelessWidget {
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.close),
-            onPressed: () => context.pop(true),
+            onPressed: () => Navigator.of(context).pop(),
           ),
         ),
         body: SingleChildScrollView(
@@ -122,7 +122,7 @@ class BatchCreatedScreen extends StatelessWidget {
 
               // Skip
               TextButton(
-                onPressed: () => context.pop(true),
+                onPressed: () => Navigator.of(context).pop(),
                 child: Text(
                   'Skip for now',
                   style: TextStyle(
