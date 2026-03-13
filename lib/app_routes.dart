@@ -6,7 +6,7 @@ import 'package:agriflock/features/farmer/batch/completed_batches_screen.dart';
 import 'package:agriflock/features/farmer/batch/edit_batch_screen.dart';
 import 'package:agriflock/features/farmer/batch/houses_screen.dart';
 import 'package:agriflock/features/farmer/batch/log_feeding_screen.dart';
-import 'package:agriflock/features/farmer/batch/model/batch_list_model.dart';
+import 'package:agriflock/features/farmer/batch/model/batch_list_model.dart' hide House;
 import 'package:agriflock/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock/features/farmer/batch/model/recommended_vaccination_model.dart';
 import 'package:agriflock/features/farmer/batch/model/vaccination_list_model.dart';
@@ -52,7 +52,7 @@ import 'package:agriflock/features/farmer/report/batch/batch_report_screen.dart'
 import 'package:agriflock/features/farmer/report/farm_reports_screen.dart';
 import 'package:agriflock/features/farmer/report/reports_flow_screen.dart';
 import 'package:agriflock/features/farmer/vet/all_vets_screen.dart';
-import 'package:agriflock/features/farmer/vet/models/my_order_list_item.dart';
+import 'package:agriflock/features/farmer/vet/models/my_order_list_item.dart' hide House;
 import 'package:agriflock/features/farmer/vet/models/vet_farmer_model.dart';
 import 'package:agriflock/features/farmer/vet/my_vet_orders_combined_screen.dart';
 import 'package:agriflock/features/farmer/vet/my_disputes_screen.dart';
@@ -489,10 +489,15 @@ class AppRoutes {
               name: 'addBatch',
               builder: (context, state) {
                 final extra = state.extra as Map<String, dynamic>?;
-                return AddBatchScreen(
-                  farm: extra?['farm'] ?? '',
-                  house: extra?['house'],
-                );
+                final farm = extra?['farm'] as FarmModel?;
+                final house = extra?['house'] as House?;
+                if (farm == null || house == null) {
+                  return const ErrorScreen(
+                    title: 'Invalid navigation',
+                    message: 'Please select a farm and house to add a batch.',
+                  );
+                }
+                return AddBatchScreen(farm: farm, house: house);
               },
             ),
             GoRoute(

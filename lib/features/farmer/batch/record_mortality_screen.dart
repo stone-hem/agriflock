@@ -35,6 +35,7 @@ class _RecordMortalityScreenState extends State<RecordMortalityScreen> {
   BatchListItem? _selectedBatch;
   bool _isLoadingBatches = true;
   bool _isSubmitting = false;
+  String? _selectedTime; // 'day' or 'night'
 
   // Multi-select reasons
   final Set<String> _selectedReasons = {};
@@ -116,6 +117,11 @@ class _RecordMortalityScreenState extends State<RecordMortalityScreen> {
       return;
     }
 
+    if (_selectedTime == null) {
+      ToastUtil.showError('Please select Day or Night');
+      return;
+    }
+
     setState(() => _isSubmitting = true);
 
     try {
@@ -123,6 +129,7 @@ class _RecordMortalityScreenState extends State<RecordMortalityScreen> {
         batchId: _selectedBatch!.id,
         changeAmount: int.parse(_countController.text),
         reasons: reasons,
+        time: _selectedTime,
       );
 
       switch (result) {
@@ -138,6 +145,41 @@ class _RecordMortalityScreenState extends State<RecordMortalityScreen> {
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
+  }
+
+  Widget _buildTimeCard(String value, String label, IconData icon) {
+    final isSelected = _selectedTime == value;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedTime = value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.red.shade50 : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? Colors.red.shade400 : Colors.grey.shade200,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon,
+                size: 28,
+                color: isSelected ? Colors.red.shade600 : Colors.grey.shade400),
+            const SizedBox(height: 6),
+            Text(label,
+                style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: isSelected
+                        ? Colors.red.shade700
+                        : Colors.grey.shade600)),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -344,6 +386,22 @@ class _RecordMortalityScreenState extends State<RecordMortalityScreen> {
                         fontSize: 12, color: Colors.grey.shade600),
                   ),
                 ),
+              const SizedBox(height: 24),
+
+              // Day / Night selection
+              Text('Time of Mortality *',
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade700)),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(child: _buildTimeCard('day', 'Day', Icons.wb_sunny)),
+                  const SizedBox(width: 12),
+                  Expanded(child: _buildTimeCard('night', 'Night', Icons.nights_stay)),
+                ],
+              ),
               const SizedBox(height: 24),
 
               // Reasons — multi-select checkboxes

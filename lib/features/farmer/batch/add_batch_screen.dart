@@ -10,7 +10,8 @@ import 'package:agriflock/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock/core/widgets/reusable_input.dart';
 import 'package:agriflock/features/farmer/batch/batch_created_screen.dart';
 import 'package:agriflock/features/farmer/batch/model/batch_model.dart';
-import 'package:agriflock/features/farmer/batch/model/bird_type.dart';
+import 'package:agriflock/core/models/bird_type.dart';
+import 'package:agriflock/core/repositories/bird_type_repository.dart';
 import 'package:agriflock/features/farmer/batch/repo/batch_house_repo.dart';
 import 'package:agriflock/core/utils/refresh_bus.dart';
 import 'package:agriflock/features/farmer/farm/models/farm_model.dart';
@@ -46,6 +47,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
   ];
 
   final _repository = BatchHouseRepository();
+  final _birdTypeRepository = BirdTypeRepository();
 
   String? _selectedBirdTypeId;
   bool _showLayersSubType = false;
@@ -115,7 +117,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
         _isLoadingBirdTypes = true;
       });
 
-      final result = await _repository.getBirdTypes();
+      final result = await _birdTypeRepository.getBirdTypes();
 
       switch (result) {
         case Success(data: final types):
@@ -346,9 +348,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                     items: [
                       // Non-layers types shown directly
                       ..._birdTypes
-                          .where((t) =>
-                              !t.name.toLowerCase().contains('layers') &&
-                              !t.name.toLowerCase().contains('growers'))
+                          .where((t) => !t.isLayersCategory)
                           .map((BirdType type) => DropdownMenuItem<String>(
                                 value: type.id,
                                 child: Text(type.name),
@@ -409,9 +409,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                           ),
                           const SizedBox(height: 10),
                           ..._birdTypes
-                              .where((t) =>
-                                  t.name.toLowerCase().contains('layers') ||
-                                  t.name.toLowerCase().contains('growers'))
+                              .where((t) => t.isLayersCategory)
                               .map((t) => RadioListTile<String>(
                                     value: t.id,
                                     groupValue: _selectedLayersSubTypeId,

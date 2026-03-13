@@ -1,4 +1,5 @@
-import 'package:agriflock/features/farmer/batch/repo/batch_house_repo.dart';
+import 'package:agriflock/core/models/bird_type.dart';
+import 'package:agriflock/core/repositories/bird_type_repository.dart';
 import 'package:agriflock/features/farmer/quotation/models/production_quotation_model.dart';
 import 'package:agriflock/features/farmer/quotation/repo/quotation_repository.dart';
 import 'package:agriflock/features/farmer/quotation/widgets/image_with_desc.dart';
@@ -6,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/utils/api_error_handler.dart';
 import 'package:agriflock/core/utils/toast_util.dart';
-import 'package:agriflock/features/farmer/batch/model/bird_type.dart';
 
 // ─── FRONTEND CALCULATOR CONSTANTS ───────────────────────────────────────────
 
@@ -204,6 +204,10 @@ class _LayersPhase2State {
   int exBirds;
   int exBirdPrice;
 
+  /// Controller for the "Flock size (birds)" input so it stays in sync
+  /// with the top-level flock size dropdown.
+  final TextEditingController flockController;
+
   _LayersPhase2State({
     this.layingWeeks  = 78,
     this.flock        = 128,
@@ -214,7 +218,7 @@ class _LayersPhase2State {
     this.otherMonthly = 0,
     this.exBirds      = 128,
     this.exBirdPrice  = 300,
-  });
+  }) : flockController = TextEditingController(text: '128');
 }
 
 class _LayersPhase2Result {
@@ -408,7 +412,7 @@ class _LayersTab extends StatefulWidget {
 class _LayersTabState extends State<_LayersTab> {
   static const Color primaryColor = Color(0xFF2E7D32);
 
-  final _batchRepo     = BatchHouseRepository();
+  final _birdTypeRepository = BirdTypeRepository();
   final _quotationRepo = QuotationRepository();
 
   bool _isLoadingBirdTypes    = false;
@@ -426,7 +430,7 @@ class _LayersTabState extends State<_LayersTab> {
   double get _scale => _selectedCapacity != null ? _selectedCapacity! / 128.0 : 1.0;
 
   List<BirdType> get _layerBreeds =>
-      _birdTypes.where((b) => b.name.toLowerCase().contains('laying eggs')).toList();
+      _birdTypes.where((b) => b.type == 'layer').toList();
 
   // Compute Phase 1 total from controllers (Stage 1 items)
   double get _phase1Total {
@@ -462,13 +466,14 @@ class _LayersTabState extends State<_LayersTab> {
   @override
   void dispose() {
     for (final c in _ctrl.values) c.dispose();
+    _phase2.flockController.dispose();
     super.dispose();
   }
 
   Future<void> _loadBirdTypes() async {
     try {
       setState(() => _isLoadingBirdTypes = true);
-      final result = await _batchRepo.getBirdTypes();
+      final result = await _birdTypeRepository.getBirdTypes();
       switch (result) {
         case Success(data: final types):
           setState(() { _birdTypes = types; _isLoadingBirdTypes = false; });
@@ -591,7 +596,11 @@ class _LayersTabState extends State<_LayersTab> {
                     ? null
                     : (v) {
                   if (v == null) return;
-                  setState(() => _selectedCapacity = v);
+                  setState(() {
+                    _selectedCapacity = v;
+                    _phase2.flock = v;
+                    _phase2.flockController.text = v.toString();
+                  });
                   if (_quotationData == null) _generateQuotation();
                 },
               ),
@@ -868,7 +877,7 @@ class _LayingStageSection extends StatelessWidget {
           _buildInputRow('Flock size (birds)', state.flock.toString(), (v) {
             state.flock = int.tryParse(v) ?? state.flock;
             onChanged();
-          }),
+          }, controller: state.flockController),
           _buildInputRow('Avg egg production %', state.prodPct.toString(),
               note: '75% = industry average for layers', (v) {
                 state.prodPct = double.tryParse(v) ?? state.prodPct;
@@ -940,7 +949,7 @@ class _LayingStageSection extends StatelessWidget {
   }
 
   Widget _buildInputRow(String label, String value, ValueChanged<String> onSave,
-      {String? note, bool isLast = false}) {
+      {String? note, bool isLast = false, TextEditingController? controller}) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 9),
       decoration: BoxDecoration(
@@ -954,7 +963,8 @@ class _LayingStageSection extends StatelessWidget {
         SizedBox(
           width: 110,
           child: TextFormField(
-            initialValue: value,
+            controller: controller,
+            initialValue: controller == null ? value : null,
             textAlign: TextAlign.right,
             keyboardType: TextInputType.number,
             style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),

@@ -271,12 +271,14 @@ class BatchMgtRepository {
     required int changeAmount,
     required List<String> reasons,
     String changeType = 'mortality',
+    String? time,
   }) async {
     try {
       final requestBody = {
         'change_type': changeType,
         'change_amount': changeAmount,
         'reason': reasons,
+        if (time != null) 'time': time,
       };
 
       LogUtil.info('Recording mortality for batch $batchId: $requestBody');

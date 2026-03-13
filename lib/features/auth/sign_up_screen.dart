@@ -35,6 +35,7 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _isLoading = false;
   bool _acceptedTerms = false;
   bool _showTermsError = false;
+  bool _acceptedSmsAlerts = false;
 
   @override
   void initState() {
@@ -297,6 +298,48 @@ class _SignupScreenState extends State<SignupScreen> {
                                           ),
                                         ),
                                     ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+
+                          // SMS Alerts Checkbox
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: Checkbox(
+                                    value: _acceptedSmsAlerts,
+                                    onChanged: (bool? value) {
+                                      setState(() {
+                                        _acceptedSmsAlerts = value ?? false;
+                                      });
+                                    },
+                                    activeColor: Theme.of(context).primaryColor,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    materialTapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    'I agree to receive SMS alerts and account notifications for Agriflock 360. '
+                                    'Message frequency varies. Message and data rates may apply.',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey.shade600,
+                                      height: 1.4,
+                                    ),
                                   ),
                                 ),
                               ],

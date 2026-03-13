@@ -17,6 +17,16 @@ class TelemetryData {
   final String stateLabel;
   final String connModeLabel;
 
+  // Added fields
+  final int soc;        // battery state of charge (0–100 %)
+  final int water;      // water level (0–100 %)
+  final int paygStatus; // 0 = active, 1 = expired/locked
+  final int mode;       // device operating mode
+  final int? tempWeek1;
+  final int? tempWeek2;
+  final int? tempWeek3;
+  final int? tempWeek4;
+
   TelemetryData({
     required this.id,
     required this.deviceId,
@@ -32,13 +42,21 @@ class TelemetryData {
     required this.timestamp,
     required this.stateLabel,
     required this.connModeLabel,
+    this.soc = 0,
+    this.water = 0,
+    this.paygStatus = 0,
+    this.mode = 0,
+    this.tempWeek1,
+    this.tempWeek2,
+    this.tempWeek3,
+    this.tempWeek4,
   });
 
   factory TelemetryData.fromJson(Map<String, dynamic> json) {
     return TelemetryData(
       id: TypeUtils.toStringSafe(json['id']),
       deviceId: TypeUtils.toStringSafe(json['device_id']),
-      temperature: TypeUtils.toDoubleSafe(json['temperature']),
+      temperature: TypeUtils.toDoubleSafe(json['temp'] ?? json['temperature']),
       humidity: TypeUtils.toDoubleSafe(json['humidity']),
       voltage: json['voltage'] != null ? TypeUtils.toDoubleSafe(json['voltage']) : null,
       state: TypeUtils.toIntSafe(json['state']),
@@ -50,6 +68,14 @@ class TelemetryData {
       timestamp: TypeUtils.toDateTimeSafe(json['timestamp']) ?? DateTime.now(),
       stateLabel: TypeUtils.toStringSafe(json['state_label']),
       connModeLabel: TypeUtils.toStringSafe(json['conn_mode_label']),
+      soc: TypeUtils.toIntSafe(json['soc']),
+      water: TypeUtils.toIntSafe(json['water']),
+      paygStatus: TypeUtils.toIntSafe(json['payg_status']),
+      mode: TypeUtils.toIntSafe(json['mode']),
+      tempWeek1: json['temp_week1'] != null ? TypeUtils.toIntSafe(json['temp_week1']) : null,
+      tempWeek2: json['temp_week2'] != null ? TypeUtils.toIntSafe(json['temp_week2']) : null,
+      tempWeek3: json['temp_week3'] != null ? TypeUtils.toIntSafe(json['temp_week3']) : null,
+      tempWeek4: json['temp_week4'] != null ? TypeUtils.toIntSafe(json['temp_week4']) : null,
     );
   }
 }

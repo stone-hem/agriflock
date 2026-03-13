@@ -1,4 +1,5 @@
 import 'package:agriflock/core/utils/date_util.dart';
+import 'package:agriflock/core/utils/feed_format_util.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/widgets/expense/expense_button.dart';
 import 'package:agriflock/core/widgets/expense/expense_marquee_banner.dart';
@@ -546,19 +547,6 @@ class _BatchReportScreenState extends State<BatchReportScreen>
     );
   }
 
-  String _formatKg(num kg) {
-    if (kg >= 50) {
-      final bags = (kg / 50).floor();
-      final remainder = kg - bags * 50;
-      final bagLabel = bags == 1 ? 'bag' : 'bags';
-      if (remainder == 0) return '$bags $bagLabel';
-      final remStr = remainder == remainder.truncate()
-          ? remainder.toInt().toString()
-          : remainder.toStringAsFixed(1);
-      return '$bags $bagLabel ${remStr}kgs';
-    }
-    return kg == kg.truncate() ? '${kg.toInt()}kgs' : '${kg.toStringAsFixed(1)}kgs';
-  }
 
   Widget _buildInfoRow(IconData icon, Color iconColor, String label, String value) {
     return Row(
@@ -580,7 +568,8 @@ class _BatchReportScreenState extends State<BatchReportScreen>
   }
 
   Widget _buildReportCard(BatchReportData report) {
-    final isLayers = report.birdType.toLowerCase().contains('layer');
+    final _bt = report.birdType.toLowerCase();
+    final isLayers = _bt.contains('layer') && !_bt.contains('grower');
     final typeColor = isLayers ? Colors.amber.shade700 : Colors.blue.shade700;
 
     return Container(
@@ -837,10 +826,10 @@ class _BatchReportScreenState extends State<BatchReportScreen>
             children: [
               Expanded(
                   child: _buildInfoRow(Icons.restaurant, Colors.orange.shade600, 'Consumed',
-                      _formatKg(feed.bagsConsumed))),
+                      FeedFormatUtil.formatKg(feed.bagsConsumed))),
               Expanded(
                   child: _buildInfoRow(Icons.inventory_2_outlined, Colors.brown.shade600,
-                      'In Store', _formatKg(feed.balanceInStore))),
+                      'In Store', FeedFormatUtil.formatKg(feed.balanceInStore))),
             ],
           ),
           const SizedBox(height: 4),
@@ -848,10 +837,10 @@ class _BatchReportScreenState extends State<BatchReportScreen>
             children: [
               Expanded(
                   child: _buildInfoRow(Icons.wb_sunny_outlined, Colors.orange.shade400,
-                      'Day', _formatKg(feed.bagsConsumedDay))),
+                      'Day', FeedFormatUtil.formatKg(feed.bagsConsumedDay))),
               Expanded(
                   child: _buildInfoRow(Icons.nightlight_round, Colors.indigo.shade400,
-                      'Night', _formatKg(feed.bagsConsumedNight))),
+                      'Night', FeedFormatUtil.formatKg(feed.bagsConsumedNight))),
             ],
           ),
           if (feed.feedVariance.isNotEmpty) ...[

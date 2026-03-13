@@ -69,10 +69,9 @@ class BatchCreatedScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: Colors.green.withOpacity(0.3)),
                 ),
-                child: Row(
+                child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.pets, size: 16, color: Colors.green),
                     const SizedBox(width: 8),
                     Text(
                       batch.batchNumber,
@@ -80,13 +79,6 @@ class BatchCreatedScreen extends StatelessWidget {
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: Colors.green,
-                      ),
-                    ),
-                    Text(
-                      '  •  ${batch.initialQuantity} birds',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey.shade600,
                       ),
                     ),
                   ],

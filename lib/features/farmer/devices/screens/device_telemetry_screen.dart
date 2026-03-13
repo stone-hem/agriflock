@@ -85,6 +85,14 @@ class _DeviceTelemetryScreenState extends State<DeviceTelemetryScreen> {
             _buildTelemetryGrid(),
             const SizedBox(height: 16),
             _buildStatusRow(),
+            if (_latestTelemetry != null &&
+                (_latestTelemetry!.tempWeek1 != null ||
+                 _latestTelemetry!.tempWeek2 != null ||
+                 _latestTelemetry!.tempWeek3 != null ||
+                 _latestTelemetry!.tempWeek4 != null)) ...[
+              const SizedBox(height: 16),
+              _buildWeeklyTempCard(),
+            ],
             if (_alerts.isNotEmpty) ...[
               const SizedBox(height: 16),
               _buildAlertsSection(),
@@ -322,6 +330,20 @@ class _DeviceTelemetryScreenState extends State<DeviceTelemetryScreen> {
           subtitle: telemetry != null ? 'Mode: ${telemetry.connModeLabel}' : '',
           isSmallText: true,
         ),
+        _MetricCard(
+          icon: _batteryIcon(telemetry?.soc),
+          label: 'Battery',
+          value: telemetry != null ? '${telemetry.soc}%' : '--',
+          color: _batteryColor(telemetry?.soc),
+          subtitle: _batteryStatus(telemetry?.soc),
+        ),
+        _MetricCard(
+          icon: Icons.water_outlined,
+          label: 'Water Level',
+          value: telemetry != null ? '${telemetry.water}%' : '--',
+          color: _waterColor(telemetry?.water),
+          subtitle: _waterStatus(telemetry?.water),
+        ),
       ],
     );
   }
@@ -356,7 +378,114 @@ class _DeviceTelemetryScreenState extends State<DeviceTelemetryScreen> {
             activeColor: Colors.green,
           ),
         ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _StatusTile(
+            icon: Icons.payment_outlined,
+            label: 'PAYG',
+            isActive: (telemetry?.paygStatus ?? 1) == 0,
+            activeColor: Colors.teal,
+            activeLabel: 'Active',
+            inactiveLabel: 'Locked',
+          ),
+        ),
       ],
+    );
+  }
+
+  Widget _buildWeeklyTempCard() {
+    final t = _latestTelemetry!;
+    final weeks = [
+      ('W1', t.tempWeek1),
+      ('W2', t.tempWeek2),
+      ('W3', t.tempWeek3),
+      ('W4', t.tempWeek4),
+    ].where((e) => e.$2 != null).toList();
+
+    if (weeks.isEmpty) return const SizedBox.shrink();
+
+    final maxTemp = weeks.map((e) => e.$2!).reduce((a, b) => a > b ? a : b);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(Icons.bar_chart_outlined, color: Colors.orange.shade700, size: 16),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Weekly Temperature Trend',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  color: Colors.grey.shade800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: weeks.map((entry) {
+              final label = entry.$1;
+              final temp = entry.$2!;
+              final barHeightFraction = maxTemp > 0 ? temp / maxTemp : 0.0;
+              final barColor = _tempColor(temp.toDouble());
+              return Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${temp}°C',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: barColor,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: SizedBox(
+                          height: 60 * barHeightFraction,
+                          child: ColoredBox(color: barColor.withValues(alpha: 0.8)),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        label,
+                        style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -413,6 +542,44 @@ class _DeviceTelemetryScreenState extends State<DeviceTelemetryScreen> {
     if (h >= 80) return 'High — Alert';
     if (h >= 70) return 'Elevated';
     return 'Normal';
+  }
+
+  IconData _batteryIcon(int? soc) {
+    if (soc == null) return Icons.battery_unknown_outlined;
+    if (soc >= 80) return Icons.battery_full_outlined;
+    if (soc >= 60) return Icons.battery_5_bar_outlined;
+    if (soc >= 40) return Icons.battery_3_bar_outlined;
+    if (soc >= 20) return Icons.battery_2_bar_outlined;
+    return Icons.battery_alert_outlined;
+  }
+
+  Color _batteryColor(int? soc) {
+    if (soc == null) return Colors.grey;
+    if (soc >= 50) return Colors.green;
+    if (soc >= 20) return Colors.orange;
+    return Colors.red;
+  }
+
+  String _batteryStatus(int? soc) {
+    if (soc == null) return 'Waiting...';
+    if (soc >= 80) return 'Full';
+    if (soc >= 50) return 'Good';
+    if (soc >= 20) return 'Low';
+    return 'Critical';
+  }
+
+  Color _waterColor(int? level) {
+    if (level == null) return Colors.grey;
+    if (level >= 50) return Colors.blue;
+    if (level >= 20) return Colors.orange;
+    return Colors.red;
+  }
+
+  String _waterStatus(int? level) {
+    if (level == null) return 'Waiting...';
+    if (level >= 50) return 'Sufficient';
+    if (level >= 20) return 'Low';
+    return 'Critical — Refill';
   }
 }
 
@@ -499,12 +666,16 @@ class _StatusTile extends StatelessWidget {
   final String label;
   final bool isActive;
   final Color activeColor;
+  final String activeLabel;
+  final String inactiveLabel;
 
   const _StatusTile({
     required this.icon,
     required this.label,
     required this.isActive,
     required this.activeColor,
+    this.activeLabel = 'ON',
+    this.inactiveLabel = 'OFF',
   });
 
   @override
@@ -539,7 +710,7 @@ class _StatusTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
-              isActive ? 'ON' : 'OFF',
+              isActive ? activeLabel : inactiveLabel,
               style: TextStyle(
                 color: color,
                 fontWeight: FontWeight.bold,

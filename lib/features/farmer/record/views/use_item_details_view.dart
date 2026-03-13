@@ -1,3 +1,4 @@
+import 'package:agriflock/core/utils/feed_format_util.dart';
 import 'package:agriflock/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock/core/widgets/reusable_input.dart';
@@ -66,6 +67,20 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
   bool _usedFromStore = true;
 
   // Packaging options
+
+  String get _dateLabel {
+    final name = widget.category.name.toLowerCase();
+    if (name.contains('vacc')) return 'Date Vaccinated';
+    if (name.contains('medic') || name.contains('medicine')) return 'Date Medicated';
+    return 'Date Fed';
+  }
+
+  String get _timeLabel {
+    final name = widget.category.name.toLowerCase();
+    if (name.contains('vacc')) return 'Actual Time Vaccinated';
+    if (name.contains('medic') || name.contains('medicine')) return 'Actual Time Medicated';
+    return 'Actual Time Fed';
+  }
 
   @override
   void initState() {
@@ -540,7 +555,7 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                                               ),
                                               const SizedBox(width: 4),
                                               Text(
-                                                'In Store: ${item.quantityInStore} ${item.categoryItemUnit}',
+                                                'In Store: ${FeedFormatUtil.formatQuantity(item.quantityInStore, item.categoryItemUnit)}',
                                                 style: TextStyle(
                                                   fontSize: 11,
                                                   fontWeight: FontWeight.w500,
@@ -841,7 +856,7 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                           Icon(Icons.inventory_2, size: 14, color: Colors.blue.shade700),
                           const SizedBox(width: 6),
                           Text(
-                            'In Store: ${widget.selectedItem!.quantityInStore} ${widget.selectedItem!.categoryItemUnit}',
+                            'In Store: ${FeedFormatUtil.formatQuantity(widget.selectedItem!.quantityInStore, widget.selectedItem!.categoryItemUnit)}',
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -1061,7 +1076,7 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
 
                     // Date selection
                     CustomDateTextField(
-                      label: 'Date Used',
+                      label: _dateLabel,
                       icon: Icons.calendar_today,
                       required: true,
                       initialDate: DateTime.now(),
@@ -1074,9 +1089,8 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
 
                     // Time selection
                     ReusableTimeInput(
-                      topLabel: 'Time Used',
+                      topLabel: _timeLabel,
                       icon: Icons.access_time,
-                      initialTime: _selectedTime,
                       onTimeChanged: (time) {
                         setState(() => _selectedTime = time);
                       },

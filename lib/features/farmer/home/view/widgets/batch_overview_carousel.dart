@@ -1,3 +1,4 @@
+import 'package:agriflock/core/utils/feed_format_util.dart';
 import 'package:agriflock/features/farmer/home/model/batch_home_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -170,7 +171,8 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
   // ─── Shared card ───────────────────────────────────────────────────────────
 
   Widget _buildBatchCard(BatchHomeData batch) {
-    final isLayers = batch.birdType.toLowerCase().contains('layers');
+    final _bt = batch.birdType.toLowerCase();
+    final isLayers = _bt.contains('layers') && !_bt.contains('grower');
     final primaryColor = isLayers ? Colors.amber : Colors.blue;
     final accentColor = isLayers ? Colors.orange : Colors.indigo;
 
@@ -420,7 +422,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                     const SizedBox(height: 8),
                     _buildInfoRow(
                       'Expected avg feeding per day',
-                      '${batch.expectedFoodPerBirdPerDayG}g/per/bird/day = ${_formatKg(batch.totalExpectedFoodPerDayKg)}',
+                      '${batch.expectedFoodPerBirdPerDayG}g/per/bird/day = ${FeedFormatUtil.formatKg(batch.totalExpectedFoodPerDayKg)}',
                       Icons.restaurant_outlined,
                       Colors.orange,
                     ),
@@ -466,7 +468,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
 
                   _buildInfoRow(
                     'Actual feeds consumed',
-                    _formatKg(batch.totalActualFoodPerDayKg),
+                    FeedFormatUtil.formatKg(batch.totalActualFoodPerDayKg),
                     Icons.restaurant_menu_outlined,
                     Colors.teal,
                   ),
@@ -475,7 +477,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                     const SizedBox(height: 8),
                     _buildInfoRow(
                       'Bags consumed',
-                      '${_formatKg(batch.feed!.totalBagsConsumed)} (Day: ${_formatKg(batch.feed!.bagsConsumedDay)}${!isLayers ? ', Night: ${_formatKg(batch.feed!.bagsConsumedNight)}' : ''})',
+                      '${FeedFormatUtil.formatKg(batch.feed!.totalBagsConsumed)} (Day: ${FeedFormatUtil.formatKg(batch.feed!.bagsConsumedDay)}${!isLayers ? ', Night: ${FeedFormatUtil.formatKg(batch.feed!.bagsConsumedNight)}' : ''})',
                       Icons.restaurant,
                       Colors.orange.shade700,
                     ),
@@ -492,7 +494,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                   const SizedBox(height: 8),
                   _buildInfoRow(
                     'Total feeds in store',
-                    _formatKg(batch.foodInStoreKg),
+                    FeedFormatUtil.formatKg(batch.foodInStoreKg),
                     Icons.inventory_2_outlined,
                     Colors.brown,
                   ),
@@ -525,7 +527,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                                     ),
                                   ),
                                   Text(
-                                    _formatKg(f.quantity),
+                                    FeedFormatUtil.formatKg(f.quantity),
                                     style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
@@ -848,24 +850,6 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
         ),
       ),
     );
-  }
-
-  /// Formats kg using 50 kg bag units.
-  /// e.g. 56 → "1 bag 6 kgs", 100 → "2 bags", 40 → "40 kgs"
-  static String _formatKg(num kg) {
-    if (kg >= 50) {
-      final bags = (kg / 50).floor();
-      final remainder = kg - bags * 50;
-      final bagLabel = bags == 1 ? 'bag' : 'bags';
-      if (remainder == 0) return '$bags $bagLabel';
-      final remStr = remainder == remainder.truncate()
-          ? remainder.toInt().toString()
-          : remainder.toStringAsFixed(1);
-      return '$bags $bagLabel ${remStr}kgs';
-    }
-    return kg == kg.truncate()
-        ? '${kg.toInt()}kgs'
-        : '${kg.toStringAsFixed(1)}kgs';
   }
 
   Widget _buildVaccineStatusChip({

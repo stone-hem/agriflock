@@ -1,5 +1,6 @@
 import 'package:agriflock/core/utils/api_error_handler.dart';
 import 'package:agriflock/core/utils/date_util.dart';
+import 'package:agriflock/core/utils/feed_format_util.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/utils/secure_storage.dart';
 import 'package:agriflock/core/widgets/expense/expense_marquee_banner.dart';
@@ -210,20 +211,6 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
       _loadReport();
       _loadFinancialData();
     }
-  }
-
-  String _formatKg(num kg) {
-    if (kg >= 50) {
-      final bags = (kg / 50).floor();
-      final remainder = kg - bags * 50;
-      final bagLabel = bags == 1 ? 'bag' : 'bags';
-      if (remainder == 0) return '$bags $bagLabel';
-      final remStr = remainder == remainder.truncate()
-          ? remainder.toInt().toString()
-          : remainder.toStringAsFixed(1);
-      return '$bags $bagLabel ${remStr}kgs';
-    }
-    return kg == kg.truncate() ? '${kg.toInt()}kgs' : '${kg.toStringAsFixed(1)}kgs';
   }
 
   String _formatDate(DateTime date) {
@@ -847,8 +834,8 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
                             'Mortality (24h)',
                             '${batch.mortality.total24hrs}')),
                     Expanded(
-                        child: _buildInfoRow(Icons.fastfood, Colors.brown.shade600, 'Feed (kgs)',
-                            '${batch.feed.bagsConsumed}')),
+                        child: _buildInfoRow(Icons.fastfood, Colors.brown.shade600, 'Feed consumed',
+                            FeedFormatUtil.formatKg(batch.feed.bagsConsumed))),
                   ],
                 ),
                 const SizedBox(height: 6),
@@ -864,7 +851,7 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
                     else
                       Expanded(
                           child: _buildInfoRow(Icons.inventory_2_outlined, Colors.brown.shade400,
-                              'Feed in Store', _formatKg(batch.feed.balanceInStore))),
+                              'Feed in Store', FeedFormatUtil.formatKg(batch.feed.balanceInStore))),
                   ],
                 ),
                 if (batch.medication.inUse.isNotEmpty) ...[

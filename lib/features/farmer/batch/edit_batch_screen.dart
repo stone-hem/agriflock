@@ -7,7 +7,8 @@ import 'package:agriflock/core/utils/toast_util.dart';
 import 'package:agriflock/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock/core/widgets/reusable_input.dart';
 import 'package:agriflock/features/farmer/batch/model/batch_model.dart';
-import 'package:agriflock/features/farmer/batch/model/bird_type.dart';
+import 'package:agriflock/core/models/bird_type.dart';
+import 'package:agriflock/core/repositories/bird_type_repository.dart';
 import 'package:agriflock/features/farmer/batch/repo/batch_house_repo.dart';
 import 'package:agriflock/features/farmer/farm/models/farm_model.dart';
 import 'package:flutter/material.dart';
@@ -38,6 +39,7 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
   final _expectedWeightController = TextEditingController();
   final _notesController = TextEditingController();
   final _repository = BatchHouseRepository();
+  final _birdTypeRepository = BirdTypeRepository();
 
   String? _selectedBirdTypeId;
   bool _showLayersSubType = false;
@@ -85,14 +87,12 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
         _isLoadingBirdTypes = true;
       });
 
-      final result = await _repository.getBirdTypes();
+      final result = await _birdTypeRepository.getBirdTypes();
 
       switch (result) {
         case Success(data: final types):
           final currentType = types.where((t) => t.id == widget.batch.birdTypeId).firstOrNull;
-          final isLayersSubType = currentType != null &&
-              (currentType.name.toLowerCase().contains('layers') ||
-               currentType.name.toLowerCase().contains('growers'));
+          final isLayersSubType = currentType != null && currentType.isLayersCategory;
           setState(() {
             _birdTypes = types;
             _isLoadingBirdTypes = false;
@@ -308,9 +308,7 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
                     hintText: 'Select bird type',
                     items: [
                       ..._birdTypes
-                          .where((t) =>
-                              !t.name.toLowerCase().contains('layers') &&
-                              !t.name.toLowerCase().contains('growers'))
+                          .where((t) => !t.isLayersCategory)
                           .map((BirdType type) => DropdownMenuItem<String>(
                                 value: type.id,
                                 child: Text(type.name),
@@ -369,9 +367,7 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
                           ),
                           const SizedBox(height: 10),
                           ..._birdTypes
-                              .where((t) =>
-                                  t.name.toLowerCase().contains('layers') ||
-                                  t.name.toLowerCase().contains('growers'))
+                              .where((t) => t.isLayersCategory)
                               .map((t) => RadioListTile<String>(
                                     value: t.id,
                                     groupValue: _selectedLayersSubTypeId,

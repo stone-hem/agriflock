@@ -13,7 +13,8 @@ import 'package:agriflock/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock/core/widgets/reusable_input.dart';
 import 'package:agriflock/core/widgets/reusable_decimal_input.dart';
 import 'package:agriflock/core/widgets/photo_upload.dart';
-import 'package:agriflock/features/farmer/batch/model/bird_type.dart';
+import 'package:agriflock/core/models/bird_type.dart';
+import 'package:agriflock/core/repositories/bird_type_repository.dart';
 import 'package:agriflock/features/farmer/batch/repo/batch_house_repo.dart';
 import 'package:agriflock/main.dart';
 import 'package:flutter/material.dart';
@@ -98,6 +99,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
 
   // ── Data ───────────────────────────────────────────────
   final _batchHouseRepo = BatchHouseRepository();
+  final _birdTypeRepository = BirdTypeRepository();
   List<BirdType> _birdTypes = [];
   bool _isLoadingBirdTypes = false;
 
@@ -153,7 +155,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
 
   Future<void> _loadBirdTypes() async {
     setState(() => _isLoadingBirdTypes = true);
-    final result = await _batchHouseRepo.getBirdTypes();
+    final result = await _birdTypeRepository.getBirdTypes();
     switch (result) {
       case Success(data: final types):
         setState(() {
@@ -886,9 +888,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                         hintText: 'Select bird type',
                         items: [
                           ..._birdTypes
-                              .where((t) =>
-                                  !t.name.toLowerCase().contains('layers') &&
-                                  !t.name.toLowerCase().contains('growers'))
+                              .where((t) => !t.isLayersCategory)
                               .map((t) => DropdownMenuItem(value: t.id, child: Text(t.name))),
                           const DropdownMenuItem<String>(
                             value: _layersCategoryId,
@@ -940,9 +940,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                               ),
                               const SizedBox(height: 10),
                               ..._birdTypes
-                                  .where((t) =>
-                                      t.name.toLowerCase().contains('layers') ||
-                                      t.name.toLowerCase().contains('growers'))
+                                  .where((t) => t.isLayersCategory)
                                   .map((t) => RadioListTile<String>(
                                         value: t.id,
                                         groupValue: _selectedLayersSubTypeId,

@@ -5,7 +5,8 @@ import 'package:agriflock/core/widgets/location_picker_step.dart';
 import 'package:agriflock/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock/core/widgets/reusable_input.dart';
 import 'package:agriflock/features/farmer/batch/model/batch_model.dart';
-import 'package:agriflock/features/farmer/batch/model/bird_type.dart';
+import 'package:agriflock/core/models/bird_type.dart';
+import 'package:agriflock/core/repositories/bird_type_repository.dart';
 import 'package:agriflock/features/farmer/batch/repo/batch_house_repo.dart';
 import 'package:agriflock/features/farmer/farm/repositories/farm_repository.dart';
 import 'package:agriflock/features/farmer/vet/models/vet_farmer_model.dart';
@@ -96,6 +97,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
   // ── Repositories ──────────────────────────────────────────────────────────
   final _farmRepository = FarmRepository();
   final _batchHouseRepository = BatchHouseRepository();
+  final _birdTypeRepository = BirdTypeRepository();
 
   // ── Farm data ─────────────────────────────────────────────────────────────
   FarmsResponse? _farmsResponse;
@@ -226,7 +228,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
 
   Future<void> _loadBirdTypes() async {
     setState(() => _isLoadingBirdTypes = true);
-    final result = await _batchHouseRepository.getBirdTypes();
+    final result = await _birdTypeRepository.getBirdTypes();
     if (!mounted) return;
     switch (result) {
       case Success<List<BirdType>>(data: final types):

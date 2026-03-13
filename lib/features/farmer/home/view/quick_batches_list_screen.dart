@@ -7,6 +7,7 @@ import 'package:agriflock/features/farmer/batch/model/batch_model.dart';
 import 'package:agriflock/features/farmer/batch/repo/batch_house_repo.dart';
 import 'package:agriflock/features/farmer/batch/repo/batch_mgt_repo.dart';
 import 'package:agriflock/features/farmer/farm/models/farm_model.dart';
+import 'package:agriflock/features/farmer/farm/repositories/farm_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -71,10 +72,179 @@ class _QuickBatchesListScreenState extends State<QuickBatchesListScreen> {
   }
 
   Future<void> _navigateToAddBatch() async {
-    context.push('/batches/add', extra: {
-      'farm': null,
-      'house': null,
-    });
+    // Step 1: pick a farm
+    final farm = await _pickFarm();
+    if (farm == null || !mounted) return;
+
+    // Step 2: pick a house within that farm
+    final house = await _pickHouse(farm);
+    if (house == null || !mounted) return;
+
+    context.push('/batches/add', extra: {'farm': farm, 'house': house});
+  }
+
+  Future<FarmModel?> _pickFarm() async {
+    List<FarmModel> farms = [];
+    bool loading = true;
+    bool fetched = false;
+
+    return showModalBottomSheet<FarmModel>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) {
+          if (!fetched) {
+            fetched = true;
+            FarmRepository().getAllFarmsWithStats().then((result) {
+              switch (result) {
+                case Success<FarmsResponse>(data: final response):
+                  setModalState(() {
+                    farms = response.farms;
+                    loading = false;
+                  });
+                case Failure():
+                  setModalState(() => loading = false);
+              }
+            });
+          }
+          return DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.5,
+            maxChildSize: 0.85,
+            builder: (_, controller) => Column(
+              children: [
+                const SizedBox(height: 12),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('Select Farm',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: loading
+                      ? const Center(child: CircularProgressIndicator())
+                      : farms.isEmpty
+                          ? const Center(child: Text('No farms found'))
+                          : ListView.builder(
+                              controller: controller,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              itemCount: farms.length,
+                              itemBuilder: (_, i) => ListTile(
+                                leading: const Icon(Icons.agriculture,
+                                    color: Colors.green),
+                                title: Text(farms[i].farmName),
+                                subtitle: farms[i].location != null
+                                    ? Text(farms[i].location!)
+                                    : null,
+                                onTap: () => Navigator.pop(ctx, farms[i]),
+                              ),
+                            ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Future<House?> _pickHouse(FarmModel farm) async {
+    List<House> houses = [];
+    bool loading = true;
+    bool fetched = false;
+
+    return showModalBottomSheet<House>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) {
+          if (!fetched) {
+            fetched = true;
+            BatchHouseRepository().getAllHouses(farm.id).then((result) {
+              switch (result) {
+                case Success<List<House>>(data: final list):
+                  setModalState(() {
+                    houses = list;
+                    loading = false;
+                  });
+                case Failure():
+                  setModalState(() => loading = false);
+              }
+            });
+          }
+          return DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.5,
+            maxChildSize: 0.85,
+            builder: (_, controller) => Column(
+              children: [
+                const SizedBox(height: 12),
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('Select House – ${farm.farmName}',
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: loading
+                      ? const Center(child: CircularProgressIndicator())
+                      : houses.isEmpty
+                          ? const Center(
+                              child: Text('No houses found for this farm'))
+                          : ListView.builder(
+                              controller: controller,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              itemCount: houses.length,
+                              itemBuilder: (_, i) => ListTile(
+                                leading:
+                                    const Icon(Icons.home, color: Colors.teal),
+                                title: Text(houses[i].houseName),
+                                subtitle: Text(
+                                    '${houses[i].currentBirds}/${houses[i].capacity} birds'),
+                                onTap: () => Navigator.pop(ctx, houses[i]),
+                              ),
+                            ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
   }
 
   Future<void> _navigateToEditBatch(BatchListItem batch) async {
@@ -135,6 +305,7 @@ class _QuickBatchesListScreenState extends State<QuickBatchesListScreen> {
         switch(res) {
           case Success<void>():
             ToastUtil.showSuccess('Batch deleted');
+            RefreshBus.instance.fire(RefreshEvent.batchUpdated);
             _loadBatches();
           case Failure<void>():
             ToastUtil.showError('Batch not deleted');
