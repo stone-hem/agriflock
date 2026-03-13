@@ -356,7 +356,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          '${DateUtil.toShortDateWithDay(_startDate)} - ${DateUtil.toShortDateWithDay(_endDate)}',
+                          '${DateUtil.toFullDateWithDay(_startDate)} - ${DateUtil.toFullDateWithDay(_endDate)}',
                           style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -518,7 +518,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                         const Icon(Icons.calendar_today, size: 13, color: Colors.white),
                         const SizedBox(width: 6),
                         Text(
-                          DateUtil.toShortDateWithDay(reportDate),
+                          DateUtil.toFullDateWithDay(reportDate),
                           style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -843,6 +843,32 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                       'Night', FeedFormatUtil.formatKg(feed.bagsConsumedNight))),
             ],
           ),
+          // Itemized feeds in store
+          if (feed.feedItemsInStore.any((f) => f.quantity > 0)) ...[
+            const SizedBox(height: 8),
+            Row(children: [
+              Icon(Icons.list_alt_outlined, size: 12, color: Colors.brown.shade500),
+              const SizedBox(width: 4),
+              Text('In Store (breakdown)',
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.brown.shade700)),
+            ]),
+            const SizedBox(height: 4),
+            ...feed.feedItemsInStore.where((f) => f.quantity > 0).map((f) => Padding(
+              padding: const EdgeInsets.only(left: 16, bottom: 3),
+              child: Row(children: [
+                Container(
+                  width: 4, height: 4,
+                  margin: const EdgeInsets.only(right: 6, top: 1),
+                  decoration: BoxDecoration(color: Colors.brown.shade400, shape: BoxShape.circle),
+                ),
+                Expanded(child: Text(f.itemName,
+                    style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
+                    overflow: TextOverflow.ellipsis)),
+                Text(FeedFormatUtil.formatKg(f.quantity),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.brown.shade700)),
+              ]),
+            )),
+          ],
           if (feed.feedVariance.isNotEmpty) ...[
             const SizedBox(height: 6),
             Container(
@@ -905,15 +931,26 @@ class _BatchReportScreenState extends State<BatchReportScreen>
             ],
           ),
           const SizedBox(height: 8),
+          if (plan.feedTypeInUse.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Row(children: [
+              Icon(Icons.grain, size: 12, color: Colors.teal.shade600),
+              const SizedBox(width: 4),
+              Text('Feed in use: ',
+                  style: TextStyle(fontSize: 12, color: Colors.teal.shade700)),
+              Text(plan.feedTypeInUse,
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.teal.shade900)),
+            ]),
+            const SizedBox(height: 6),
+          ],
           Row(
             children: [
-
               Expanded(
                   child: _buildInfoRow(Icons.calculate_outlined, Colors.teal.shade600,
                       'Expected Feed/Bird (g)', plan.feedPerBirdPerDayGrams.toStringAsFixed(1))),
               Expanded(
                   child: _buildInfoRow(Icons.scale_outlined, Colors.teal.shade600,
-                      'Expected Feed/Day (kg)', plan.expectedFeedPerDayKg.toStringAsFixed(1))),
+                      'Expected Feed/Day', FeedFormatUtil.formatKg(plan.expectedFeedPerDayKg))),
             ],
           ),
           const SizedBox(height: 4),
@@ -927,9 +964,18 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                       Icons.repeat, Colors.teal.shade600, 'Feeding Times/Day', '${plan.timesPerDay}')),
             ],
           ),
+          if (plan.expectedAvgWeight.isNotEmpty && plan.expectedAvgWeight != '0') ...[
+            const SizedBox(height: 4),
+            Row(children: [
+              Expanded(
+                  child: _buildInfoRow(Icons.monitor_weight_outlined, Colors.teal.shade600,
+                      'Expected Avg Weight', '${plan.expectedAvgWeight} kg')),
+              const Expanded(child: SizedBox.shrink()),
+            ]),
+          ],
           if (plan.feedingTimes.slots.isNotEmpty) ...[
             const SizedBox(height: 6),
-            Text('Feeding Times:'),
+            Text('Feeding Times:', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
             const SizedBox(height: 6),
 
             Wrap(
@@ -1006,11 +1052,17 @@ class _BatchReportScreenState extends State<BatchReportScreen>
             if (vaccination.vaccinesUpcoming.isNotEmpty) ...[
               const SizedBox(height: 4),
               Wrap(
-                spacing: 4,
-                runSpacing: 4,
+                spacing: 6,
+                runSpacing: 6,
                 children: vaccination.vaccinesUpcoming.map((v) {
                   final name = v is Map ? (v['name'] ?? v.toString()) : v.toString();
-                  return _buildVaccineChip(name, false);
+                  final dueDateRaw = v is Map ? v['due_date'] as String? : null;
+                  final dayDue = v is Map ? (v['day_due'] as num?)?.toInt() : null;
+                  DateTime? dueDate;
+                  if (dueDateRaw != null) {
+                    try { dueDate = DateTime.parse(dueDateRaw); } catch (_) {}
+                  }
+                  return _buildUpcomingVaccineChip(name, dueDate, dayDue);
                 }).toList(),
               ),
             ],
@@ -1037,6 +1089,45 @@ class _BatchReportScreenState extends State<BatchReportScreen>
         Text(name,
             style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.w500)),
       ]),
+    );
+  }
+
+  Widget _buildUpcomingVaccineChip(String name, DateTime? dueDate, int? dayDue) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.orange.shade300),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(mainAxisSize: MainAxisSize.min, children: [
+            Icon(Icons.vaccines_outlined, size: 11, color: Colors.orange.shade700),
+            const SizedBox(width: 4),
+            Text(name,
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.orange.shade900)),
+          ]),
+          if (dueDate != null || dayDue != null) ...[
+            const SizedBox(height: 3),
+            Row(mainAxisSize: MainAxisSize.min, children: [
+              if (dueDate != null) ...[
+                Icon(Icons.calendar_today, size: 10, color: Colors.orange.shade500),
+                const SizedBox(width: 3),
+                Text(DateUtil.toFullDateWithDay(dueDate),
+                    style: TextStyle(fontSize: 10, color: Colors.orange.shade700)),
+              ],
+              if (dueDate != null && dayDue != null)
+                Text('  ·  ', style: TextStyle(fontSize: 10, color: Colors.orange.shade400)),
+              if (dayDue != null)
+                Text('Day $dayDue',
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.orange.shade700)),
+            ]),
+          ],
+        ],
+      ),
     );
   }
 

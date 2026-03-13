@@ -45,7 +45,6 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
   bool _showLayersSubType = false;
   String? _selectedLayersSubTypeId;
   static const String _layersCategoryId = '__layers_category__';
-  String? _selectedBatchType;
   String? _selectedFeedingTimeCategory;
   DateTime? _hatchDate;
   File? _batchPhotoFile;
@@ -53,19 +52,6 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
   bool _isLoadingBirdTypes = false;
 
   List<BirdType> _birdTypes = [];
-  final List<String> _batchTypes = [
-    'Meat Production',
-    'Egg Production',
-    'Breeding',
-    'Dual Purpose',
-    'LAYERS'
-  ];
-
-  final Map<String, List<String>> _feedingTimeOptions = {
-    'Day': ['06:00AM', '09:00AM', '12:00 Noon', '3:00PM', '6:00PM'],
-    'Night': ['9:00PM', '12:00 Midnight', '3:00AM', '06:00AM'],
-    'Both': ['06:00AM', '09:00AM', '12:00 Noon', '3:00PM', '6:00PM', '9:00PM', '12:00 Midnight', '3:00AM'],
-  };
 
   // Track selected feeding times within each category
   final Map<String, List<String>> _selectedFeedingTimes = {
@@ -122,8 +108,7 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
     final batch = widget.batch;
 
     _selectedBirdTypeId = batch.birdTypeId;
-    // Will be resolved once bird types load — see _loadBirdTypes
-    _selectedBatchType = batch.type;
+
     _hatchDate = batch.startDate;
 
     // Set hatch controller value
@@ -399,92 +384,6 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
                 ],
               ),
               const SizedBox(height: 20),
-
-              // Batch Type Selection
-              // Text(
-              //   'Batch Type',
-              //   style: Theme.of(context).textTheme.titleMedium!.copyWith(
-              //     fontWeight: FontWeight.bold,
-              //     color: Colors.grey.shade800,
-              //   ),
-              // ),
-              // const SizedBox(height: 8),
-              // ReusableDropdown<String>(
-              //   value: _selectedBatchType,
-              //   hintText: 'Select batch type',
-              //   items: _batchTypes.map((String type) {
-              //     return DropdownMenuItem<String>(
-              //       value: type,
-              //       child: Text(type),
-              //     );
-              //   }).toList(),
-              //   onChanged: (String? newValue) {
-              //     setState(() {
-              //       _selectedBatchType = newValue;
-              //     });
-              //   },
-              //   validator: (value) {
-              //     if (value == null || value.isEmpty) {
-              //       return 'Please select a batch type';
-              //     }
-              //     return null;
-              //   },
-              // ),
-              // const SizedBox(height: 20),
-
-              // // Hatch Date
-              // CustomDateTextField(
-              //   label: 'Date of Hatching',
-              //   hintText: 'Select hatch date',
-              //   icon: Icons.calendar_today,
-              //   required: true,
-              //   minYear: DateTime.now().year - 2,
-              //   returnFormat: DateReturnFormat.dateTime,
-              //   maxYear: DateTime.now().year,
-              //   controller: _hatchController,
-              //   initialDate: _hatchDate,
-              //   onChanged: (value) {
-              //     if (value != null) {
-              //       setState(() {
-              //         _hatchDate = value;
-              //       });
-              //     }
-              //   },
-              // ),
-              // const SizedBox(height: 20),
-
-              // Initial Count
-              // Text(
-              //   'Initial Count',
-              //   style: Theme.of(context).textTheme.titleMedium!.copyWith(
-              //     fontWeight: FontWeight.bold,
-              //     color: Colors.grey.shade800,
-              //   ),
-              // ),
-              // const SizedBox(height: 8),
-              // ReusableInput(
-              //   controller: _initialQuantityController,
-              //   keyboardType: TextInputType.number,
-              //   validator: (value) {
-              //     if (value == null || value.isEmpty) {
-              //       return 'Please enter initial count';
-              //     }
-              //     if (int.tryParse(value) == null) {
-              //       return 'Please enter a valid number';
-              //     }
-              //     final count = int.parse(value);
-              //     if (count <= 0) {
-              //       return 'Initial count must be greater than 0';
-              //     }
-              //     if (count > availableCapacity) {
-              //       return 'Initial count ($count) exceeds available capacity ($availableCapacity)';
-              //     }
-              //     return null;
-              //   },
-              //   labelText: 'Initial count from hatchery',
-              //   hintText: 'e.g., 1000',
-              // ),
-              // const SizedBox(height: 20),
 
               // Current Count (Birds Alive)
               Text(

@@ -58,6 +58,14 @@ class DateUtil {
     return '${dayNames[date.weekday - 1]}, ${monthNames[date.month - 1]} ${date.day}';
   }
 
+  /// Format date with full day and full month name, no year (e.g., Friday, March 13)
+  static String toFullDateWithDay(DateTime date) {
+    final dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    final monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'];
+    return '${dayNames[date.weekday - 1]}, ${monthNames[date.month - 1]} ${date.day}';
+  }
+
   /// Format time to 12-hour format (e.g., 03:45 PM)
   static String to12HourTime(DateTime date) {
     final hour = date.hour > 12 ? date.hour - 12 : (date.hour == 0 ? 12 : date.hour);

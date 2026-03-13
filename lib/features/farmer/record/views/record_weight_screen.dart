@@ -169,35 +169,6 @@ class _RecordWeightScreenState extends State<RecordWeightScreen> {
               ),
 
 
-
-              // Weight disclaimer banner
-              // Container(
-              //   width: double.infinity,
-              //   padding: const EdgeInsets.all(14),
-              //   decoration: BoxDecoration(
-              //     color: Colors.amber.shade50,
-              //     borderRadius: BorderRadius.circular(12),
-              //     border: Border.all(color: Colors.amber.shade300),
-              //   ),
-              //   child: Row(
-              //     crossAxisAlignment: CrossAxisAlignment.start,
-              //     children: [
-              //       Icon(Icons.info_outline,
-              //           color: Colors.amber.shade800, size: 20),
-              //       const SizedBox(width: 10),
-              //       Expanded(
-              //         child: Text(
-              //           'Weigh at least 10 birds and record the average weight for accurate growth tracking.',
-              //           style: TextStyle(
-              //               fontSize: 13,
-              //               color: Colors.amber.shade900,
-              //               fontWeight: FontWeight.w500),
-              //         ),
-              //       ),
-              //     ],
-              //   ),
-              // ),
-
               const SizedBox(height: 16),
 
               const Text(

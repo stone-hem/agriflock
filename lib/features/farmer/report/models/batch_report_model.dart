@@ -58,6 +58,9 @@ class BatchReportData {
   final BatchMedication medications;
   final FeedingPlan feedingPlan;
   final String reportBy;
+  final double productionCostPerBird;
+  final double totalExpenditure;
+  final String expenditureCurrency;
   final DateTime reportDate;
   final String reportPeriod;
 
@@ -82,6 +85,9 @@ class BatchReportData {
     required this.medications,
     required this.feedingPlan,
     required this.reportBy,
+    required this.productionCostPerBird,
+    required this.totalExpenditure,
+    required this.expenditureCurrency,
     required this.reportDate,
     required this.reportPeriod,
   });
@@ -117,6 +123,9 @@ class BatchReportData {
       medications: BatchMedication.fromJson(medicationsMap ?? {}),
       feedingPlan: FeedingPlan.fromJson(feedingPlanMap ?? {}),
       reportBy: TypeUtils.toStringSafe(json['report_by']),
+      productionCostPerBird: TypeUtils.toDoubleSafe(json['production_cost_per_bird']),
+      totalExpenditure: TypeUtils.toDoubleSafe(json['total_expenditure']),
+      expenditureCurrency: TypeUtils.toStringSafe(json['expenditure_currency']),
       reportDate: TypeUtils.toDateTimeSafe(json['report_date']) ?? DateTime.now(),
       reportPeriod: TypeUtils.toStringSafe(json['report_period']),
     );
@@ -144,6 +153,9 @@ class BatchReportData {
       'medications': medications.toJson(),
       'feeding_plan': feedingPlan.toJson(),
       'report_by': reportBy,
+      'production_cost_per_bird': productionCostPerBird,
+      'total_expenditure': totalExpenditure,
+      'expenditure_currency': expenditureCurrency,
       'report_date': reportDate.toIso8601String(),
       'report_period': reportPeriod,
     };
@@ -258,8 +270,10 @@ class BatchFeed {
   final int bagsConsumedNight;
   final int totalBagsConsumed;
   final int balanceInStore;
+  final List<FeedItemInStore> feedItemsInStore;
   final String feedType;
   final String feedVariance;
+  final double variancePct;
 
   BatchFeed({
     required this.bagsConsumed,
@@ -267,19 +281,26 @@ class BatchFeed {
     required this.bagsConsumedNight,
     required this.totalBagsConsumed,
     required this.balanceInStore,
+    required this.feedItemsInStore,
     required this.feedType,
     required this.feedVariance,
+    required this.variancePct,
   });
 
   factory BatchFeed.fromJson(Map<String, dynamic> json) {
+    final itemsList = TypeUtils.toListSafe<dynamic>(json['feed_items_in_store']);
     return BatchFeed(
       bagsConsumed: TypeUtils.toIntSafe(json['bags_consumed']),
       bagsConsumedDay: TypeUtils.toIntSafe(json['bags_consumed_day']),
       bagsConsumedNight: TypeUtils.toIntSafe(json['bags_consumed_night']),
       totalBagsConsumed: TypeUtils.toIntSafe(json['total_bags_consumed']),
       balanceInStore: TypeUtils.toIntSafe(json['balance_in_store']),
+      feedItemsInStore: itemsList
+          .map((e) => FeedItemInStore.fromJson(e is Map<String, dynamic> ? e : {}))
+          .toList(),
       feedType: TypeUtils.toStringSafe(json['feed_type']),
       feedVariance: TypeUtils.toStringSafe(json['feed_variance']),
+      variancePct: TypeUtils.toDoubleSafe(json['variance_pct']),
     );
   }
 
@@ -290,8 +311,38 @@ class BatchFeed {
       'bags_consumed_night': bagsConsumedNight,
       'total_bags_consumed': totalBagsConsumed,
       'balance_in_store': balanceInStore,
+      'feed_items_in_store': feedItemsInStore.map((e) => e.toJson()).toList(),
       'feed_type': feedType,
       'feed_variance': feedVariance,
+      'variance_pct': variancePct,
+    };
+  }
+}
+
+class FeedItemInStore {
+  final String itemName;
+  final double quantity;
+  final String unit;
+
+  FeedItemInStore({
+    required this.itemName,
+    required this.quantity,
+    required this.unit,
+  });
+
+  factory FeedItemInStore.fromJson(Map<String, dynamic> json) {
+    return FeedItemInStore(
+      itemName: TypeUtils.toStringSafe(json['item_name']),
+      quantity: TypeUtils.toDoubleSafe(json['quantity']),
+      unit: TypeUtils.toStringSafe(json['unit']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'item_name': itemName,
+      'quantity': quantity,
+      'unit': unit,
     };
   }
 }
@@ -455,7 +506,9 @@ class BatchVaccination {
 class FeedingPlan {
   final double expectedFeedPerDayKg;
   final double feedPerBirdPerDayGrams;
+  final double expectedFeedPerWeekKg;
   final int expectedFeedPerWeekBags;
+  final String expectedAvgWeight;
   final String feedTypeInUse;
   final String stageName;
   final int timesPerDay;
@@ -464,7 +517,9 @@ class FeedingPlan {
   FeedingPlan({
     required this.expectedFeedPerDayKg,
     required this.feedPerBirdPerDayGrams,
+    required this.expectedFeedPerWeekKg,
     required this.expectedFeedPerWeekBags,
+    required this.expectedAvgWeight,
     required this.feedTypeInUse,
     required this.stageName,
     required this.timesPerDay,
@@ -477,7 +532,9 @@ class FeedingPlan {
     return FeedingPlan(
       expectedFeedPerDayKg: TypeUtils.toDoubleSafe(json['expected_feed_per_day_kg']),
       feedPerBirdPerDayGrams: TypeUtils.toDoubleSafe(json['feed_per_bird_per_day_grams']),
+      expectedFeedPerWeekKg: TypeUtils.toDoubleSafe(json['expected_feed_per_week_kg']),
       expectedFeedPerWeekBags: TypeUtils.toIntSafe(json['expected_feed_per_week_bags']),
+      expectedAvgWeight: TypeUtils.toStringSafe(json['expected_avg_weight']),
       feedTypeInUse: TypeUtils.toStringSafe(json['feed_type_in_use']),
       stageName: TypeUtils.toStringSafe(json['stage_name']),
       timesPerDay: TypeUtils.toIntSafe(json['times_per_day']),
@@ -489,7 +546,9 @@ class FeedingPlan {
     return {
       'expected_feed_per_day_kg': expectedFeedPerDayKg,
       'feed_per_bird_per_day_grams': feedPerBirdPerDayGrams,
+      'expected_feed_per_week_kg': expectedFeedPerWeekKg,
       'expected_feed_per_week_bags': expectedFeedPerWeekBags,
+      'expected_avg_weight': expectedAvgWeight,
       'feed_type_in_use': feedTypeInUse,
       'stage_name': stageName,
       'times_per_day': timesPerDay,
