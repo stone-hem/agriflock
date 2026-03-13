@@ -14,27 +14,26 @@ class VisitDetailsSection extends StatelessWidget {
     this.accentColor = Colors.green,
   });
 
-
-
   @override
   Widget build(BuildContext context) {
-    // Collect bird type info from batches
-    final birdSummary = _buildBirdSummary();
+    final hasBatches = visit.batches.isNotEmpty;
+    final hasBirdTypes = visit.birdTypes.isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Bird Info Section
-        if (birdSummary.isNotEmpty) ...[
+        // ── Bird Info Section ──
+        if (hasBatches) ...[
+          // Case 2: has batches — show each batch as a line
           _SectionRow(
             icon: Icons.egg_outlined,
             iconColor: accentColor,
             children: [
-              for (final info in birdSummary)
+              for (final batch in visit.batches)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 2),
-                  child:Text(
-                    info,
+                  child: Text(
+                    '${batch.birdTypeName} – ${batch.birdsCount} birds',
                     style: TextStyle(
                       color: Colors.grey.shade700,
                       fontSize: 13,
@@ -42,42 +41,88 @@ class VisitDetailsSection extends StatelessWidget {
                     ),
                   ),
                 ),
-
-             Text(' Age ${visit.ageInDays??1} days old')
+            ],
+          ),
+        ] else if (hasBirdTypes || visit.birdsCount > 0) ...[
+          // Case 1: no batches — show bird type chips + total count
+          _SectionRow(
+            icon: Icons.egg_outlined,
+            iconColor: accentColor,
+            children: [
+              Text(
+                '${visit.birdsCount} birds',
+                style: TextStyle(
+                    color: Colors.grey.shade700,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600),
+              ),
+              if (hasBirdTypes) ...[
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 4,
+                  runSpacing: 6,
+                  children: visit.birdTypes.map((bt) => Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: accentColor.withOpacity(0.10),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: accentColor.withOpacity(0.35)),
+                    ),
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      Icon(Icons.pets, size: 11, color: accentColor),
+                      const SizedBox(width: 4),
+                      ConstrainedBox(
+                       constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width*0.65),
+                        child: Text(bt.name,
+                            style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: accentColor)),
+                      ),
+                    ]),
+                  )).toList(),
+                ),
+              ],
             ],
           ),
         ],
+        const SizedBox(height: 10),
 
+        // ── Mortality ──
         _SectionRow(
-          icon: Icons.reduce_capacity,
-          iconColor: accentColor,
+          icon: Icons.warning_amber_rounded,
+          iconColor: (visit.mortality ?? 0) > 0 ? Colors.red.shade400 : accentColor,
           children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 2),
-              child:Text(
-                'Mortality count - ${visit.mortality ?? 0}',
-                style: TextStyle(
-                  color: Colors.grey.shade700,
-                  fontSize: 13,
-                  height: 1.4,
-                ),
+            Text(
+              'Mortality: ${visit.mortality ?? 0} birds',
+              style: TextStyle(
+                color: (visit.mortality ?? 0) > 0
+                    ? Colors.red.shade700
+                    : Colors.grey.shade700,
+                fontSize: 13,
+                height: 1.4,
               ),
             ),
           ],
         ),
         const SizedBox(height: 10),
 
+        // ── Age ──
         _SectionRow(
-          icon: Icons.reduce_capacity,
+          icon: Icons.calendar_month_outlined,
           iconColor: accentColor,
           children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 2),
-              child: Text(' Age ${visit.ageInDays??1} days old', style: TextStyle(
-    color: Colors.grey.shade700,
-    fontSize: 13,
-    height: 1.4,
-    ),)
+            Text(
+              visit.ageInDays != null
+                  ? 'Age: ${visit.ageInDays} day${visit.ageInDays == 1 ? '' : 's'} old'
+                  : hasBatches
+                      ? 'Age: varies per batch'
+                      : 'Age: not specified',
+              style: TextStyle(
+                color: Colors.grey.shade700,
+                fontSize: 13,
+                height: 1.4,
+              ),
             ),
           ],
         ),
@@ -100,7 +145,9 @@ class VisitDetailsSection extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  DateUtil.toShortDateWithDay(DateTime.parse(visit.preferredDate)),
+                  DateUtil.toShortDateWithDay(
+                    DateTime.parse(visit.preferredDate),
+                  ),
                   style: TextStyle(
                     color: Colors.grey.shade700,
                     fontSize: 13,
@@ -118,7 +165,6 @@ class VisitDetailsSection extends StatelessWidget {
                 ),
               ],
             ),
-
           ],
         ),
         // Requested Visit Date/Time
@@ -156,7 +202,6 @@ class VisitDetailsSection extends StatelessWidget {
                 ),
               ],
             ),
-
           ],
         ),
 
@@ -173,7 +218,6 @@ class VisitDetailsSection extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                   color: Colors.grey.shade500,
                 ),
-
               ),
               const SizedBox(height: 4),
               for (final service in visit.serviceCosts)
@@ -221,9 +265,10 @@ class VisitDetailsSection extends StatelessWidget {
             children: [
               _CostRow(
                 label: 'Payment Mode',
-                value: '${visit.paymentMode.isNotEmpty?visit.paymentMode.replaceAll('_',' '):'Not Provided'}',
+                value:
+                    '${visit.paymentMode.isNotEmpty ? visit.paymentMode.replaceAll('_', ' ') : 'Not Provided'}',
               ),
-              SizedBox(height: 10,),
+              SizedBox(height: 10),
               _CostRow(
                 label: 'Service Cost',
                 value: 'KES ${visit.serviceFee.toStringAsFixed(2)}',
@@ -251,28 +296,10 @@ class VisitDetailsSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 10),
-
-
-
-
       ],
     );
   }
 
-  /// Build a summary of bird info from batches.
-  List<String> _buildBirdSummary() {
-    final lines = <String>[];
-
-    if (visit.batches.isNotEmpty) {
-      for (final batch in visit.batches) {
-        lines.add('${batch.birdTypeName} – ${batch.birdsCount} birds');
-      }
-    } else if (visit.birdsCount > 0) {
-      lines.add('${visit.birdsCount} birds');
-    }
-
-    return lines;
-  }
 }
 
 /// A row with a leading icon and content children.
@@ -338,10 +365,7 @@ class _CostRow extends StatelessWidget {
               const SizedBox(width: 4),
               Text(
                 '($subtitle)',
-                style: TextStyle(
-                  color: Colors.grey.shade500,
-                  fontSize: 11,
-                ),
+                style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
               ),
             ],
           ],
