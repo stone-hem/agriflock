@@ -111,6 +111,7 @@ class VetDashboardStats {
 
 class VisitDashboard {
   final String id;
+  final String farmerId;
   final String farmerName;
   final String farmName;
   final int birdCount;
@@ -122,6 +123,7 @@ class VisitDashboard {
 
   VisitDashboard({
     required this.id,
+    required this.farmerId,
     required this.farmerName,
     required this.farmName,
     required this.birdCount,
@@ -135,6 +137,7 @@ class VisitDashboard {
   factory VisitDashboard.fromJson(Map<String, dynamic> json) {
     return VisitDashboard(
       id: TypeUtils.toStringSafe(json['id']),
+      farmerId: TypeUtils.toStringSafe(json['farmer_id']),
       farmerName: TypeUtils.toStringSafe(json['farmer_name']),
       farmName: TypeUtils.toStringSafe(json['farm_name']),
       birdCount: TypeUtils.toIntSafe(json['bird_count']),
@@ -149,6 +152,7 @@ class VisitDashboard {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'farmer_id': farmerId,
       'farmer_name': farmerName,
       'farm_name': farmName,
       'bird_count': birdCount,

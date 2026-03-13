@@ -1,5 +1,6 @@
 import 'package:agriflock/core/utils/api_error_handler.dart';
 import 'package:agriflock/core/utils/refresh_bus.dart';
+import 'package:agriflock/core/widgets/app_snack_bar.dart';
 import 'package:agriflock/core/utils/log_util.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/utils/toast_util.dart';
@@ -252,7 +253,15 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
           }
           break;
         case Failure(message: final error):
-          ApiErrorHandler.handle(error);
+          if (mounted) {
+            AppSnackBar.show(
+              context,
+              message: error,
+              type: SnackBarType.error,
+              floating: true,
+              duration: const Duration(seconds: 30),
+            );
+          }
           break;
       }
     } catch (e) {

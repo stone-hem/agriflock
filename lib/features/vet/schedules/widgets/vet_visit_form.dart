@@ -1,4 +1,4 @@
-import 'package:agriflock/core/utils/result.dart';
+import 'package:agriflock/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock/features/vet/schedules/repo/visit_repo.dart';
 import 'package:flutter/material.dart';
 
@@ -9,10 +9,14 @@ class VetVisitFormPage extends StatefulWidget {
   /// The farmer's user ID.
   final String farmerId;
 
+  /// When true, automatically calls completeVisit after the report is submitted.
+  final bool autoComplete;
+
   const VetVisitFormPage({
     super.key,
     required this.orderId,
     required this.farmerId,
+    this.autoComplete = false,
   });
 
   @override
@@ -73,7 +77,7 @@ class _VetVisitFormPageState extends State<VetVisitFormPage> {
   final TextEditingController _rec1 = TextEditingController();
   final TextEditingController _rec2 = TextEditingController();
   final TextEditingController _followUpNotes = TextEditingController();
-  DateTime? _followUpDate;
+  final TextEditingController _followUpDateController = TextEditingController();
   bool _farmerConfirmed = false;
   bool _isSubmitting = false;
 
@@ -111,6 +115,7 @@ class _VetVisitFormPageState extends State<VetVisitFormPage> {
     _rec1.dispose();
     _rec2.dispose();
     _followUpNotes.dispose();
+    _followUpDateController.dispose();
     super.dispose();
   }
 
@@ -165,9 +170,7 @@ class _VetVisitFormPageState extends State<VetVisitFormPage> {
                   rec1: _rec1,
                   rec2: _rec2,
                   followUpNotes: _followUpNotes,
-                  followUpDate: _followUpDate,
-                  onFollowUpDateChanged: (d) =>
-                      setState(() => _followUpDate = d),
+                  followUpDateController: _followUpDateController,
                   confirmed: _farmerConfirmed,
                   isSubmitting: _isSubmitting,
                   onConfirm: (v) => setState(() => _farmerConfirmed = v!),
@@ -218,29 +221,40 @@ class _VetVisitFormPageState extends State<VetVisitFormPage> {
           .toList(),
       recommendation1: _rec1.text.trim(),
       recommendation2: _rec2.text.trim(),
-      followUpDate: _followUpDate?.toUtc().toIso8601String(),
+      followUpDate: _followUpDateController.text.trim().isEmpty ? null : _followUpDateController.text.trim(),
       followUpNotes: _followUpNotes.text.trim(),
     );
 
     if (!mounted) return;
-    setState(() => _isSubmitting = false);
 
+    bool succeeded = false;
     result.when(
-      success: (_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Visit report submitted successfully'),
-            backgroundColor: Color(0xFF2E7D32),
-          ),
-        );
-        Navigator.of(context).pop();
-      },
+      success: (_) { succeeded = true; },
       failure: (msg, _, __) {
+        setState(() => _isSubmitting = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(msg), backgroundColor: Colors.red),
         );
       },
     );
+
+    if (!succeeded) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Visit report submitted successfully'),
+        backgroundColor: Color(0xFF2E7D32),
+      ),
+    );
+
+    if (widget.autoComplete) {
+      await _repo.completeVisit(visitId: widget.orderId, body: {});
+    }
+
+    if (mounted) {
+      setState(() => _isSubmitting = false);
+      Navigator.of(context).pop(widget.autoComplete);
+    }
   }
 }
 
@@ -664,9 +678,7 @@ class _PageE extends StatelessWidget {
 }
 
 class _PageF extends StatelessWidget {
-  final TextEditingController rec1, rec2, followUpNotes;
-  final DateTime? followUpDate;
-  final ValueChanged<DateTime?> onFollowUpDateChanged;
+  final TextEditingController rec1, rec2, followUpNotes, followUpDateController;
   final bool confirmed;
   final bool isSubmitting;
   final ValueChanged<bool?> onConfirm;
@@ -676,8 +688,7 @@ class _PageF extends StatelessWidget {
     required this.rec1,
     required this.rec2,
     required this.followUpNotes,
-    required this.followUpDate,
-    required this.onFollowUpDateChanged,
+    required this.followUpDateController,
     required this.confirmed,
     required this.isSubmitting,
     required this.onConfirm,
@@ -710,29 +721,12 @@ class _PageF extends StatelessWidget {
           // Follow-up
           const Text('Follow-up (Optional)',
               style: TextStyle(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 8),
-          OutlinedButton.icon(
-            onPressed: () async {
-              final picked = await showDatePicker(
-                context: context,
-                initialDate: followUpDate ??
-                    DateTime.now().add(const Duration(days: 7)),
-                firstDate: DateTime.now(),
-                lastDate:
-                    DateTime.now().add(const Duration(days: 365)),
-              );
-              if (picked != null) onFollowUpDateChanged(picked);
-            },
-            icon: const Icon(Icons.calendar_today, size: 16),
-            label: Text(followUpDate == null
-                ? 'Select follow-up date'
-                : 'Follow-up: ${followUpDate!.toLocal().toString().split(' ')[0]}'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF2E7D32),
-              side: const BorderSide(color: Color(0xFF2E7D32)),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-            ),
+          CustomDateTextField(
+            label: 'Follow-up Date',
+            icon: Icons.calendar_today,
+            controller: followUpDateController,
+            minYear: DateTime.now().year,
+            returnFormat: DateReturnFormat.isoString,
           ),
           const SizedBox(height: 10),
           TextField(

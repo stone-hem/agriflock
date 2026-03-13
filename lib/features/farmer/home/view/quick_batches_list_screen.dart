@@ -438,9 +438,10 @@ class _QuickBatchesListScreenState extends State<QuickBatchesListScreen> {
                   child: const Icon(Icons.pets, color: Colors.green),
                 ),
                 const SizedBox(width: 12),
+                if (batch.birdType != null)
                 Expanded(
                   child: Text(
-                    batch.batchNumber,
+                    batch.birdType!.name,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -494,7 +495,6 @@ class _QuickBatchesListScreenState extends State<QuickBatchesListScreen> {
                   _buildBatchInfo(Icons.home, batch.house!.name, Colors.purple),
               ],
             ),
-            if (batch.birdType != null)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
                 child: Container(
@@ -507,7 +507,7 @@ class _QuickBatchesListScreenState extends State<QuickBatchesListScreen> {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    batch.birdType!.name,
+                    batch.batchNumber,
                     style: const TextStyle(
                       fontSize: 11,
                       color: Colors.green,

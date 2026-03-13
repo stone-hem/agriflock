@@ -130,12 +130,6 @@ class _VetHomeScreenState extends State<VetHomeScreen> {
           body: {},
         );
         break;
-      case 'complete':
-        result = await _visitsRepository.completeVisit(
-          visitId: appointment.id,
-          body: {},
-        );
-        break;
       case 'cancel':
         result = await _visitsRepository.cancelVisit(
           visitId: appointment.id,
@@ -485,7 +479,17 @@ class _VetHomeScreenState extends State<VetHomeScreen> {
           onAccept: () => _showAcceptDialog(appointment),
           onReject: () => _showRejectDialog(appointment),
           onStart: () => _handleAppointmentAction(appointment, 'start'),
-          onComplete: () => _handleAppointmentAction(appointment, 'complete'),
+          onComplete: () async {
+            final result = await context.push<bool>(
+              '/vet-visit-form',
+              extra: {
+                'orderId': appointment.id,
+                'farmerId': appointment.farmerId,
+                'autoComplete': true,
+              },
+            );
+            if (result == true) _onRefresh();
+          },
           onCancel: () => _handleAppointmentAction(appointment, 'cancel'),
         )),
       ],
@@ -728,7 +732,7 @@ class _AppointmentItem extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      appointment.farmName,
+                      appointment.farmName.toLowerCase().contains('unknown')?'Guest Farmer':'Farm: ${appointment.farmName}',
                       style: TextStyle(
                         color: Colors.grey.shade600,
                         fontSize: 12,

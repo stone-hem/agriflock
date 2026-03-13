@@ -9,9 +9,7 @@ import 'package:agriflock/features/farmer/vet/repo/vet_farmer_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-// ignore_for_file: deprecated_member_use
 
-// ignore_for_file: deprecated_member_use
 
 class MyVetOrdersCombinedScreen extends StatefulWidget {
   final int initialTab;
@@ -1228,6 +1226,25 @@ class _CompletedOrdersTabState extends State<_CompletedOrdersTab>
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => context.push(
+                  '/vet-report-view',
+                  extra: {'orderId': order.id},
+                ),
+                icon: const Icon(Icons.assignment_outlined, size: 16),
+                label: const Text('View Vet Report'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.green.shade700,
+                  side: BorderSide(color: Colors.green.shade300),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
             ),
           ],
         ),

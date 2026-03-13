@@ -2,7 +2,6 @@ import 'package:agriflock/core/utils/date_util.dart';
 import 'package:agriflock/features/vet/schedules/models/visit_model.dart';
 import 'package:agriflock/features/vet/schedules/widgets/visit_details_section.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 class CompletedVisitCard extends StatelessWidget {
   final Visit visit;
@@ -286,20 +285,6 @@ class CompletedVisitCard extends StatelessWidget {
                     ],
                   ),
                 ],
-                const SizedBox(height: 8),
-                if (visit.completedAt != null) ...[
-                  TextButton.icon(
-                    onPressed: () => context.push('/vet-visit-form', extra: {
-                      'orderId': visit.id,
-                      'farmerId': visit.farmerId,
-                    }),
-                    label: const Text('Submit Visit Report'),
-                    icon: const Icon(Icons.assignment_outlined, size: 16),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.green.shade700,
-                    ),
-                  ),
-                ]
               ],
             ),
           ),

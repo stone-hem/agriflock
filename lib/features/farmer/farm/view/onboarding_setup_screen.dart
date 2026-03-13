@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -64,7 +65,9 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
   bool _hasChickCost = true;
   String _currency = '';
   final _currentWeightController = TextEditingController();
-  final _expectedWeightController = TextEditingController();
+  double? _recommendedWeight;
+  bool _isLoadingRec = false;
+  Timer? _debounce;
   final _notesController = TextEditingController();
   final _chickCostController = TextEditingController();
   final _chickAgeController = TextEditingController();
@@ -120,6 +123,8 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
     _hatchController.text = DateUtil.toReadableDate(DateTime.now());
     _loadBirdTypes();
     _loadCurrency();
+    _chickAgeController.addListener(_scheduleRecommendedWeightFetch);
+    _hatchController.addListener(_scheduleRecommendedWeightFetch);
   }
 
   Future<void> _loadCurrency() async {
@@ -166,6 +171,109 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
         setState(() => _isLoadingBirdTypes = false);
         LogUtil.error('Failed to load bird types: $msg');
     }
+  }
+
+  void _scheduleRecommendedWeightFetch() {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 600), _fetchRecommendedWeight);
+  }
+
+  Future<void> _fetchRecommendedWeight() async {
+    final breedId = _selectedBirdTypeId;
+    if (breedId == null || breedId.isEmpty) {
+      setState(() => _recommendedWeight = null);
+      return;
+    }
+
+    int? ageDays;
+    if (_isOwnHatch) {
+      try {
+        final hatch = DateTime.parse(_hatchController.text);
+        ageDays = DateTime.now().difference(hatch).inDays;
+      } catch (_) {}
+    } else {
+      ageDays = int.tryParse(_chickAgeController.text.trim());
+    }
+
+    if (ageDays == null || ageDays < 0) {
+      setState(() => _recommendedWeight = null);
+      return;
+    }
+
+    setState(() => _isLoadingRec = true);
+    try {
+      final response = await apiClient.get('/breeds/$breedId/recommended-weight?age=$ageDays');
+      if (!mounted) return;
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final val = double.tryParse(response.body.trim());
+        setState(() {
+          _recommendedWeight = val;
+          _isLoadingRec = false;
+        });
+      } else {
+        setState(() {
+          _recommendedWeight = null;
+          _isLoadingRec = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() {
+        _recommendedWeight = null;
+        _isLoadingRec = false;
+      });
+    }
+  }
+
+  Widget _buildRecommendedWeightBanner() {
+    if (_isLoadingRec) {
+      return Container(
+        margin: const EdgeInsets.only(top: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.blue.shade50,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.blue.shade200),
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 14, height: 14,
+              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.blue.shade600),
+            ),
+            const SizedBox(width: 10),
+            Text('Fetching recommended weight…',
+                style: TextStyle(fontSize: 12, color: Colors.blue.shade700)),
+          ],
+        ),
+      );
+    }
+    if (_recommendedWeight != null) {
+      return Container(
+        margin: const EdgeInsets.only(top: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.blue.shade50,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.blue.shade200),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.info_outline, size: 16, color: Colors.blue.shade600),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Recommended weight at this age: ${_recommendedWeight!.toStringAsFixed(3)} kg/bird',
+                style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.blue.shade800,
+                    fontWeight: FontWeight.w500),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return const SizedBox.shrink();
   }
 
   void _goToPage(int page) {
@@ -400,9 +508,6 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
         if (_currentWeightController.text.isNotEmpty)
           'current_weight':
               double.parse(_currentWeightController.text.trim()),
-        if (_expectedWeightController.text.isNotEmpty)
-          'expected_weight':
-              double.parse(_expectedWeightController.text.trim()),
         if (_notesController.text.trim().isNotEmpty)
           'notes': _notesController.text.trim(),
       };
@@ -907,6 +1012,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                               _selectedLayersSubTypeId = null;
                             }
                           });
+                          _scheduleRecommendedWeightFetch();
                         },
                         validator: (v) =>
                             (v == null || v.isEmpty) ? 'Please select a bird type' : null,
@@ -951,6 +1057,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                                             _selectedLayersSubTypeId = val;
                                             _selectedBirdTypeId = val;
                                           });
+                                          _scheduleRecommendedWeightFetch();
                                         },
                                         activeColor: Colors.amber.shade700,
                                         contentPadding: EdgeInsets.zero,
@@ -1389,27 +1496,8 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
               hintText: 'e.g., 0.0',
               suffixText: 'Max 10',
             ),
-            const SizedBox(height: 20),
-
-            // ── Expected weight (optional) ─────────────────────────────
-            ReusableDecimalInput(
-              topLabel: 'Expected weight (kg)  Per bird(Optional)',
-              controller: _expectedWeightController,
-              validator: (value) {
-                if (value == null || value.isEmpty) return null;
-                final expected = double.tryParse(value);
-                if (expected == null) return 'Please enter a valid number or leave empty';
-                final current =
-                    double.tryParse(_currentWeightController.text) ?? 0.0;
-                if (expected < current) {
-                  return 'Expected weight should be greater than current weight';
-                }
-                return null;
-              },
-              labelText: 'Expected average weight at removal/sale',
-              hintText: 'e.g., 2.5',
-              suffixText: 'Max 10',
-            ),
+            const SizedBox(height: 12),
+            _buildRecommendedWeightBanner(),
             const SizedBox(height: 20),
 
             // ── Notes (optional) ───────────────────────────────────────
@@ -1747,11 +1835,11 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
     _initialQuantityController.dispose();
     _birdsAliveController.dispose();
     _currentWeightController.dispose();
-    _expectedWeightController.dispose();
     _notesController.dispose();
     _chickCostController.dispose();
     _chickAgeController.dispose();
     _hatchSourceController.dispose();
+    _debounce?.cancel();
     super.dispose();
   }
 }

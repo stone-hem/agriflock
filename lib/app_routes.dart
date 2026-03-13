@@ -56,6 +56,7 @@ import 'package:agriflock/features/farmer/vet/models/my_order_list_item.dart' hi
 import 'package:agriflock/features/farmer/vet/models/vet_farmer_model.dart';
 import 'package:agriflock/features/farmer/vet/my_vet_orders_combined_screen.dart';
 import 'package:agriflock/features/farmer/vet/my_disputes_screen.dart';
+import 'package:agriflock/features/farmer/vet/vet_report_view_screen.dart';
 import 'package:agriflock/features/farmer/vet/farmer_vet_payment_screen.dart';
 import 'package:agriflock/features/farmer/vet/vet_details_screen.dart';
 import 'package:agriflock/features/farmer/vet/vet_order_screen.dart';
@@ -858,12 +859,22 @@ class AppRoutes {
           },
         ),
         GoRoute(
+          path: '/vet-report-view',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>? ?? {};
+            return VetReportViewScreen(
+              orderId: extra['orderId'] as String? ?? '',
+            );
+          },
+        ),
+        GoRoute(
           path: '/vet-visit-form',
           builder: (context, state) {
             final extra = state.extra as Map<String, dynamic>? ?? {};
             return VetVisitFormPage(
               orderId: extra['orderId'] as String? ?? '',
               farmerId: extra['farmerId'] as String? ?? '',
+              autoComplete: extra['autoComplete'] as bool? ?? false,
             );
           },
         ),

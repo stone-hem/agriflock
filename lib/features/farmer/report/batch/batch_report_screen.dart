@@ -1,4 +1,5 @@
 import 'package:agriflock/core/utils/date_util.dart';
+import 'package:agriflock/features/farmer/vet/widgets/vet_reports_tab.dart';
 import 'package:agriflock/core/utils/feed_format_util.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/widgets/expense/expense_button.dart';
@@ -50,7 +51,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _initializeDefaults();
     _loadCurrency();
     _loadReport();
@@ -267,6 +268,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
           tabs: const [
             Tab(text: 'Production Report'),
             Tab(text: 'Financial Report'),
+            Tab(text: 'Vet Reports'),
           ],
         ),
       ),
@@ -276,6 +278,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
         children: [
           _buildProductionTab(),
           _buildFinancialTab(),
+          VetReportsTab(batchId: widget.batchId),
         ],
       ),
     );

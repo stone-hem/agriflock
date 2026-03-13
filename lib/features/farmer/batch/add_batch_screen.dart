@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:agriflock/core/utils/api_error_handler.dart';
 import 'package:agriflock/core/utils/date_util.dart';
@@ -35,7 +36,9 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
   final _initialQuantityController = TextEditingController();
   final _birdsAliveController = TextEditingController();
   final _currentWeightController = TextEditingController();
-  final _expectedWeightController = TextEditingController();
+  double? _recommendedWeight;
+  bool _isLoadingRec = false;
+  Timer? _debounce;
   final _notesController = TextEditingController();
   final _chickCostController = TextEditingController();
   final _chickAgeController = TextEditingController();
@@ -96,6 +99,8 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
     _initializeForm();
     _loadBirdTypes();
     _calculateAvailableCapacity();
+    _chickAgeController.addListener(_scheduleRecommendedWeightFetch);
+    _hatchController.addListener(_scheduleRecommendedWeightFetch);
   }
 
   Future<void> _loadCurrency() async {
@@ -165,6 +170,118 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
         }
       }
     });
+  }
+
+  void _scheduleRecommendedWeightFetch() {
+    _debounce?.cancel();
+    _debounce = Timer(
+      const Duration(milliseconds: 600),
+      _fetchRecommendedWeight,
+    );
+  }
+
+  Future<void> _fetchRecommendedWeight() async {
+    final breedId = _selectedBirdTypeId;
+    if (breedId == null || breedId.isEmpty) {
+      setState(() => _recommendedWeight = null);
+      return;
+    }
+
+    int? ageDays;
+    if (_isOwnHatch) {
+      try {
+        final hatch = DateTime.parse(_hatchController.text);
+        ageDays = DateTime.now().difference(hatch).inDays;
+      } catch (_) {}
+    } else {
+      final raw = int.tryParse(_chickAgeController.text.trim());
+      if (raw != null) {
+        ageDays = _ageInWeeks ? raw * 7 : raw;
+      }
+    }
+
+    if (ageDays == null || ageDays < 0) {
+      setState(() => _recommendedWeight = null);
+      return;
+    }
+
+    setState(() => _isLoadingRec = true);
+    try {
+      final response = await apiClient
+          .get('/breeds/$breedId/recommended-weight?age=$ageDays');
+      if (!mounted) return;
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final val = double.tryParse(response.body.trim());
+        setState(() {
+          _recommendedWeight = val;
+          _isLoadingRec = false;
+        });
+      } else {
+        setState(() {
+          _recommendedWeight = null;
+          _isLoadingRec = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() {
+        _recommendedWeight = null;
+        _isLoadingRec = false;
+      });
+    }
+  }
+
+  Widget _buildRecommendedWeightBanner() {
+    if (_isLoadingRec) {
+      return Container(
+        margin: const EdgeInsets.only(top: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.blue.shade50,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.blue.shade200),
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(
+                  strokeWidth: 2, color: Colors.blue.shade600),
+            ),
+            const SizedBox(width: 10),
+            Text('Fetching recommended weight…',
+                style: TextStyle(fontSize: 12, color: Colors.blue.shade700)),
+          ],
+        ),
+      );
+    }
+    if (_recommendedWeight != null) {
+      return Container(
+        margin: const EdgeInsets.only(top: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.blue.shade50,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.blue.shade200),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.info_outline, size: 16, color: Colors.blue.shade600),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Recommended weight at this age: ${_recommendedWeight!.toStringAsFixed(3)} kg/bird',
+                style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.blue.shade800,
+                    fontWeight: FontWeight.w500),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return const SizedBox.shrink();
   }
 
   @override
@@ -371,6 +488,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                           _selectedLayersSubTypeId = null;
                         }
                       });
+                      _scheduleRecommendedWeightFetch();
                     },
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -420,6 +538,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                                         _selectedLayersSubTypeId = val;
                                         _selectedBirdTypeId = val;
                                       });
+                                      _scheduleRecommendedWeightFetch();
                                     },
                                     activeColor: Colors.amber.shade700,
                                     contentPadding: EdgeInsets.zero,
@@ -990,34 +1109,8 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                 hintText: 'e.g., 0.0',
                 suffixText: 'Max 10',
               ),
-              const SizedBox(height: 20),
-
-              // Expected Weight
-              ReusableDecimalInput(
-                topLabel: 'Expected weight (kg)  Per bird(Optional)',
-                controller: _expectedWeightController,
-                validator: (value) {
-                  // Allow empty/null value since it's not required
-                  if (value == null || value.isEmpty) {
-                    return null; // No error, field is optional
-                  }
-
-                  final expected = double.tryParse(value);
-                  if (expected == null) {
-                    return 'Please enter a valid number or leave empty';
-                  }
-
-                  final current = double.tryParse(_currentWeightController.text) ?? 0.0;
-                  if (expected < current) {
-                    return 'Expected weight should be greater than current weight';
-                  }
-
-                  return null;
-                },
-                labelText: 'Expected average weight at removal/sale',
-                hintText: 'e.g., 2.5',
-                suffixText: 'Max 10',
-              ),
+              const SizedBox(height: 12),
+              _buildRecommendedWeightBanner(),
               const SizedBox(height: 20),
 
 
@@ -1202,7 +1295,6 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
         if(_isOwnHatch)'hatch_date': DateTime.parse(_hatchController.text).toUtc().toIso8601String(), // Date only
         'birds_alive': int.parse(_birdsAliveController.text.trim()),
         'current_weight': _currentWeightController.text.isNotEmpty?double.parse(_currentWeightController.text.trim()):null,
-        'expected_weight': _expectedWeightController.text.isNotEmpty?double.parse(_expectedWeightController.text.trim()):null,
         'cost_per_bird':double.tryParse(_chickCostController.text.trim()) ?? 0,
         if (!_isOwnHatch)
           'age_at_purchase': _ageInWeeks
@@ -1267,11 +1359,11 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
     _initialQuantityController.dispose();
     _birdsAliveController.dispose();
     _currentWeightController.dispose();
-    _expectedWeightController.dispose();
     _notesController.dispose();
     _chickCostController.dispose();
     _chickAgeController.dispose();
     _hatchSourceController.dispose();
+    _debounce?.cancel();
     super.dispose();
   }
 }

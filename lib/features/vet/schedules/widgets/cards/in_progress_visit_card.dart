@@ -2,8 +2,9 @@ import 'package:agriflock/features/vet/schedules/models/visit_model.dart';
 import 'package:agriflock/features/vet/schedules/repo/visit_repo.dart';
 import 'package:agriflock/features/vet/schedules/widgets/visit_details_section.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
-class InProgressVisitCard extends StatefulWidget {
+class InProgressVisitCard extends StatelessWidget {
   final Visit visit;
   final VisitsRepository repository;
   final VoidCallback onActionCompleted;
@@ -16,224 +17,6 @@ class InProgressVisitCard extends StatefulWidget {
     required this.onActionCompleted,
     this.onStatusChanged,
   });
-
-  @override
-  State<InProgressVisitCard> createState() => _InProgressVisitCardState();
-}
-
-class _InProgressVisitCardState extends State<InProgressVisitCard> {
-  bool _isProcessing = false;
-  bool? _followUpRequired; // true/false for radio buttons
-
-  Future<void> _completeVisit(Map<String, dynamic> data) async {
-    if (_isProcessing) return;
-
-    setState(() => _isProcessing = true);
-
-    final result = await widget.repository.completeVisit(
-      visitId: widget.visit.id,
-      body: data,
-    );
-
-    if (mounted) {
-      result.when(
-        success: (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Visit completed successfully'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          widget.onActionCompleted();
-          widget.onStatusChanged?.call(VisitStatus.completed.value);
-          setState(() => _isProcessing = false);
-        },
-        failure: (message, _, __) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(message),
-              backgroundColor: Colors.red,
-            ),
-          );
-          setState(() => _isProcessing = false);
-        },
-      );
-    }
-  }
-
-  void _showCompleteDialog() {
-    final notesController = TextEditingController();
-    final recommendationsController = TextEditingController();
-    _followUpRequired = null; // Reset radio button
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-            title: const Text('Complete Visit'),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Complete visit for ${widget.visit.farmerName}',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Service Fee Display (non-editable)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Service Fee:',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                        Text(
-                          'KES ${widget.visit.serviceFee.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: Colors.green,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Follow-up Required Radio Buttons
-                  const Text(
-                    'Follow-up Required:',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Radio<bool>(
-                        value: true,
-                        groupValue: _followUpRequired,
-                        onChanged: _isProcessing
-                            ? null
-                            : (value) {
-                          setState(() {
-                            _followUpRequired = value;
-                          });
-                        },
-                      ),
-                      const Text('Yes'),
-                      const SizedBox(width: 20),
-                      Radio<bool>(
-                        value: false,
-                        groupValue: _followUpRequired,
-                        onChanged: _isProcessing
-                            ? null
-                            : (value) {
-                          setState(() {
-                            _followUpRequired = value;
-                          });
-                        },
-                      ),
-                      const Text('No'),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Notes Input
-                  TextField(
-                    controller: notesController,
-                    decoration: const InputDecoration(
-                      labelText: 'Notes',
-                      hintText: 'Enter any additional notes',
-                      border: OutlineInputBorder(),
-                    ),
-                    maxLines: 3,
-                    enabled: !_isProcessing,
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Recommendations Input
-                  TextField(
-                    controller: recommendationsController,
-                    decoration: const InputDecoration(
-                      labelText: 'Recommendations',
-                      hintText: 'Enter recommendations for the farmer',
-                      border: OutlineInputBorder(),
-                    ),
-                    maxLines: 3,
-                    enabled: !_isProcessing,
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: _isProcessing ? null : () => Navigator.pop(context),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: _isProcessing ? null : () async {
-                  // Validate required fields
-                  if (_followUpRequired == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Please select if follow-up is required'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                    return;
-                  }
-
-                  // Prepare data for API
-                  final data = {
-                    "notes": notesController.text.trim().isEmpty
-                        ? "string"
-                        : notesController.text.trim(),
-                    "recommendations": recommendationsController.text.trim().isEmpty
-                        ? "string"
-                        : recommendationsController.text.trim(),
-                    "follow_up_required": _followUpRequired.toString(), // Convert bool to string
-                  };
-
-                  Navigator.pop(context);
-                  await _completeVisit(data);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                ),
-                child: _isProcessing
-                    ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-                    : const Text('Complete'),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -264,7 +47,7 @@ class _InProgressVisitCardState extends State<InProgressVisitCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.visit.farmerName,
+                        visit.farmerName,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -272,7 +55,7 @@ class _InProgressVisitCardState extends State<InProgressVisitCard> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        widget.visit.farmerLocation.address,
+                        visit.farmerLocation.address,
                         style: TextStyle(
                           color: Colors.grey.shade600,
                           fontSize: 14,
@@ -284,7 +67,7 @@ class _InProgressVisitCardState extends State<InProgressVisitCard> {
                           Icon(Icons.phone, size: 12, color: Colors.grey.shade600),
                           const SizedBox(width: 4),
                           Text(
-                            widget.visit.farmerPhone,
+                            visit.farmerPhone,
                             style: TextStyle(
                               color: Colors.grey.shade600,
                               fontSize: 12,
@@ -320,27 +103,30 @@ class _InProgressVisitCardState extends State<InProgressVisitCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Comprehensive visit details
                 VisitDetailsSection(
-                  visit: widget.visit,
+                  visit: visit,
                   accentColor: Colors.purple,
                 ),
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: _isProcessing ? null : _showCompleteDialog,
+                    onPressed: () async {
+                      final result = await context.push<bool>(
+                        '/vet-visit-form',
+                        extra: {
+                          'orderId': visit.id,
+                          'farmerId': visit.farmerId,
+                          'autoComplete': true,
+                        },
+                      );
+                      if (result == true) {
+                        onActionCompleted();
+                        onStatusChanged?.call(VisitStatus.paymentPending.value);
+                      }
+                    },
                     icon: const Icon(Icons.check_circle, size: 20),
-                    label: _isProcessing
-                        ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                        : const Text(
+                    label: const Text(
                       'Complete Visit',
                       style: TextStyle(fontSize: 16),
                     ),
