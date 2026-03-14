@@ -145,7 +145,25 @@ class UseCategorySelectionView extends StatelessWidget {
                     color: Colors.grey.shade600,
                   ),
                 ),
-                const SizedBox(height: 24),
+                if (filteredCategories.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  ...filteredCategories.map((category) {
+                    final color = _getCategoryColor(category.name);
+                    final icon = _getCategoryIcon(category.name);
+                    final count = _getUsableItemsCount(category);
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _buildSpecialActionCard(
+                        context: context,
+                        icon: icon,
+                        title: category.name,
+                        subtitle: count > 0 ? '$count item${count != 1 ? 's' : ''} available in store' : 'Tap to record',
+                        color: color,
+                        onTap: () => onCategorySelected(category),
+                      ),
+                    );
+                  }),
+                ],
 
                 // Special action cards
                 _buildSpecialActionCard(
@@ -193,25 +211,7 @@ class UseCategorySelectionView extends StatelessWidget {
                   },
                 ),
 
-                if (filteredCategories.isNotEmpty) ...[
-                  const SizedBox(height: 24),
-                  ...filteredCategories.map((category) {
-                    final color = _getCategoryColor(category.name);
-                    final icon = _getCategoryIcon(category.name);
-                    final count = _getUsableItemsCount(category);
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _buildSpecialActionCard(
-                        context: context,
-                        icon: icon,
-                        title: category.name,
-                        subtitle: count > 0 ? '$count item${count != 1 ? 's' : ''} available in store' : 'Tap to record',
-                        color: color,
-                        onTap: () => onCategorySelected(category),
-                      ),
-                    );
-                  }),
-                ],
+
               ],
             ),
           ),

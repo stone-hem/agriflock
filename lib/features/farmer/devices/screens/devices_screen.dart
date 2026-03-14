@@ -1,6 +1,8 @@
 import 'package:agriflock/app_routes.dart';
+import 'package:agriflock/core/utils/refresh_bus.dart';
 import 'package:agriflock/features/farmer/devices/models/device_model.dart';
 import 'package:agriflock/features/farmer/devices/repository/devices_repo.dart';
+import 'package:agriflock/features/farmer/devices/screens/device_scanner_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -25,6 +27,19 @@ class _DevicesScreenState extends State<DevicesScreen> {
   void initState() {
     super.initState();
     _fetchDevices();
+    RefreshBus.instance.addListener(_onRefreshBus);
+  }
+
+  void _onRefreshBus() {
+    if (RefreshBus.instance.lastEvent == RefreshEvent.deviceScanned) {
+      _fetchDevices(isRefresh: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    RefreshBus.instance.removeListener(_onRefreshBus);
+    super.dispose();
   }
 
   Future<void> _fetchDevices({bool isRefresh = false}) async {
@@ -90,6 +105,17 @@ class _DevicesScreenState extends State<DevicesScreen> {
           onPressed: () => context.pop(),
         ),
         actions: [
+          IconButton(
+            icon: Icon(Icons.qr_code_scanner_rounded, color: Colors.green.shade700),
+            tooltip: 'Scan device',
+            onPressed: () async {
+              await Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const DeviceScannerScreen(),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: Icon(Icons.refresh, color: Colors.green.shade700),
             onPressed: _isRefreshing ? null : _refreshData,

@@ -27,6 +27,11 @@ class AppSnackBar {
               ),
             ],
           ),
+          action: SnackBarAction(
+            label: '✕',
+            textColor: colors.iconColor,
+            onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+          ),
           backgroundColor: colors.backgroundColor,
           behavior: floating ? SnackBarBehavior.floating : SnackBarBehavior.fixed,
           shape: floating

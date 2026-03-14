@@ -8,6 +8,49 @@ import 'package:agriflock/main.dart';
 import 'package:http/http.dart' as http;
 
 class DevicesRepository {
+  /// Submit a scanned device barcode/QR code for automatic registration.
+  ///
+  /// [scannedCode] is the raw value from the scanner.
+  Future<Result<void>> scanDevice(String scannedCode) async {
+    try {
+      final response = await apiClient.post(
+        '/devices/scan',
+        body: jsonEncode({'code': scannedCode}),
+      );
+      final jsonResponse = jsonDecode(response.body);
+      LogUtil.info('Scan Device API Response: $jsonResponse');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return const Success(null);
+      } else {
+        final errorMessage = jsonResponse is Map<String, dynamic>
+            ? (jsonResponse['message'] ?? 'Failed to scan device')
+            : 'Failed to scan device';
+        return Failure(
+          message: errorMessage,
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in scanDevice: $e');
+      return const Failure(message: 'No internet connection', statusCode: 0);
+    } on FormatException catch (e) {
+      LogUtil.error('Format error in scanDevice: $e');
+      return const Failure(
+          message: 'Invalid response format from server', statusCode: 0);
+    } catch (e) {
+      LogUtil.error('Error in scanDevice: $e');
+      if (e is http.Response) {
+        return Failure(
+            message: 'Failed to scan device',
+            response: e,
+            statusCode: e.statusCode);
+      }
+      return Failure(message: e.toString());
+    }
+  }
+
   /// Get all devices assigned to the current farmer
   Future<Result<List<DeviceItem>>> getMyDevices() async {
     try {

@@ -1,4 +1,5 @@
 import 'package:agriflock/core/utils/date_util.dart';
+import 'package:agriflock/core/utils/egg_util.dart';
 import 'package:agriflock/features/farmer/vet/widgets/vet_reports_tab.dart';
 import 'package:agriflock/core/utils/feed_format_util.dart';
 import 'package:agriflock/core/utils/result.dart';
@@ -1246,7 +1247,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
               Expanded(
                   child: _buildInfoRow(
                       Icons.egg_outlined, Colors.amber.shade700, 'Total Eggs',
-                      '${egg.totalEggsCollected}')),
+                      EggUtil.eggsToTrayString(egg.totalEggsCollected))),
             ],
           ),
           const SizedBox(height: 4),
@@ -1255,7 +1256,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
               Expanded(
                   child: _buildInfoRow(
                       Icons.check_circle_outline, Colors.green.shade600, 'Good Eggs',
-                      '${egg.goodEggs}')),
+                      EggUtil.eggsToTrayString(egg.goodEggs))),
               Expanded(
                   child: _buildInfoRow(Icons.inventory_outlined, Colors.brown.shade500,
                       'In Store', '${egg.traysInStore} trays')),

@@ -1623,38 +1623,10 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
               ),
             ),
             const SizedBox(height: 32),
-            Text('Did you buy other inputs',  style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: Colors.black,
-            ),),
-            const SizedBox(height: 14),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => context.push('/record-expenditure'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 52),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 2,
-                ),
-                child: const Text(
-                  'Please add the expenses',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text('Or '),
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => context.push(AppRoutes.home),
+                onPressed: () => _showNextStepsDialog(context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Theme.of(context).primaryColor,
                   foregroundColor: Colors.white,
@@ -1665,7 +1637,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                   elevation: 2,
                 ),
                 child: const Text(
-                  'Go to the dashboard',
+                  'Next',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
@@ -1817,6 +1789,141 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
           child: Text(
             text,
             style: TextStyle(fontSize: 13, color: Colors.grey.shade700, height: 1.3),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showNextStepsDialog(BuildContext ctx) {
+    showDialog<void>(
+      context: ctx,
+      barrierDismissible: false,
+      builder: (dialogCtx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.receipt_long_rounded,
+                    size: 36, color: Theme.of(ctx).primaryColor),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Add Your Expenses',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.amber.shade200),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Why record expenses now?',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.amber.shade900,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildDialogBullet(
+                      Icons.trending_up_rounded,
+                      Colors.green.shade700,
+                      'See real Profit & Loss — know exactly how much you\'re making or losing per batch.',
+                    ),
+                    const SizedBox(height: 6),
+                    _buildDialogBullet(
+                      Icons.bar_chart_rounded,
+                      Colors.blue.shade700,
+                      'Unlock detailed Financial Reports — cost per bird, revenue vs spend breakdowns.',
+                    ),
+                    const SizedBox(height: 6),
+                    _buildDialogBullet(
+                      Icons.lightbulb_outline_rounded,
+                      Colors.orange.shade700,
+                      'Make smarter decisions — track where your money goes and cut unnecessary costs.',
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.of(dialogCtx).pop();
+                    ctx.push('/record-expenditure');
+                  },
+                  icon: const Icon(Icons.add_circle_outline, size: 18),
+                  label: const Text(
+                    'Add New Expense',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.shade600,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    elevation: 0,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.of(dialogCtx).pop();
+                    ctx.go(AppRoutes.home);
+                  },
+                  icon: const Icon(Icons.dashboard_rounded, size: 18),
+                  label: const Text(
+                    'Go to Dashboard',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Theme.of(ctx).primaryColor,
+                    side: BorderSide(color: Theme.of(ctx).primaryColor),
+                    minimumSize: const Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDialogBullet(IconData icon, Color color, String text) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 16, color: color),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(fontSize: 12.5, color: Colors.grey.shade700, height: 1.4),
           ),
         ),
       ],

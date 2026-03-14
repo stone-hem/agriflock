@@ -22,6 +22,9 @@ enum RefreshEvent {
 
   /// User completed their profile → quotation screen
   profileCompleted,
+
+  /// A device was scanned and registered → devices screen
+  deviceScanned,
 }
 
 /// Global event bus for cross-screen refresh signals.
