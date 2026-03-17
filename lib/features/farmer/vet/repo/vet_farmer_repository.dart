@@ -489,7 +489,7 @@ class VetFarmerRepository {
     try {
       final response = await apiClient.patch(
         '/order-vet/$orderId/cancel',
-        body: {'cancellation_reason': reason},
+        body: {'reason': reason},
       );
 
       final jsonResponse = jsonDecode(response.body);
