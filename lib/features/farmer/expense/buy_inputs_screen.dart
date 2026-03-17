@@ -156,7 +156,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
           _selectedCategory != null &&
           _selectedItem != null &&
           (!_selectedCategory!.useFromStore || !_selectedItem!.useFromStore)) {
-        _goToPage(2); // Go back to quantity/price page
+        _pageController.jumpToPage(2); // Go back to quantity/price page (no animation through skipped page)
         return;
       }
       _pageController.previousPage(
@@ -369,7 +369,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
                     // For custom "Others" items, skip usage choice - always use immediately
                     if (_hasCustomOtherName) {
                       setState(() => _useNow = true);
-                      _goToPage(4); // Skip usage choice, go to batch selection
+                      _pageController.jumpToPage(4); // Skip usage choice instantly
                       return;
                     }
                     // Check if category and item can use from store
@@ -379,7 +379,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
                     } else {
                       // Cannot store, use immediately - skip to batch selection
                       setState(() => _useNow = true);
-                      _goToPage(4); // Skip usage choice, go to batch selection
+                      _pageController.jumpToPage(4); // Skip usage choice instantly
                     }
                   },
                   onBack: _previousPage,

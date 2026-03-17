@@ -412,8 +412,8 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                     ),
                     const SizedBox(height: 8),
                     _buildInfoRow(
-                      'Times/day',
-                      '${batch.feedingPlan!.timesPerDay} (${batch.feedingPlan!.feedingTimes.slots.join(', ')})',
+                      'Feeding Time',
+                      '${batch.feedTime} (${batch.feedingSchedule})',
                       Icons.access_time,
                       Colors.teal.shade700,
                     ),

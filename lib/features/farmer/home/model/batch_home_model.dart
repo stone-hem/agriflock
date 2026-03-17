@@ -50,6 +50,8 @@ class BatchHomeData {
   final String reportBy;
   final String ageDays;
   final int ageWeeks;
+  final String feedTime;
+  final String feedingSchedule;
   final ProductionStage productionStage;
   final int mortality;
   final String mortalityRate;
@@ -85,6 +87,8 @@ class BatchHomeData {
     required this.reportBy,
     required this.ageDays,
     required this.ageWeeks,
+    required this.feedTime,
+    required this.feedingSchedule,
     required this.productionStage,
     required this.mortality,
     required this.mortalityRate,
@@ -127,6 +131,8 @@ class BatchHomeData {
       reportBy: TypeUtils.toStringSafe(json['report_by']),
       ageDays: _parseAgeDays(json['age_days']),
       ageWeeks: TypeUtils.toIntSafe(json['age_weeks']),
+      feedTime: TypeUtils.toStringSafe(json['feeding_time']),
+      feedingSchedule: TypeUtils.toStringSafe(json['feeding_schedule']),
       productionStage: ProductionStage.fromJson(productionStageMap ?? {}),
       mortality: TypeUtils.toIntSafe(json['mortality']),
       mortalityRate: TypeUtils.toStringSafe(json['mortality_rate'], defaultValue: '0%'),
@@ -165,6 +171,8 @@ class BatchHomeData {
       'report_by': reportBy,
       'age_days': ageDays,
       'age_weeks': ageWeeks,
+      'feeding_time': feedTime,
+      'feeding_schedule': feedingSchedule,
       'production_stage': productionStage.toJson(),
       'mortality': mortality,
       'mortality_rate': mortalityRate,

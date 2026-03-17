@@ -45,6 +45,7 @@ import 'package:agriflock/features/farmer/devices/models/device_model.dart';
 import 'package:agriflock/features/farmer/profile/update_profile_screen.dart';
 import 'package:agriflock/features/farmer/farm/view/onboarding_setup_screen.dart';
 import 'package:agriflock/features/farmer/quotation/quotation_screen.dart';
+import 'package:agriflock/features/farmer/quotation/production_estimate.dart';
 import 'package:agriflock/features/farmer/record/quick_record.dart';
 import 'package:agriflock/features/farmer/home/view/quick_batches_list_screen.dart';
 import 'package:agriflock/features/farmer/batch/record_mortality_screen.dart';
@@ -155,6 +156,7 @@ class AppRoutes {
   static const String about = '/about';
   static const String activity = '/activity';
   static const String notifications = '/notifications';
+  static const String productionEstimate = '/production-estimate';
   static const String completeProfile = '/complete-profile';
   static const String congratulations = '/complete-profile/congratulations';
   static const String vetOrderDetails = '/vet-order-details';

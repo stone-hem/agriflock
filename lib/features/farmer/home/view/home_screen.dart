@@ -75,7 +75,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onRefreshBus() {
     if (!mounted) return;
     final event = RefreshBus.instance.lastEvent;
-    if (event == RefreshEvent.farmCreated || event == RefreshEvent.farmUpdated) {
+    if (event == RefreshEvent.farmCreated ||
+        event == RefreshEvent.farmUpdated) {
       // Farm changes only affect top stats
       _loadSummary();
     } else {
@@ -146,12 +147,15 @@ class _HomeScreenState extends State<HomeScreen> {
             _isBatchesLoading = false;
           });
           break;
-        case Failure<List<BatchHomeData>>(message: final error, cond: final cond):
+        case Failure<List<BatchHomeData>>(
+          message: final error,
+          cond: final cond,
+        ):
           setState(() {
             _batchesError = error;
             _isBatchesLoading = false;
             if (cond == 'no_subscription_plan') {
-               secureStorage.saveSubscriptionState('no_subscription_plan');
+              secureStorage.saveSubscriptionState('no_subscription_plan');
               _hasNoSubscription = true;
             }
             if (cond == 'expired_subscription_plan') {
@@ -160,7 +164,6 @@ class _HomeScreenState extends State<HomeScreen> {
             }
             secureStorage.saveSubscriptionState('has_subscription_plan');
             _hasNoSubscription = false;
-
           });
           break;
       }
@@ -268,7 +271,8 @@ class _HomeScreenState extends State<HomeScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
 
-        final lastShown = SharedPrefs.getInt('transition_screen_last_shown') ?? 0;
+        final lastShown =
+            SharedPrefs.getInt('transition_screen_last_shown') ?? 0;
         final today = DateTime.now();
         final todayDate = DateTime(today.year, today.month, today.day);
 
@@ -412,15 +416,12 @@ class _HomeScreenState extends State<HomeScreen> {
     ]);
   }
 
-
   String _getGreeting() {
     final hour = DateTime.now().hour;
     if (hour < 12) return 'Good Morning';
     if (hour < 17) return 'Good Afternoon';
     return 'Good Evening';
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -451,10 +452,7 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Colors.transparent,
         automaticallyImplyLeading: false,
         elevation: 0,
-        actions: [
-           AlertsButton(),
-          SizedBox(width: 8,)
-        ],
+        actions: [AlertsButton(), SizedBox(width: 8)],
       ),
       bottomNavigationBar: const ExpenseMarqueeBannerCompact(),
       body: Stack(
@@ -477,8 +475,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   else ...[
                     Text(
                       'Daily Flock Summary',
-                      style: Theme.of(context).textTheme.titleMedium!
-                          .copyWith(
+                      style: Theme.of(context).textTheme.titleMedium!.copyWith(
                         fontWeight: FontWeight.bold,
                         color: Colors.grey.shade800,
                       ),
@@ -501,7 +498,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.error_outline, color: Colors.red.shade700, size: 40),
+                            Icon(
+                              Icons.error_outline,
+                              color: Colors.red.shade700,
+                              size: 40,
+                            ),
                             const SizedBox(height: 12),
                             Text(
                               'Failed to load batches',
@@ -516,43 +517,54 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       )
                     else if (_batches.isEmpty)
-                        Container(
-                          height: MediaQuery.sizeOf(context).height * 0.33,
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey.shade300),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.inbox_outlined, color: Colors.grey.shade400, size: 48),
-                              const SizedBox(height: 12),
-                              Text(
-                                'No batches available',
-                                style: TextStyle(
-                                  color: Colors.grey.shade600,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                      Container(
+                        height: MediaQuery.sizeOf(context).height * 0.33,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.inbox_outlined,
+                              color: Colors.grey.shade400,
+                              size: 48,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'No batches available',
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Create your first batch to get started',
-                                style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Create your first batch to get started',
+                              style: TextStyle(
+                                color: Colors.grey.shade500,
+                                fontSize: 14,
                               ),
-                              FilledButton.icon(
-                                icon: Icon(Icons.add),
-                                onPressed: () {
-                                  context.go('/farms');
-                                }, label: Text('Create batch' ),
-                              ),
-                            ],
-                          ),
-                        )
-                      else
-                        BatchOverviewCarousel(batches: _batches, outerScrollController: _scrollController),
+                            ),
+                            FilledButton.icon(
+                              icon: Icon(Icons.add),
+                              onPressed: () {
+                                context.go('/farms');
+                              },
+                              label: Text('Create batch'),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      BatchOverviewCarousel(
+                        batches: _batches,
+                        outerScrollController: _scrollController,
+                      ),
                     if (!_isBatchesLoading && _batchesError == null) ...[
                       const SizedBox(height: 16),
                       Text(
@@ -594,14 +606,42 @@ class _HomeScreenState extends State<HomeScreen> {
                           ],
                         ),
                       )
-                    else if (_financialOverview != null)
+                    else if (_financialOverview != null) ...[
+                      Text(
+                        'Daily Flock Summary',
+                        style: Theme.of(context).textTheme.titleMedium!
+                            .copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade800,
+                            ),
+                      ),
+                      SizedBox(height: 10,),
                       FinancialPerformanceGraph(
                         financialData: _financialOverview!,
-                      )
-                    else
+                      ),
+                    ] else
                       const SizedBox.shrink(),
                     const SizedBox(height: 20),
                   ],
+
+                  Row(
+                    mainAxisAlignment: .spaceBetween,
+                    children: [
+                      Text(
+                        'Recent Activity',
+                        style: Theme.of(context).textTheme.titleMedium!
+                            .copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey.shade800,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => context.push('/activity'),
+                        child: const Text('View all'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
 
                   _buildRecentActivitySection(context),
                 ],
@@ -629,10 +669,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
   Widget _buildWelcomeOrBannerSection() {
-
-
     // Show a shimmer placeholder while summary or user data is loading
     if (_isSummaryLoading || _isLoadingUser) {
       return Container(
@@ -693,10 +730,7 @@ class _HomeScreenState extends State<HomeScreen> {
               style: TextStyle(color: Colors.red.shade700),
             ),
             const SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: _loadSummary,
-              child: const Text('Retry'),
-            ),
+            ElevatedButton(onPressed: _loadSummary, child: const Text('Retry')),
           ],
         ),
       );
@@ -729,9 +763,7 @@ class _HomeScreenState extends State<HomeScreen> {
       houses: '${_summary!.numberOfHouses}',
       batches: '${_summary!.totalBatches}',
       birds: '${_summary!.totalBirds}',
-      daysSinceLogin: _userFirstLoginDate != null
-          ? _daysSinceFirstLogin
-          : null,
+      daysSinceLogin: _userFirstLoginDate != null ? _daysSinceFirstLogin : null,
     );
   }
 
@@ -746,11 +778,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: Column(
         children: [
-          Icon(
-            Icons.workspace_premium,
-            size: 56,
-            color: Colors.green.shade600,
-          ),
+          Icon(Icons.workspace_premium, size: 56, color: Colors.green.shade600),
           const SizedBox(height: 16),
           Text(
             'Subscription Required',
@@ -764,10 +792,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Text(
             'To access core modules, please select a subscription plan.',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
           ),
           const SizedBox(height: 24),
           SizedBox(
@@ -784,10 +809,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               child: const Text(
                 'Choose a Plan',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
           ),
@@ -815,7 +837,8 @@ class _HomeScreenState extends State<HomeScreen> {
         _buildQuickActionCard(
           icon: Icons.edit_note,
           title: 'Daily Records',
-          subtitle: 'Record Feed, Vaccination, Medication, Mortality, Weight, Product',
+          subtitle:
+              'Record Feed, Vaccination, Medication, Mortality, Weight, Product',
           color: Colors.green,
           onTap: () => context.push('/quick-recording'),
         ),
@@ -905,7 +928,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
   Widget _buildRecentActivitySection(BuildContext context) {
     if (_isActivitiesLoading) {
       return HomeActivitiesLoading();
@@ -928,15 +950,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Recent Activity',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey.shade800,
-            ),
-          ),
-          const SizedBox(height: 12),
+
           Text(
             _activitiesError ?? 'Failed to load activities',
             style: TextStyle(color: Colors.red.shade700),
@@ -944,11 +958,11 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 12),
           ElevatedButton(
             onPressed: _loadActivities,
-            child: const Text('Retry'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red.shade100,
               foregroundColor: Colors.red.shade800,
             ),
+            child: const Text('Retry'),
           ),
         ],
       ),
@@ -959,23 +973,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Recent Activity',
-              style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
-              ),
-            ),
-            TextButton(
-              onPressed: () => context.push('/activity'),
-              child: const Text('View all'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
         if (_activities.isEmpty)
           Center(
             child: Padding(

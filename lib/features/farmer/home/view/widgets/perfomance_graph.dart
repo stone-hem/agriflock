@@ -94,11 +94,6 @@ class _FinancialPerformanceGraphState extends State<FinancialPerformanceGraph> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Financial Performance',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 2),
             Row(
               children: [
                 Icon(Icons.calendar_month, size: 14, color: Colors.grey.shade500),

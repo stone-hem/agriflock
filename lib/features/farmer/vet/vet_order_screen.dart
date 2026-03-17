@@ -15,7 +15,7 @@ import 'package:agriflock/features/farmer/vet/models/vet_order_model.dart';
 import 'package:agriflock/features/farmer/vet/models/vet_service_type.dart';
 import 'package:agriflock/features/farmer/vet/repo/vet_farmer_repository.dart';
 import 'package:agriflock/features/farmer/vet/widgets/order_process.dart';
-import 'package:agriflock/features/farmer/vet/widgets/vet_order_bottom_sheet.dart';
+import 'package:agriflock/features/farmer/vet/widgets/vet_order_bottom_sheet.dart' show VetOrderPage;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:agriflock/core/utils/result.dart';
@@ -536,22 +536,19 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
 
   void _showOrderBottomSheet(
       VetEstimateResponse estimate, VetEstimateRequest request) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      isDismissible: true,
-      enableDrag: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => VetOrderBottomSheet(
-        estimate: estimate,
-        vet: widget.vet,
-        vetRepository: _vetRepository,
-        onOrderSuccess: () {
-          context.pop();
-          context.pop();
-          context.pop();
-        },
-        request: request,
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => VetOrderPage(
+          estimate: estimate,
+          vet: widget.vet,
+          vetRepository: _vetRepository,
+          onOrderSuccess: () {
+            context.pop();
+            context.pop();
+            context.pop();
+          },
+          request: request,
+        ),
       ),
     );
   }
@@ -1006,12 +1003,14 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
           const SizedBox(height: 4),
           Row(
             children: [
-              _houseDetailText('Capacity', '${house.currentBirds}/${house.capacity} birds'),
+              Flexible(child: _houseDetailText('Capacity', '${house.currentBirds}/${house.capacity} birds')),
               const SizedBox(width: 16),
-              _houseDetailText(
-                'Utilization',
-                '${util.toStringAsFixed(1)}%',
-                valueColor: util > 80 ? Colors.red : Colors.green,
+              Flexible(
+                child: _houseDetailText(
+                  'Utilization',
+                  '${util.toStringAsFixed(1)}%',
+                  valueColor: util > 80 ? Colors.red : Colors.green,
+                ),
               ),
             ],
           ),
@@ -1025,15 +1024,19 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
 
   Widget _houseDetailText(String label, String value, {Color? valueColor}) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(label,
             style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
         const Text(': ', style: TextStyle(fontSize: 12)),
-        Text(value,
-            style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: valueColor)),
+        Flexible(
+          child: Text(value,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: valueColor)),
+        ),
       ],
     );
   }

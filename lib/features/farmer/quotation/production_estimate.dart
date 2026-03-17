@@ -5,8 +5,7 @@ import 'package:agriflock/features/farmer/quotation/repo/quotation_repository.da
 import 'package:agriflock/features/farmer/quotation/widgets/image_with_desc.dart';
 import 'package:flutter/material.dart';
 import 'package:agriflock/core/utils/result.dart';
-import 'package:agriflock/core/utils/api_error_handler.dart';
-import 'package:agriflock/core/utils/toast_util.dart';
+import 'package:agriflock/core/widgets/app_snack_bar.dart';
 
 // ─── FRONTEND CALCULATOR CONSTANTS ───────────────────────────────────────────
 
@@ -483,13 +482,12 @@ class _LayersTabState extends State<_LayersTab> {
             _selectedCapacity = _quantities.first;
             _generateQuotation();
           }
-        case Failure(:final response, :final message):
-          if (response != null) ApiErrorHandler.handle(response);
-          else ToastUtil.showError(message);
+        case Failure(:final message):
+          if (mounted) AppSnackBar.show(context, message: message, type: SnackBarType.error);
           setState(() => _isLoadingBirdTypes = false);
       }
     } catch (e) {
-      ApiErrorHandler.handle(e);
+      if (mounted) AppSnackBar.show(context, message: e.toString(), type: SnackBarType.error);
       setState(() => _isLoadingBirdTypes = false);
     }
   }
@@ -509,7 +507,7 @@ class _LayersTabState extends State<_LayersTab> {
 
   Future<void> _generateQuotation() async {
     if (_selectedBreed == null || _selectedCapacity == null) {
-      ToastUtil.showError('Please select breed and flock size');
+      AppSnackBar.show(context, message: 'Please select breed and flock size', type: SnackBarType.error);
       return;
     }
     try {
@@ -520,14 +518,13 @@ class _LayersTabState extends State<_LayersTab> {
         case Success(data: final quotation):
           _initControllers(quotation);
           setState(() { _quotationData = quotation; _isGeneratingQuotation = false; });
-          ToastUtil.showSuccess('Quotation generated successfully');
-        case Failure(:final response, :final message):
-          if (response != null) ApiErrorHandler.handle(response);
-          else ToastUtil.showError(message);
+          if (mounted) AppSnackBar.show(context, message: 'Quotation generated successfully', type: SnackBarType.success);
+        case Failure(:final message):
+          if (mounted) AppSnackBar.show(context, message: message, type: SnackBarType.error);
           setState(() => _isGeneratingQuotation = false);
       }
     } catch (e) {
-      ApiErrorHandler.handle(e);
+      if (mounted) AppSnackBar.show(context, message: e.toString(), type: SnackBarType.error);
       setState(() => _isGeneratingQuotation = false);
     }
   }
@@ -606,7 +603,7 @@ class _LayersTabState extends State<_LayersTab> {
               ),
               const SizedBox(height: 20),
               if (_isGeneratingQuotation)
-                const Center(child: CircularProgressIndicator(color: primaryColor)),
+                const Center(child: CircularProgressIndicator()),
               const SizedBox(height: 16),
             ],
 
@@ -734,7 +731,7 @@ class _Stage1Table extends StatelessWidget {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        decoration: BoxDecoration(color: Colors.teal, borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(color: Theme.of(context).primaryColor, borderRadius: BorderRadius.circular(12)),
         child: Row(children: [
           const Icon(Icons.layers, color: Colors.white, size: 24),
           const SizedBox(width: 12),

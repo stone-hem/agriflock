@@ -1,5 +1,5 @@
 import 'package:agriflock/core/utils/format_util.dart';
-import 'package:agriflock/core/utils/toast_util.dart';
+import 'package:agriflock/core/widgets/app_snack_bar.dart';
 import 'package:agriflock/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock/core/widgets/reusable_time_input.dart';
 import 'package:agriflock/features/farmer/vet/models/vet_farmer_model.dart';
@@ -9,15 +9,14 @@ import 'package:flutter/material.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:go_router/go_router.dart';
 
-class VetOrderBottomSheet extends StatefulWidget {
+class VetOrderPage extends StatefulWidget {
   final VetEstimateResponse estimate;
   final VetFarmer vet;
   final VetEstimateRequest request;
   final VetFarmerRepository vetRepository;
   final VoidCallback onOrderSuccess;
 
-
-  const VetOrderBottomSheet({
+  const VetOrderPage({
     super.key,
     required this.estimate,
     required this.vet,
@@ -27,10 +26,10 @@ class VetOrderBottomSheet extends StatefulWidget {
   });
 
   @override
-  State<VetOrderBottomSheet> createState() => _VetOrderBottomSheetState();
+  State<VetOrderPage> createState() => _VetOrderPageState();
 }
 
-class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
+class _VetOrderPageState extends State<VetOrderPage> {
   final _selectedDateController = TextEditingController();
   TimeOfDay? _selectedTime;
   bool _termsAgreed = false;
@@ -39,7 +38,6 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
   @override
   void initState() {
     super.initState();
-    // Pre-fill with current time so the field is never blank when submitted
     _selectedTime = TimeOfDay.now();
     _selectedDateController.addListener(_onDateChanged);
   }
@@ -57,285 +55,247 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return DraggableScrollableSheet(
-      initialChildSize: 0.85,
-      minChildSize: 0.5,
-      maxChildSize: 0.95,
-      builder: (context, scrollController) {
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(24),
-              topRight: Radius.circular(24),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                offset: const Offset(0, -5),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              // Drag Handle
-              Container(
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Booking Details'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.check_circle,
+                    color: Colors.green,
+                    size: 28,
+                  ),
                 ),
-              ),
-
-              // Content
-              Expanded(
-                child: SingleChildScrollView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.all(20),
+                const SizedBox(width: 12),
+                const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.check_circle,
-                              color: Colors.green,
-                              size: 28,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Estimate Generated',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  'Complete your booking details',
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Estimate Card
-                      _buildEstimateCard(),
-                      const SizedBox(height: 24),
-
-                      // Confirmed Location Display
-                      if (widget.request.farmLocation != null)
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.withOpacity(0.05),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.blue.withOpacity(0.1)),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(Icons.location_on, color: Colors.blue.shade700, size: 20),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Confirmed Location',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.blue.shade700,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                widget.request.farmLocation!.address,
-                                style: const TextStyle(fontSize: 14),
-                              ),
-                            ],
-                          ),
-                        ),
-                      const SizedBox(height: 24),
-
-                      CustomDateTextField(
-                        label: 'Preferred Date',
-                        icon: Icons.calendar_today,
-                        required: true,
-                        initialDate: DateTime.now(),
-                        minYear: DateTime.now().year,
-                        returnFormat: DateReturnFormat.isoString,
-                        maxYear: DateTime.now().year + 1,
-                        controller: _selectedDateController,
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Preferred Time
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ReusableTimeInput(
-                            topLabel: 'Preferred Time',
-                            showIconOutline: true,
-                            suffixText: '12 hr format',
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter a time';
-                              }
-                              return null;
-                            },
-                            onTimeChanged: (time) {
-                              setState(() {
-                                _selectedTime = time;
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              Icon(Icons.info_outline, size: 14, color: Colors.orange.shade700),
-                              const SizedBox(width: 6),
-                              Text(
-                                'Available hours: 7:00 AM – 6:00 PM only',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.orange.shade700,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Additional Information Card
-                      _buildAdditionalInfoCard(),
-                      const SizedBox(height: 24),
-
-                      // Terms and Conditions
-                      Card(
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          side: BorderSide(color: Colors.grey.shade200),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Checkbox(
-                                    value: _termsAgreed,
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _termsAgreed = value ?? false;
-                                      });
-                                    },
-                                    activeColor: Colors.green,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        setState(() {
-                                          _termsAgreed = !_termsAgreed;
-                                        });
-                                      },
-                                      child: const Text(
-                                        'I agree to the terms and conditions',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'By submitting this order, you agree to:\n'
-                                    '• Payment terms and conditions\n'
-                                    '• Service terms and conditions\n'
-                                    '• Privacy and data protection agreement\n'
-                                    '• Cancellation policy\n'
-                                    '• All applicable laws and regulations',
-                                style: TextStyle(
-                                  color: Colors.grey.shade600,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
+                      Text(
+                        'Estimate Generated',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 24),
-
-                      // Submit Button
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: (_isSubmittingOrder || !_termsAgreed)
-                              ? null
-                              : _submitOrder,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            padding: const EdgeInsets.symmetric(vertical: 18),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: _isSubmittingOrder
-                              ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor:
-                              AlwaysStoppedAnimation(Colors.white),
-                            ),
-                          )
-                              : const Text(
-                            'Submit Booking Request',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
+                      Text(
+                        'Complete your booking details',
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 14,
                         ),
                       ),
-                      const SizedBox(height: 20),
                     ],
                   ),
                 ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Estimate Card
+            _buildEstimateCard(),
+            const SizedBox(height: 24),
+
+            // Confirmed Location Display
+            if (widget.request.farmLocation != null)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.blue.withOpacity(0.1)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.location_on, color: Colors.blue.shade700, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Confirmed Location',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue.shade700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.request.farmLocation!.address,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ],
+                ),
               ),
-            ],
-          ),
-        );
-      },
+            const SizedBox(height: 24),
+
+            CustomDateTextField(
+              label: 'Preferred Date',
+              icon: Icons.calendar_today,
+              required: true,
+              initialDate: DateTime.now(),
+              minYear: DateTime.now().year,
+              returnFormat: DateReturnFormat.isoString,
+              maxYear: DateTime.now().year + 1,
+              controller: _selectedDateController,
+            ),
+            const SizedBox(height: 20),
+
+            // Preferred Time
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ReusableTimeInput(
+                  topLabel: 'Preferred Time',
+                  showIconOutline: true,
+                  suffixText: '12 hr format',
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a time';
+                    }
+                    return null;
+                  },
+                  onTimeChanged: (time) {
+                    setState(() {
+                      _selectedTime = time;
+                    });
+                  },
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 14, color: Colors.orange.shade700),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        'Available hours: 7:00 AM – 6:00 PM only excluding some services',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.orange.shade700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Additional Information Card
+            _buildAdditionalInfoCard(),
+            const SizedBox(height: 24),
+
+            // Terms and Conditions
+            Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: Colors.grey.shade200),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Checkbox(
+                          value: _termsAgreed,
+                          onChanged: (value) {
+                            setState(() {
+                              _termsAgreed = value ?? false;
+                            });
+                          },
+                          activeColor: Colors.green,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _termsAgreed = !_termsAgreed;
+                              });
+                            },
+                            child: const Text(
+                              'I agree to the terms and conditions',
+                              style: TextStyle(fontSize: 14),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'By submitting this order, you agree to:\n'
+                          '• Payment terms and conditions\n'
+                          '• Service terms and conditions\n'
+                          '• Privacy and data protection agreement\n'
+                          '• Cancellation policy\n'
+                          '• All applicable laws and regulations',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Submit Button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: (_isSubmittingOrder || !_termsAgreed) ? null : _submitOrder,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: _isSubmittingOrder
+                    ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation(Colors.white),
+                  ),
+                )
+                    : const Text(
+                  'Submit Booking Request',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 32),
+          ],
+        ),
+      ),
     );
   }
 
@@ -413,11 +373,9 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
               ),
             ],
 
-            // Updated to use correct fields
             _buildEstimateItem('Service Fee:', widget.estimate.serviceFee),
             _buildEstimateItem('Transport Fee(to and fro):', widget.estimate.mileageFee),
 
-            // Mileage details if available
             if (widget.estimate.mileageDetails != null) ...[
               Padding(
                 padding: const EdgeInsets.only(left: 16, bottom: 8),
@@ -439,13 +397,11 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                 isSurcharge: true,
               ),
 
-            // Platform Commission
             _buildEstimateItem(
               'Platform Commission:',
               widget.estimate.platformCommission,
             ),
 
-            // Officer Earnings (optional display)
             _buildEstimateItem(
               'Veterinary Officer Earnings:',
               widget.estimate.officerEarnings,
@@ -456,19 +412,25 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                const Flexible(
+                  child: Text(
                   'Total Estimated Cost:',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
+                  ),
                 ),
-                Text(
-                  '${widget.estimate.currency} ${FormatUtil.formatAmount(widget.estimate.totalEstimatedCost)}',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    '${widget.estimate.currency} ${FormatUtil.formatAmount(widget.estimate.totalEstimatedCost)}',
+                    textAlign: TextAlign.end,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                    ),
                   ),
                 ),
               ],
@@ -485,8 +447,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.info_outline,
-                        size: 16, color: Colors.blue.shade700),
+                    Icon(Icons.info_outline, size: 16, color: Colors.blue.shade700),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -502,7 +463,6 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
               ),
             ],
 
-            // Distance information
             if (widget.estimate.distanceKm > 0) ...[
               const SizedBox(height: 8),
               Container(
@@ -514,8 +474,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.directions_car,
-                        size: 16, color: Colors.grey.shade700),
+                    Icon(Icons.directions_car, size: 16, color: Colors.grey.shade700),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -602,7 +561,6 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
             ),
             const SizedBox(height: 12),
 
-            // Birds count and houses
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -611,10 +569,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                   children: [
                     Text(
                       'Total Birds',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                     ),
                     Text(
                       '${widget.estimate.birdsCount}',
@@ -631,10 +586,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                   children: [
                     Text(
                       'Houses',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                     ),
                     Text(
                       '${widget.estimate.housesCount}',
@@ -651,10 +603,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                   children: [
                     Text(
                       'Batches',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                     ),
                     Text(
                       '${widget.estimate.batchesCount}',
@@ -669,7 +618,6 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
               ],
             ),
 
-            // Bird type if available
             if (widget.estimate.birdType != null) ...[
               const SizedBox(height: 12),
               Container(
@@ -686,10 +634,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                       width: MediaQuery.sizeOf(context).width * 0.6,
                       child: Text(
                         'Bird Type: ${widget.estimate.birdType!}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.green.shade700,
-                        ),
+                        style: TextStyle(fontSize: 14, color: Colors.green.shade700),
                       ),
                     ),
                   ],
@@ -697,7 +642,6 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
               ),
             ],
 
-            // Service codes if available
             if (widget.estimate.serviceCosts.isNotEmpty) ...[
               const SizedBox(height: 12),
               Wrap(
@@ -721,38 +665,34 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
     );
   }
 
-
   Future<void> _submitOrder() async {
     if (_selectedDateController.text.isEmpty) {
-      ToastUtil.showError('Please select a preferred date');
+      AppSnackBar.show(context, message: 'Please select a preferred date', type: SnackBarType.error);
       return;
     }
-
 
     if (_selectedTime == null) {
-      ToastUtil.showError('Please select a preferred time');
+      AppSnackBar.show(context, message: 'Please select a preferred time', type: SnackBarType.error);
       return;
     }
 
-    // Restrict night hours — vets are only available 7:00 AM to 6:00 PM
     final hour = _selectedTime!.hour;
     if (hour < 7 || hour >= 18) {
-      ToastUtil.showError(
-        'Vet services are only available between 7:00 AM and 6:00 PM. '
-        'Night hours are not permitted for safety and welfare reasons.',
+      AppSnackBar.show(
+        context,
+        message: 'Vet services are only available between 7:00 AM and 6:00 PM. '
+            'Night hours are not permitted for safety and welfare reasons.',
+        type: SnackBarType.error,
       );
       return;
     }
 
     if (!_termsAgreed) {
-      ToastUtil.showError('Please agree to the terms and conditions');
+      AppSnackBar.show(context, message: 'Please agree to the terms and conditions', type: SnackBarType.error);
       return;
     }
 
-    setState(() {
-      _isSubmittingOrder = true;
-    });
-
+    setState(() => _isSubmittingOrder = true);
 
     final request = VetOrderRequest(
       vetId: widget.vet.id,
@@ -765,32 +705,28 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
       termsAgreed: _termsAgreed,
       preferredTime: _selectedTime!.format(context),
       participantsCount: widget.request.participantsCount,
-
       paymentMode: widget.request.paymentMode,
-      // Manual fields (null for farm path)
       birdTypeIds: (widget.request.birdTypeIds?.isNotEmpty ?? false)
           ? widget.request.birdTypeIds
           : null,
       mortality: widget.request.mortality,
-      ageInDays:  widget.request.ageInDays,
+      ageInDays: widget.request.ageInDays,
       farmLocation: widget.request.farmLocation,
     );
 
     final result = await widget.vetRepository.submitVetOrder(request);
 
-    setState(() {
-      _isSubmittingOrder = false;
-    });
+    setState(() => _isSubmittingOrder = false);
 
     switch (result) {
-      case Success<VetOrderResponse>(data: final data):
-      // Close bottom sheet
-      if(!mounted) return;
+      case Success<VetOrderResponse>():
+        if (!mounted) return;
         Navigator.of(context).pop();
         context.pushReplacement('/my-vet-orders');
         break;
       case Failure(message: final error):
-        ToastUtil.showError('Failed to submit order: $error');
+        if (!mounted) return;
+        AppSnackBar.show(context, message: error, type: SnackBarType.error);
         break;
     }
   }
