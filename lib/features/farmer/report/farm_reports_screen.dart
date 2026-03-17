@@ -9,6 +9,7 @@ import 'package:agriflock/core/utils/secure_storage.dart';
 import 'package:agriflock/core/widgets/expense/expense_marquee_banner.dart';
 import 'package:agriflock/features/farmer/farm/models/farm_model.dart';
 import 'package:agriflock/features/farmer/report/models/farm_batch_report_model.dart';
+import 'package:agriflock/features/farmer/expense/repo/expenditure_repository.dart';
 import 'package:agriflock/features/farmer/report/models/farm_financial_stats_model.dart';
 import 'package:agriflock/features/farmer/report/repo/report_repo.dart';
 import 'package:flutter/material.dart';
@@ -25,6 +26,7 @@ class FarmReportsScreen extends StatefulWidget {
 class _FarmReportsScreenState extends State<FarmReportsScreen>
     with SingleTickerProviderStateMixin {
   final _reportRepository = ReportRepository();
+  final _expenditureRepository = ExpenditureRepository();
   final _secureStorage = SecureStorage();
   late TabController _tabController;
 
@@ -140,25 +142,18 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
     });
 
     try {
-      final startDate = DateTime.parse(_startDateController.text);
-      final endDate = DateTime.parse(_endDateController.text);
-
-      final result = await _reportRepository.getFarmFinancialStats(
-        farmId: _selectedFarm.id,
-        startDate: startDate,
-        endDate: endDate,
-      );
+      final result = await _expenditureRepository.getFinancialStats(farmId: _selectedFarm.id);
 
       if (!mounted) return;
 
       switch (result) {
-        case Success<FarmFinancialStatsResponse>(data: final data):
+        case Success<FarmFinancialStats>(data: final data):
           setState(() {
-            _financialStats = data.data;
+            _financialStats = data;
             _isLoadingFinancial = false;
           });
           break;
-        case Failure<FarmFinancialStatsResponse>(message: final message):
+        case Failure<FarmFinancialStats>(message: final message):
           setState(() {
             _financialError = message;
             _isLoadingFinancial = false;

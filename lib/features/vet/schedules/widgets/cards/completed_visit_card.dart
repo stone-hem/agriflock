@@ -1,4 +1,5 @@
 import 'package:agriflock/core/utils/date_util.dart';
+import 'package:agriflock/core/utils/format_util.dart';
 import 'package:agriflock/features/vet/schedules/models/visit_model.dart';
 import 'package:agriflock/features/vet/schedules/widgets/visit_details_section.dart';
 import 'package:flutter/material.dart';
@@ -234,7 +235,7 @@ class CompletedVisitCard extends StatelessWidget {
                       Icon(Icons.attach_money, size: 16, color: Colors.green.shade700),
                       const SizedBox(width: 4),
                       Text(
-                        'Earned: KES ${visit.officerEarnings.toStringAsFixed(2)}',
+                        'Earned: KES ${FormatUtil.formatAmount(visit.officerEarnings)}',
                         style: TextStyle(
                           color: Colors.green.shade700,
                           fontSize: 14,

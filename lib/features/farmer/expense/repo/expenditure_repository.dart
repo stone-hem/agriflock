@@ -6,6 +6,7 @@ import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/main.dart';
 import 'package:http/http.dart' as http;
 import 'package:agriflock/features/farmer/expense/model/expenditure_model.dart';
+import 'package:agriflock/features/farmer/report/models/farm_financial_stats_model.dart';
 
 class ExpenditureRepository {
   /// Get all expenditures with optional filters
@@ -95,6 +96,48 @@ class ExpenditureRepository {
         );
       }
 
+      return Failure(message: e.toString());
+    }
+  }
+
+  /// Get financial stats for a batch or farm
+  Future<Result<FarmFinancialStats>> getFinancialStats({
+    String? batchId,
+    String? farmId,
+  }) async {
+    try {
+      final Map<String, String> queryParams = {};
+      if (batchId != null) queryParams['batch_id'] = batchId;
+      if (farmId != null) queryParams['farm_id'] = farmId;
+
+      LogUtil.info('Get Financial Stats API Query Parameters: $queryParams');
+
+      final response = await apiClient.get(
+        '/financials/stats',
+        queryParameters: queryParams,
+      );
+
+      final jsonResponse = jsonDecode(response.body);
+      LogUtil.info('Get Financial Stats API Response: $jsonResponse');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final dataMap = jsonResponse['data'] as Map<String, dynamic>? ?? {};
+        return Success(FarmFinancialStats.fromJson(dataMap));
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to fetch financial stats',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in getFinancialStats: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
+    } catch (e) {
+      LogUtil.error('Error in getFinancialStats: $e');
       return Failure(message: e.toString());
     }
   }

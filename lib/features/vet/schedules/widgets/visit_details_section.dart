@@ -1,4 +1,5 @@
 import 'package:agriflock/core/utils/date_util.dart';
+import 'package:agriflock/core/utils/format_util.dart';
 import 'package:agriflock/features/vet/schedules/models/visit_model.dart';
 import 'package:flutter/material.dart';
 
@@ -239,7 +240,7 @@ class VisitDetailsSection extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'KES ${service.cost.toStringAsFixed(0)}',
+                        'KES ${FormatUtil.formatAmount(service.cost)}',
                         style: TextStyle(
                           color: Colors.grey.shade600,
                           fontSize: 12,
@@ -273,25 +274,25 @@ class VisitDetailsSection extends StatelessWidget {
               SizedBox(height: 10),
               _CostRow(
                 label: 'Service Cost',
-                value: 'KES ${visit.serviceFee.toStringAsFixed(2)}',
+                value: 'KES ${FormatUtil.formatAmount(visit.serviceFee)}',
               ),
               const SizedBox(height: 6),
               _CostRow(
                 label: 'Transport Estimate',
-                value: 'KES ${visit.mileageFee.toStringAsFixed(2)}',
+                value: 'KES ${FormatUtil.formatAmount(visit.mileageFee)}',
                 subtitle: '${visit.distanceKm.toStringAsFixed(1)} km',
               ),
               if (visit.prioritySurcharge > 0) ...[
                 const SizedBox(height: 6),
                 _CostRow(
                   label: 'Priority Surcharge',
-                  value: 'KES ${visit.prioritySurcharge.toStringAsFixed(2)}',
+                  value: 'KES ${FormatUtil.formatAmount(visit.prioritySurcharge)}',
                 ),
               ],
               Divider(height: 16, color: Colors.grey.shade300),
               _CostRow(
                 label: 'Total Estimated',
-                value: 'KES ${visit.totalEstimatedCost.toStringAsFixed(2)}',
+                value: 'KES ${FormatUtil.formatAmount(visit.totalEstimatedCost)}',
                 isBold: true,
               ),
             ],

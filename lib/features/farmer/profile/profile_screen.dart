@@ -470,15 +470,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Column(
               children: [
                 ProfileMenuItem(
-                  icon: Icons.payment_outlined,
-                  title: 'Subscription',
-                  subtitle: 'Check my subscription',
-                  color: Colors.blue,
-                  onTap: () {
-                    context.push('/payg');
-                  },
-                ),
-                ProfileMenuItem(
                   icon: Icons.location_on_outlined,
                   title: 'My Brooder Devices',
                   subtitle: 'See My Active Brooder devices',

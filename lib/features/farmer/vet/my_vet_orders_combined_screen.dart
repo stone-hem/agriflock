@@ -1,5 +1,6 @@
 import 'package:agriflock/app_routes.dart';
 import 'package:agriflock/core/utils/date_util.dart';
+import 'package:agriflock/core/utils/format_util.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/utils/secure_storage.dart';
 import 'package:agriflock/core/widgets/search_input.dart';
@@ -353,11 +354,7 @@ class _ActiveOrdersTabState extends State<_ActiveOrdersTab>
     }
   }
 
-  String _getFirstServiceName(MyOrderListItem order) {
-    if (order.services.isNotEmpty) return order.services.first.name;
-    if (order.serviceCosts.isNotEmpty) return order.serviceCosts.first.serviceName;
-    return 'Service';
-  }
+
 
   String _getFirstServiceCode(MyOrderListItem order) {
     if (order.services.isNotEmpty) return order.services.first.code;
@@ -517,7 +514,7 @@ class _ActiveOrdersTabState extends State<_ActiveOrdersTab>
                             style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey.shade700))),
-                    Text('KES ${svc.cost.toStringAsFixed(2)}',
+                    Text('KES ${FormatUtil.formatAmount(svc.cost)}',
                         style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey.shade800,
@@ -527,6 +524,65 @@ class _ActiveOrdersTabState extends State<_ActiveOrdersTab>
               )),
               const SizedBox(height: 12),
             ],
+            const SizedBox(height: 4),
+            // Fee breakdown
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Total Services Fee',
+                          style: TextStyle(
+                              fontSize: 12, color: Colors.grey.shade600)),
+                      Text('KES ${FormatUtil.formatAmount(order.serviceFee)}',
+                          style: const TextStyle(
+                              fontSize: 12, fontWeight: FontWeight.w500)),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        order.distanceKm > 0
+                            ? 'Transport (${order.distanceKm.toStringAsFixed(1)} km)'
+                            : 'Transport Fee',
+                        style: TextStyle(
+                            fontSize: 12, color: Colors.grey.shade600),
+                      ),
+                      Text('KES ${FormatUtil.formatAmount(order.mileageFee)}',
+                          style: const TextStyle(
+                              fontSize: 12, fontWeight: FontWeight.w500)),
+                    ],
+                  ),
+                  if (order.prioritySurcharge > 0) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Priority Surcharge',
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.orange.shade700)),
+                        Text(
+                            'KES ${FormatUtil.formatAmount(order.prioritySurcharge)}',
+                            style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.orange.shade700)),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
             const SizedBox(height: 12),
             Row(
               children: [
@@ -535,7 +591,7 @@ class _ActiveOrdersTabState extends State<_ActiveOrdersTab>
                   children: [
                     const Text('Total Estimated Cost',
                         style: TextStyle(fontSize: 10, color: Colors.grey)),
-                    Text('KES ${order.totalEstimatedCost.toStringAsFixed(2)}',
+                    Text('KES ${FormatUtil.formatAmount(order.totalEstimatedCost)}',
                         style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -782,7 +838,7 @@ class _CompletedOrdersTabState extends State<_CompletedOrdersTab>
             Text('Total Amount:',
                 style: TextStyle(fontSize: 16, color: Colors.grey.shade700)),
             Text(
-              '${order.currency} ${order.totalEstimatedCost.toStringAsFixed(2)}',
+              '${order.currency} ${FormatUtil.formatAmount(order.totalEstimatedCost)}',
               style: const TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -1078,7 +1134,7 @@ class _CompletedOrdersTabState extends State<_CompletedOrdersTab>
           Text(label,
               style: TextStyle(
                   fontWeight: isTotal ? FontWeight.bold : FontWeight.normal)),
-          Text('${amount.toStringAsFixed(2)}',
+          Text(FormatUtil.formatAmount(amount),
               style: TextStyle(
                   fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
                   color: isTotal ? Colors.green : null)),
@@ -1175,7 +1231,7 @@ class _CompletedOrdersTabState extends State<_CompletedOrdersTab>
                     size: 16, color: Colors.green.shade600),
                 const SizedBox(width: 8),
                 Text(
-                    'Total: ${order.currency} ${order.totalEstimatedCost.toStringAsFixed(2)}',
+                    'Total: ${order.currency} ${FormatUtil.formatAmount(order.totalEstimatedCost)}',
                     style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.green,

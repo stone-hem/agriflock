@@ -1,10 +1,11 @@
+import 'package:agriflock/core/utils/format_util.dart';
 import 'package:agriflock/core/widgets/alert_button.dart';
 import 'package:agriflock/features/vet/payments/models/vet_pending_payment.dart';
 import 'package:agriflock/features/vet/schedules/repo/visit_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-String _fmtAmt(double v) => v.toStringAsFixed(2);
+String _fmtAmt(double v) => FormatUtil.formatAmount(v);
 
 String _fmtDt(DateTime dt) {
   const m = [
@@ -349,7 +350,7 @@ class _VetPaymentsScreenState extends State<VetPaymentsScreen> {
     );
   }
 
-  String _fmt(double v) => v.toStringAsFixed(2);
+  String _fmt(double v) => FormatUtil.formatAmount(v);
 
   String _fmtDate(DateTime dt) {
     const months = [

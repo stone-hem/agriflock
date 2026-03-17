@@ -1,3 +1,4 @@
+import 'package:agriflock/core/utils/format_util.dart';
 import 'package:agriflock/core/utils/log_util.dart';
 import 'package:agriflock/core/utils/secure_storage.dart';
 import 'package:agriflock/features/vet/payments/models/vet_pending_payment.dart';
@@ -21,7 +22,7 @@ class _VetRemitPaymentScreenState extends State<VetRemitPaymentScreen> {
 
   String get _currency => widget.payment.currency;
   double get _remitAmount => widget.payment.platformCommission;
-  String get _formattedRemit => '$_currency ${_remitAmount.toStringAsFixed(2)}';
+  String get _formattedRemit => '$_currency ${FormatUtil.formatAmount(_remitAmount)}';
 
   Future<void> _processPayment() async {
     setState(() => _isProcessing = true);
@@ -197,14 +198,14 @@ class _VetRemitPaymentScreenState extends State<VetRemitPaymentScreen> {
                   _Row(
                     label: 'Total Service Amount',
                     value:
-                        '$_currency ${widget.payment.totalAmount.toStringAsFixed(2)}',
+                        '$_currency ${FormatUtil.formatAmount(widget.payment.totalAmount)}',
                     valueColor: Colors.grey.shade600,
                   ),
                   const SizedBox(height: 8),
                   _Row(
                     label: 'Your Earnings (80%)',
                     value:
-                        '$_currency ${widget.payment.vetEarnings.toStringAsFixed(2)}',
+                        '$_currency ${FormatUtil.formatAmount(widget.payment.vetEarnings)}',
                     valueColor: Colors.grey.shade600,
                   ),
                   const Divider(height: 20),

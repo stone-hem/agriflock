@@ -1,3 +1,4 @@
+import 'package:agriflock/core/utils/format_util.dart';
 import 'package:agriflock/features/vet/payments/models/vet_pending_payment.dart'
     show VetPaymentsSummary, VetPendingPayment;
 import 'package:agriflock/features/vet/schedules/repo/visit_repo.dart';
@@ -144,7 +145,7 @@ class _VetPendingPaymentsScreenState extends State<VetPendingPaymentsScreen> {
                     const Text('Total Pending Remittance',
                         style: TextStyle(color: Colors.white70, fontSize: 13)),
                     Text(
-                      '${payments.first.currency} ${data.pendingRemittance.toStringAsFixed(2)}',
+                      '${payments.first.currency} ${FormatUtil.formatAmount(data.pendingRemittance)}',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 24,
@@ -251,20 +252,20 @@ class _PaymentCard extends StatelessWidget {
             // Amount breakdown
             _AmountRow(
               label: 'Total Amount',
-              value: '$currency ${payment.totalAmount.toStringAsFixed(2)}',
+              value: '$currency ${FormatUtil.formatAmount(payment.totalAmount)}',
               color: Colors.grey.shade700,
             ),
             const SizedBox(height: 6),
             _AmountRow(
               label: 'Your Earnings (80%)',
-              value: '$currency ${payment.vetEarnings.toStringAsFixed(2)}',
+              value: '$currency ${FormatUtil.formatAmount(payment.vetEarnings)}',
               color: Colors.green.shade700,
             ),
             const SizedBox(height: 6),
             _AmountRow(
               label: 'Platform Commission (20%)',
               value:
-                  '$currency ${payment.platformCommission.toStringAsFixed(2)}',
+                  '$currency ${FormatUtil.formatAmount(payment.platformCommission)}',
               color: Colors.orange.shade700,
               bold: true,
             ),
@@ -297,7 +298,7 @@ class _PaymentCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
                 child: Text(
-                  'Remit $currency ${payment.platformCommission.toStringAsFixed(2)}',
+                  'Remit $currency ${FormatUtil.formatAmount(payment.platformCommission)}',
                   style: const TextStyle(
                       fontWeight: FontWeight.bold, color: Colors.white),
                 ),

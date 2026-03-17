@@ -7,9 +7,9 @@ import 'package:agriflock/core/utils/feed_format_util.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/widgets/expense/expense_button.dart';
 import 'package:agriflock/core/widgets/expense/expense_marquee_banner.dart';
-import 'package:agriflock/features/farmer/batch/model/batch_mgt_model.dart';
-import 'package:agriflock/features/farmer/batch/repo/batch_mgt_repo.dart';
+import 'package:agriflock/features/farmer/expense/repo/expenditure_repository.dart';
 import 'package:agriflock/features/farmer/report/models/batch_report_model.dart';
+import 'package:agriflock/features/farmer/report/models/farm_financial_stats_model.dart';
 import 'package:agriflock/features/farmer/report/repo/report_repo.dart';
 import 'package:agriflock/main.dart';
 import 'package:flutter/material.dart';
@@ -41,11 +41,10 @@ class _BatchReportScreenState extends State<BatchReportScreen>
   String _currency = 'KES';
 
   // Financial report state
-  final BatchMgtRepository _batchMgtRepository = BatchMgtRepository();
-  BatchMgtResponse? _financialData;
+  final ExpenditureRepository _expenditureRepository = ExpenditureRepository();
+  FarmFinancialStats? _financialStats;
   bool _isLoadingFinancial = false;
   String? _financialError;
-  String _selectedFinancialPeriod = 'today';
 
   // Default filter values
   late DateTime _startDate;
@@ -136,18 +135,18 @@ class _BatchReportScreenState extends State<BatchReportScreen>
     });
 
     try {
-      final result = await _batchMgtRepository.getBatchDetails(widget.batchId);
+      final result = await _expenditureRepository.getFinancialStats(batchId: widget.batchId);
 
       if (!mounted) return;
 
       switch (result) {
-        case Success<BatchMgtResponse>(data: final data):
+        case Success<FarmFinancialStats>(data: final data):
           setState(() {
-            _financialData = data;
+            _financialStats = data;
             _isLoadingFinancial = false;
           });
           break;
-        case Failure<BatchMgtResponse>(message: final message):
+        case Failure<FarmFinancialStats>(message: final message):
           setState(() {
             _financialError = message;
             _isLoadingFinancial = false;
@@ -201,50 +200,6 @@ class _BatchReportScreenState extends State<BatchReportScreen>
         _endDateController.text = _endDate.toIso8601String().split('T').first;
       });
       _loadReport();
-    }
-  }
-
-  FinancialPeriodStats _getSelectedFinancialStats() {
-    if (_financialData == null) {
-      return const FinancialPeriodStats(
-        feedingCost: 0,
-        vaccinationCost: 0,
-        inventoryCost: 0,
-        totalExpenditure: 0,
-        productIncome: 0,
-        netProfit: 0,
-      );
-    }
-    switch (_selectedFinancialPeriod) {
-      case 'today':
-        return _financialData!.financialStats.today;
-      case 'weekly':
-        return _financialData!.financialStats.weekly;
-      case 'monthly':
-        return _financialData!.financialStats.monthly;
-      case 'yearly':
-        return _financialData!.financialStats.yearly;
-      case 'all_time':
-        return _financialData!.financialStats.allTime;
-      default:
-        return _financialData!.financialStats.today;
-    }
-  }
-
-  String _getFinancialPeriodLabel(String period) {
-    switch (period) {
-      case 'today':
-        return 'Today';
-      case 'weekly':
-        return 'This Week';
-      case 'monthly':
-        return 'This Month';
-      case 'yearly':
-        return 'This Year';
-      case 'all_time':
-        return 'All Time';
-      default:
-        return 'Today';
     }
   }
 
@@ -597,58 +552,101 @@ class _BatchReportScreenState extends State<BatchReportScreen>
           // ── Header ──
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            margin: EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            margin: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: typeColor.withValues(alpha: 0.04),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.green.shade200),
+              border: Border.all(color: typeColor.withValues(alpha: 0.25)),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                        child: Text('${report.birdType} ',
-                            style: TextStyle(fontSize: 15, color: Colors.green,fontWeight: FontWeight.bold)),
-                      ),
-
-                      const SizedBox(height: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: typeColor.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: typeColor.withOpacity(0.3)),
+                // Bird type + age chip
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        report.birdType,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.green.shade700,
+                          fontWeight: FontWeight.bold,
                         ),
-                        child: Text(AgeUtil.formatAge(report.ageDays),
-                            style: TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.w700, color: typeColor)),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        child: Text('Number of birds - ${report.totalBirds} birds',
-                            style: TextStyle(fontSize: 15, color: Colors.black,fontWeight: FontWeight.bold)),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: typeColor.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: typeColor.withValues(alpha: 0.35)),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text('Farm - ${report.farmName} | House - ${report.houseName}',
-                            style: TextStyle(fontSize: 14, color: Colors.green,fontWeight: FontWeight.bold)),
+                      child: Text(
+                        AgeUtil.formatAge(report.ageDays),
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: typeColor,
+                        ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(report.batchNumber,
-                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                      ),
-
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-
+                const SizedBox(height: 10),
+                // Birds count
+                Row(
+                  children: [
+                    Icon(Icons.group_outlined, size: 15, color: Colors.grey.shade600),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${report.totalBirds} birds',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black87,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                // Farm | House
+                Row(
+                  children: [
+                    Icon(Icons.home_outlined, size: 15, color: Colors.grey.shade600),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        '${report.farmName}  ·  ${report.houseName}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.green.shade700,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                // Batch number
+                Row(
+                  children: [
+                    Icon(Icons.tag, size: 14, color: Colors.grey.shade500),
+                    const SizedBox(width: 6),
+                    Text(
+                      report.batchNumber,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -656,7 +654,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
 
 
 
-          Divider(height: 1, color: Colors.grey.shade100),
+
 
           // ── Sections ──
           Padding(
@@ -964,7 +962,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
             children: [
               Expanded(
                   child: _buildInfoRow(Icons.inventory_outlined, Colors.brown.shade500,
-                      'Expected Quantity/Week', '${plan.expectedFeedPerWeekBags} Bags')),
+                      'Expected Quantity/Week', '${FeedFormatUtil.formatKg(plan.expectedFeedPerWeekKg)} Bags')),
               Expanded(
                   child: _buildInfoRow(
                       Icons.repeat, Colors.teal.shade600, 'Feeding Times/Day', '${plan.timesPerDay}')),
@@ -1336,7 +1334,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
       );
     }
 
-    if (_financialData == null) {
+    if (_financialStats == null) {
       return const Center(child: Text('No financial data available'));
     }
 
@@ -1351,25 +1349,6 @@ class _BatchReportScreenState extends State<BatchReportScreen>
           ),
           const SizedBox(height: 16),
 
-          // Period Selection
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildFinancialPeriodButton('today', 'Today'),
-                const SizedBox(width: 8),
-                _buildFinancialPeriodButton('weekly', 'Week'),
-                const SizedBox(width: 8),
-                _buildFinancialPeriodButton('monthly', 'Month'),
-                const SizedBox(width: 8),
-                _buildFinancialPeriodButton('yearly', 'Year'),
-                const SizedBox(width: 8),
-                _buildFinancialPeriodButton('all_time', 'All Time'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-
           // Main Financial Card
           _buildFinancialMainCard(),
         ],
@@ -1377,31 +1356,8 @@ class _BatchReportScreenState extends State<BatchReportScreen>
     );
   }
 
-  Widget _buildFinancialPeriodButton(String period, String label) {
-    final isSelected = _selectedFinancialPeriod == period;
-    return ElevatedButton(
-      onPressed: () {
-        setState(() {
-          _selectedFinancialPeriod = period;
-        });
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? Colors.green.shade600 : Colors.grey.shade100,
-        foregroundColor: isSelected ? Colors.white : Colors.grey.shade700,
-        elevation: isSelected ? 2 : 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(
-            color: isSelected ? Colors.green.shade700 : Colors.grey.shade300,
-          ),
-        ),
-      ),
-      child: Text(label),
-    );
-  }
-
   Widget _buildFinancialMainCard() {
-    final stats = _getSelectedFinancialStats();
+    final stats = _financialStats!;
     final totalExpenditure = stats.totalExpenditure;
 
     return Container(
@@ -1463,7 +1419,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _getFinancialPeriodLabel(_selectedFinancialPeriod),
+                          'All Time',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -1511,7 +1467,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                 Expanded(
                   child: _buildFinancialStatCard(
                     label: 'Income',
-                    value: '$_currency ${FormatUtil.formatAmount(stats.productIncome)}',
+                    value: '$_currency ${FormatUtil.formatAmount(stats.totalIncome)}',
                     icon: Icons.arrow_upward,
                     color: Colors.green,
                   ),
@@ -1558,22 +1514,36 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                   const SizedBox(height: 12),
                   _buildCostBar(
                     label: 'Feeding',
-                    amount: stats.feedingCost,
-                    percentage: totalExpenditure > 0 ? stats.feedingCost / totalExpenditure : 0,
+                    amount: stats.feedCost,
+                    percentage: totalExpenditure > 0 ? stats.feedCost / totalExpenditure : 0,
                     color: Colors.orange,
                   ),
                   const SizedBox(height: 8),
                   _buildCostBar(
+                    label: 'Medication',
+                    amount: stats.medicationCost,
+                    percentage: totalExpenditure > 0 ? stats.medicationCost / totalExpenditure : 0,
+                    color: Colors.red,
+                  ),
+                  const SizedBox(height: 8),
+                  _buildCostBar(
                     label: 'Vaccination',
-                    amount: stats.vaccinationCost,
-                    percentage: totalExpenditure > 0 ? stats.vaccinationCost / totalExpenditure : 0,
+                    amount: stats.vaccineCost,
+                    percentage: totalExpenditure > 0 ? stats.vaccineCost / totalExpenditure : 0,
                     color: Colors.blue,
                   ),
                   const SizedBox(height: 8),
                   _buildCostBar(
+                    label: 'Labor',
+                    amount: stats.laborCost,
+                    percentage: totalExpenditure > 0 ? stats.laborCost / totalExpenditure : 0,
+                    color: Colors.teal,
+                  ),
+                  const SizedBox(height: 8),
+                  _buildCostBar(
                     label: 'Other Expenses',
-                    amount: stats.inventoryCost,
-                    percentage: totalExpenditure > 0 ? stats.inventoryCost / totalExpenditure : 0,
+                    amount: stats.otherCosts,
+                    percentage: totalExpenditure > 0 ? stats.otherCosts / totalExpenditure : 0,
                     color: Colors.purple,
                   ),
                   const SizedBox(height: 12),

@@ -1,3 +1,4 @@
+import 'package:agriflock/core/utils/format_util.dart';
 import 'package:agriflock/core/utils/log_util.dart';
 import 'package:agriflock/features/farmer/vet/repo/vet_farmer_repository.dart';
 import 'package:flutter/material.dart';
@@ -41,7 +42,7 @@ class _FarmerVetPaymentScreenState extends State<FarmerVetPaymentScreen> {
   }
 
   String get _formattedAmount =>
-      '$_currencySymbol ${widget.amount.toStringAsFixed(2)}';
+      '$_currencySymbol ${FormatUtil.formatAmount(widget.amount)}';
 
   Future<void> _processPayment() async {
     setState(() => _isProcessing = true);
@@ -219,22 +220,17 @@ class _FarmerVetPaymentScreenState extends State<FarmerVetPaymentScreen> {
                     ],
                   ),
                   const Divider(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Total Amount',
-                          style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold)),
-                      Text(
-                        _formattedAmount,
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green,
-                        ),
-                      ),
-                    ],
+                  const Text('Total Amount',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold)),
+                  Text(
+                    _formattedAmount,
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                    ),
                   ),
                 ],
               ),

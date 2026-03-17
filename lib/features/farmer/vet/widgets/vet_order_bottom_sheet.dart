@@ -1,3 +1,4 @@
+import 'package:agriflock/core/utils/format_util.dart';
 import 'package:agriflock/core/utils/toast_util.dart';
 import 'package:agriflock/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock/core/widgets/reusable_time_input.dart';
@@ -396,7 +397,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              '${widget.estimate.currency} ${service.cost.toStringAsFixed(0)}',
+                              '${widget.estimate.currency} ${FormatUtil.formatAmount(service.cost)}',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
@@ -463,7 +464,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
                   ),
                 ),
                 Text(
-                  '${widget.estimate.currency} ${widget.estimate.totalEstimatedCost.toStringAsFixed(0)}',
+                  '${widget.estimate.currency} ${FormatUtil.formatAmount(widget.estimate.totalEstimatedCost)}',
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -558,7 +559,7 @@ class _VetOrderBottomSheetState extends State<VetOrderBottomSheet> {
           ),
           const SizedBox(width: 8),
           Text(
-            '${widget.estimate.currency} ${amount.toStringAsFixed(0)}',
+            '${widget.estimate.currency} ${FormatUtil.formatAmount(amount)}',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,

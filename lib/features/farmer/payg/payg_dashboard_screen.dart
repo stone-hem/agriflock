@@ -214,13 +214,6 @@ class PaygDashboardScreen extends StatelessWidget {
               onTap: () => context.push(AppRoutes.paygPayment),
             ),
             _ActionTile(
-              icon: Icons.history,
-              title: 'Payment History',
-              subtitle: 'View past payments',
-              color: Colors.blue,
-              onTap: () => context.push(AppRoutes.paygHistory),
-            ),
-            _ActionTile(
               icon: Icons.help_outline,
               title: 'Get Support',
               subtitle: 'Contact help desk',
