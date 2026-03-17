@@ -50,7 +50,7 @@ class VisitDetailsSection extends StatelessWidget {
             iconColor: accentColor,
             children: [
               Text(
-                '${visit.birdsCount} birds',
+                '${visit.birdsCount} total birds',
                 style: TextStyle(
                     color: Colors.grey.shade700,
                     fontSize: 13,
@@ -79,6 +79,7 @@ class VisitDetailsSection extends StatelessWidget {
                                 fontWeight: FontWeight.w600,
                                 color: accentColor)),
                       ),
+
                     ]),
                   )).toList(),
                 ),
@@ -94,7 +95,7 @@ class VisitDetailsSection extends StatelessWidget {
           iconColor: (visit.mortality ?? 0) > 0 ? Colors.red.shade400 : accentColor,
           children: [
             Text(
-              'Mortality: ${visit.mortality ?? 0} birds',
+              'Total Mortality: ${visit.mortality ?? 0} birds',
               style: TextStyle(
                 color: (visit.mortality ?? 0) > 0
                     ? Colors.red.shade700
@@ -154,7 +155,7 @@ class VisitDetailsSection extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: 14),
                 Text(
                   'Time: ${DateUtil.to12HourTime(DateTime.parse(visit.preferredDate))}',
                   style: TextStyle(
@@ -191,7 +192,7 @@ class VisitDetailsSection extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: 14),
                 Text(
                   'Time: ${DateUtil.to12HourTime(visit.submittedAt)}',
                   style: TextStyle(
@@ -204,6 +205,7 @@ class VisitDetailsSection extends StatelessWidget {
             ),
           ],
         ),
+        SizedBox(height: 10,),
 
         // Requested Services with costs
         if (visit.serviceCosts.isNotEmpty) ...[

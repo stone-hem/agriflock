@@ -404,16 +404,6 @@ class _LogFeedingScreenState extends State<LogFeedingScreen> {
               },
             ),
             const SizedBox(height: 20),
-
-            // Mortality Rate
-            ReusableInput(
-              topLabel: 'Mortality Now (Optional)',
-              icon: Icons.note,
-              controller: _notesController,
-              maxLines: 3,
-              hintText: 'Number of chicks that have died at this time...',
-            ),
-            const SizedBox(height: 32),
             // Notes
             ReusableInput(
               topLabel: 'Notes (Optional)',

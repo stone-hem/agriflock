@@ -1,3 +1,4 @@
+import 'package:agriflock/core/utils/age_util.dart';
 import 'package:agriflock/core/utils/api_error_handler.dart';
 import 'package:agriflock/core/utils/refresh_bus.dart';
 import 'package:agriflock/core/utils/result.dart';
@@ -482,7 +483,7 @@ class _QuickBatchesListScreenState extends State<QuickBatchesListScreen> {
                 ),
                 _buildBatchInfo(
                   Icons.calendar_today,
-                  'Day ${batch.ageInDays}',
+                  AgeUtil.formatAge(batch.ageInDays),
                   Colors.orange,
                 ),
                 if (batch.farm != null)

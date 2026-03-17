@@ -59,8 +59,24 @@ class _BatchDetailsScreenState extends State<BatchDetailsScreen>
             ),
             const SizedBox(width: 8),
             SizedBox(
-              width: MediaQuery.sizeOf(context).width*0.5,
-                child: Text(widget.batch.batchNumber,overflow: TextOverflow.ellipsis,)),
+              width: MediaQuery.sizeOf(context).width * 0.5,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    widget.batch.breed,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    widget.batch.batchNumber,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
         centerTitle: false,

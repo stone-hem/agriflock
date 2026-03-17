@@ -1,3 +1,4 @@
+import 'package:agriflock/core/utils/age_util.dart';
 import 'package:agriflock/core/utils/date_util.dart';
 import 'package:agriflock/core/utils/refresh_bus.dart';
 import 'package:agriflock/core/utils/result.dart';
@@ -424,14 +425,14 @@ class _BatchCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        batch.batchNumber,
+                        batch.breed,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
                       ),
                       Text(
-                        '${batch.breed} • ${batch.birdsAlive} birds • ${batch.age} days',
+                        '${batch.batchNumber} • ${batch.birdsAlive} birds • ${AgeUtil.formatAge(batch.age)}',
                         style: TextStyle(
                           color: Colors.grey.shade600,
                           fontSize: 12,

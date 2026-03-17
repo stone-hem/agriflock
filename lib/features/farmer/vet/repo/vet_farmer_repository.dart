@@ -108,18 +108,15 @@ class VetFarmerRepository {
 
       if (latitude != null) queryParams['latitude'] = latitude.toString();
       if (longitude != null) queryParams['longitude'] = longitude.toString();
-      if (minRating != null) queryParams['min_rating'] = minRating.toString();
-      if (minJobsDone != null) queryParams['min_jobs_done'] = minJobsDone.toString();
+      if (minRating != null) queryParams['ratings'] = minRating.toStringAsFixed(0);
+      if (minJobsDone != null) queryParams['min_jobs'] = minJobsDone.toString();
       if (minExperience != null) queryParams['min_experience'] = minExperience.toString();
-
-      // Build query string (specializations need repeated params)
-      var queryString = Uri(queryParameters: queryParams).query;
       if (specializations != null && specializations.isNotEmpty) {
-        final specParams = specializations
-            .map((s) => 'specialization[]=${Uri.encodeComponent(s)}')
-            .join('&');
-        queryString = queryString.isNotEmpty ? '$queryString&$specParams' : specParams;
+        queryParams['specializations'] = specializations.join(',');
       }
+
+      // Build query string
+      final queryString = Uri(queryParameters: queryParams).query;
 
       final endpoint = '/extension-officers${queryString.isNotEmpty ? '?$queryString' : ''}';
 

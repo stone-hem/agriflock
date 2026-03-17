@@ -1,4 +1,5 @@
 import 'package:agriflock/core/utils/date_util.dart';
+import 'package:agriflock/core/utils/format_util.dart';
 import 'package:agriflock/features/farmer/batch/model/batch_list_model.dart';
 import 'package:agriflock/features/farmer/expense/model/expense_category.dart';
 import 'package:agriflock/features/farmer/farm/models/farm_model.dart';
@@ -153,7 +154,7 @@ class SuccessView extends StatelessWidget {
                 _buildUpdateItem(
                   Icons.receipt,
                   'Expense recorded',
-                  'KES ${totalPrice.toStringAsFixed(2)} (${DateUtil.toShortDateWithDay(selectedDate)})',
+                  'KES ${FormatUtil.formatAmount(totalPrice)} (${DateUtil.toShortDateWithDay(selectedDate)})',
                   Colors.green,
                 ),
                 const SizedBox(height: 16),
@@ -164,7 +165,7 @@ class SuccessView extends StatelessWidget {
                     _buildUpdateItem(
                       Icons.trending_up,
                       'Batch cost updated',
-                      '${batch!.batchNumber} +KES ${totalPrice.toStringAsFixed(2)}',
+                      '${batch!.batchNumber} +KES ${FormatUtil.formatAmount(totalPrice)}',
                       Colors.blue,
                     ),
                   const SizedBox(height: 16),

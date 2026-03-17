@@ -1,5 +1,4 @@
 import 'package:agriflock/core/widgets/location_picker_step.dart';
-import 'package:agriflock/core/widgets/search_input.dart';
 import 'package:agriflock/features/farmer/vet/models/vet_farmer_model.dart';
 import 'package:agriflock/features/farmer/vet/repo/vet_farmer_repository.dart';
 import 'package:flutter/material.dart';
@@ -8,14 +7,8 @@ import 'package:agriflock/core/utils/result.dart';
 
 // Predefined specialization options
 const _kSpecializations = [
-  'Poultry',
-  'Livestock',
-  'Companion Animals',
-  'Public Health',
-  'Surgery',
-  'Nutrition & Feed',
-  'Disease Management',
-  'Reproduction',
+  'Vaccination',
+  'Training',
 ];
 
 class AllVetsScreen extends StatefulWidget {
@@ -27,14 +20,12 @@ class AllVetsScreen extends StatefulWidget {
 
 class _AllVetsScreenState extends State<AllVetsScreen> {
   final VetFarmerRepository _vetRepository = VetFarmerRepository();
-  final TextEditingController _searchController = TextEditingController();
 
   bool _isLoading = false;
   bool _hasError = false;
   String? _errorMessage;
 
   List<VetFarmer> _allVets = [];
-  List<VetFarmer> _filteredVets = [];
 
   String? _selectedOfficerType;
   String? _selectedRegion;
@@ -62,7 +53,6 @@ class _AllVetsScreenState extends State<AllVetsScreen> {
   @override
   void initState() {
     super.initState();
-    _searchController.addListener(_filterVets);
     _loadVets();
   }
 
@@ -80,7 +70,6 @@ class _AllVetsScreenState extends State<AllVetsScreen> {
         isVerified: true,
         page: _currentPage,
         limit: _limit,
-        search: _searchController.text.isNotEmpty ? _searchController.text : null,
         latitude: _filterLatitude,
         longitude: _filterLongitude,
         specializations:
@@ -93,7 +82,6 @@ class _AllVetsScreenState extends State<AllVetsScreen> {
         case Success<VetFarmerListResponse>(data: final data):
           setState(() {
             _allVets = data.data;
-            _filteredVets = data.data;
             _totalVets = data.total;
             _isLoading = false;
           });
@@ -123,7 +111,6 @@ class _AllVetsScreenState extends State<AllVetsScreen> {
         isVerified: true,
         page: _currentPage,
         limit: _limit,
-        search: _searchController.text.isNotEmpty ? _searchController.text : null,
         latitude: _filterLatitude,
         longitude: _filterLongitude,
         specializations:
@@ -136,7 +123,6 @@ class _AllVetsScreenState extends State<AllVetsScreen> {
         case Success<VetFarmerListResponse>(data: final data):
           setState(() {
             _allVets = data.data;
-            _filteredVets = data.data;
             _totalVets = data.total;
             _hasError = false;
           });
@@ -152,24 +138,6 @@ class _AllVetsScreenState extends State<AllVetsScreen> {
         _errorMessage = e.toString();
       });
     }
-  }
-
-  void _filterVets() {
-    final q = _searchController.text.toLowerCase();
-    setState(() {
-      _filteredVets = q.isEmpty
-          ? _allVets
-          : _allVets.where((v) =>
-                  v.name.toLowerCase().contains(q) ||
-                  v.educationLevel.toLowerCase().contains(q) ||
-                  (v.region?.toLowerCase().contains(q) ?? false) ||
-                  (v.specializations?.areas
-                          .toString()
-                          .toLowerCase()
-                          .contains(q) ??
-                      false))
-              .toList();
-    });
   }
 
   void _clearFilters() {
@@ -211,15 +179,6 @@ class _AllVetsScreenState extends State<AllVetsScreen> {
         builder: (_, scrollCtrl) => StatefulBuilder(
           builder: (context, setSheet) => Column(
             children: [
-              // Handle
-              Container(
-                margin: const EdgeInsets.only(top: 10, bottom: 4),
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2)),
-              ),
               // Header
               Padding(
                 padding:
@@ -256,66 +215,52 @@ class _AllVetsScreenState extends State<AllVetsScreen> {
                   padding: const EdgeInsets.all(16),
                   children: [
                     // ── Location ──────────────────────────────────────────
-                    _sheetSection(
-                      icon: Icons.location_on,
-                      title: 'Search by Location',
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Show vets near a specific location',
-                            style: TextStyle(
-                                fontSize: 12, color: Colors.grey.shade600),
-                          ),
-                          const SizedBox(height: 10),
-                          LocationPickerStep(
-                            selectedAddress: sheetAddress,
-                            latitude: sheetLat,
-                            longitude: sheetLng,
-                            title: '',
-                            text: 'Pick a location to search nearby vets',
-                            primaryColor: Colors.green,
-                            onLocationSelected: (addr, lat, lng) {
-                              setSheet(() {
-                                sheetAddress = addr;
-                                sheetLat = lat;
-                                sheetLng = lng;
-                              });
-                            },
-                          ),
-                          if (sheetLat != null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.check_circle,
-                                      size: 14, color: Colors.green.shade600),
-                                  const SizedBox(width: 6),
-                                  Expanded(
-                                    child: Text(
-                                      sheetAddress ?? '',
-                                      style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.green.shade700),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  TextButton(
-                                    onPressed: () => setSheet(() {
-                                      sheetLat = null;
-                                      sheetLng = null;
-                                      sheetAddress = null;
-                                    }),
-                                    child: const Text('Clear',
-                                        style: TextStyle(fontSize: 12)),
-                                  ),
-                                ],
+                    LocationPickerStep(
+                      selectedAddress: sheetAddress,
+                      latitude: sheetLat,
+                      longitude: sheetLng,
+                      title: '',
+                      text: 'Pick a location to search nearby vets',
+                      hintText: 'Type your location',
+                      showBanner: false,
+                      onLocationSelected: (addr, lat, lng) {
+                        setSheet(() {
+                          sheetAddress = addr;
+                          sheetLat = lat;
+                          sheetLng = lng;
+                        });
+                      },
+                    ),
+                    if (sheetLat != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Row(
+                          children: [
+                            Icon(Icons.check_circle,
+                                size: 14, color: Colors.green.shade600),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                sheetAddress ?? '',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.green.shade700),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                        ],
+                            TextButton(
+                              onPressed: () => setSheet(() {
+                                sheetLat = null;
+                                sheetLng = null;
+                                sheetAddress = null;
+                              }),
+                              child: const Text('Clear',
+                                  style: TextStyle(fontSize: 12)),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
                     const SizedBox(height: 16),
 
                     // ── Specialization ────────────────────────────────────
@@ -345,30 +290,18 @@ class _AllVetsScreenState extends State<AllVetsScreen> {
                     // ── Minimum Rating ────────────────────────────────────
                     _sheetSection(
                       icon: Icons.star,
-                      title: 'Minimum Rating',
+                      title: 'Rating',
                       child: Column(
                         children: [
                           _ratingOption(
-                              label: 'Any rating',
-                              value: null,
-                              groupValue: sheetRating,
-                              onChanged: (v) =>
-                                  setSheet(() => sheetRating = v)),
-                          _ratingOption(
-                              label: '2+ stars',
-                              value: 2.0,
-                              groupValue: sheetRating,
-                              onChanged: (v) =>
-                                  setSheet(() => sheetRating = v)),
-                          _ratingOption(
-                              label: '3+ stars',
-                              value: 3.0,
-                              groupValue: sheetRating,
-                              onChanged: (v) =>
-                                  setSheet(() => sheetRating = v)),
-                          _ratingOption(
                               label: '4+ stars',
                               value: 4.0,
+                              groupValue: sheetRating,
+                              onChanged: (v) =>
+                                  setSheet(() => sheetRating = v)),
+                          _ratingOption(
+                              label: '5 stars',
+                              value: 5.0,
                               groupValue: sheetRating,
                               onChanged: (v) =>
                                   setSheet(() => sheetRating = v)),
@@ -435,7 +368,6 @@ class _AllVetsScreenState extends State<AllVetsScreen> {
                     const EdgeInsets.fromLTRB(16, 8, 16, 24),
                 child: SizedBox(
                   width: double.infinity,
-                  height: 50,
                   child: ElevatedButton(
                     onPressed: () {
                       setState(() {
@@ -831,11 +763,6 @@ class _AllVetsScreenState extends State<AllVetsScreen> {
             ),
           Stack(
             children: [
-              IconButton(
-                icon: const Icon(Icons.tune),
-                tooltip: 'Filter',
-                onPressed: _showFilterSheet,
-              ),
               if (_hasActiveFilters)
                 Positioned(
                   right: 8,
@@ -875,22 +802,40 @@ class _AllVetsScreenState extends State<AllVetsScreen> {
         onRefresh: _refreshVets,
         child: Column(
           children: [
-            // Search + active filter chips
+            // Filter tap area + active filter chips
             Container(
               color: Colors.white,
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SearchInput(
-                    controller: _searchController,
-                    hintText: 'Search by name, education, specialization...',
-                    prefixIcon: _searchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear, size: 20),
-                            onPressed: () => _searchController.clear(),
-                          )
-                        : null,
+                  GestureDetector(
+                    onTap: _showFilterSheet,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.tune, size: 18, color: Colors.grey.shade600),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              _hasActiveFilters ? 'Filters applied' : 'Filter veterinarians...',
+                              style: TextStyle(
+                                color: _hasActiveFilters ? Colors.green.shade700 : Colors.grey.shade500,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                          if (_hasActiveFilters)
+                            Icon(Icons.circle, size: 8, color: Colors.green.shade600),
+                        ],
+                      ),
+                    ),
                   ),
                   // Active filter chips
                   if (_hasActiveFilters) ...[
@@ -978,7 +923,7 @@ class _AllVetsScreenState extends State<AllVetsScreen> {
                             ),
                           ),
                         )
-                      : _filteredVets.isEmpty
+                      : _allVets.isEmpty
                           ? Center(
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
@@ -996,9 +941,7 @@ class _AllVetsScreenState extends State<AllVetsScreen> {
                                   Text(
                                     _hasActiveFilters
                                         ? 'Try adjusting or clearing your filters'
-                                        : (_searchController.text.isEmpty
-                                            ? 'No veterinarians available at the moment'
-                                            : 'Try adjusting your search terms'),
+                                        : 'No veterinarians available at the moment',
                                     style: TextStyle(
                                         fontSize: 13,
                                         color: Colors.grey.shade500),
@@ -1025,17 +968,17 @@ class _AllVetsScreenState extends State<AllVetsScreen> {
                                     crossAxisSpacing: 16,
                                     childAspectRatio: 0.52,
                                   ),
-                                  itemCount: _filteredVets.length,
+                                  itemCount: _allVets.length,
                                   itemBuilder: (_, i) =>
-                                      _buildVetCard(_filteredVets[i]),
+                                      _buildVetCard(_allVets[i]),
                                 )
                               : ListView.builder(
                                   padding: const EdgeInsets.all(16),
                                   physics:
                                       const AlwaysScrollableScrollPhysics(),
-                                  itemCount: _filteredVets.length,
+                                  itemCount: _allVets.length,
                                   itemBuilder: (_, i) =>
-                                      _buildVetCard(_filteredVets[i]),
+                                      _buildVetCard(_allVets[i]),
                                 ),
             ),
           ],
@@ -1068,7 +1011,6 @@ class _AllVetsScreenState extends State<AllVetsScreen> {
 
   @override
   void dispose() {
-    _searchController.dispose();
     super.dispose();
   }
 }

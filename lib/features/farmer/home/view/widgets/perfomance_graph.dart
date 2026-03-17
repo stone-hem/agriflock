@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:agriflock/core/utils/format_util.dart';
 import 'package:agriflock/features/farmer/home/model/financial_overview_model.dart';
 import 'package:agriflock/main.dart';
 import 'package:flutter/material.dart';
@@ -174,32 +175,20 @@ class _FinancialPerformanceGraphState extends State<FinancialPerformanceGraph> {
 
             // Summary Stats
             const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildStatCard(
-                    'Total Income',
-                    '${_calculateTotalIncome()} $_currency',
-                    Colors.green,
-                  ),
-                  _buildStatCard(
-                    'Total Expenditure',
-                    '${_calculateTotalExpenditure()} $_currency',
-                    Colors.red,
-                  ),
-                  _buildStatCard(
-                    'Net Profit',
-                    '${_calculateNetProfit()} $_currency',
-                    _calculateNetProfit() >= 0 ? Colors.blue : Colors.orange,
-                  ),
-                ],
-              ),
+            _buildStatCard(
+              'Total Income',
+              '${FormatUtil.formatAmount(widget.financialData.totalIncome)} $_currency',
+              Colors.green,
+            ),
+            _buildStatCard(
+              'Total Expenditure',
+              '${FormatUtil.formatAmount(widget.financialData.totalExpenditure)} $_currency',
+              Colors.red,
+            ),
+            _buildStatCard(
+              'Net Profit',
+              '${FormatUtil.formatAmount(widget.financialData.netProfit)} $_currency',
+              widget.financialData.netProfit >= 0 ? Colors.blue : Colors.orange,
             ),
           ],
         ),

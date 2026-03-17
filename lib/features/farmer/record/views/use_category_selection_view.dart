@@ -1,3 +1,4 @@
+import 'package:agriflock/core/utils/age_util.dart';
 import 'package:agriflock/features/farmer/batch/model/batch_list_model.dart';
 import 'package:agriflock/features/farmer/expense/model/expense_category.dart';
 import 'package:agriflock/features/farmer/record/views/record_weight_screen.dart';
@@ -93,22 +94,36 @@ class UseCategorySelectionView extends StatelessWidget {
                 children: [
                   const Icon(Icons.pets, color: Colors.green, size: 18),
                   const SizedBox(width: 8),
-                  Text(
-                    batch.batchNumber,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          batch.birdType?.name ?? batch.batchNumber,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (batch.birdType != null)
+                          Text(
+                            batch.batchNumber,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade500,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                      ],
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 4),
               Text(
-                '${batch.currentCount} birds •  ${batch.ageInDays} days old  /  '
-                    '${((batch.ageInDays / 7) % 1 > 0.5)
-                    ? (batch.ageInDays / 7).ceil()
-                    : (batch.ageInDays / 7).floor()} weeks',
+                '${batch.currentCount} birds • ${AgeUtil.formatAge(batch.ageInDays)}',
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey.shade700,
@@ -206,6 +221,7 @@ class UseCategorySelectionView extends StatelessWidget {
                       extra: {
                         'batchNumber': batch.batchNumber,
                         'batchAge': int.tryParse(batch.age ?? ''),
+                        'breed': batch.birdType?.name,
                       },
                     );
                   },

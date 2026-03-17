@@ -17,19 +17,19 @@ import 'package:agriflock/features/farmer/farm/models/farm_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class UseFromStorePageView extends StatefulWidget {
+class QuickRecordScreen extends StatefulWidget {
   final FarmModel? farm;
 
-  const UseFromStorePageView({
+  const QuickRecordScreen({
     super.key,
     this.farm,
   });
 
   @override
-  State<UseFromStorePageView> createState() => _UseFromStorePageViewState();
+  State<QuickRecordScreen> createState() => _QuickRecordScreenState();
 }
 
-class _UseFromStorePageViewState extends State<UseFromStorePageView> {
+class _QuickRecordScreenState extends State<QuickRecordScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
@@ -423,7 +423,7 @@ class _UseFromStorePageViewState extends State<UseFromStorePageView> {
       case 0:
         return 'Quick recording for a batch';
       case 1:
-        return _selectedBatch?.batchNumber ?? 'Select Category';
+        return _selectedBatch?.birdType?.name ?? _selectedBatch?.batchNumber ?? 'Select Category';
       case 2:
         return _selectedCategory?.name ?? 'Item Details';
       case 3:

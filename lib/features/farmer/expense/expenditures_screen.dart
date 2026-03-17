@@ -1,3 +1,4 @@
+import 'package:agriflock/core/utils/format_util.dart';
 import 'package:agriflock/core/utils/refresh_bus.dart';
 import 'package:agriflock/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock/core/widgets/disclaimer_widget.dart';
@@ -712,7 +713,7 @@ class _ExpendituresScreenState extends State<ExpendituresScreen> {
         children: [
           Expanded(
             child: _buildStatCard(
-              value: '${_totalAmount.toStringAsFixed(2)} $_currency',
+              value: '${FormatUtil.formatAmount(_totalAmount)} $_currency',
               label: 'Total Amount',
               icon: Icons.attach_money,
               color: Colors.blue.shade100,
@@ -1075,7 +1076,7 @@ class _ExpenditureCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '${expenditure.amount.toStringAsFixed(2)} $currency',
+                      '${FormatUtil.formatAmount(expenditure.amount)} $currency',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,

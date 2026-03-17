@@ -582,6 +582,7 @@ class AppRoutes {
                   batchId: batchId,
                   batchNumber: extra?['batchNumber'] as String?,
                   batchAge: extra?['batchAge'] as int?,
+                  breed: extra?['breed'] as String?,
                 );
               },
             ),
@@ -598,7 +599,7 @@ class AppRoutes {
           path: '/quick-recording',
           builder: (context, state) {
             final farm = state.extra as FarmModel?;
-            return UseFromStorePageView(farm: farm);
+            return QuickRecordScreen(farm: farm);
           },
         ),
         GoRoute(

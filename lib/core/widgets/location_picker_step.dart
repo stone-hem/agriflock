@@ -13,6 +13,8 @@ class LocationPickerStep extends StatefulWidget {
   final String? text;
   final Function(String address, double lat, double lng) onLocationSelected;
   final Color? primaryColor;
+  final bool? showBanner;
+  final String? hintText;
 
 
   const LocationPickerStep({
@@ -22,6 +24,7 @@ class LocationPickerStep extends StatefulWidget {
     this.longitude,
     required this.onLocationSelected,
     this.primaryColor, this.title, this.text,
+    this.showBanner=true, this.hintText,
   });
 
   @override
@@ -270,7 +273,7 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
             color: Colors.black87,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Text(
           widget.text??'Search and select your practice location',
           style: TextStyle(
@@ -340,7 +343,7 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
             googleAPIKey: AppConstants.googleApiKey,
             focusNode: _focusNode,
             inputDecoration: InputDecoration(
-              hintText: 'Search for your location',
+              hintText: widget.hintText??'Search for your location',
               prefixIcon: Icon(
                 Icons.location_on,
                 color: _primaryColor,
@@ -464,6 +467,7 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
         const SizedBox(height: 20),
 
         // Info Card
+        if (widget.showBanner == true)
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(

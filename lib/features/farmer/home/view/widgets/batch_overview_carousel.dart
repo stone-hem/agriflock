@@ -1,4 +1,6 @@
+import 'package:agriflock/core/utils/age_util.dart';
 import 'package:agriflock/core/utils/feed_format_util.dart';
+import 'package:agriflock/core/utils/format_util.dart';
 import 'package:agriflock/features/farmer/home/model/batch_home_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -176,10 +178,6 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
     final primaryColor = isLayers ? Colors.amber : Colors.blue;
     final accentColor = isLayers ? Colors.orange : Colors.indigo;
 
-    // Calculate mortality percentage
-    final mortalityPercent = batch.totalBirds > 0
-        ? ((batch.mortality / batch.totalBirds) * 100).toStringAsFixed(1)
-        : '0';
 
     // Calculate total egg trays
     final totalEggTrays = batch.totalEggProduction != null
@@ -313,7 +311,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                           ),
                         ),
                         Text(
-                          '${batch.ageWeeks} weeks / ${batch.ageDays} days',
+                          AgeUtil.formatAge(int.tryParse(batch.ageDays) ?? 0),
                           style: TextStyle(
                             color: primaryColor.shade800,
                             fontSize: 12,
@@ -348,7 +346,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                     Expanded(
                       child: _buildInfoRow(
                         'Mortality',
-                        '${batch.mortality} birds – $mortalityPercent%',
+                        '${batch.mortality} birds – ${batch.mortalityRate}',
                         Icons.warning_amber_outlined,
                         Colors.red,
                         valueColor: batch.mortality > 0
@@ -366,7 +364,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                       Expanded(
                         child: _buildInfoRow(
                           'Production cost/bird',
-                          'KES ${batch.productionCostPerBird.toStringAsFixed(0)}',
+                          'KES ${FormatUtil.formatAmount(batch.productionCostPerBird)}',
                           Icons.attach_money_outlined,
                           Colors.green,
                         ),
@@ -429,7 +427,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                     const SizedBox(height: 8),
                     _buildInfoRow(
                       'Expected feeds per week',
-                      '${batch.feedingPlan!.expectedFeedPerWeekBags} bags',
+                      '${FeedFormatUtil.formatKg(batch.feedingPlan!.expectedFeedPerWeekKgs)} bags',
                       Icons.calendar_today,
                       Colors.teal.shade700,
                     ),
@@ -614,7 +612,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
             // Layers Specific Info with tray calculation
             if (isLayers) ...[
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   color: Colors.amber.shade50,
                   borderRadius: BorderRadius.circular(6),
@@ -635,7 +633,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: _buildInfoRow(
-                            'Production %',
+                            'Production Percentage',
                             '${batch.productionPercentage ?? 0}%',
                             Icons.trending_up,
                             Colors.green,
@@ -658,7 +656,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                         Expanded(
                           child: _buildInfoRow(
                             'Production cost/egg',
-                            'KES ${batch.productionCostPerEgg?.toStringAsFixed(2) ?? '0.00'}',
+                            'KES ${FormatUtil.formatAmount(batch.productionCostPerEgg ?? 0)}',
                             Icons.attach_money,
                             Colors.green.shade700,
                           ),
@@ -794,7 +792,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                               const SizedBox(width: 6),
                               Expanded(
                                 child: Text(
-                                  '${v.name} (Day ${v.dayDue})',
+                                  '${v.name} (${AgeUtil.formatVaccinationDay(v.dayDue ?? 0)})',
                                   style: TextStyle(
                                     fontSize: 11,
                                     color: Colors.grey.shade800,

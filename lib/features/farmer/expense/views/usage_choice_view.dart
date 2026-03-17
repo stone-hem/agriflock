@@ -1,3 +1,4 @@
+import 'package:agriflock/core/utils/format_util.dart';
 import 'package:agriflock/features/farmer/expense/model/expense_category.dart';
 import 'package:flutter/material.dart';
 
@@ -58,7 +59,7 @@ class UsageChoiceView extends StatelessWidget {
                   children: [
                     Text('${quantity.toStringAsFixed(0)} units',
                         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                    Text('KES ${totalPrice.toStringAsFixed(2)}',
+                    Text('KES ${FormatUtil.formatAmount(totalPrice)}',
                         style: const TextStyle(
                             fontSize: 13, fontWeight: FontWeight.bold, color: Colors.green)),
                   ],

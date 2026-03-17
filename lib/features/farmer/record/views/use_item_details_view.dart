@@ -1,3 +1,4 @@
+import 'package:agriflock/core/utils/age_util.dart';
 import 'package:agriflock/core/utils/feed_format_util.dart';
 import 'package:agriflock/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock/core/widgets/reusable_dropdown.dart';
@@ -206,7 +207,8 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
         );
         return;
       }
-      if (double.tryParse(_priceController.text) == null || double.parse(_priceController.text) <= 0) {
+      final rawPrice = _priceController.text.replaceAll(',', '');
+      if (double.tryParse(rawPrice) == null || double.parse(rawPrice) <= 0) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Please enter a valid price')),
         );
@@ -218,7 +220,9 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
     final dosesUsed = _isVaccineOrMedicine && _dosesController.text.isNotEmpty
         ? double.tryParse(_dosesController.text)
         : null;
-    final price = !_usedFromStore ? double.tryParse(_priceController.text) : null;
+    final price = !_usedFromStore
+        ? double.tryParse(_priceController.text.replaceAll(',', ''))
+        : null;
 
     // Parse date from controller (ISO format from CustomDateTextField)
     DateTime selectedDate = DateTime.now();
@@ -277,17 +281,31 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                 children: [
                   Icon(Icons.pets, color: categoryColor, size: 16),
                   const SizedBox(width: 8),
-                  Text(
-                    widget.batch.batchNumber,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: categoryColor,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.batch.birdType?.name ?? widget.batch.batchNumber,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: categoryColor,
+                          ),
+                        ),
+                        if (widget.batch.birdType != null)
+                          Text(
+                            widget.batch.batchNumber,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 8),
                   Text(
-                    '• ${widget.batch.currentCount} birds',
+                    '${widget.batch.currentCount} birds',
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey.shade700,
@@ -297,13 +315,9 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
               ),
               const SizedBox(height: 4),
               Text(
-                '${widget.batch.ageInDays} days old  /  '
-                    '${((widget.batch.ageInDays / 7) % 1 > 0.5)
-                    ? (widget.batch.ageInDays / 7).ceil()
-                    : (widget.batch.ageInDays / 7).floor()} weeks',
+                AgeUtil.formatAge(widget.batch.ageInDays),
                 style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
                   color: categoryColor,
                 ),
               ),
@@ -337,7 +351,7 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                   // Item selection section
                   if (widget.selectedItem == null) ...[
                     const Text(
-                      'Select item from store',
+                      'Select item',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -928,7 +942,7 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                                   child: RichText(
                                     text: TextSpan(
                                       style: TextStyle(
-                                          fontSize: 12, color: Colors.green.shade800),
+                                          fontSize: 16, color: Colors.green.shade800),
                                       children: [
                                         const TextSpan(
                                           text: 'Recommended feeds per day: ',
@@ -936,9 +950,7 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                                         ),
                                         TextSpan(
                                           text: '${_formatQty(recQty)} $fieldUnit'
-                                              ' (${_formatQty(qtyPerBird)}g'
-                                              ' × ${widget.batch.currentCount} birds'
-                                              '${timesPerDay != null ? ', $timesPerDay×/day' : ''})',
+                                              '(${timesPerDay != null ? ' $timesPerDay×/day' : ''})',
                                         ),
                                       ],
                                     ),
@@ -975,12 +987,8 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                         topLabel: 'Total Purchase Price',
                         icon: Icons.payments_rounded,
                         controller: _priceController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true,signed: false),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(
-                            RegExp(r'^\d+\.?\d{0,2}'),
-                          ),
-                        ],
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: false),
+                        inputFormatters: [_ThousandsFormatter()],
                         hintText: 'Enter total amount paid',
                       ),
                       const SizedBox(height: 16),
@@ -1157,5 +1165,32 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
     _dateController.dispose();
     _priceController.dispose();
     super.dispose();
+  }
+}
+
+class _ThousandsFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    final stripped = newValue.text.replaceAll(',', '');
+    if (stripped.isEmpty) return newValue.copyWith(text: '');
+
+    final parts = stripped.split('.');
+    final intPart = parts[0];
+    final decPart = parts.length > 1
+        ? '.${parts[1].substring(0, parts[1].length.clamp(0, 2))}'
+        : '';
+
+    final buffer = StringBuffer();
+    for (int i = 0; i < intPart.length; i++) {
+      if (i > 0 && (intPart.length - i) % 3 == 0) buffer.write(',');
+      buffer.write(intPart[i]);
+    }
+
+    final formatted = '${buffer.toString()}$decPart';
+    return newValue.copyWith(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
   }
 }

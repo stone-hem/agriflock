@@ -1,3 +1,4 @@
+import 'package:agriflock/core/utils/format_util.dart';
 import 'package:agriflock/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock/core/widgets/reusable_input.dart';
@@ -375,7 +376,7 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
                           ),
                         ),
                         Text(
-                          '$_currency ${_totalPrice.toStringAsFixed(2)}',
+                          '$_currency ${FormatUtil.formatAmount(_totalPrice)}',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,

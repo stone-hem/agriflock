@@ -124,6 +124,7 @@ class _BatchProductsTabState extends State<BatchProductsTab> {
       extra: {
         'batchNumber': widget.batch.batchNumber,
         'batchAge': widget.batch.age,
+        'breed': widget.batch.breed,
       },
     );
   }

@@ -1,4 +1,5 @@
 import 'package:agriflock/app_routes.dart';
+import 'package:agriflock/core/utils/age_util.dart';
 import 'package:agriflock/core/utils/api_error_handler.dart';
 import 'package:agriflock/core/utils/secure_storage.dart';
 import 'package:agriflock/core/widgets/location_picker_step.dart';
@@ -799,7 +800,7 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Farm Details (Optional)',
+          'Farm Details',
           style: Theme.of(context).textTheme.titleMedium!.copyWith(
             fontWeight: FontWeight.bold,
             color: Colors.grey.shade800,
@@ -1059,13 +1060,20 @@ class _VetOrderScreenState extends State<VetOrderScreen> {
             children: _availableBatches.map((batch) {
               final isSelected = _selectedBatches.contains(batch.id);
               return CheckboxListTile(
-                title: Text(batch.batchNumber,
+                title: Text(batch.breed,
                     style: const TextStyle(fontWeight: FontWeight.w500)),
-                subtitle: Row(children: [
-                  Text('${batch.birdsAlive} birds'),
-                  const SizedBox(width: 12),
-                  Text('${batch.age} days'),
-                ]),
+                subtitle: Wrap(
+                  spacing: 4,
+                  runSpacing: 2,
+                  children: [
+                    Text(batch.batchNumber,
+                        style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                    Text('• ${batch.birdsAlive} birds',
+                        style: const TextStyle(fontSize: 11)),
+                    Text('• ${AgeUtil.formatAge(batch.age)}',
+                        style: const TextStyle(fontSize: 11)),
+                  ],
+                ),
                 value: isSelected,
                 onChanged: (v) => _onBatchSelected(batch.id, v ?? false),
                 controlAffinity: ListTileControlAffinity.leading,

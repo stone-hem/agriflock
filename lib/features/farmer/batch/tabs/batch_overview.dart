@@ -1,3 +1,5 @@
+import 'package:agriflock/core/utils/age_util.dart';
+import 'package:agriflock/core/utils/format_util.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/features/farmer/batch/model/batch_mgt_model.dart';
 import 'package:agriflock/features/farmer/batch/repo/batch_mgt_repo.dart';
@@ -175,7 +177,7 @@ class _BatchOverviewState extends State<BatchOverview> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                _batchData!.batch.batchNumber,
+                                _batchData!.batch.breed,
                                 style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
@@ -183,10 +185,10 @@ class _BatchOverviewState extends State<BatchOverview> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                _batchData!.batch.breed,
+                                _batchData!.batch.batchNumber,
                                 style: TextStyle(
                                   color: Colors.grey.shade600,
-                                  fontSize: 16,
+                                  fontSize: 14,
                                 ),
                               ),
                               const SizedBox(height: 4),
@@ -241,8 +243,8 @@ class _BatchOverviewState extends State<BatchOverview> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: StatCard(
-                    value: '${_batchData!.stats.ageDays}',
-                    label: 'Days Old',
+                    value: AgeUtil.formatAge(_batchData!.stats.ageDays),
+                    label: 'Age',
                     color: Colors.orange.shade100,
                     icon: Icons.calendar_today,
                     textColor: Colors.orange.shade800,
@@ -390,8 +392,8 @@ class _BatchOverviewState extends State<BatchOverview> {
                       ),
                       child: Text(
                         _getSelectedStats().netProfit >= 0
-                            ? 'Profit: $_currency ${_getSelectedStats().netProfit.toStringAsFixed(2)}'
-                            : 'Loss: $_currency ${_getSelectedStats().netProfit.abs().toStringAsFixed(2)}',
+                            ? 'Profit: $_currency ${FormatUtil.formatAmount(_getSelectedStats().netProfit)}'
+                            : 'Loss: $_currency ${FormatUtil.formatAmount(_getSelectedStats().netProfit.abs())}',
                         style: TextStyle(
                           color: _getSelectedStats().netProfit >= 0
                               ? Colors.green
@@ -502,7 +504,7 @@ class _BatchOverviewState extends State<BatchOverview> {
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
             Text(
-              '$_currency ${totalExpenditure.toStringAsFixed(2)}',
+              '$_currency ${FormatUtil.formatAmount(totalExpenditure)}',
               style: const TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 16,
@@ -545,7 +547,7 @@ class _BatchOverviewState extends State<BatchOverview> {
                       style: const TextStyle(fontWeight: FontWeight.w500),
                     ),
                     Text(
-                      '$_currency ${amount.toStringAsFixed(2)}',
+                      '$_currency ${FormatUtil.formatAmount(amount)}',
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         color: color,
@@ -595,7 +597,7 @@ class _BatchOverviewState extends State<BatchOverview> {
               children: [
                 _buildSummaryItem(
                   label: 'Income',
-                  value: '$_currency ${stats.productIncome.toStringAsFixed(2)}',
+                  value: '$_currency ${FormatUtil.formatAmount(stats.productIncome)}',
                   icon: Icons.arrow_upward,
                   color: Colors.green,
                 ),
@@ -606,7 +608,7 @@ class _BatchOverviewState extends State<BatchOverview> {
                 ),
                 _buildSummaryItem(
                   label: 'Expenditure',
-                  value: '$_currency ${stats.totalExpenditure.toStringAsFixed(2)}',
+                  value: '$_currency ${FormatUtil.formatAmount(stats.totalExpenditure)}',
                   icon: Icons.arrow_downward,
                   color: Colors.red,
                 ),
@@ -711,19 +713,19 @@ class _BatchOverviewState extends State<BatchOverview> {
             const SizedBox(height: 12),
             _buildComparisonItem(
               label: 'Total Income',
-              value: '$_currency ${allTime.productIncome.toStringAsFixed(2)}',
+              value: '$_currency ${FormatUtil.formatAmount(allTime.productIncome)}',
             ),
             _buildComparisonItem(
               label: 'Total Feeding Cost',
-              value: '$_currency ${allTime.feedingCost.toStringAsFixed(2)}',
+              value: '$_currency ${FormatUtil.formatAmount(allTime.feedingCost)}',
             ),
             _buildComparisonItem(
               label: 'Total Vaccination Cost',
-              value: '$_currency ${allTime.vaccinationCost.toStringAsFixed(2)}',
+              value: '$_currency ${FormatUtil.formatAmount(allTime.vaccinationCost)}',
             ),
             _buildComparisonItem(
               label: 'Overall Net',
-              value: '$_currency ${allTime.netProfit.toStringAsFixed(2)}',
+              value: '$_currency ${FormatUtil.formatAmount(allTime.netProfit)}',
               isNet: true,
             ),
           ],

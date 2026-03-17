@@ -285,6 +285,7 @@ class FeedingPlan {
   final double expectedFeedPerDayKg;
   final int feedPerBirdPerDayGrams;
   final int expectedFeedPerWeekBags;
+  final double expectedFeedPerWeekKgs;
   final String expectedAvgWeight;
   final String feedTypeInUse;
   final String stageName;
@@ -295,6 +296,7 @@ class FeedingPlan {
     required this.expectedFeedPerDayKg,
     required this.feedPerBirdPerDayGrams,
     required this.expectedFeedPerWeekBags,
+    required this.expectedFeedPerWeekKgs,
     required this.expectedAvgWeight,
     required this.feedTypeInUse,
     required this.stageName,
@@ -309,6 +311,7 @@ class FeedingPlan {
       expectedFeedPerDayKg: TypeUtils.toDoubleSafe(json['expected_feed_per_day_kg']),
       feedPerBirdPerDayGrams: TypeUtils.toIntSafe(json['feed_per_bird_per_day_grams']),
       expectedFeedPerWeekBags: TypeUtils.toIntSafe(json['expected_feed_per_week_bags']),
+      expectedFeedPerWeekKgs: TypeUtils.toDoubleSafe(json['expected_feed_per_week_kg']),
       expectedAvgWeight: TypeUtils.toStringSafe(json['expected_avg_weight']),
       feedTypeInUse: TypeUtils.toStringSafe(json['feed_type_in_use']),
       stageName: TypeUtils.toStringSafe(json['stage_name']),
@@ -322,6 +325,7 @@ class FeedingPlan {
       'expected_feed_per_day_kg': expectedFeedPerDayKg,
       'feed_per_bird_per_day_grams': feedPerBirdPerDayGrams,
       'expected_feed_per_week_bags': expectedFeedPerWeekBags,
+      'expected_feed_per_week_kg': expectedFeedPerWeekKgs,
       'expected_avg_weight': expectedAvgWeight,
       'feed_type_in_use': feedTypeInUse,
       'stage_name': stageName,

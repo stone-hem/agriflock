@@ -1,4 +1,6 @@
+import 'package:agriflock/core/utils/age_util.dart';
 import 'package:agriflock/core/utils/api_error_handler.dart';
+import 'package:agriflock/core/utils/format_util.dart';
 import 'package:agriflock/features/farmer/vet/widgets/vet_reports_tab.dart';
 import 'package:agriflock/core/utils/date_util.dart';
 import 'package:agriflock/core/utils/feed_format_util.dart';
@@ -791,9 +793,9 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(batch.batchNumber,
+                      Text(batch.birdType,
                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                      Text('${batch.birdType} · ${batch.houseName}',
+                      Text('${batch.batchNumber} · ${batch.houseName}',
                           style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
                     ],
                   ),
@@ -808,7 +810,7 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: typeColor.withOpacity(0.3)),
                       ),
-                      child: Text('${batch.ageDays}d',
+                      child: Text(AgeUtil.formatAge(batch.ageDays),
                           style: TextStyle(
                               fontSize: 11, fontWeight: FontWeight.w600, color: typeColor)),
                     ),
@@ -1091,8 +1093,8 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
                         ),
                         child: Text(
                           stats.netProfit >= 0
-                              ? 'Profit: $_currency ${stats.netProfit.toStringAsFixed(2)}'
-                              : 'Loss: $_currency ${stats.netProfit.abs().toStringAsFixed(2)}',
+                              ? 'Profit: $_currency ${FormatUtil.formatAmount(stats.netProfit)}'
+                              : 'Loss: $_currency ${FormatUtil.formatAmount(stats.netProfit.abs())}',
                           style: TextStyle(
                             color: stats.netProfit >= 0
                                 ? Colors.green
@@ -1191,7 +1193,7 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
             Text(
-              '$_currency ${totalExpenditure.toStringAsFixed(2)}',
+              '$_currency ${FormatUtil.formatAmount(totalExpenditure)}',
               style: const TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 16,
@@ -1248,7 +1250,7 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
             Text(
-              '$_currency ${totalIncome.toStringAsFixed(2)}',
+              '$_currency ${FormatUtil.formatAmount(totalIncome)}',
               style: const TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 16,
@@ -1290,7 +1292,7 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
                     Text(label,
                         style: const TextStyle(fontWeight: FontWeight.w500)),
                     Text(
-                      '$_currency ${amount.toStringAsFixed(2)}',
+                      '$_currency ${FormatUtil.formatAmount(amount)}',
                       style:
                           TextStyle(fontWeight: FontWeight.w600, color: color),
                     ),
@@ -1334,7 +1336,7 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
                 _buildFinancialSummaryItem(
                   label: 'Income',
                   value:
-                      '$_currency ${stats.totalIncome.toStringAsFixed(2)}',
+                      '$_currency ${FormatUtil.formatAmount(stats.totalIncome)}',
                   icon: Icons.arrow_upward,
                   color: Colors.green,
                 ),
@@ -1346,7 +1348,7 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
                 _buildFinancialSummaryItem(
                   label: 'Expenditure',
                   value:
-                      '$_currency ${stats.totalExpenditure.toStringAsFixed(2)}',
+                      '$_currency ${FormatUtil.formatAmount(stats.totalExpenditure)}',
                   icon: Icons.arrow_downward,
                   color: Colors.red,
                 ),

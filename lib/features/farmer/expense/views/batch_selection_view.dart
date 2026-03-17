@@ -1,4 +1,5 @@
 import 'package:agriflock/core/widgets/reusable_input.dart';
+import 'package:agriflock/core/utils/age_util.dart';
 import 'package:agriflock/features/farmer/batch/model/batch_list_model.dart';
 import 'package:agriflock/features/farmer/expense/model/expense_category.dart';
 import 'package:agriflock/features/farmer/farm/models/farm_model.dart';
@@ -233,7 +234,7 @@ class _BatchSelectionViewState extends State<BatchSelectionView> {
                                         '${batch.currentCount} birds',
                                         Colors.blue),
                                     _buildBatchInfo(Icons.calendar_today,
-                                        'Day ${batch.ageInDays}', Colors.orange),
+                                        AgeUtil.formatAge(batch.ageInDays), Colors.orange),
                                     if (batch.farm != null)
                                       _buildBatchInfo(Icons.agriculture,
                                           batch.farm!.farmName, Colors.green),

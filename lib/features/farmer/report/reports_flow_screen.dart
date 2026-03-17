@@ -1,3 +1,4 @@
+import 'package:agriflock/core/utils/age_util.dart';
 import 'package:agriflock/core/utils/api_error_handler.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/widgets/disclaimer_widget.dart';
@@ -641,19 +642,28 @@ class _ReportsFlowScreenState extends State<ReportsFlowScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      batch.batchNumber,
+                      batch.birdType?.name ?? batch.breed ?? batch.batchNumber,
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                         color: Colors.grey.shade800,
                       ),
                     ),
+                    const SizedBox(height: 2),
+                    Text(
+                      batch.batchNumber,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade500,
+                      ),
+                    ),
                     const SizedBox(height: 4),
-                    Row(
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
                       children: [
                         _buildInfoChip(Icons.pets, '${batch.currentCount} birds'),
-                        const SizedBox(width: 8),
-                        _buildInfoChip(Icons.calendar_today, '${batch.ageInDays} days'),
+                        _buildInfoChip(Icons.calendar_today, AgeUtil.formatAge(batch.ageInDays)),
                       ],
                     ),
                     if (batch.house?.name != null)

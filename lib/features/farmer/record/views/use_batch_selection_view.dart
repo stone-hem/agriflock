@@ -1,3 +1,4 @@
+import 'package:agriflock/core/utils/age_util.dart';
 import 'package:agriflock/features/farmer/batch/model/batch_list_model.dart';
 import 'package:agriflock/features/farmer/farm/models/farm_model.dart';
 import 'package:flutter/material.dart';
@@ -119,30 +120,45 @@ class UseBatchSelectionView extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (batch.birdType != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.green.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                batch.birdType!.name,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.green,
-                                  fontWeight: FontWeight.w700,
-                                ),
+                        Row(
+                          children: [
+                            Icon(
+                              isSelected
+                                  ? Icons.radio_button_checked
+                                  : Icons.radio_button_unchecked,
+                              color: isSelected
+                                  ? Colors.green
+                                  : Colors.grey.shade400,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    batch.birdType?.name ?? batch.batchNumber,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: isSelected
+                                          ? Colors.green
+                                          : Colors.grey.shade800,
+                                    ),
+                                  ),
+                                  if (batch.birdType != null)
+                                    Text(
+                                      batch.batchNumber,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade500,
+                                      ),
+                                    ),
+                                ],
                               ),
                             ),
-                          ),
-                        SizedBox(height: 15,),
-
+                          ],
+                        ),
+                        const SizedBox(height: 12),
 
                         // Batch info
                         Wrap(
@@ -156,7 +172,7 @@ class UseBatchSelectionView extends StatelessWidget {
                             ),
                             _buildBatchInfo(
                               Icons.calendar_today,
-                              'Day ${batch.ageInDays}',
+                              AgeUtil.formatAge(batch.ageInDays),
                               Colors.orange,
                             ),
                             if (batch.farm != null)
@@ -173,35 +189,6 @@ class UseBatchSelectionView extends StatelessWidget {
                               ),
                           ],
                         ),
-                        const SizedBox(height: 12),
-
-                        Row(
-                          children: [
-                            Icon(
-                              isSelected
-                                  ? Icons.radio_button_checked
-                                  : Icons.radio_button_unchecked,
-                              color: isSelected
-                                  ? Colors.green
-                                  : Colors.grey.shade400,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                batch.batchNumber,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.normal,
-                                  color: isSelected
-                                      ? Colors.green
-                                      : Colors.grey.shade800,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-
-
                       ],
                     ),
                   ),

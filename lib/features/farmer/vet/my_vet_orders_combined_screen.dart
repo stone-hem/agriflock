@@ -369,7 +369,7 @@ class _ActiveOrdersTabState extends State<_ActiveOrdersTab>
     final house = order.firstHouse;
     final batch = order.firstBatch;
     if (house != null && batch != null) {
-      return '${house.name} • ${batch.name} (${order.birdsCount} birds)';
+      return '${house.name} • (${order.birdsCount} birds)';
     } else if (house != null) {
       return '${house.name} (${order.birdsCount} birds)';
     } else if (batch != null) {
@@ -401,10 +401,6 @@ class _ActiveOrdersTabState extends State<_ActiveOrdersTab>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(_getFirstServiceName(order),
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16)),
-                      const SizedBox(height: 4),
                       Text(
                           '${_getFirstServiceCode(order)} • Order: ${order.orderNumber}',
                           style: TextStyle(
@@ -430,33 +426,6 @@ class _ActiveOrdersTabState extends State<_ActiveOrdersTab>
               ],
             ),
             const SizedBox(height: 12),
-            if (order.serviceCosts.isNotEmpty) ...[
-              const Text('Services:',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                      color: Colors.black87)),
-              const SizedBox(height: 4),
-              ...order.serviceCosts.map((svc) => Padding(
-                    padding: const EdgeInsets.only(bottom: 2),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                            child: Text('• ${svc.serviceName}',
-                                style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey.shade700))),
-                        Text('KES ${svc.cost.toStringAsFixed(2)}',
-                            style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade800,
-                                fontWeight: FontWeight.w500)),
-                      ],
-                    ),
-                  )),
-              const SizedBox(height: 12),
-            ],
             Row(
               children: [
                 Icon(Icons.person, size: 16, color: Colors.grey.shade600),
@@ -530,6 +499,34 @@ class _ActiveOrdersTabState extends State<_ActiveOrdersTab>
                 ),
               ],
             ),
+            const SizedBox(height: 12),
+            if (order.serviceCosts.isNotEmpty) ...[
+              const Text('Services:',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: Colors.black87)),
+              const SizedBox(height: 4),
+              ...order.serviceCosts.map((svc) => Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                        child: Text('• ${svc.serviceName}',
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade700))),
+                    Text('KES ${svc.cost.toStringAsFixed(2)}',
+                        style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade800,
+                            fontWeight: FontWeight.w500)),
+                  ],
+                ),
+              )),
+              const SizedBox(height: 12),
+            ],
             const SizedBox(height: 12),
             Row(
               children: [

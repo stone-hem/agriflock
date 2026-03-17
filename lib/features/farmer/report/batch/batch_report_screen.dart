@@ -1,4 +1,6 @@
+import 'package:agriflock/core/utils/age_util.dart';
 import 'package:agriflock/core/utils/date_util.dart';
+import 'package:agriflock/core/utils/format_util.dart';
 import 'package:agriflock/core/utils/egg_util.dart';
 import 'package:agriflock/features/farmer/vet/widgets/vet_reports_tab.dart';
 import 'package:agriflock/core/utils/feed_format_util.dart';
@@ -622,7 +624,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(color: typeColor.withOpacity(0.3)),
                         ),
-                        child: Text('Age :  ${report.ageDays}d / ${report.ageWeeks}wk',
+                        child: Text(AgeUtil.formatAge(report.ageDays),
                             style: TextStyle(
                                 fontSize: 12, fontWeight: FontWeight.w700, color: typeColor)),
                       ),
@@ -1126,7 +1128,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
               if (dueDate != null && dayDue != null)
                 Text('  ·  ', style: TextStyle(fontSize: 10, color: Colors.orange.shade400)),
               if (dayDue != null)
-                Text('Day $dayDue',
+                Text(AgeUtil.formatVaccinationDay(dayDue),
                     style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Colors.orange.shade700)),
             ]),
           ],
@@ -1280,7 +1282,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
           if (egg.totalValue > 0) ...[
             const SizedBox(height: 6),
             _buildInfoRow(Icons.attach_money, Colors.green.shade700, 'Value',
-                '$_currency ${egg.totalValue.toStringAsFixed(0)}'),
+                '$_currency ${FormatUtil.formatAmount(egg.totalValue)}'),
           ],
         ],
       ),
@@ -1481,7 +1483,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        '$_currency ${stats.netProfit.abs().toStringAsFixed(2)}',
+                        '$_currency ${FormatUtil.formatAmount(stats.netProfit.abs())}',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -1509,7 +1511,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                 Expanded(
                   child: _buildFinancialStatCard(
                     label: 'Income',
-                    value: '$_currency ${stats.productIncome.toStringAsFixed(2)}',
+                    value: '$_currency ${FormatUtil.formatAmount(stats.productIncome)}',
                     icon: Icons.arrow_upward,
                     color: Colors.green,
                   ),
@@ -1518,7 +1520,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                 Expanded(
                   child: _buildFinancialStatCard(
                     label: 'Expenditure',
-                    value: '$_currency ${stats.totalExpenditure.toStringAsFixed(2)}',
+                    value: '$_currency ${FormatUtil.formatAmount(stats.totalExpenditure)}',
                     icon: Icons.arrow_downward,
                     color: Colors.red,
                   ),
@@ -1594,7 +1596,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          '$_currency ${totalExpenditure.toStringAsFixed(2)}',
+                          '$_currency ${FormatUtil.formatAmount(totalExpenditure)}',
                           style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
@@ -1671,7 +1673,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
             ),
             Text(
-              '$_currency ${amount.toStringAsFixed(2)}',
+              '$_currency ${FormatUtil.formatAmount(amount)}',
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
             ),
           ],

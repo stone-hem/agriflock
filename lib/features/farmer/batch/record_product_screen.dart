@@ -1,3 +1,4 @@
+import 'package:agriflock/core/utils/age_util.dart';
 import 'package:agriflock/core/utils/refresh_bus.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/widgets/custom_date_text_field.dart';
@@ -7,18 +8,21 @@ import 'package:agriflock/core/widgets/reusable_time_input.dart';
 import 'package:agriflock/features/farmer/batch/model/product_model.dart';
 import 'package:agriflock/features/farmer/batch/repo/product_repo.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 class RecordProductScreen extends StatefulWidget {
   final String batchId;
   final String? batchNumber;
   final int? batchAge;
+  final String? breed;
 
   const RecordProductScreen({
     super.key,
     required this.batchId,
     this.batchNumber,
     this.batchAge,
+    this.breed,
   });
 
   @override
@@ -83,7 +87,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
           crackedEggs: int.tryParse(_crackedEggsController.text) ?? 0,
           partialBrokenEggs: int.tryParse(_crackedEggsController.text) ?? 0,
           smallDeformedEggs: int.tryParse(_smallDeformedEggsController.text) ?? 0,
-          price: _isSold ? num.parse(_priceController.text) : null,
+          price: _isSold ? num.parse(_priceController.text.replaceAll(',', '')) : null,
           collectionDate: selectedCompletedTime.toUtc().toIso8601String(),
           notes: _notesController.text.isNotEmpty ? _notesController.text : null,
         );
@@ -96,7 +100,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
           weight: _weightController.text.isNotEmpty
               ? num.parse(_weightController.text)
               : null,
-          price: _isSold ? num.parse(_priceController.text) : null,
+          price: _isSold ? num.parse(_priceController.text.replaceAll(',', '')) : null,
           collectionDate: selectedCompletedTime.toUtc().toIso8601String(),
           notes: _notesController.text.isNotEmpty ? _notesController.text : null,
         );
@@ -107,7 +111,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
           batchId: widget.batchId,
           isSold: _isSold,
           quantity: num.parse(_quantityController.text),
-          price: _isSold ? num.parse(_priceController.text) : null,
+          price: _isSold ? num.parse(_priceController.text.replaceAll(',', '')) : null,
           collectionDate: selectedCompletedTime.toUtc().toIso8601String(),
           notes: _notesController.text.isNotEmpty ? _notesController.text : null,
         );
@@ -203,7 +207,7 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
     if (value == null || value.isEmpty) {
       return 'Price is required';
     }
-    final price = num.tryParse(value);
+    final price = num.tryParse(value.replaceAll(',', ''));
     if (price == null) {
       return 'Please enter a valid price';
     }
@@ -211,19 +215,6 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
       return 'Price must be greater than 0';
     }
     return null;
-  }
-
-  String _formatAge(int days) {
-    if (days >= 365) {
-      final years = days ~/ 365;
-      final rem = days % 365;
-      return rem > 0 ? '$years yr ${rem}d' : '$years yr';
-    } else if (days >= 30) {
-      final months = days ~/ 30;
-      final rem = days % 30;
-      return rem > 0 ? '$months mo ${rem}d' : '$months mo';
-    }
-    return '${days}d';
   }
 
   @override
@@ -321,17 +312,23 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              widget.batchNumber != null
-                                  ? 'Batch #${widget.batchNumber}'
-                                  : 'Record Product',
+                              widget.breed ?? widget.batchNumber ?? 'Record Product',
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
+                            if (widget.breed != null && widget.batchNumber != null)
+                              Text(
+                                widget.batchNumber!,
+                                style: TextStyle(
+                                  color: Colors.grey.shade500,
+                                  fontSize: 13,
+                                ),
+                              ),
                             if (widget.batchAge != null)
                               Text(
-                                '${_formatAge(widget.batchAge!)} old',
+                                AgeUtil.formatAge(widget.batchAge!),
                                 style: TextStyle(
                                   color: Colors.grey.shade600,
                                   fontSize: 13,
@@ -524,13 +521,14 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
                 const SizedBox(height: 16),
                 ReusableInput(
                   controller: _priceController,
-                  topLabel: _selectedProductType == 'eggs'?"How much for total eggs?":" Price for all units",
+                  topLabel: _selectedProductType == 'eggs' ? 'How much for total eggs?' : 'Price for all units',
                   labelText: 'Put whole amount for accurate financial reports',
-                  hintText: 'e.g., 4000',
+                  hintText: 'e.g., 4,000',
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                     signed: false,
                   ),
+                  inputFormatters: [_ThousandsFormatter()],
                   icon: Icons.attach_money,
                   autocorrect: false,
                   enableSuggestions: false,
@@ -647,5 +645,32 @@ class _RecordProductScreenState extends State<RecordProductScreen> {
     _selectedDateController.dispose();
     _smallDeformedEggsController.dispose();
     super.dispose();
+  }
+}
+
+class _ThousandsFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    final stripped = newValue.text.replaceAll(',', '');
+    if (stripped.isEmpty) return newValue.copyWith(text: '');
+
+    final parts = stripped.split('.');
+    final intPart = parts[0];
+    final decPart = parts.length > 1
+        ? '.${parts[1].substring(0, parts[1].length.clamp(0, 2))}'
+        : '';
+
+    final buffer = StringBuffer();
+    for (int i = 0; i < intPart.length; i++) {
+      if (i > 0 && (intPart.length - i) % 3 == 0) buffer.write(',');
+      buffer.write(intPart[i]);
+    }
+
+    final formatted = '${buffer.toString()}$decPart';
+    return newValue.copyWith(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
   }
 }
