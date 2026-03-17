@@ -651,11 +651,6 @@ class _BatchReportScreenState extends State<BatchReportScreen>
             ),
           ),
 
-
-
-
-
-
           // ── Sections ──
           Padding(
             padding: const EdgeInsets.all(12),

@@ -919,11 +919,14 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
 
                         final recQty = _recommendedQtyInFieldUnit(item)!;
                         final fieldUnit = _getUnitDisplay();
-
+                        final perSession = (timesPerDay != null && timesPerDay > 0)
+                            ? recQty / timesPerDay
+                            : null;
 
                         return GestureDetector(
                           onTap: () => setState(
-                            () => _quantityController.text = _formatQty(recQty),
+                            () => _quantityController.text =
+                                _formatQty(perSession ?? recQty),
                           ),
                           child: Container(
                             margin: const EdgeInsets.only(top: 8),
@@ -934,26 +937,53 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                               border: Border.all(color: Colors.green.shade200),
                             ),
                             child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Icon(Icons.lightbulb_outline,
-                                    color: Colors.green.shade700, size: 18),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 2),
+                                  child: Icon(Icons.lightbulb_outline,
+                                      color: Colors.green.shade700, size: 18),
+                                ),
                                 const SizedBox(width: 10),
                                 Expanded(
-                                  child: RichText(
-                                    text: TextSpan(
-                                      style: TextStyle(
-                                          fontSize: 16, color: Colors.green.shade800),
-                                      children: [
-                                        const TextSpan(
-                                          text: 'Recommended feeds per day: ',
-                                          style: TextStyle(fontWeight: FontWeight.w600),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      RichText(
+                                        text: TextSpan(
+                                          style: TextStyle(
+                                              fontSize: 13, color: Colors.green.shade800),
+                                          children: [
+                                            TextSpan(
+                                              text: 'Per day: ',
+                                              style: TextStyle(fontWeight: FontWeight.w600),
+                                            ),
+                                            TextSpan(
+                                              text: '${_formatQty(recQty)} $fieldUnit'
+                                                  '${timesPerDay != null ? '  ($timesPerDay×/day)' : ''}',
+                                            ),
+                                          ],
                                         ),
-                                        TextSpan(
-                                          text: '${_formatQty(recQty)} $fieldUnit'
-                                              '(${timesPerDay != null ? ' $timesPerDay×/day' : ''})',
+                                      ),
+                                      if (perSession != null) ...[
+                                        const SizedBox(height: 3),
+                                        RichText(
+                                          text: TextSpan(
+                                            style: TextStyle(
+                                                fontSize: 13, color: Colors.green.shade800),
+                                            children: [
+                                              TextSpan(
+                                                text: 'Per session: ',
+                                                style: TextStyle(fontWeight: FontWeight.w600),
+                                              ),
+                                              TextSpan(
+                                                text: '${_formatQty(perSession)} $fieldUnit',
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ],
-                                    ),
+                                    ],
                                   ),
                                 ),
                                 const SizedBox(width: 8),
