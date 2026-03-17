@@ -424,7 +424,7 @@ class _LayersTabState extends State<_LayersTab> {
   final Map<String, TextEditingController> _ctrl = {};
   final _phase2 = _LayersPhase2State();
 
-  static const List<int> _quantities = [128, 256, 512, 1024, 2048];
+  final _capacityController = TextEditingController();
 
   double get _scale => _selectedCapacity != null ? _selectedCapacity! / 128.0 : 1.0;
 
@@ -466,6 +466,7 @@ class _LayersTabState extends State<_LayersTab> {
   void dispose() {
     for (final c in _ctrl.values) c.dispose();
     _phase2.flockController.dispose();
+    _capacityController.dispose();
     super.dispose();
   }
 
@@ -479,7 +480,10 @@ class _LayersTabState extends State<_LayersTab> {
           // Auto-select when there is only one laying breed
           if (_layerBreeds.length == 1) {
             _selectedBreed = _layerBreeds.first;
-            _selectedCapacity = _quantities.first;
+            _selectedCapacity = 128;
+            _capacityController.text = '128';
+            _phase2.flock = 128;
+            _phase2.exBirds = 128;
             _generateQuotation();
           }
         case Failure(:final message):
@@ -502,6 +506,23 @@ class _LayersTabState extends State<_LayersTab> {
     for (int i = 0; i < lb.stage1.items.length; i++) {
       final p = double.tryParse(lb.stage1.items[i].unitPrice) ?? 0.0;
       _ctrl['s1_$i'] = TextEditingController(text: _formatPrice(p));
+    }
+  }
+
+  void _applyCapacity() {
+    final v = int.tryParse(_capacityController.text.trim());
+    if (v == null || v < 1) {
+      AppSnackBar.show(context, message: 'Please enter a valid flock size (min 1)', type: SnackBarType.error);
+      return;
+    }
+    setState(() {
+      _selectedCapacity = v;
+      _phase2.flock = v;
+      _phase2.flockController.text = v.toString();
+      _phase2.exBirds = v;
+    });
+    if (_quotationData == null) {
+      _generateQuotation();
     }
   }
 
@@ -560,6 +581,7 @@ class _LayersTabState extends State<_LayersTab> {
                       _selectedBreed = _layerBreeds[i];
                       _selectedCapacity = null;
                       _quotationData = null;
+                      _capacityController.clear();
                     }),
                   ),
                 ),
@@ -569,42 +591,53 @@ class _LayersTabState extends State<_LayersTab> {
 
             // ── Flock Size ──
             if (_selectedBreed != null) ...[
-              Text('Select Flock Size',
+              Text('Enter Flock Size',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey.shade800)),
               const SizedBox(height: 4),
-              Text('Base estimate uses 128 birds. Select a size to scale the quotation:',
-                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
+              Text('Base quotation uses 128 birds. Enter any number — the estimate scales automatically.',
+                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
               const SizedBox(height: 12),
-              DropdownButtonFormField<int>(
-                value: _selectedCapacity,
-                decoration: InputDecoration(
-                  labelText: 'Flock Size',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                ),
-                hint: const Text('Select flock size'),
-                items: _quantities.map((qty) {
-                  final f = qty ~/ 128;
-                  return DropdownMenuItem<int>(
-                      value: qty,
-                      child: Text(f == 1 ? '$qty Birds (Base)' : '$qty Birds (×$f)'));
-                }).toList(),
-                onChanged: _isGeneratingQuotation
-                    ? null
-                    : (v) {
-                  if (v == null) return;
-                  setState(() {
-                    _selectedCapacity = v;
-                    _phase2.flock = v;
-                    _phase2.flockController.text = v.toString();
-                    _phase2.exBirds = v;
-                  });
-                  if (_quotationData == null) _generateQuotation();
-                },
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _capacityController,
+                      enabled: !_isGeneratingQuotation,
+                      keyboardType: TextInputType.number,
+                      onFieldSubmitted: (_) => _applyCapacity(),
+                      decoration: InputDecoration(
+                        labelText: 'Number of Birds',
+                        hintText: 'e.g. 350',
+                        suffixText: 'birds',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  SizedBox(
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: _isGeneratingQuotation ? null : _applyCapacity,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                      ),
+                      child: _isGeneratingQuotation
+                          ? const SizedBox(width: 18, height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          : const Text('Apply', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 20),
-              if (_isGeneratingQuotation)
-                const Center(child: CircularProgressIndicator()),
+              if (_selectedCapacity != null) ...[
+                const SizedBox(height: 6),
+                Text('Scale: ×${_scale == _scale.truncateToDouble() ? _scale.toInt() : _scale.toStringAsFixed(2)}  (${_selectedCapacity} birds)',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+              ],
               const SizedBox(height: 16),
             ],
 
