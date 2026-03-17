@@ -597,6 +597,7 @@ class _LayersTabState extends State<_LayersTab> {
                     _selectedCapacity = v;
                     _phase2.flock = v;
                     _phase2.flockController.text = v.toString();
+                    _phase2.exBirds = v;
                   });
                   if (_quotationData == null) _generateQuotation();
                 },
@@ -627,6 +628,7 @@ class _LayersTabState extends State<_LayersTab> {
 
               // ── End-of-Cycle Sale ──
               _ExLayerSaleSection(
+                key: ValueKey('ex-layer-${_selectedCapacity}'),
                 state: _phase2,
                 onChanged: () => setState(() {}),
               ),
@@ -990,7 +992,7 @@ class _ExLayerSaleSection extends StatelessWidget {
   final _LayersPhase2State state;
   final VoidCallback onChanged;
 
-  const _ExLayerSaleSection({required this.state, required this.onChanged});
+  const _ExLayerSaleSection({super.key, required this.state, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
