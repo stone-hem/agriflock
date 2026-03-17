@@ -22,6 +22,7 @@ class UseItemDetailsView extends StatefulWidget {
   final VoidCallback onItemCleared;
   final Function({
   required double quantity,
+  String? unit,
   String? methodOfAdministration,
   String? notes,
   required DateTime selectedDate,
@@ -56,7 +57,6 @@ class UseItemDetailsView extends StatefulWidget {
 class _UseItemDetailsViewState extends State<UseItemDetailsView> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _quantityController = TextEditingController();
-  final TextEditingController _dosesController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
@@ -64,8 +64,13 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
 
   String _searchQuery = '';
   String? _selectedMethodOfAdministration;
+  String _selectedVaccineUnit = 'doses';
   TimeOfDay _selectedTime = TimeOfDay.now();
   bool _usedFromStore = true;
+
+  static const List<String> _vaccineUnits = [
+    'doses', 'ml', 'tablets', 'sachets', 'packets',
+  ];
 
   // Packaging options
 
@@ -89,9 +94,6 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
 
     if (widget.quantity != null) {
       _quantityController.text = widget.quantity.toString();
-    }
-    if (widget.dosesUsed != null) {
-      _dosesController.text = widget.dosesUsed.toString();
     }
     if (widget.notes != null) {
       _notesController.text = widget.notes!;
@@ -171,9 +173,9 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
   }
 
   String _getUnitDisplay() {
-    return widget.category.name.toLowerCase().contains('feed')
-        ? 'kgs'
-        : 'units';
+    if (widget.category.name.toLowerCase().contains('feed')) return 'kgs';
+    if (_isVaccineOrMedicine) return _selectedVaccineUnit;
+    return 'units';
   }
 
   List<CategoryItem> get _filteredItems {
@@ -217,9 +219,8 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
     }
 
     final quantity = double.parse(_quantityController.text);
-    final dosesUsed = _isVaccineOrMedicine && _dosesController.text.isNotEmpty
-        ? double.tryParse(_dosesController.text)
-        : null;
+    // quantity IS the doses for vaccine/medicine — pass back so UseSuccessView can show it
+    final dosesUsed = _isVaccineOrMedicine ? quantity : null;
     final price = !_usedFromStore
         ? double.tryParse(_priceController.text.replaceAll(',', ''))
         : null;
@@ -246,6 +247,7 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
 
     widget.onSave(
       quantity: quantity,
+      unit: _isVaccineOrMedicine ? _selectedVaccineUnit : null,
       methodOfAdministration: _selectedMethodOfAdministration,
       notes: _notesController.text.isNotEmpty ? _notesController.text : null,
       selectedDate: combinedDateTime,
@@ -905,6 +907,62 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                       },
                     ),
 
+                    // Unit selector (vaccine / medicine only)
+                    if (_isVaccineOrMedicine) ...[
+                      const SizedBox(height: 12),
+                      ReusableDropdown<String>(
+                        value: _selectedVaccineUnit,
+                        icon: Icons.straighten,
+                        topLabel: 'Unit',
+                        hintText: 'Select unit',
+                        items: _vaccineUnits.map((u) => DropdownMenuItem(
+                          value: u,
+                          child: Text(u[0].toUpperCase() + u.substring(1)),
+                        )).toList(),
+                        onChanged: (v) {
+                          if (v != null) setState(() => _selectedVaccineUnit = v);
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      // Recommendation banner for vaccine/medicine
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.blue.shade200),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.lightbulb_outline, color: Colors.blue.shade700, size: 18),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Recommended: ${widget.batch.currentCount} doses (1 per bird)',
+                                style: TextStyle(fontSize: 13, color: Colors.blue.shade800),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            GestureDetector(
+                              onTap: () => setState(() {
+                                _quantityController.text = widget.batch.currentCount.toString();
+                                _selectedVaccineUnit = 'doses';
+                              }),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade100,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text('Use',
+                                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.blue.shade700)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+
                     // Feed recommendation banner
                     if (!_isVaccineOrMedicine && widget.selectedItem != null) ...[
                       Builder(builder: (context) {
@@ -1063,53 +1121,6 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                         ),
                       ),
                       const SizedBox(height: 16),
-
-                      // Doses used
-                      ReusableInput(
-                        topLabel: 'Doses/Amount Used (Optional)',
-                        icon: Icons.medical_information,
-                        controller: _dosesController,
-                        hintText: '0',
-                        keyboardType: TextInputType.number,
-                        validator: (value) {
-                          if (value != null && value.isNotEmpty) {
-                            if (double.tryParse(value) == null) {
-                              return 'Please enter a valid number';
-                            }
-                            if (double.parse(value) <= 0) {
-                              return 'Amount must be greater than 0';
-                            }
-                          }
-                          return null;
-                        },
-                      ),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.blue.shade200),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.lightbulb_outline,
-                              color: Colors.blue.shade700,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'Recommended: ${widget.batch.currentCount} doses (1 per bird)',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.blue.shade700,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
                     ],
 
                     // Date selection
@@ -1189,7 +1200,6 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
   @override
   void dispose() {
     _quantityController.dispose();
-    _dosesController.dispose();
     _notesController.dispose();
     _searchController.dispose();
     _dateController.dispose();

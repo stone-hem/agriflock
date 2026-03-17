@@ -54,6 +54,7 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
 
   // Vaccination/Medicine details
   double? _dosesUsed;
+  String? _unit;
   bool _usedFromStore = true;
   double? _price;
 
@@ -199,12 +200,12 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
           'category_item_id': _selectedItem!.id,
           'description': _selectedItem!.categoryItemName,
           'quantity': _quantity?.toInt() ?? 1,
-          'unit': 'doses',
+          'unit': _unit ?? 'doses',
           'date': _selectedDate.toUtc().toIso8601String(),
           if (_notes != null && _notes!.isNotEmpty) 'notes': _notes,
           if (_methodOfAdministration != null) 'method_of_administration': _methodOfAdministration,
-          'doses_used': _dosesUsed?.toInt() ?? _quantity?.toInt() ?? 1,
-          'birds_vaccinated': _dosesUsed?.toInt() ?? _quantity?.toInt() ?? 1,
+          'doses_used': _quantity?.toInt() ?? 1,
+          'birds_vaccinated': _quantity?.toInt() ?? 1,
           'cost': _usedFromStore ? 0 : (_price ?? 0),
           'supplier': '',
           'use_from_store': _usedFromStore,
@@ -221,12 +222,12 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
           'category_id': _selectedCategory!.id,
           'category_item_id': _selectedItem!.id,
           'quantity': _quantity?.toInt() ?? 1,
-          'unit': 'doses',
+          'unit': _unit ?? 'doses',
           'date': _selectedDate.toUtc().toIso8601String(),
-          'dosage': '${_quantity ?? 1} dose(s)',
+          'dosage': '${_quantity ?? 1} ${_unit ?? 'dose(s)'}',
           if (_methodOfAdministration != null) 'administration_method': _methodOfAdministration,
           if (_notes != null && _notes!.isNotEmpty) 'reason': _notes,
-          'birds_treated': _dosesUsed?.toInt() ?? 0,
+          'birds_treated': _quantity?.toInt() ?? 0,
           'treatment_duration_days': 1,
           'withdrawal_period_days': 0,
           'cost': _usedFromStore ? 0 : (_price ?? 0),
@@ -372,6 +373,7 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
                     },
                     onSave: ({
                       required double quantity,
+                      String? unit,
                       String? methodOfAdministration,
                       String? notes,
                       required DateTime selectedDate,
@@ -381,6 +383,7 @@ class _QuickRecordScreenState extends State<QuickRecordScreen> {
                     }) {
                       setState(() {
                         _quantity = quantity;
+                        _unit = unit;
                         _methodOfAdministration = methodOfAdministration;
                         _notes = notes;
                         _selectedDate = selectedDate;
