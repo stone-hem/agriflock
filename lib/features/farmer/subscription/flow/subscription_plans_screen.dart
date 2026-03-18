@@ -120,10 +120,8 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).primaryColor;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F4),
       appBar: AppBar(title:   Row(
         children: [
           Container(
@@ -178,10 +176,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── Compact Header ────────────────────────────────
-
-
               const SizedBox(height: 20),
-
               Text(
                 'Pick your plan &\nget started today',
                 style: TextStyle(

@@ -300,7 +300,7 @@ class _PlanRecommendationScreenState extends State<PlanRecommendationScreen> {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
-              onPressed: () => context.go(AppRoutes.subscriptionPlansPreview),
+              onPressed: () => context.go(AppRoutes.subscriptionPlans),
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.green,
                 side: const BorderSide(color: Colors.green),

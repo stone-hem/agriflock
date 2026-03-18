@@ -57,7 +57,25 @@
 		<string>We need your location to show your farm location on the map</string>
 		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 		<string>We need your location to show your farm location on the map</string>
+		<!-- FCM: required for background push notifications on iOS -->
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>fetch</string>
+			<string>remote-notification</string>
+		</array>
 		<key>UIStatusBarHidden</key>
 		<false/>
+		<!-- Google Sign-In: reversed client ID for OAuth redirect -->
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleTypeRole</key>
+				<string>Editor</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>com.googleusercontent.apps.966300580112-jjrj4naeftomrf8hedcub6soh96ug1g4</string>
+				</array>
+			</dict>
+		</array>
 	</dict>
 </plist>

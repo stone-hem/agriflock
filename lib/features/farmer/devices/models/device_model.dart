@@ -1,4 +1,36 @@
+import 'dart:convert';
 import 'package:agriflock/core/utils/type_safe_utils.dart';
+
+String? _parseLocation(dynamic raw) {
+  if (raw == null) return null;
+
+  if (raw is Map<String, dynamic>) {
+    return jsonEncode(raw);
+  }
+
+  if (raw is String) {
+    var str = raw.trim();
+    if (str.isEmpty) return null;
+
+    if (str.startsWith('"') && str.endsWith('"')) {
+      try {
+        final unquoted = jsonDecode(str);
+        if (unquoted is String) {
+          str = unquoted;
+        }
+      } catch (_) {}
+    }
+
+    try {
+      final parsed = jsonDecode(str);
+      if (parsed is Map) return str;
+    } catch (_) {}
+
+    return str;
+  }
+
+  return null;
+}
 
 class DeviceListResponse {
   final List<DeviceItem> devices;
@@ -76,6 +108,11 @@ class DeviceItem {
   final String? notes;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final String? hardwareVersion;
+  final String? iccid;
+  final bool isOnline;
+  final String? lastIp;
+  final String? targetFirmwareId;
 
   DeviceItem({
     required this.id,
@@ -100,6 +137,11 @@ class DeviceItem {
     this.notes,
     required this.createdAt,
     required this.updatedAt,
+    this.hardwareVersion,
+    this.iccid,
+    required this.isOnline,
+    this.lastIp,
+    this.targetFirmwareId,
   });
 
   factory DeviceItem.fromJson(Map<String, dynamic> json) {
@@ -122,11 +164,16 @@ class DeviceItem {
       warrantyExpiry: TypeUtils.toNullableStringSafe(json['warranty_expiry']),
       mqttTopicPrefix: TypeUtils.toNullableStringSafe(json['mqtt_topic_prefix']),
       wifiSsid: TypeUtils.toNullableStringSafe(json['wifi_ssid']),
-      location: TypeUtils.toNullableStringSafe(json['location']),
+      location: _parseLocation(json['location']),
       subscriptionId: TypeUtils.toNullableStringSafe(json['subscription_id']),
       notes: TypeUtils.toNullableStringSafe(json['notes']),
       createdAt: TypeUtils.toDateTimeSafe(json['created_at']) ?? DateTime.now(),
       updatedAt: TypeUtils.toDateTimeSafe(json['updated_at']) ?? DateTime.now(),
+      hardwareVersion: TypeUtils.toNullableStringSafe(json['hardware_version']),
+      iccid: TypeUtils.toNullableStringSafe(json['iccid']),
+      isOnline: TypeUtils.toBoolSafe(json['is_online']),
+      lastIp: TypeUtils.toNullableStringSafe(json['last_ip']),
+      targetFirmwareId: TypeUtils.toNullableStringSafe(json['target_firmware_id']),
     );
   }
 
@@ -153,14 +200,32 @@ class DeviceItem {
     'notes': notes,
     'created_at': createdAt.toIso8601String(),
     'updated_at': updatedAt.toIso8601String(),
+    'hardware_version': hardwareVersion,
+    'iccid': iccid,
+    'is_online': isOnline,
+    'last_ip': lastIp,
+    'target_firmware_id': targetFirmwareId,
   };
 
-  bool get isOnline => lastSeen != null;
   bool get isRegistered => deviceStatus?.name == 'registered';
   bool get isActive => deviceStatus?.name == 'active';
   bool get isSmartBrooder => deviceType == 'smart_brooder';
 
   String get statusLabel => deviceStatus?.name ?? 'unknown';
+
+  /// Parses the location JSON string and returns a Map, or null if invalid.
+  Map<String, dynamic>? get locationMap {
+    if (location == null) return null;
+    try {
+      final decoded = jsonDecode(location!);
+      if (decoded is Map<String, dynamic>) return decoded;
+    } catch (_) {}
+    return null;
+  }
+
+  double? get latitude => locationMap?['latitude'] as double?;
+  double? get longitude => locationMap?['longitude'] as double?;
+  String? get locationAddress => locationMap?['address'] as String?;
 
   String get formattedLastSeen {
     if (lastSeen == null) return 'Never';

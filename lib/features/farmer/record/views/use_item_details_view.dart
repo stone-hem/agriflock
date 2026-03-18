@@ -64,13 +64,9 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
 
   String _searchQuery = '';
   String? _selectedMethodOfAdministration;
-  String _selectedVaccineUnit = 'doses';
+
   TimeOfDay _selectedTime = TimeOfDay.now();
   bool _usedFromStore = true;
-
-  static const List<String> _vaccineUnits = [
-    'doses', 'ml', 'tablets', 'sachets', 'packets',
-  ];
 
   // Packaging options
 
@@ -174,7 +170,7 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
 
   String _getUnitDisplay() {
     if (widget.category.name.toLowerCase().contains('feed')) return 'kgs';
-    if (_isVaccineOrMedicine) return _selectedVaccineUnit;
+    if (_isVaccineOrMedicine) return widget.selectedItem?.categoryItemUnit ?? 'units';
     return 'units';
   }
 
@@ -247,7 +243,7 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
 
     widget.onSave(
       quantity: quantity,
-      unit: _isVaccineOrMedicine ? _selectedVaccineUnit : null,
+      unit: null,
       methodOfAdministration: _selectedMethodOfAdministration,
       notes: _notesController.text.isNotEmpty ? _notesController.text : null,
       selectedDate: combinedDateTime,
@@ -886,7 +882,7 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                       topLabel: 'Quantity Used (${_getUnitDisplay()})',
                       icon: Icons.inventory_2,
                       controller: _quantityController,
-                      hintText: 'Enter quantity in ${_getUnitDisplay()}',
+                      hintText: 'Enter quantity',
                       keyboardType: const TextInputType.numberWithOptions(decimal: true,signed: false),
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(
@@ -907,61 +903,7 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
                       },
                     ),
 
-                    // Unit selector (vaccine / medicine only)
-                    if (_isVaccineOrMedicine) ...[
-                      const SizedBox(height: 12),
-                      ReusableDropdown<String>(
-                        value: _selectedVaccineUnit,
-                        icon: Icons.straighten,
-                        topLabel: 'Unit',
-                        hintText: 'Select unit',
-                        items: _vaccineUnits.map((u) => DropdownMenuItem(
-                          value: u,
-                          child: Text(u[0].toUpperCase() + u.substring(1)),
-                        )).toList(),
-                        onChanged: (v) {
-                          if (v != null) setState(() => _selectedVaccineUnit = v);
-                        },
-                      ),
-                      const SizedBox(height: 10),
-                      // Recommendation banner for vaccine/medicine
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.blue.shade200),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.lightbulb_outline, color: Colors.blue.shade700, size: 18),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                'Recommended: ${widget.batch.currentCount} doses (1 per bird)',
-                                style: TextStyle(fontSize: 13, color: Colors.blue.shade800),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            GestureDetector(
-                              onTap: () => setState(() {
-                                _quantityController.text = widget.batch.currentCount.toString();
-                                _selectedVaccineUnit = 'doses';
-                              }),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue.shade100,
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text('Use',
-                                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.blue.shade700)),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+
 
                     // Feed recommendation banner
                     if (!_isVaccineOrMedicine && widget.selectedItem != null) ...[
@@ -1084,41 +1026,27 @@ class _UseItemDetailsViewState extends State<UseItemDetailsView> {
 
                     // Method of administration (for vaccines/medicines)
                     if (_isVaccineOrMedicine) ...[
-                      const Text(
-                        'Method of Administration',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey.shade200),
-                        ),
-                        child: ReusableDropdown<String>(
-                          value: _selectedMethodOfAdministration,
-                          icon: Icons.medication_liquid,
-                          topLabel: 'Select method of administration',
-                          hintText: 'Select method',
-                          items: [
-                            'Drinking water',
-                            'Injection',
-                            'Spray',
-                            'Eye drop',
-                            'Oral',
-                          ].map((method) {
-                            return DropdownMenuItem(
-                              value: method,
-                              child: Text(method),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            setState(() => _selectedMethodOfAdministration = value);
-                          },
-                        ),
+
+                      ReusableDropdown<String>(
+                        value: _selectedMethodOfAdministration,
+                        icon: Icons.medication_liquid,
+                        topLabel: 'Select method of administration',
+                        hintText: 'Select method',
+                        items: [
+                          'Drinking water',
+                          'Injection',
+                          'Spray',
+                          'Eye drop',
+                          'Oral',
+                        ].map((method) {
+                          return DropdownMenuItem(
+                            value: method,
+                            child: Text(method),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() => _selectedMethodOfAdministration = value);
+                        },
                       ),
                       const SizedBox(height: 16),
                     ],

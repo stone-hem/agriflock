@@ -54,7 +54,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '966300580112',
     projectId: 'agriflock-360-cb236',
     storageBucket: 'agriflock-360-cb236.firebasestorage.app',
-    androidClientId: '966300580112-imqmadra66jmits9ah9km3lgcvmtjlpd.apps.googleusercontent.com',
+    androidClientId: '966300580112-4dsvcod5t4slhpurnaott8sm3ts2p8t8.apps.googleusercontent.com',
     iosClientId: '966300580112-jjrj4naeftomrf8hedcub6soh96ug1g4.apps.googleusercontent.com',
     iosBundleId: 'com.mglobal.agriflock',
   );
@@ -65,7 +65,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '966300580112',
     projectId: 'agriflock-360-cb236',
     storageBucket: 'agriflock-360-cb236.firebasestorage.app',
-    androidClientId: '966300580112-imqmadra66jmits9ah9km3lgcvmtjlpd.apps.googleusercontent.com',
+    androidClientId: '966300580112-4dsvcod5t4slhpurnaott8sm3ts2p8t8.apps.googleusercontent.com',
     iosClientId: '966300580112-jjrj4naeftomrf8hedcub6soh96ug1g4.apps.googleusercontent.com',
     iosBundleId: 'com.mglobal.agriflock',
   );

@@ -470,7 +470,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Column(
               children: [
                 ProfileMenuItem(
-                  icon: Icons.location_on_outlined,
+                  icon: Icons.device_hub,
                   title: 'My Brooder Devices',
                   subtitle: 'See My Active Brooder devices',
                   color: Colors.brown,

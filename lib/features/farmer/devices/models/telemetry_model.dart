@@ -18,14 +18,16 @@ class TelemetryData {
   final String connModeLabel;
 
   // Added fields
-  final int soc;        // battery state of charge (0–100 %)
-  final int water;      // water level (0–100 %)
-  final int paygStatus; // 0 = active, 1 = expired/locked
-  final int mode;       // device operating mode
+  final int soc;             // battery state of charge (0–100 %)
+  final int water;           // water level raw value
+  final int paygStatus;      // 0 = active, 1 = expired/locked
+  final int mode;            // device operating mode
   final int? tempWeek1;
   final int? tempWeek2;
   final int? tempWeek3;
   final int? tempWeek4;
+  final String modeLabel;        // e.g. "auto", "manual"
+  final String waterLevelLabel;  // e.g. "low", "medium", "high"
 
   TelemetryData({
     required this.id,
@@ -50,9 +52,14 @@ class TelemetryData {
     this.tempWeek2,
     this.tempWeek3,
     this.tempWeek4,
+    this.modeLabel = '',
+    this.waterLevelLabel = '',
   });
 
   factory TelemetryData.fromJson(Map<String, dynamic> json) {
+    // meta sub-object (new format nests several fields here)
+    final meta = json['meta'] as Map<String, dynamic>? ?? {};
+
     return TelemetryData(
       id: TypeUtils.toStringSafe(json['id']),
       deviceId: TypeUtils.toStringSafe(json['device_id']),
@@ -68,16 +75,28 @@ class TelemetryData {
       timestamp: TypeUtils.toDateTimeSafe(json['timestamp']) ?? DateTime.now(),
       stateLabel: TypeUtils.toStringSafe(json['state_label']),
       connModeLabel: TypeUtils.toStringSafe(json['conn_mode_label']),
-      soc: TypeUtils.toIntSafe(json['soc']),
-      water: TypeUtils.toIntSafe(json['water']),
-      paygStatus: TypeUtils.toIntSafe(json['payg_status']),
-      mode: TypeUtils.toIntSafe(json['mode']),
-      tempWeek1: json['temp_week1'] != null ? TypeUtils.toIntSafe(json['temp_week1']) : null,
-      tempWeek2: json['temp_week2'] != null ? TypeUtils.toIntSafe(json['temp_week2']) : null,
-      tempWeek3: json['temp_week3'] != null ? TypeUtils.toIntSafe(json['temp_week3']) : null,
-      tempWeek4: json['temp_week4'] != null ? TypeUtils.toIntSafe(json['temp_week4']) : null,
+      // battery: root batt_percentage → meta battery_percent → legacy soc
+      soc: TypeUtils.toIntSafe(
+        json['batt_percentage'] ?? meta['battery_percent'] ?? json['soc'],
+      ),
+      // water / payg / mode / weekly temps come from meta in new format
+      water: TypeUtils.toIntSafe(meta['water'] ?? json['water']),
+      paygStatus: TypeUtils.toIntSafe(meta['payg_status'] ?? json['payg_status']),
+      mode: TypeUtils.toIntSafe(meta['mode'] ?? json['mode']),
+      tempWeek1: _intFromMeta(meta, 'temp_week1') ?? _intFromJson(json, 'temp_week1'),
+      tempWeek2: _intFromMeta(meta, 'temp_week2') ?? _intFromJson(json, 'temp_week2'),
+      tempWeek3: _intFromMeta(meta, 'temp_week3') ?? _intFromJson(json, 'temp_week3'),
+      tempWeek4: _intFromMeta(meta, 'temp_week4') ?? _intFromJson(json, 'temp_week4'),
+      modeLabel: TypeUtils.toStringSafe(json['mode_label']),
+      waterLevelLabel: TypeUtils.toStringSafe(json['water_level_label']),
     );
   }
+
+  static int? _intFromMeta(Map<String, dynamic> meta, String key) =>
+      meta[key] != null ? TypeUtils.toIntSafe(meta[key]) : null;
+
+  static int? _intFromJson(Map<String, dynamic> json, String key) =>
+      json[key] != null ? TypeUtils.toIntSafe(json[key]) : null;
 }
 
 class DeviceAlert {

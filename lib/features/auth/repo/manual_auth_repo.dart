@@ -99,6 +99,7 @@ class ManualAuthRepository {
     required String phoneNumber,
     required String password,
     required bool agreedToTerms,
+    bool agreedToSmsAlerts = false,
   }) async {
     LogUtil.warning({
       'name': fullName,
@@ -106,6 +107,7 @@ class ManualAuthRepository {
       'password': password,
       'phone_number': phoneNumber,
       'agreed_to_terms': agreedToTerms,
+      'accept_sms_notifications': agreedToSmsAlerts,
     });
     try {
       final response = await apiClient.post(
@@ -116,6 +118,7 @@ class ManualAuthRepository {
           'password': password,
           'phone_number': phoneNumber,
           'agreed_to_terms': agreedToTerms,
+          'accept_sms_notifications': agreedToSmsAlerts,
         },
       );
 
@@ -156,12 +159,32 @@ class ManualAuthRepository {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
+        LogUtil.info('socialLogin raw response: $data');
+
+        // Backend may return 200 with a cond redirect (e.g. user_onboarding)
+        final cond = data['cond'] as String?;
+        if (cond != null) {
+          final tempToken = data['tempToken'] as String?;
+          final message = data['message'] as String? ?? 'Action required';
+          LogUtil.info('socialLogin redirect — cond: $cond, tempToken present: ${tempToken != null}');
+          return Failure(
+            message: message,
+            statusCode: response.statusCode,
+            cond: cond,
+            data: {
+              if (tempToken != null) 'tempToken': tempToken,
+              'email': authData['email'],
+            },
+          );
+        }
 
         final accessToken = data['data']?['access_token'] as String?;
         final refreshToken = data['data']?['refresh_token'] as String?;
         final currency = data['data']?['currency'] as String?;
         final user = data['data']?['user'] as Map<String, dynamic>?;
         final expiresIn = data['data']?['expires_in'] as int?;
+
+        LogUtil.info('socialLogin parsed — accessToken: $accessToken, refreshToken: $refreshToken, user: $user');
 
         if (accessToken != null && refreshToken != null && user != null) {
           await secureStorage.saveLoginData(
@@ -182,6 +205,7 @@ class ManualAuthRepository {
         }
       } else {
         final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+        LogUtil.error('socialLogin error ${response.statusCode}: $errorData');
 
         // Support both new format (cond at root) and old format (status inside message)
         String? cond = errorData['cond'] as String?;

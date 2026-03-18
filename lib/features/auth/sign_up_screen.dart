@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:agriflock/app_routes.dart';
+import 'package:agriflock/core/constants/app_constants.dart';
 import 'package:agriflock/core/services/social_auth_service.dart';
 import 'package:agriflock/core/utils/api_error_handler.dart';
 import 'package:agriflock/core/utils/first_login_util.dart';
@@ -8,6 +11,7 @@ import 'package:agriflock/features/auth/repo/manual_auth_repo.dart';
 import 'package:agriflock/features/auth/shared/auth_text_field.dart';
 import 'package:agriflock/features/auth/shared/country_phone_input.dart';
 import 'package:agriflock/features/auth/shared/country_service.dart';
+import 'package:agriflock/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -36,6 +40,7 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _acceptedTerms = false;
   bool _showTermsError = false;
   bool _acceptedSmsAlerts = false;
+  bool _showSmsError = false;
 
   @override
   void initState() {
@@ -305,7 +310,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           ),
                           const SizedBox(height: 12),
 
-                          // SMS Alerts Checkbox
+                          // SMS Alerts Checkbox (mandatory)
                           Container(
                             width: double.infinity,
                             padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -320,6 +325,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                     onChanged: (bool? value) {
                                       setState(() {
                                         _acceptedSmsAlerts = value ?? false;
+                                        _showSmsError = false;
                                       });
                                     },
                                     activeColor: Theme.of(context).primaryColor,
@@ -332,14 +338,37 @@ class _SignupScreenState extends State<SignupScreen> {
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
-                                  child: Text(
-                                    'I agree to receive SMS alerts and account notifications for Agriflock 360. '
-                                    'Message frequency varies. Message and data rates may apply.',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.grey.shade600,
-                                      height: 1.4,
-                                    ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'I agree to receive SMS alerts and account notifications for Agriflock 360.',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey.shade600,
+                                          height: 1.4,
+                                        ),
+                                      ),
+                                      Text(
+                                        'You can opt out later in your account settings.',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade500,
+                                          height: 1.4,
+                                        ),
+                                      ),
+                                      if (_showSmsError && !_acceptedSmsAlerts)
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 4),
+                                          child: Text(
+                                            'Please accept SMS notifications to continue',
+                                            style: TextStyle(
+                                              color: Colors.red.shade600,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                 ),
                               ],
@@ -355,11 +384,17 @@ class _SignupScreenState extends State<SignupScreen> {
                               onPressed: _isLoading
                                   ? null
                                   : () {
-                                setState(() => _showTermsError = true);
-
+                                setState(() {
+                                  _showTermsError = true;
+                                  _showSmsError = true;
+                                });
                                 if (_formKey.currentState!.validate()) {
                                   if (!_acceptedTerms) {
                                     ToastUtil.showError('Please accept the terms and conditions');
+                                    return;
+                                  }
+                                  if (!_acceptedSmsAlerts) {
+                                    ToastUtil.showError('Please accept SMS notifications to continue');
                                     return;
                                   }
                                   _signUp();
@@ -522,9 +557,8 @@ class _SignupScreenState extends State<SignupScreen> {
     switch (failure.cond) {
       case 'user_onboarding':
         final tempToken = failure.data?['tempToken'] as String? ?? '';
-        context.push(
-          '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(tempToken)}',
-        );
+        final email = failure.data?['email'] as String? ?? _emailController.text.trim();
+        _showSocialTermsDialog(tempToken: tempToken, email: email);
       case 'account_unverified':
         final email = failure.data?['email'] as String? ??
             _emailController.text.trim();
@@ -581,6 +615,7 @@ class _SignupScreenState extends State<SignupScreen> {
         phoneNumber: completePhoneNumber,
         password: password,
         agreedToTerms: true,
+        agreedToSmsAlerts: _acceptedSmsAlerts,
       );
 
       if (!mounted) return;
@@ -621,9 +656,8 @@ class _SignupScreenState extends State<SignupScreen> {
         case Success(:final data):
           if (data['is_new_user'] == true) {
             final tempToken = data['tempToken'] as String? ?? '';
-            context.push(
-              '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(tempToken)}',
-            );
+            final email = data['email'] as String? ?? '';
+            _showSocialTermsDialog(tempToken: tempToken, email: email);
           } else {
             ToastUtil.showSuccess("Welcome back!");
             final redirectPath = await FirstLoginUtil.getRedirectPath();
@@ -654,9 +688,8 @@ class _SignupScreenState extends State<SignupScreen> {
         case Success(:final data):
           if (data['is_new_user'] == true) {
             final tempToken = data['tempToken'] as String? ?? '';
-            context.push(
-              '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(tempToken)}',
-            );
+            final email = data['email'] as String? ?? '';
+            _showSocialTermsDialog(tempToken: tempToken, email: email);
           } else {
             ToastUtil.showSuccess("Welcome back!");
             final redirectPath = await FirstLoginUtil.getRedirectPath();
@@ -672,6 +705,124 @@ class _SignupScreenState extends State<SignupScreen> {
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _showSocialTermsDialog({
+    required String tempToken,
+    required String email,
+  }) async {
+    bool agreedToTerms = false;
+    bool acceptSms = false;
+
+    final accepted = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          bool isSubmitting = false;
+
+          Future<void> submit() async {
+            setDialogState(() => isSubmitting = true);
+            try {
+              final response = await  apiClient.post(
+                '${AppConstants.baseUrl}/auth/accept-sms-notifications',
+                headers: {
+                  'Authorization': 'Bearer $tempToken',
+                  'Content-Type': 'application/json',
+                },
+                body: jsonEncode({
+                  'agreed_to_terms': true,
+                  'accept_sms_notifications': acceptSms,
+                }),
+              );
+              if (response.statusCode == 200 || response.statusCode == 201) {
+                if (mounted) {
+                  context.pop(true);
+                }
+              } else {
+                ToastUtil.showError('Failed to accept terms. Please try again.');
+                setDialogState(() => isSubmitting = false);
+              }
+            } catch (e) {
+              ToastUtil.showError('An error occurred. Please try again.');
+              setDialogState(() => isSubmitting = false);
+            }
+          }
+
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Text(
+              'Terms & Conditions',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Before continuing, please review and accept our terms and conditions.',
+                  style: TextStyle(fontSize: 14),
+                ),
+                const SizedBox(height: 16),
+                CheckboxListTile(
+                  value: agreedToTerms,
+                  onChanged: isSubmitting
+                      ? null
+                      : (v) => setDialogState(() => agreedToTerms = v ?? false),
+                  title: const Text(
+                    'I agree to the Terms & Conditions',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.zero,
+                ),
+                CheckboxListTile(
+                  value: acceptSms,
+                  onChanged: isSubmitting
+                      ? null
+                      : (v) => setDialogState(() => acceptSms = v ?? false),
+                  title: const Text(
+                    'I agree to receive SMS notifications',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  subtitle: const Text(
+                    'You can opt out later in your account settings.',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: isSubmitting
+                    ? null
+                    : () => Navigator.of(dialogContext).pop(false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: agreedToTerms && acceptSms && !isSubmitting ? submit : null,
+                child: isSubmitting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Text('Agree & Continue'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    if (accepted == true && mounted) {
+      context.push(
+        '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(tempToken)}',
+        extra: email,
+      );
     }
   }
 

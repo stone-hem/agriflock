@@ -437,10 +437,10 @@ class _DeviceCard extends StatelessWidget {
                   label: device.deviceType.replaceAll('_', ' ').toUpperCase(),
                   color: Colors.purple,
                 ),
-                if (device.location != null)
+                if (device.locationAddress != null)
                   _InfoChip(
                     icon: Icons.location_on_outlined,
-                    label: device.location!,
+                    label: '${device.locationAddress}',
                     color: Colors.teal,
                   ),
                 _InfoChip(

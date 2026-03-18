@@ -26,7 +26,6 @@ import 'package:agriflock/features/farmer/subscription/flow/experience_selection
 import 'package:agriflock/features/farmer/subscription/flow/plan_recommendation_screen.dart';
 import 'package:agriflock/features/farmer/subscription/flow/subscription_payment_screen.dart';
 import 'package:agriflock/features/farmer/subscription/flow/subscription_plans_screen.dart';
-import 'package:agriflock/features/farmer/subscription/subscription_plans_preview_screen.dart';
 import 'package:agriflock/features/farmer/payg/flow/payg_intro_screen.dart';
 import 'package:agriflock/features/farmer/payg/payg_dashboard_screen.dart';
 import 'package:agriflock/features/farmer/payg/payg_history_screen.dart';
@@ -144,7 +143,6 @@ class AppRoutes {
   static const String subscriptionExperience = '/subscription/experience';
   static const String subscriptionPlans = '/subscription/plans';
   static const String subscriptionRecommendation = '/subscription/recommendation';
-  static const String subscriptionPlansPreview = '/subscription/plans-preview';
   static const String subscriptionPayment = '/subscription/payment';
 
   // PAYG (device lease) routes
@@ -193,7 +191,6 @@ class AppRoutes {
     subscriptionExperience,
     subscriptionPlans,
     subscriptionRecommendation,
-    subscriptionPlansPreview,
     subscriptionPayment,
     paygIntro,
     paygDashboard,
@@ -768,7 +765,7 @@ class AppRoutes {
         ),
         GoRoute(path: '/welcome-day1', redirect: (_, _) => subscriptionExperience),
         GoRoute(path: '/plan-transition', redirect: (_, _) => subscriptionRecommendation),
-        GoRoute(path: '/plans', redirect: (_, _) => subscriptionPlansPreview),
+        GoRoute(path: '/plans', redirect: (_, _) => subscriptionPlans),
 
         // ── Subscription flow routes ──────────────────────────────────
         GoRoute(
@@ -782,10 +779,6 @@ class AppRoutes {
         GoRoute(
           path: subscriptionRecommendation,
           builder: (_, _) => const PlanRecommendationScreen(),
-        ),
-        GoRoute(
-          path: subscriptionPlansPreview,
-          builder: (_, _) => const SubscriptionPlansPreviewScreen(),
         ),
         GoRoute(
           path: subscriptionPayment,

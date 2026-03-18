@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:agriflock/core/constants/app_constants.dart';
 import 'package:agriflock/core/network/api_client.dart';
+import 'package:agriflock/core/notifications/fcm_service.dart';
 import 'package:agriflock/core/notifications/notification_service.dart';
 import 'package:agriflock/core/services/social_auth_service.dart';
 import 'package:agriflock/core/theme/theme.dart';
@@ -64,6 +65,13 @@ void main() async {
       NotificationService.instance.connect();
       NotificationService.instance.fetchAndSeed();
     }
+
+    // 7. Initialize FCM push notifications
+    print('Initializing FCM...');
+    await FCMService.instance.initialize(
+      storage: secureStorage,
+      navigatorKey: navigatorKey,
+    );
 
     print('=== App Initialization Complete ===');
 

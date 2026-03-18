@@ -81,20 +81,20 @@ class _DeviceTelemetryScreenState extends State<DeviceTelemetryScreen> {
             if (_alerts.isNotEmpty) _buildAlertBanner(_alerts.first),
             if (_alerts.isNotEmpty) const SizedBox(height: 12),
             _buildDeviceInfoCard(),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             _buildTelemetryGrid(),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             _buildStatusRow(),
             if (_latestTelemetry != null &&
                 (_latestTelemetry!.tempWeek1 != null ||
                  _latestTelemetry!.tempWeek2 != null ||
                  _latestTelemetry!.tempWeek3 != null ||
                  _latestTelemetry!.tempWeek4 != null)) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
               _buildWeeklyTempCard(),
             ],
             if (_alerts.isNotEmpty) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
               _buildAlertsSection(),
             ],
             const SizedBox(height: 24),
@@ -260,15 +260,17 @@ class _DeviceTelemetryScreenState extends State<DeviceTelemetryScreen> {
                   widget.device.deviceImei,
                   style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
                 ),
-                if (widget.device.location != null) ...[
+                if (widget.device.locationAddress != null) ...[
                   const SizedBox(height: 4),
                   Row(
                     children: [
                       Icon(Icons.location_on_outlined, size: 12, color: Colors.teal.shade600),
                       const SizedBox(width: 2),
-                      Text(
-                        widget.device.location!,
-                        style: TextStyle(color: Colors.teal.shade700, fontSize: 11),
+                      Flexible(
+                        child: Text(
+                          "${widget.device.locationAddress}",
+                          style: TextStyle(color: Colors.teal.shade700, fontSize: 11),
+                        ),
                       ),
                     ],
                   ),
@@ -327,7 +329,9 @@ class _DeviceTelemetryScreenState extends State<DeviceTelemetryScreen> {
               ? telemetry.stateLabel.replaceAll('-', ' ').toUpperCase()
               : '--',
           color: Colors.teal,
-          subtitle: telemetry != null ? 'Mode: ${telemetry.connModeLabel}' : '',
+          subtitle: telemetry != null
+              ? 'Mode: ${telemetry.modeLabel.isNotEmpty ? telemetry.modeLabel : telemetry.connModeLabel}'
+              : '',
           isSmallText: true,
         ),
         _MetricCard(
@@ -340,9 +344,14 @@ class _DeviceTelemetryScreenState extends State<DeviceTelemetryScreen> {
         _MetricCard(
           icon: Icons.water_outlined,
           label: 'Water Level',
-          value: telemetry != null ? '${telemetry.water}%' : '--',
-          color: _waterColor(telemetry?.water),
-          subtitle: _waterStatus(telemetry?.water),
+          value: telemetry != null
+              ? (telemetry.waterLevelLabel.isNotEmpty
+                  ? telemetry.waterLevelLabel.toUpperCase()
+                  : '${telemetry.water}')
+              : '--',
+          color: _waterLabelColor(telemetry?.waterLevelLabel),
+          subtitle: _waterLabelStatus(telemetry?.waterLevelLabel),
+          isSmallText: true,
         ),
       ],
     );
@@ -568,18 +577,34 @@ class _DeviceTelemetryScreenState extends State<DeviceTelemetryScreen> {
     return 'Critical';
   }
 
-  Color _waterColor(int? level) {
-    if (level == null) return Colors.grey;
-    if (level >= 50) return Colors.blue;
-    if (level >= 20) return Colors.orange;
-    return Colors.red;
+  Color _waterLabelColor(String? label) {
+    switch (label?.toLowerCase()) {
+      case 'high':
+        return Colors.blue;
+      case 'medium':
+        return Colors.teal;
+      case 'low':
+        return Colors.orange;
+      case 'empty':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
   }
 
-  String _waterStatus(int? level) {
-    if (level == null) return 'Waiting...';
-    if (level >= 50) return 'Sufficient';
-    if (level >= 20) return 'Low';
-    return 'Critical — Refill';
+  String _waterLabelStatus(String? label) {
+    switch (label?.toLowerCase()) {
+      case 'high':
+        return 'Sufficient';
+      case 'medium':
+        return 'Adequate';
+      case 'low':
+        return 'Low — Check soon';
+      case 'empty':
+        return 'Critical — Refill';
+      default:
+        return 'Waiting...';
+    }
   }
 }
 

@@ -1,3 +1,7 @@
+import 'dart:convert';
+
+import 'package:agriflock/core/constants/app_constants.dart';
+import 'package:agriflock/core/notifications/fcm_service.dart';
 import 'package:agriflock/core/utils/api_error_handler.dart';
 import 'package:agriflock/core/utils/first_login_util.dart';
 import 'package:agriflock/core/utils/result.dart';
@@ -324,17 +328,24 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  /// Handle conditional auth failures (shared between login and social auth)
-  void _handleAuthFailure<T>(Failure<T> failure) {
+  /// Handle conditional auth failures (shared between login and social auth).
+  /// [isSocialLogin] — true for Google/Apple flows (shows terms dialog before onboarding).
+  void _handleAuthFailure<T>(Failure<T> failure, {bool isSocialLogin = false}) {
     if (!mounted) return;
 
     switch (failure.cond) {
       case 'user_onboarding':
         final tempToken = failure.data?['tempToken'] as String? ?? '';
-        context.push(
-          '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(tempToken)}',
-          extra: _identifierController.text.trim(),
-        );
+        final identifier =
+            failure.data?['email'] as String? ?? _identifierController.text.trim();
+        if (isSocialLogin) {
+          _showTermsDialog(tempToken: tempToken, identifier: identifier);
+        } else {
+          context.push(
+            '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(tempToken)}',
+            extra: identifier,
+          );
+        }
       case 'account_unverified':
         final email = failure.data?['email'] as String? ??
             _identifierController.text.trim();
@@ -376,6 +387,7 @@ class _LoginScreenState extends State<LoginScreen> {
       switch (result) {
         case Success():
           ToastUtil.showSuccess("Login successful!");
+          FCMService.instance.registerTokenAfterLogin();
           final redirectPath = await FirstLoginUtil.getRedirectPath();
           if (mounted) context.go(redirectPath);
 
@@ -402,11 +414,12 @@ class _LoginScreenState extends State<LoginScreen> {
       switch (result) {
         case Success():
           ToastUtil.showSuccess("Login successful!");
+          FCMService.instance.registerTokenAfterLogin();
           final redirectPath = await FirstLoginUtil.getRedirectPath();
           if (mounted) context.go(redirectPath);
 
         case final Failure failure:
-          _handleAuthFailure(failure);
+          _handleAuthFailure(failure, isSocialLogin: true);
       }
     } catch (e) {
       if (mounted) {
@@ -428,11 +441,12 @@ class _LoginScreenState extends State<LoginScreen> {
       switch (result) {
         case Success():
           ToastUtil.showSuccess("Login successful!");
+          FCMService.instance.registerTokenAfterLogin();
           final redirectPath = await FirstLoginUtil.getRedirectPath();
           if (mounted) context.go(redirectPath);
 
         case final Failure failure:
-          _handleAuthFailure(failure);
+          _handleAuthFailure(failure, isSocialLogin: true);
       }
     } catch (e) {
       if (mounted) {
@@ -440,6 +454,128 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  /// Shows a Terms & Conditions dialog for social sign-in new users.
+  /// POSTs to /auth/accept-sms-notifications with the tempToken, then navigates to onboarding.
+  Future<void> _showTermsDialog({
+    required String tempToken,
+    required String identifier,
+  }) async {
+    bool agreedToTerms = false;
+    bool acceptSms = false;
+
+    final accepted = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          bool isSubmitting = false;
+
+          Future<void> submit() async {
+            setDialogState(() => isSubmitting = true);
+            try {
+              final response = await apiClient.post(
+               '${AppConstants.baseUrl}/auth/accept-sms-notifications',
+                headers: {
+                  'Authorization': 'Bearer $tempToken',
+                  'Content-Type': 'application/json',
+                },
+                body: {
+                  'agreed_to_terms': true,
+                  'accept_sms_notifications': acceptSms,
+                },
+              );
+
+              if (response.statusCode == 200 || response.statusCode == 201) {
+                if (mounted) {
+                  context.pop(true);
+                }
+
+              } else {
+                ToastUtil.showError('Failed to accept terms. Please try again.');
+                setDialogState(() => isSubmitting = false);
+              }
+            } catch (e) {
+              ToastUtil.showError('An error occurred. Please try again.');
+              setDialogState(() => isSubmitting = false);
+            }
+          }
+
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Text(
+              'Terms & Conditions',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Before continuing, please review and accept our terms and conditions.',
+                  style: TextStyle(fontSize: 14),
+                ),
+                const SizedBox(height: 16),
+                CheckboxListTile(
+                  value: agreedToTerms,
+                  onChanged: isSubmitting
+                      ? null
+                      : (v) => setDialogState(() => agreedToTerms = v ?? false),
+                  title: const Text(
+                    'I agree to the Terms & Conditions',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.zero,
+                ),
+                CheckboxListTile(
+                  value: acceptSms,
+                  onChanged: isSubmitting
+                      ? null
+                      : (v) => setDialogState(() => acceptSms = v ?? false),
+                  title: const Text(
+                    'I agree to receive SMS notifications',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  subtitle: const Text(
+                    'You can opt out later in your account settings.',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: isSubmitting
+                    ? null
+                    : () => Navigator.of(dialogContext).pop(false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: agreedToTerms && acceptSms && !isSubmitting ? submit : null,
+                child: isSubmitting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Text('Agree & Continue'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    if (accepted == true && mounted) {
+      context.push(
+        '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(tempToken)}',
+        extra: identifier,
+      );
     }
   }
 

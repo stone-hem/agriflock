@@ -424,9 +424,9 @@ class _LayersTabState extends State<_LayersTab> {
   final Map<String, TextEditingController> _ctrl = {};
   final _phase2 = _LayersPhase2State();
 
-  final _capacityController = TextEditingController();
+  int _multiplier = 1;
 
-  double get _scale => _selectedCapacity != null ? _selectedCapacity! / 128.0 : 1.0;
+  double get _scale => _multiplier.toDouble();
 
   List<BirdType> get _layerBreeds =>
       _birdTypes.where((b) => b.type == 'layer').toList();
@@ -466,7 +466,6 @@ class _LayersTabState extends State<_LayersTab> {
   void dispose() {
     for (final c in _ctrl.values) c.dispose();
     _phase2.flockController.dispose();
-    _capacityController.dispose();
     super.dispose();
   }
 
@@ -480,8 +479,8 @@ class _LayersTabState extends State<_LayersTab> {
           // Auto-select when there is only one laying breed
           if (_layerBreeds.length == 1) {
             _selectedBreed = _layerBreeds.first;
+            _multiplier = 1;
             _selectedCapacity = 128;
-            _capacityController.text = '128';
             _phase2.flock = 128;
             _phase2.exBirds = 128;
             _generateQuotation();
@@ -509,17 +508,15 @@ class _LayersTabState extends State<_LayersTab> {
     }
   }
 
-  void _applyCapacity() {
-    final v = int.tryParse(_capacityController.text.trim());
-    if (v == null || v < 1) {
-      AppSnackBar.show(context, message: 'Please enter a valid flock size (min 1)', type: SnackBarType.error);
-      return;
-    }
+  void _applyMultiplier(int newMultiplier) {
+    if (newMultiplier < 1) return;
+    final capacity = newMultiplier * 128;
     setState(() {
-      _selectedCapacity = v;
-      _phase2.flock = v;
-      _phase2.flockController.text = v.toString();
-      _phase2.exBirds = v;
+      _multiplier = newMultiplier;
+      _selectedCapacity = capacity;
+      _phase2.flock = capacity;
+      _phase2.flockController.text = capacity.toString();
+      _phase2.exBirds = capacity;
     });
     if (_quotationData == null) {
       _generateQuotation();
@@ -579,9 +576,9 @@ class _LayersTabState extends State<_LayersTab> {
                     isSelected: _selectedBreed?.id == _layerBreeds[i].id,
                     onTap: () => setState(() {
                       _selectedBreed = _layerBreeds[i];
+                      _multiplier = 1;
                       _selectedCapacity = null;
                       _quotationData = null;
-                      _capacityController.clear();
                     }),
                   ),
                 ),
@@ -591,52 +588,51 @@ class _LayersTabState extends State<_LayersTab> {
 
             // ── Flock Size ──
             if (_selectedBreed != null) ...[
-              Text('Enter Flock Size',
+              Text('Flock Size',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey.shade800)),
               const SizedBox(height: 4),
-              Text('Base quotation uses 128 birds. Enter any number — the estimate scales automatically.',
+              Text('Base: 128 birds. Tap + or − to scale the estimate.',
                   style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
               const SizedBox(height: 12),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _capacityController,
-                      enabled: !_isGeneratingQuotation,
-                      keyboardType: TextInputType.number,
-                      onFieldSubmitted: (_) => _applyCapacity(),
-                      decoration: InputDecoration(
-                        labelText: 'Number of Birds',
-                        hintText: 'e.g. 350',
-                        suffixText: 'birds',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.remove_circle_outline,
+                          color: _multiplier > 1 ? primaryColor : Colors.grey.shade300, size: 28),
+                      onPressed: _isGeneratingQuotation || _multiplier <= 1
+                          ? null
+                          : () => _applyMultiplier(_multiplier - 1),
+                    ),
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Text('×$_multiplier',
+                              style: const TextStyle(
+                                  fontSize: 24, fontWeight: FontWeight.bold, color: primaryColor)),
+                          Text('${_multiplier * 128} birds',
+                              style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                        ],
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  SizedBox(
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: _isGeneratingQuotation ? null : _applyCapacity,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                      ),
-                      child: _isGeneratingQuotation
-                          ? const SizedBox(width: 18, height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                          : const Text('Apply', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    IconButton(
+                      icon: Icon(Icons.add_circle_outline, color: primaryColor, size: 28),
+                      onPressed: _isGeneratingQuotation
+                          ? null
+                          : () => _applyMultiplier(_multiplier + 1),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              if (_selectedCapacity != null) ...[
-                const SizedBox(height: 6),
-                Text('Scale: ×${_scale == _scale.truncateToDouble() ? _scale.toInt() : _scale.toStringAsFixed(2)}  (${_selectedCapacity} birds)',
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+              if (_isGeneratingQuotation) ...[
+                const SizedBox(height: 10),
+                const Center(child: CircularProgressIndicator(color: primaryColor, strokeWidth: 2)),
               ],
               const SizedBox(height: 16),
             ],
@@ -790,7 +786,7 @@ class _Stage1Table extends StatelessWidget {
             side: BorderSide(color: Colors.teal.withOpacity(0.2))),
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: _stageTable('s1', 'Stage 1 — Rearing Phase (0–20 weeks)', lb.stage1.items),
+          child: _stageTable('s1', 'Stage 1 — Rearing Phase (0–18 weeks/4.5 months)', lb.stage1.items),
         ),
       ),
     ]);
@@ -940,16 +936,17 @@ class _LayingStageSection extends StatelessWidget {
   }
 
   Widget _buildWeekSlider(BuildContext context) {
+    final months = (state.layingWeeks / 4.33).round().clamp(1, 24);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        const Text('Laying period (weeks)',
+        const Text('Total Laying Period (months)',
             style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
               color: const Color(0xFFFFF3E0), borderRadius: BorderRadius.circular(6),
               border: Border.all(color: const Color(0xFFFFCC80))),
-          child: Text('${state.layingWeeks} wks',
+          child: Text('$months months',
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold,
                   color: Color(0xFFE65100))),
         ),
@@ -965,16 +962,16 @@ class _LayingStageSection extends StatelessWidget {
           trackHeight: 4,
         ),
         child: Slider(
-          value: state.layingWeeks.toDouble(),
-          min: 4, max: 120, divisions: 116,
+          value: months.toDouble(),
+          min: 1, max: 24, divisions: 23,
           onChanged: (v) {
-            state.layingWeeks = v.toInt();
+            state.layingWeeks = (v * 4.33).round();
             onChanged();
           },
         ),
       ),
       Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: ['4 wks', '30 wks', '60 wks', '90 wks', '120 wks']
+          children: ['1 mo', '6 mo', '12 mo', '18 mo', '24 mo']
               .map((s) => Text(s, style: const TextStyle(fontSize: 9, color: _kMuted)))
               .toList()),
     ]);
@@ -1267,10 +1264,10 @@ class _BreakEvenLabel extends StatelessWidget {
       text = 'Break-even: Never (monthly loss)';
       color = const Color(0xFFB83232);
     } else if (r.breakEvenWeek != null) {
-      text = 'Break-even: Week ${r.breakEvenWeek!.ceil()} of Phase 2';
+      text = 'Break-even: Month ${(r.breakEvenWeek! / 4.33).ceil()} of Phase 2';
       color = const Color(0xFFC8813A);
     } else {
-      text = 'Break-even: After wk ${state.layingWeeks} (extend period)';
+      text = 'Break-even: After month ${(state.layingWeeks / 4.33).round()} (extend period)';
       color = const Color(0xFFC8813A);
     }
 
@@ -1314,14 +1311,14 @@ class _VerdictBox extends StatelessWidget {
     } else if (good) {
       icon = '✅';
       message = "Egg sales recover your Phase 1 investment of ${_ksh(phase1Cost)} by "
-          "week ${r.breakEvenWeek!.ceil()}. With the ex-layer sale of ${_ksh(r.exLayerTotal)}, "
-          "total net over ${state.layingWeeks} weeks is ${r.overallNet >= 0 ? '+' : '-'}${_ksh(r.overallNet)}.";
+          "month ${(r.breakEvenWeek! / 4.33).ceil()}. With the ex-layer sale of ${_ksh(r.exLayerTotal)}, "
+          "total net over ${(state.layingWeeks / 4.33).round()} months is ${r.overallNet >= 0 ? '+' : '-'}${_ksh(r.overallNet)}.";
     } else {
       icon = '⚠️';
       final tip = r.overallNet >= 0
           ? 'The bird sale tips you into profit! ✅'
           : 'Consider extending the cycle or adjusting prices.';
-      message = "Egg sales alone don't recover Phase 1 costs within ${state.layingWeeks} weeks. "
+      message = "Egg sales alone don't recover Phase 1 costs within ${(state.layingWeeks / 4.33).round()} months. "
           "Including ex-layer sale of ${_ksh(r.exLayerTotal)}, overall net is "
           "${r.overallNet >= 0 ? '+' : '-'}${_ksh(r.overallNet)}. $tip";
     }
