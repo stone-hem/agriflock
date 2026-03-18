@@ -1,9 +1,7 @@
-import 'dart:convert';
-
-import 'package:agriflock/core/constants/app_constants.dart';
 import 'package:agriflock/core/notifications/fcm_service.dart';
 import 'package:agriflock/core/utils/api_error_handler.dart';
 import 'package:agriflock/core/utils/first_login_util.dart';
+import 'package:agriflock/core/utils/log_util.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/utils/toast_util.dart';
 import 'package:agriflock/features/auth/repo/manual_auth_repo.dart';
@@ -11,6 +9,7 @@ import 'package:agriflock/features/auth/shared/auth_text_field.dart';
 import 'package:agriflock/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../main.dart';
 
@@ -476,12 +475,9 @@ class _LoginScreenState extends State<LoginScreen> {
           Future<void> submit() async {
             setDialogState(() => isSubmitting = true);
             try {
-              final response = await apiClient.post(
-               '${AppConstants.baseUrl}/auth/accept-sms-notifications',
-                headers: {
-                  'Authorization': 'Bearer $tempToken',
-                  'Content-Type': 'application/json',
-                },
+              final response = await apiClient.patch(
+                '/auth/agree-to-terms',
+                headers: {'Authorization': 'Bearer $tempToken'},
                 body: {
                   'agreed_to_terms': true,
                   'accept_sms_notifications': acceptSms,
@@ -494,6 +490,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 }
 
               } else {
+                LogUtil.error(response.body);
                 ToastUtil.showError('Failed to accept terms. Please try again.');
                 setDialogState(() => isSubmitting = false);
               }
@@ -517,7 +514,37 @@ class _LoginScreenState extends State<LoginScreen> {
                   'Before continuing, please review and accept our terms and conditions.',
                   style: TextStyle(fontSize: 14),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => launchUrl(Uri.parse('https://www.agriflock360.com/terms-conditions'), mode: LaunchMode.externalApplication),
+                      child: Text(
+                        'Terms & Conditions',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Theme.of(ctx).primaryColor,
+                          fontWeight: FontWeight.w600,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                    const Text('  ·  ', style: TextStyle(fontSize: 13)),
+                    GestureDetector(
+                      onTap: () => launchUrl(Uri.parse('https://www.agriflock360.com/privacy-policy'), mode: LaunchMode.externalApplication),
+                      child: Text(
+                        'Privacy Policy',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Theme.of(ctx).primaryColor,
+                          fontWeight: FontWeight.w600,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
                 CheckboxListTile(
                   value: agreedToTerms,
                   onChanged: isSubmitting
@@ -550,9 +577,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             actions: [
               TextButton(
-                onPressed: isSubmitting
-                    ? null
-                    : () => Navigator.of(dialogContext).pop(false),
+                onPressed: isSubmitting ? null : () => context.pop(false),
                 child: const Text('Cancel'),
               ),
               FilledButton(

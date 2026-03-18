@@ -122,9 +122,17 @@ class FCMService {
     if (notification == null) return;
 
     // Suppress device-registration confirmation notifications — just log them
-    final type = message.data['type'] as String?;
-    if (type == 'device_connected' || type == 'device_registered') {
-      LogUtil.info('FCM: device connected/registered — suppressing banner');
+    final type = (message.data['type'] as String? ?? '').toLowerCase();
+    final title = (notification.title ?? '').toLowerCase();
+    final body = (notification.body ?? '').toLowerCase();
+    final isDeviceRegistration = type.contains('device') ||
+        type.contains('connect') ||
+        title.contains('connected') ||
+        title.contains('monitoring has started') ||
+        body.contains('monitoring has started') ||
+        body.contains('now connected');
+    if (isDeviceRegistration) {
+      LogUtil.info('FCM: device registration notification — suppressing banner');
       return;
     }
 
@@ -140,7 +148,7 @@ class FCMService {
           _channelName,
           importance: Importance.high,
           priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
+          icon: '@mipmap/launcher_icon',
         ),
         iOS: DarwinNotificationDetails(
           presentAlert: true,

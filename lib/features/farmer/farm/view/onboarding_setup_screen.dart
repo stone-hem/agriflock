@@ -58,7 +58,6 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
   bool _showLayersSubType = false;
   String? _selectedLayersSubTypeId;
   static const String _layersCategoryId = '__layers_category__';
-  String? _selectedBatchType;
   String? _selectedFeedingTimeCategory;
   File? _batchPhotoFile;
   bool _isOwnHatch = false;
@@ -491,7 +490,6 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
       final batchData = <String, dynamic>{
         'house_id': _createdHouseId,
         'bird_type_id': _selectedBirdTypeId,
-        'batch_type': _selectedBatchType,
         'initial_count': int.parse(_initialQuantityController.text.trim()),
         'current_count': int.parse(_birdsAliveController.text.trim()),
         'hatch_date':
@@ -1078,20 +1076,6 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                       ],
                     ],
                   ),
-            const SizedBox(height: 20),
-
-            // Batch Type
-            ReusableDropdown<String>(
-              topLabel: 'Batch Type',
-              value: _selectedBatchType,
-              hintText: 'Select batch type',
-              items: _batchTypes
-                  .map((t) => DropdownMenuItem(value: t, child: Text(t)))
-                  .toList(),
-              onChanged: (v) => setState(() => _selectedBatchType = v),
-              validator: (v) =>
-                  (v == null || v.isEmpty) ? 'Please select a batch type' : null,
-            ),
             const SizedBox(height: 20),
 
             // ── Hatch Source ──────────────────────────────────────────

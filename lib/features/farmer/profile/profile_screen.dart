@@ -14,8 +14,9 @@ import 'package:agriflock/features/shared/widgets/profile_menu_item.dart';
 import 'package:agriflock/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -501,9 +502,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   title: 'About Agriflock 360',
                   subtitle: 'App version and information',
                   color: Colors.teal,
-                  onTap: () {
-                    context.push('/about');
-                  },
+                  onTap: () => launchUrl(
+                    Uri.parse('https://www.agriflock360.com/about'),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                ),
+                ProfileMenuItem(
+                  icon: Icons.description_outlined,
+                  title: 'Terms & Conditions',
+                  subtitle: 'Read our terms and conditions',
+                  color: Colors.indigo,
+                  onTap: () => launchUrl(
+                    Uri.parse('https://www.agriflock360.com/terms-conditions'),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                ),
+                ProfileMenuItem(
+                  icon: Icons.privacy_tip_outlined,
+                  title: 'Privacy Policy',
+                  subtitle: 'Read our privacy policy',
+                  color: Colors.cyan,
+                  onTap: () => launchUrl(
+                    Uri.parse('https://www.agriflock360.com/privacy-policy'),
+                    mode: LaunchMode.externalApplication,
+                  ),
                 ),
                 const SizedBox(height: 24),
 

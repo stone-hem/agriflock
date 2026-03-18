@@ -178,11 +178,15 @@ class ManualAuthRepository {
           );
         }
 
-        final accessToken = data['data']?['access_token'] as String?;
-        final refreshToken = data['data']?['refresh_token'] as String?;
-        final currency = data['data']?['currency'] as String?;
-        final user = data['data']?['user'] as Map<String, dynamic>?;
-        final expiresIn = data['data']?['expires_in'] as int?;
+        // Backend may return tokens at root level OR nested under 'data'
+        final payload = (data['data'] as Map<String, dynamic>?) ?? data;
+        final accessToken = payload['access_token'] as String?;
+        final refreshToken = payload['refresh_token'] as String?;
+        final currency = payload['currency'] as String?;
+        final user = payload['user'] as Map<String, dynamic>?;
+        final expiresIn = payload['expires_in'] as int?;
+        final sessionId = payload['session_id'] as String?
+            ?? user?['session_id'] as String?;
 
         LogUtil.info('socialLogin parsed — accessToken: $accessToken, refreshToken: $refreshToken, user: $user');
 
@@ -190,13 +194,13 @@ class ManualAuthRepository {
           await secureStorage.saveLoginData(
             token: accessToken,
             refreshToken: refreshToken,
-            sessionId: user['session_id'] as String,
+            sessionId: sessionId ?? '',
             userData: user,
             expiresInSeconds: expiresIn ?? 3600,
             currency: currency ?? 'USD',
           );
 
-          return Success(data['data'] as Map<String, dynamic>);
+          return Success(payload);
         } else {
           return const Failure(
             message: 'Invalid response format from backend',

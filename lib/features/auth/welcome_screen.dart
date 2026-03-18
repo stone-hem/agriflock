@@ -14,7 +14,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _currentPage = 0;
 
   // Single green color scheme throughout
-  static const Color primaryGreen = Colors.green;
   static const Color lightGreen = Color(0xFF4CAF50);
 
   final List<OnboardingPage> _pages = [
@@ -65,7 +64,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             },
             itemCount: _pages.length,
             itemBuilder: (context, index) {
-              return _buildPage(_pages[index], screenHeight, screenWidth);
+              return _buildPage(_pages[index], screenHeight, screenWidth,context);
             },
           ),
 
@@ -146,7 +145,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
-                            foregroundColor: primaryGreen,
+                            foregroundColor: Theme.of(context).primaryColor,
                             minimumSize: const Size(double.infinity, 56),
                             elevation: 8,
                             shadowColor: Colors.black26,
@@ -196,7 +195,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
-                        foregroundColor: primaryGreen,
+                        foregroundColor: Theme.of(context).primaryColor,
                         minimumSize: const Size(double.infinity, 56),
                         elevation: 8,
                         shadowColor: Colors.black26,
@@ -222,12 +221,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  Widget _buildPage(OnboardingPage page, double screenHeight, double screenWidth) {
+  Widget _buildPage(OnboardingPage page, double screenHeight, double screenWidth, BuildContext context) {
     final imageHeight = screenHeight * 0.6; // 60% for image
 
     return Container(
-      decoration: const BoxDecoration(
-        color: primaryGreen,
+      decoration: BoxDecoration(
+        color: Theme.of(context).primaryColor,
       ),
       child: Stack(
         children: [
@@ -295,13 +294,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             right: 0,
             height: 120,
             child: Container(
-              decoration: const BoxDecoration(
+              decoration:  BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
                     Color(0x002E7D32),
-                    primaryGreen,
+                    Theme.of(context).primaryColor,
                   ],
                 ),
               ),

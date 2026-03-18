@@ -123,7 +123,7 @@ class _QuotationScreenState extends State<QuotationScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const SizedBox(height: 40),
+          const SizedBox(height: 30),
 
           // Error message if any
           if (_errorMessage != null)
@@ -164,23 +164,7 @@ class _QuotationScreenState extends State<QuotationScreen>
               ),
             ),
 
-          // Header with icon
-          Container(
-            width: 100,
-            height: 100,
-            decoration: BoxDecoration(
-              color: Colors.orange.shade50,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.orange.shade200, width: 3),
-            ),
-            child: Icon(
-              Icons.person_outline,
-              size: 50,
-              color: Colors.orange.shade700,
-            ),
-          ),
-
-          const SizedBox(height: 32),
+          const SizedBox(height: 10),
 
           // Title
           Text(

@@ -1,10 +1,8 @@
-import 'dart:convert';
-
 import 'package:agriflock/app_routes.dart';
-import 'package:agriflock/core/constants/app_constants.dart';
 import 'package:agriflock/core/services/social_auth_service.dart';
 import 'package:agriflock/core/utils/api_error_handler.dart';
 import 'package:agriflock/core/utils/first_login_util.dart';
+import 'package:agriflock/core/utils/log_util.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/utils/toast_util.dart';
 import 'package:agriflock/features/auth/repo/manual_auth_repo.dart';
@@ -14,6 +12,7 @@ import 'package:agriflock/features/auth/shared/country_service.dart';
 import 'package:agriflock/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 
 class SignupScreen extends StatefulWidget {
@@ -257,9 +256,10 @@ class _SignupScreenState extends State<SignupScreen> {
                                             ),
                                             WidgetSpan(
                                               child: GestureDetector(
-                                                onTap: () {
-                                                  _showTermsDialog(context);
-                                                },
+                                                onTap: () => launchUrl(
+                                                  Uri.parse('https://www.agriflock360.com/terms-conditions'),
+                                                  mode: LaunchMode.externalApplication,
+                                                ),
                                                 child: Text(
                                                   'Terms and Conditions',
                                                   style: TextStyle(
@@ -274,9 +274,10 @@ class _SignupScreenState extends State<SignupScreen> {
                                             const TextSpan(text: ' and '),
                                             WidgetSpan(
                                               child: GestureDetector(
-                                                onTap: () {
-                                                  _showPrivacyDialog(context);
-                                                },
+                                                onTap: () => launchUrl(
+                                                  Uri.parse('https://www.agriflock360.com/privacy-policy'),
+                                                  mode: LaunchMode.externalApplication,
+                                                ),
                                                 child: Text(
                                                   'Privacy Policy',
                                                   style: TextStyle(
@@ -725,22 +726,18 @@ class _SignupScreenState extends State<SignupScreen> {
           Future<void> submit() async {
             setDialogState(() => isSubmitting = true);
             try {
-              final response = await  apiClient.post(
-                '${AppConstants.baseUrl}/auth/accept-sms-notifications',
-                headers: {
-                  'Authorization': 'Bearer $tempToken',
-                  'Content-Type': 'application/json',
-                },
-                body: jsonEncode({
+              final response = await apiClient.patch(
+                '/auth/agree-to-terms',
+                headers: {'Authorization': 'Bearer $tempToken'},
+                body: {
                   'agreed_to_terms': true,
                   'accept_sms_notifications': acceptSms,
-                }),
+                },
               );
               if (response.statusCode == 200 || response.statusCode == 201) {
-                if (mounted) {
-                  context.pop(true);
-                }
+                if (mounted) context.pop(true);
               } else {
+                LogUtil.error(response);
                 ToastUtil.showError('Failed to accept terms. Please try again.');
                 setDialogState(() => isSubmitting = false);
               }
@@ -764,7 +761,43 @@ class _SignupScreenState extends State<SignupScreen> {
                   'Before continuing, please review and accept our terms and conditions.',
                   style: TextStyle(fontSize: 14),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => launchUrl(
+                        Uri.parse('https://www.agriflock360.com/terms-conditions'),
+                        mode: LaunchMode.externalApplication,
+                      ),
+                      child: Text(
+                        'Terms & Conditions',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Theme.of(dialogContext).primaryColor,
+                          fontWeight: FontWeight.w600,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                    const Text('  ·  ', style: TextStyle(fontSize: 13)),
+                    GestureDetector(
+                      onTap: () => launchUrl(
+                        Uri.parse('https://www.agriflock360.com/privacy-policy'),
+                        mode: LaunchMode.externalApplication,
+                      ),
+                      child: Text(
+                        'Privacy Policy',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Theme.of(dialogContext).primaryColor,
+                          fontWeight: FontWeight.w600,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
                 CheckboxListTile(
                   value: agreedToTerms,
                   onChanged: isSubmitting
@@ -797,9 +830,7 @@ class _SignupScreenState extends State<SignupScreen> {
             ),
             actions: [
               TextButton(
-                onPressed: isSubmitting
-                    ? null
-                    : () => Navigator.of(dialogContext).pop(false),
+                onPressed: isSubmitting ? null : () => context.pop(false),
                 child: const Text('Cancel'),
               ),
               FilledButton(
@@ -826,62 +857,6 @@ class _SignupScreenState extends State<SignupScreen> {
     }
   }
 
-  void _showTermsDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Terms and Conditions'),
-        content: SingleChildScrollView(
-          child: Text(
-            'By creating an account with agriflock, you agree to:\n\n'
-                '1. Provide accurate and complete information\n'
-                '2. Maintain the security of your account credentials\n'
-                '3. Accept responsibility for all activities under your account\n'
-                '4. Use the service only for lawful purposes\n'
-                '5. Not engage in any fraudulent activities\n'
-                '6. Receive SMS alerts and account notifications from AgriFlock 360.\n\n'
-                'We reserve the right to modify these terms at any time. '
-                'Continued use of the service constitutes acceptance of modified terms.',
-            style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showPrivacyDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Privacy Policy'),
-        content: SingleChildScrollView(
-          child: Text(
-            'Your privacy is important to us. This Privacy Policy explains:\n\n'
-                '• What personal data we collect\n'
-                '• How we use your data\n'
-                '• How we protect your information\n'
-                '• Your rights regarding your data\n'
-                '• How to contact us about privacy concerns\n\n'
-                'We collect information you provide directly, including name, email, '
-                'phone number, and farm data. We use this to provide and improve our services.',
-            style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   void dispose() {

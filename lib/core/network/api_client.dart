@@ -179,6 +179,8 @@ class ApiClient {
     try {
       final uri = Uri.parse('${AppConstants.baseUrl}$endpoint');
 
+      LogUtil.info('POST $uri');
+
       Future<http.Response> makeRequest() async {
         return await http.post(
           uri,
@@ -203,6 +205,8 @@ class ApiClient {
       }) async {
     try {
       final uri = Uri.parse('${AppConstants.baseUrl}$endpoint');
+
+      LogUtil.info('PUT $uri');
 
       Future<http.Response> makeRequest() async {
         return await http.put(
@@ -229,6 +233,8 @@ class ApiClient {
     try {
       final uri = Uri.parse('${AppConstants.baseUrl}$endpoint');
 
+      LogUtil.info('PATCH $uri');
+
       Future<http.Response> makeRequest() async {
         return await http.patch(
           uri,
@@ -253,6 +259,8 @@ class ApiClient {
       }) async {
     try {
       final uri = Uri.parse('${AppConstants.baseUrl}$endpoint');
+
+      LogUtil.info('DELETE $uri');
 
       Future<http.Response> makeRequest() async {
         return await http.delete(

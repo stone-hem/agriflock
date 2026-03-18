@@ -31,7 +31,6 @@ import 'package:agriflock/features/farmer/payg/payg_dashboard_screen.dart';
 import 'package:agriflock/features/farmer/payg/payg_history_screen.dart';
 import 'package:agriflock/features/farmer/payg/payg_invoice_screen.dart';
 import 'package:agriflock/features/farmer/payg/payg_payment_screen.dart';
-import 'package:agriflock/features/farmer/profile/about_screen.dart';
 import 'package:agriflock/features/farmer/quotation/complete_profile_screen.dart';
 import 'package:agriflock/features/farmer/quotation/congratulations_screen.dart';
 import 'package:agriflock/features/farmer/profile/help_support_screen.dart';
@@ -151,7 +150,6 @@ class AppRoutes {
   static const String paygInvoice = '/payg/invoice';
   static const String settings = '/settings';
   static const String help = '/help';
-  static const String about = '/about';
   static const String activity = '/activity';
   static const String notifications = '/notifications';
   static const String productionEstimate = '/production-estimate';
@@ -662,7 +660,6 @@ class AppRoutes {
           path: help,
           builder: (context, state) => const HelpSupportScreen(),
         ),
-        GoRoute(path: about, builder: (context, state) => const AboutScreen()),
         GoRoute(
           path: '/my-devices',
           builder: (context, state) => const DevicesScreen(),
