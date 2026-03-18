@@ -1,47 +1,29 @@
 import 'package:flutter/material.dart';
-// import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HelpSupportScreen extends StatelessWidget {
   const HelpSupportScreen({super.key});
 
   void _launchEmail() async {
-    final Uri emailLaunchUri = Uri(
+    final Uri uri = Uri(
       scheme: 'mailto',
-      path: 'support@agriflock.com',
+      path: 'admin@agriflock360.com',
       queryParameters: {
         'subject': 'Agriflock 360 Support Request',
         'body': 'Hello Agriflock Team,\n\nI need assistance with:',
       },
     );
-
-    // if (await canLaunchUrl(emailLaunchUri)) {
-    //   await launchUrl(emailLaunchUri);
-    // }
+    if (await canLaunchUrl(uri)) await launchUrl(uri);
   }
 
   void _launchPhone() async {
-    final Uri phoneLaunchUri = Uri(
-      scheme: 'tel',
-      path: '+254711123456',
-    );
-
-    // if (await canLaunchUrl(phoneLaunchUri)) {
-    //   await launchUrl(phoneLaunchUri);
-    // }
+    final Uri uri = Uri(scheme: 'tel', path: '+254729554434');
+    if (await canLaunchUrl(uri)) await launchUrl(uri);
   }
 
   void _launchWhatsApp() async {
-    final Uri whatsappLaunchUri = Uri(
-      scheme: 'https',
-      path: 'wa.me/254711123456',
-      queryParameters: {
-        'text': 'Hello Agriflock 360 Support, I need help with:',
-      },
-    );
-
-    // if (await canLaunchUrl(whatsappLaunchUri)) {
-    //   await launchUrl(whatsappLaunchUri);
-    // }
+    final Uri uri = Uri.parse('https://wa.me/254729554434?text=Hello%20Agriflock%20360%20Support%2C%20I%20need%20help%20with%3A');
+    if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   @override

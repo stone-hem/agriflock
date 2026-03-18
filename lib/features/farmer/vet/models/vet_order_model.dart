@@ -583,7 +583,6 @@ class VetOrderResponse {
         'The vet will contact you shortly to confirm the appointment.';
   }
 
-  @override
   List<Object?> get props => [
     id,
     orderNumber,
