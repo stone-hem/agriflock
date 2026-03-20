@@ -61,6 +61,7 @@ import 'package:agriflock/features/farmer/vet/vet_details_screen.dart';
 import 'package:agriflock/features/farmer/vet/vet_order_screen.dart';
 import 'package:agriflock/features/farmer/vet/my_order_tracking_screen.dart';
 import 'package:agriflock/features/farmer/vet/browse_vets_screen.dart';
+import 'package:agriflock/core/widgets/app_snack_bar.dart';
 import 'package:agriflock/features/shared/error_screen.dart';
 import 'package:agriflock/features/shared/shell_scaffold.dart';
 import 'package:agriflock/features/vet/home/vet_home_screen.dart';
@@ -319,37 +320,28 @@ class AppRoutes {
           path: onboardingQuiz,
           builder: (context, state) {
             final temptToken = state.uri.queryParameters['tempToken'];
-            final identifier=state.extra as String;
+            final identifier = state.extra as String?;
 
-            if (temptToken == null || temptToken.isEmpty) {
-              return const Scaffold(
-                body: Center(child: Text('Temp Token parameter is missing')),
-              );
+            if (temptToken == null || temptToken.isEmpty || identifier == null || identifier.isEmpty) {
+              return const _AuthErrorRedirect();
             }
             final decodedToken = Uri.decodeComponent(temptToken);
 
-            return OnboardingQuestionsScreen(token: decodedToken,identifier:identifier);
+            return OnboardingQuestionsScreen(token: decodedToken, identifier: identifier);
           },
         ),
         GoRoute(
           path: otpVerifyEmailOrPhone,
           builder: (context, state) {
             final email = state.uri.queryParameters['email'];
-            final userId = state.uri.queryParameters['userId'];
 
             if (email == null || email.isEmpty) {
-              return ErrorScreen(message: 'Email parameter is missing');
+              return const _AuthErrorRedirect();
             }
-
-            if (userId == null || userId.isEmpty) {
-              return ErrorScreen(message: 'User ID parameter is missing');
-            }
-
 
             final decodedEmail = Uri.decodeComponent(email);
-            final decodedUserId = Uri.decodeComponent(userId);
 
-            return OTPVerifyScreen(email: decodedEmail, userId: decodedUserId, phoneNumber :state.extra as String?);
+            return OTPVerifyScreen(email: decodedEmail, phoneNumber: state.extra as String?);
           },
         ),
         GoRoute(
@@ -879,6 +871,36 @@ class AppRoutes {
     final hasSeenWelcome = SharedPrefs.getBool('hasSeenWelcome') ?? false;
     return hasSeenWelcome ? login : welcome;
   }
+}
+
+// ── Auth error redirect ─────────────────────────────────────────
+
+class _AuthErrorRedirect extends StatefulWidget {
+  const _AuthErrorRedirect();
+
+  @override
+  State<_AuthErrorRedirect> createState() => _AuthErrorRedirectState();
+}
+
+class _AuthErrorRedirectState extends State<_AuthErrorRedirect> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      AppSnackBar.show(
+        context,
+        message: 'An unexpected error occurred. Please try again later.',
+        type: SnackBarType.error,
+      );
+      context.go(AppRoutes.login);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
 }
 
 // ── Transition helpers ──────────────────────────────────────────

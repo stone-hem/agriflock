@@ -313,14 +313,12 @@ class ManualAuthRepository {
   /// Verify Email with OTP (using /auth/verify-email endpoint)
   Future<Map<String, dynamic>> verifyEmail({
     required String otpCode,
-    required String userId,
   }) async {
     try {
       final response = await apiClient.post(
         '/auth/verify-email',
         body: {
           'code': otpCode.trim(),
-          'userId':userId,
         },
       );
 

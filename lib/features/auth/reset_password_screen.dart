@@ -3,7 +3,8 @@ import 'package:agriflock/features/auth/shared/auth_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:agriflock/core/utils/api_error_handler.dart';
-import 'package:agriflock/core/utils/toast_util.dart';
+import 'package:agriflock/core/widgets/app_snack_bar.dart';
+import 'package:flutter/services.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   final String? email;
@@ -241,6 +242,16 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                             obscureText: _obscureNewPassword,
                             labelText: 'New Password',
                             hintText: 'Enter new password',
+                            icon: Icons.lock_outline,
+                            topLabel: 'Min 8 chars · 1 uppercase · 1 digit · 1 symbol',
+                            inputFormatters: [
+                              FilteringTextInputFormatter.deny(
+                                RegExp(
+                                  r'[\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}\u{1FA00}-\u{1FAFF}\u{1F1E0}-\u{1F1FF}]',
+                                  unicode: true,
+                                ),
+                              ),
+                            ],
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _obscureNewPassword
@@ -254,15 +265,22 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                 });
                               },
                             ),
-                icon: Icons.lock_outline,
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Please enter new password';
                               }
-                              if (value.length < 6) {
-                                return 'Password must be at least 6 characters';
+                              if (value.length < 8) {
+                                return 'Password must be at least 8 characters';
                               }
-                              // Add more validation if needed
+                              if (!RegExp(r'[A-Z]').hasMatch(value)) {
+                                return 'Password must contain at least 1 uppercase letter';
+                              }
+                              if (!RegExp(r'[0-9]').hasMatch(value)) {
+                                return 'Password must contain at least 1 digit';
+                              }
+                              if (!RegExp(r'[!@#$%^&*()\[\]{};:,.<>?/~|_\-+=\\`]').hasMatch(value)) {
+                                return 'Password must contain at least 1 symbol';
+                              }
                               return null;
                             },
                           ),
@@ -275,6 +293,14 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                             labelText: 'Confirm Password',
                             hintText: 'Confirm your new password',
                             icon: Icons.lock_reset_outlined,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.deny(
+                                RegExp(
+                                  r'[\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}\u{1FA00}-\u{1FAFF}\u{1F1E0}-\u{1F1FF}]',
+                                  unicode: true,
+                                ),
+                              ),
+                            ],
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _obscureConfirmPassword
@@ -288,7 +314,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                                   !_obscureConfirmPassword;
                                 });
                               },
-                            ),                          validator: (value) {
+                            ),
+                            validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Please confirm your password';
                               }
@@ -348,9 +375,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   void _resetPassword() async {
     // Validate that we have email
     if (_email.isEmpty) {
-      ToastUtil.showError(
-        'Email is missing. Please request a new reset link.',
-      );
+      AppSnackBar.show(context, message: 'Email is missing. Please request a new reset link.', type: SnackBarType.error);
       return;
     }
 
@@ -367,17 +392,20 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       );
 
       if (result['success'] == true) {
-        ToastUtil.showSuccess(result['message']);
-
         if (mounted) {
+          AppSnackBar.show(context, message: result['message'] ?? 'Password reset successful', type: SnackBarType.success);
           context.go('/login');
         }
       } else {
-        ToastUtil.showError(result['message'] ?? 'Password reset failed');
+        if (mounted) {
+          AppSnackBar.show(context, message: result['message'] ?? 'Password reset failed', type: SnackBarType.error);
+        }
       }
     } catch (e) {
       ApiErrorHandler.handle(e);
-      ToastUtil.showError('An error occurred. Please try again.');
+      if (mounted) {
+        AppSnackBar.show(context, message: 'An error occurred. Please try again.', type: SnackBarType.error);
+      }
     } finally {
       if (mounted) {
         setState(() {

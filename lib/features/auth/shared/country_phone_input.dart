@@ -589,15 +589,6 @@ class _CountryPickerSheetState extends State<CountryPickerSheet> {
       builder: (context, scrollController) {
         return Column(
           children: [
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(

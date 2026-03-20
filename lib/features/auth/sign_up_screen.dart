@@ -4,7 +4,8 @@ import 'package:agriflock/core/utils/api_error_handler.dart';
 import 'package:agriflock/core/utils/first_login_util.dart';
 import 'package:agriflock/core/utils/log_util.dart';
 import 'package:agriflock/core/utils/result.dart';
-import 'package:agriflock/core/utils/toast_util.dart';
+import 'package:agriflock/core/widgets/app_snack_bar.dart';
+import 'package:flutter/services.dart';
 import 'package:agriflock/features/auth/repo/manual_auth_repo.dart';
 import 'package:agriflock/features/auth/shared/auth_text_field.dart';
 import 'package:agriflock/features/auth/shared/country_phone_input.dart';
@@ -187,6 +188,14 @@ class _SignupScreenState extends State<SignupScreen> {
                             hintText: 'Create a strong password',
                             icon: Icons.lock_outline,
                             obscureText: _obscurePassword,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.deny(
+                                RegExp(
+                                  r'[\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}\u{1FA00}-\u{1FAFF}\u{1F1E0}-\u{1F1FF}]',
+                                  unicode: true,
+                                ),
+                              ),
+                            ],
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _obscurePassword
@@ -206,6 +215,15 @@ class _SignupScreenState extends State<SignupScreen> {
                               }
                               if (value.length < 8) {
                                 return 'Password must be at least 8 characters';
+                              }
+                              if (!RegExp(r'[A-Z]').hasMatch(value)) {
+                                return 'Password must contain at least 1 uppercase letter';
+                              }
+                              if (!RegExp(r'[0-9]').hasMatch(value)) {
+                                return 'Password must contain at least 1 digit';
+                              }
+                              if (!RegExp(r'[!@#$%^&*()\[\]{};:,.<>?/~|_\-+=\\`]').hasMatch(value)) {
+                                return 'Password must contain at least 1 symbol';
                               }
                               return null;
                             },
@@ -391,11 +409,11 @@ class _SignupScreenState extends State<SignupScreen> {
                                 });
                                 if (_formKey.currentState!.validate()) {
                                   if (!_acceptedTerms) {
-                                    ToastUtil.showError('Please accept the terms and conditions');
+                                    AppSnackBar.show(context, message: 'Please accept the terms and conditions', type: SnackBarType.error);
                                     return;
                                   }
                                   if (!_acceptedSmsAlerts) {
-                                    ToastUtil.showError('Please accept SMS notifications to continue');
+                                    AppSnackBar.show(context, message: 'Please accept SMS notifications to continue', type: SnackBarType.error);
                                     return;
                                   }
                                   _signUp();
@@ -583,23 +601,23 @@ class _SignupScreenState extends State<SignupScreen> {
 
     // Validate required fields
     if (fullName.isEmpty) {
-      ToastUtil.showError("Please enter your full name");
+      AppSnackBar.show(context, message: 'Please enter your full name', type: SnackBarType.error);
       return;
     }
     if (email.isEmpty) {
-      ToastUtil.showError("Please enter your email");
+      AppSnackBar.show(context, message: 'Please enter your email', type: SnackBarType.error);
       return;
     }
     if (phone.isEmpty) {
-      ToastUtil.showError("Please enter your phone number");
+      AppSnackBar.show(context, message: 'Please enter your phone number', type: SnackBarType.error);
       return;
     }
     if (password.isEmpty) {
-      ToastUtil.showError("Please enter your password");
+      AppSnackBar.show(context, message: 'Please enter your password', type: SnackBarType.error);
       return;
     }
     if (!_acceptedTerms) {
-      ToastUtil.showError("Please accept the terms and conditions");
+      AppSnackBar.show(context, message: 'Please accept the terms and conditions', type: SnackBarType.error);
       return;
     }
 
@@ -623,9 +641,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
       switch (result) {
         case Success(:final data):
-          ToastUtil.showSuccess(
-            "Account created successfully! Please verify your account.",
-          );
+          AppSnackBar.show(context, message: 'Account created successfully! Please verify your account.', type: SnackBarType.success);
           final userId = data['userId'] as String? ?? '';
           context.go(
             '${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(email)}&userId=${Uri.encodeComponent(userId)}',
@@ -637,7 +653,7 @@ class _SignupScreenState extends State<SignupScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ToastUtil.showError('Sign up failed: ${e.toString()}');
+        AppSnackBar.show(context, message: 'Sign up failed: ${e.toString()}', type: SnackBarType.error);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -660,7 +676,7 @@ class _SignupScreenState extends State<SignupScreen> {
             final email = data['email'] as String? ?? '';
             _showSocialTermsDialog(tempToken: tempToken, email: email);
           } else {
-            ToastUtil.showSuccess("Welcome back!");
+            AppSnackBar.show(context, message: 'Welcome back!', type: SnackBarType.success);
             final redirectPath = await FirstLoginUtil.getRedirectPath();
             if (mounted) context.go(redirectPath);
           }
@@ -670,7 +686,7 @@ class _SignupScreenState extends State<SignupScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ToastUtil.showError('Google sign up failed: ${e.toString()}');
+        AppSnackBar.show(context, message: 'Google sign up failed: ${e.toString()}', type: SnackBarType.error);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -692,7 +708,7 @@ class _SignupScreenState extends State<SignupScreen> {
             final email = data['email'] as String? ?? '';
             _showSocialTermsDialog(tempToken: tempToken, email: email);
           } else {
-            ToastUtil.showSuccess("Welcome back!");
+            AppSnackBar.show(context, message: 'Welcome back!', type: SnackBarType.success);
             final redirectPath = await FirstLoginUtil.getRedirectPath();
             if (mounted) context.go(redirectPath);
           }
@@ -702,7 +718,7 @@ class _SignupScreenState extends State<SignupScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ToastUtil.showError('Apple sign up failed: ${e.toString()}');
+        AppSnackBar.show(context, message: 'Apple sign up failed: ${e.toString()}', type: SnackBarType.error);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -738,11 +754,11 @@ class _SignupScreenState extends State<SignupScreen> {
                 if (mounted) context.pop(true);
               } else {
                 LogUtil.error(response);
-                ToastUtil.showError('Failed to accept terms. Please try again.');
+                AppSnackBar.show(context, message: 'Failed to accept terms. Please try again.', type: SnackBarType.error);
                 setDialogState(() => isSubmitting = false);
               }
             } catch (e) {
-              ToastUtil.showError('An error occurred. Please try again.');
+              AppSnackBar.show(context, message: 'An error occurred. Please try again.', type: SnackBarType.error);
               setDialogState(() => isSubmitting = false);
             }
           }

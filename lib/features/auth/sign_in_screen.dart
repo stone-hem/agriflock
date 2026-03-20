@@ -3,7 +3,8 @@ import 'package:agriflock/core/utils/api_error_handler.dart';
 import 'package:agriflock/core/utils/first_login_util.dart';
 import 'package:agriflock/core/utils/log_util.dart';
 import 'package:agriflock/core/utils/result.dart';
-import 'package:agriflock/core/utils/toast_util.dart';
+import 'package:agriflock/core/widgets/app_snack_bar.dart';
+import 'package:flutter/services.dart';
 import 'package:agriflock/features/auth/repo/manual_auth_repo.dart';
 import 'package:agriflock/features/auth/shared/auth_text_field.dart';
 import 'package:agriflock/app_routes.dart';
@@ -126,6 +127,14 @@ class _LoginScreenState extends State<LoginScreen> {
                             hintText: 'Enter your password',
                             icon: Icons.lock_outline,
                             obscureText: _obscurePassword,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.deny(
+                                RegExp(
+                                  r'[\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}\u{1FA00}-\u{1FAFF}\u{1F1E0}-\u{1F1FF}]',
+                                  unicode: true,
+                                ),
+                              ),
+                            ],
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _obscurePassword
@@ -365,11 +374,11 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = _passwordController.text;
 
     if (email.isEmpty) {
-      ToastUtil.showError("Please enter your email");
+      AppSnackBar.show(context, message: 'Please enter your email', type: SnackBarType.error);
       return;
     }
     if (password.isEmpty) {
-      ToastUtil.showError("Please enter your password");
+      AppSnackBar.show(context, message: 'Please enter your password', type: SnackBarType.error);
       return;
     }
 
@@ -385,7 +394,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       switch (result) {
         case Success():
-          ToastUtil.showSuccess("Login successful!");
+          AppSnackBar.show(context, message: 'Login successful!', type: SnackBarType.success);
           FCMService.instance.registerTokenAfterLogin();
           final redirectPath = await FirstLoginUtil.getRedirectPath();
           if (mounted) context.go(redirectPath);
@@ -395,7 +404,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ToastUtil.showError('Login failed: ${e.toString()}');
+        AppSnackBar.show(context, message: 'Login failed: ${e.toString()}', type: SnackBarType.error);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -412,7 +421,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       switch (result) {
         case Success():
-          ToastUtil.showSuccess("Login successful!");
+          AppSnackBar.show(context, message: 'Login successful!', type: SnackBarType.success);
           FCMService.instance.registerTokenAfterLogin();
           final redirectPath = await FirstLoginUtil.getRedirectPath();
           if (mounted) context.go(redirectPath);
@@ -422,7 +431,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ToastUtil.showError('Google sign in failed: ${e.toString()}');
+        AppSnackBar.show(context, message: 'Google sign in failed: ${e.toString()}', type: SnackBarType.error);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -439,7 +448,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       switch (result) {
         case Success():
-          ToastUtil.showSuccess("Login successful!");
+          AppSnackBar.show(context, message: 'Login successful!', type: SnackBarType.success);
           FCMService.instance.registerTokenAfterLogin();
           final redirectPath = await FirstLoginUtil.getRedirectPath();
           if (mounted) context.go(redirectPath);
@@ -449,7 +458,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ToastUtil.showError('Apple sign in failed: ${e.toString()}');
+        AppSnackBar.show(context, message: 'Apple sign in failed: ${e.toString()}', type: SnackBarType.error);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -491,11 +500,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
               } else {
                 LogUtil.error(response.body);
-                ToastUtil.showError('Failed to accept terms. Please try again.');
+                AppSnackBar.show(context, message: 'Failed to accept terms. Please try again.', type: SnackBarType.error);
                 setDialogState(() => isSubmitting = false);
               }
             } catch (e) {
-              ToastUtil.showError('An error occurred. Please try again.');
+              AppSnackBar.show(context, message: 'An error occurred. Please try again.', type: SnackBarType.error);
               setDialogState(() => isSubmitting = false);
             }
           }

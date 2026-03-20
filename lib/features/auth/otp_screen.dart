@@ -7,9 +7,8 @@ import 'package:go_router/go_router.dart';
 
 class OTPVerifyScreen extends StatefulWidget {
   final String email;
-  final String userId;
   final String? phoneNumber;
-  const OTPVerifyScreen({super.key, required this.email, required this.userId,   this.phoneNumber});
+  const OTPVerifyScreen({super.key, required this.email,   this.phoneNumber});
 
   @override
   State<OTPVerifyScreen> createState() => _OTPVerifyScreenState();
@@ -298,7 +297,6 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
       // Call repository method using your original endpoint
       final result = await _authRepository.verifyEmail(
         otpCode: _otpCode,
-        userId: widget.userId,
       );
 
       if (result['success'] == true) {

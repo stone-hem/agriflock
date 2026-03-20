@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class AuthTextField extends StatelessWidget {
   final TextEditingController controller;
@@ -24,6 +25,7 @@ class AuthTextField extends StatelessWidget {
   final int? maxLength;
   final String? value;
   final String? topLabel;
+  final List<TextInputFormatter>? inputFormatters;
 
   const AuthTextField({
     super.key,
@@ -48,7 +50,9 @@ class AuthTextField extends StatelessWidget {
     this.focusNode,
     this.nextFocusNode,
     this.maxLength,
-    this.value, this.topLabel,
+    this.value,
+    this.topLabel,
+    this.inputFormatters,
   });
 
   @override
@@ -60,12 +64,10 @@ class AuthTextField extends StatelessWidget {
             children: [
               Icon(icon, size: 16, color: Colors.grey.shade600),
               const SizedBox(width: 8),
-              Text(
-                topLabel!,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade800,
+              Flexible(
+                child: Text(
+                  topLabel!,
+                  style: Theme.of(context).textTheme.labelSmall,
                 ),
               ),
 
@@ -88,6 +90,7 @@ class AuthTextField extends StatelessWidget {
           onChanged: onChanged,
           onFieldSubmitted: onFieldSubmitted,
           maxLength: maxLength,
+          inputFormatters: inputFormatters,
           decoration: InputDecoration(
             labelText: labelText,
             hintText: hintText,
