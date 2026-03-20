@@ -340,8 +340,13 @@ class AppRoutes {
             }
 
             final decodedEmail = Uri.decodeComponent(email);
+            final extra = state.extra as Map<String, dynamic>?;
 
-            return OTPVerifyScreen(email: decodedEmail, phoneNumber: state.extra as String?);
+            return OTPVerifyScreen(
+              email: decodedEmail,
+              phoneNumber: extra?['phoneNumber'] as String?,
+              userId: extra?['userId'] as String? ?? '',
+            );
           },
         ),
         GoRoute(

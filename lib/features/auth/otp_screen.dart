@@ -1,5 +1,5 @@
-import 'package:agriflock/core/utils/api_error_handler.dart';
-import 'package:agriflock/core/utils/toast_util.dart';
+import 'package:agriflock/core/utils/snackbar_api_error_handler.dart';
+import 'package:agriflock/core/widgets/app_snack_bar.dart';
 import 'package:agriflock/app_routes.dart';
 import 'package:agriflock/features/auth/repo/manual_auth_repo.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +8,8 @@ import 'package:go_router/go_router.dart';
 class OTPVerifyScreen extends StatefulWidget {
   final String email;
   final String? phoneNumber;
-  const OTPVerifyScreen({super.key, required this.email,   this.phoneNumber});
+  final String userId;
+  const OTPVerifyScreen({super.key, required this.email, this.phoneNumber, required this.userId});
 
   @override
   State<OTPVerifyScreen> createState() => _OTPVerifyScreenState();
@@ -285,45 +286,43 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
   }
 
   void _verifyOTP() async {
-    // Validate OTP length
     if (_otpCode.length != 6) {
-      ToastUtil.showError("Please enter all 6 digits");
+      AppSnackBar.show(context, message: 'Please enter all 6 digits', type: SnackBarType.error);
       return;
     }
 
     setState(() => _isLoading = true);
 
     try {
-      // Call repository method using your original endpoint
       final result = await _authRepository.verifyEmail(
         otpCode: _otpCode,
+        userId: widget.userId,
       );
 
+      if (!mounted) return;
+
       if (result['success'] == true) {
-        ToastUtil.showSuccess(result['message'] ?? "Email verified successfully!");
+        AppSnackBar.show(context, message: result['message'] ?? 'Verified successfully!', type: SnackBarType.success);
 
         final tempToken = result['tempToken'];
+        _clearOtpFields();
 
-        if (mounted) {
-          _clearOtpFields();
-
-          // Navigate to onboarding with tempToken if available
-          if (tempToken != null) {
-            context.go(
-              '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(tempToken)}',
-              extra: widget.email,
-            );
-          } else {
-            context.go('/login');
-          }
+        if (tempToken != null) {
+          context.go(
+            '${AppRoutes.onboardingQuiz}?tempToken=${Uri.encodeComponent(tempToken)}',
+            extra: widget.email,
+          );
+        } else {
+          context.go('/login');
         }
       } else {
-        ToastUtil.showError(result['message'] ?? 'Email verification failed');
+        AppSnackBar.show(context, message: result['message'] ?? 'Verification failed', type: SnackBarType.error);
         _clearOtpFields();
       }
     } catch (e) {
-      ApiErrorHandler.handle(e);
-      ToastUtil.showError('An error occurred. Please try again.');
+      if (mounted) {
+        SnackBarApiErrorHandler.handle(context, e);
+      }
       _clearOtpFields();
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -339,30 +338,28 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
     });
 
     try {
-      // Call repository method using your original endpoint
       final result = await _authRepository.resendVerificationCode(
         identifier: widget.email,
       );
 
+      if (!mounted) return;
+
       if (result['success'] == true) {
-        ToastUtil.showSuccess(result['message'] ?? "Verification code resent successfully!");
-
-        // Start countdown again
+        AppSnackBar.show(context, message: result['message'] ?? 'Code resent successfully!', type: SnackBarType.success);
         _startCountdown();
-
-        // Clear previous OTP
         _clearOtpFields();
         if (_focusNodes.isNotEmpty) {
           _focusNodes[0].requestFocus();
         }
       } else {
-        ToastUtil.showError(result['message'] ?? 'Failed to resend code');
+        AppSnackBar.show(context, message: result['message'] ?? 'Failed to resend code', type: SnackBarType.error);
         setState(() => _canResend = true);
       }
     } catch (e) {
-      ApiErrorHandler.handle(e);
-      ToastUtil.showError('An error occurred. Please try again.');
-      setState(() => _canResend = true);
+      if (mounted) {
+        SnackBarApiErrorHandler.handle(context, e);
+        setState(() => _canResend = true);
+      }
     }
   }
 

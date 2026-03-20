@@ -20,6 +20,19 @@ class ApiClient {
     required this.navigatorKey,
   });
 
+  void _logRequest(String method, Uri uri, {dynamic body}) {
+    debugPrint('┌── [$method] $uri');
+    if (body != null) {
+      debugPrint('│   Payload: ${jsonEncode(body)}');
+    }
+  }
+
+  void _logResponse(http.Response response) {
+    final status = response.statusCode;
+    final emoji = status >= 200 && status < 300 ? '✅' : '❌';
+    debugPrint('└── $emoji Response [$status]: ${response.body}');
+  }
+
   Future<Map<String, String>> _getHeaders({Map<String, String>? extraHeaders}) async {
     final token = await storage.getToken();
     final headers = {
@@ -153,7 +166,7 @@ class ApiClient {
       final uri = Uri.parse('${AppConstants.baseUrl}$endpoint')
           .replace(queryParameters: queryParameters);
 
-      LogUtil.info('GET $uri');
+      _logRequest('GET', uri);
 
       Future<http.Response> makeRequest() async {
         return await http.get(
@@ -163,6 +176,7 @@ class ApiClient {
       }
 
       final response = await makeRequest();
+      _logResponse(response);
       return await _handleResponse(response, makeRequest);
     } catch (e) {
       LogUtil.error('GET request error: $e');
@@ -179,7 +193,7 @@ class ApiClient {
     try {
       final uri = Uri.parse('${AppConstants.baseUrl}$endpoint');
 
-      LogUtil.info('POST $uri');
+      _logRequest('POST', uri, body: body);
 
       Future<http.Response> makeRequest() async {
         return await http.post(
@@ -190,6 +204,7 @@ class ApiClient {
       }
 
       final response = await makeRequest();
+      _logResponse(response);
       return await _handleResponse(response, makeRequest);
     } catch (e) {
       LogUtil.error('POST request error: $e');
@@ -206,7 +221,7 @@ class ApiClient {
     try {
       final uri = Uri.parse('${AppConstants.baseUrl}$endpoint');
 
-      LogUtil.info('PUT $uri');
+      _logRequest('PUT', uri, body: body);
 
       Future<http.Response> makeRequest() async {
         return await http.put(
@@ -217,6 +232,7 @@ class ApiClient {
       }
 
       final response = await makeRequest();
+      _logResponse(response);
       return await _handleResponse(response, makeRequest);
     } catch (e) {
       LogUtil.error('PUT request error: $e');
@@ -233,7 +249,7 @@ class ApiClient {
     try {
       final uri = Uri.parse('${AppConstants.baseUrl}$endpoint');
 
-      LogUtil.info('PATCH $uri');
+      _logRequest('PATCH', uri, body: body);
 
       Future<http.Response> makeRequest() async {
         return await http.patch(
@@ -244,6 +260,7 @@ class ApiClient {
       }
 
       final response = await makeRequest();
+      _logResponse(response);
       return await _handleResponse(response, makeRequest);
     } catch (e) {
       LogUtil.error('PATCH request error: $e');
@@ -260,7 +277,7 @@ class ApiClient {
     try {
       final uri = Uri.parse('${AppConstants.baseUrl}$endpoint');
 
-      LogUtil.info('DELETE $uri');
+      _logRequest('DELETE', uri, body: body);
 
       Future<http.Response> makeRequest() async {
         return await http.delete(
@@ -271,6 +288,7 @@ class ApiClient {
       }
 
       final response = await makeRequest();
+      _logResponse(response);
       return await _handleResponse(response, makeRequest);
     } catch (e) {
       LogUtil.error('DELETE request error: $e');
@@ -314,10 +332,13 @@ class ApiClient {
           request.files.addAll(files);
         }
 
+        debugPrint('┌── [$method Multipart] $uri');
+        debugPrint('│   Fields: $fields | Files: ${files?.map((f) => f.filename).toList()}');
         return await request.send();
       }
 
       final streamedResponse = await makeRequest();
+      debugPrint('└── ${streamedResponse.statusCode >= 200 && streamedResponse.statusCode < 300 ? '✅' : '❌'} Response [${streamedResponse.statusCode}]');
 
       if (streamedResponse.statusCode == 401) {
         final refreshed = await _refreshToken();
@@ -367,10 +388,13 @@ class ApiClient {
 
         request.files.add(file); // Add single file
 
+        debugPrint('┌── [$method Multipart] $uri');
+        debugPrint('│   Fields: $fields | File: ${file.filename}');
         return await request.send();
       }
 
       final streamedResponse = await makeRequest();
+      debugPrint('└── ${streamedResponse.statusCode >= 200 && streamedResponse.statusCode < 300 ? '✅' : '❌'} Response [${streamedResponse.statusCode}]');
 
       if (streamedResponse.statusCode == 401) {
         final refreshed = await _refreshToken();

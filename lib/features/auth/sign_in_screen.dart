@@ -1,5 +1,5 @@
 import 'package:agriflock/core/notifications/fcm_service.dart';
-import 'package:agriflock/core/utils/api_error_handler.dart';
+import 'package:agriflock/core/utils/snackbar_api_error_handler.dart';
 import 'package:agriflock/core/utils/first_login_util.dart';
 import 'package:agriflock/core/utils/log_util.dart';
 import 'package:agriflock/core/utils/result.dart';
@@ -359,13 +359,13 @@ class _LoginScreenState extends State<LoginScreen> {
             _identifierController.text.trim();
         final userId = failure.data?['userId'] as String? ?? '';
         context.push(
-          '${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(email)}&userId=${Uri.encodeComponent(userId)}',
-          extra: 'get phone number',
+          '${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(email)}',
+          extra: {'userId': userId, 'phoneNumber': null},
         );
       case 'unverified_vet':
         context.go(AppRoutes.vetVerificationPending);
       default:
-        ApiErrorHandler.handleFailure(failure);
+        SnackBarApiErrorHandler.handleFailure(context, failure);
     }
   }
 

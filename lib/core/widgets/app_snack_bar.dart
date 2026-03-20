@@ -11,7 +11,8 @@ class AppSnackBar {
     Duration duration = const Duration(seconds: 4),
   }) {
     final colors = _colors(type);
-    ScaffoldMessenger.of(context)
+    final messenger = ScaffoldMessenger.of(context);
+    messenger
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
@@ -30,7 +31,7 @@ class AppSnackBar {
           action: SnackBarAction(
             label: '✕',
             textColor: colors.iconColor,
-            onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+            onPressed: () => messenger.hideCurrentSnackBar(),
           ),
           backgroundColor: colors.backgroundColor,
           behavior: floating ? SnackBarBehavior.floating : SnackBarBehavior.fixed,

@@ -1,6 +1,6 @@
 import 'package:agriflock/app_routes.dart';
 import 'package:agriflock/core/services/social_auth_service.dart';
-import 'package:agriflock/core/utils/api_error_handler.dart';
+import 'package:agriflock/core/utils/snackbar_api_error_handler.dart';
 import 'package:agriflock/core/utils/first_login_util.dart';
 import 'package:agriflock/core/utils/log_util.dart';
 import 'package:agriflock/core/utils/result.dart';
@@ -583,13 +583,13 @@ class _SignupScreenState extends State<SignupScreen> {
             _emailController.text.trim();
         final userId = failure.data?['userId'] as String? ?? '';
         context.push(
-          '${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(email)}&userId=${Uri.encodeComponent(userId)}',
-          extra: _phoneController.text.trim(),
+          '${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(email)}',
+          extra: {'userId': userId, 'phoneNumber': _phoneController.text.trim()},
         );
       case 'unverified_vet':
         context.go(AppRoutes.vetVerificationPending);
       default:
-        ApiErrorHandler.handleFailure(failure);
+        SnackBarApiErrorHandler.handleFailure(context, failure);
     }
   }
 
@@ -644,12 +644,12 @@ class _SignupScreenState extends State<SignupScreen> {
           AppSnackBar.show(context, message: 'Account created successfully! Please verify your account.', type: SnackBarType.success);
           final userId = data['userId'] as String? ?? '';
           context.go(
-            '${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(email)}&userId=${Uri.encodeComponent(userId)}',
-            extra: completePhoneNumber,
+            '${AppRoutes.otpVerifyEmailOrPhone}?email=${Uri.encodeComponent(email)}',
+            extra: {'userId': userId, 'phoneNumber': completePhoneNumber},
           );
 
         case final Failure failure:
-          ApiErrorHandler.handleFailure(failure);
+          SnackBarApiErrorHandler.handleFailure(context, failure);
       }
     } catch (e) {
       if (mounted) {
