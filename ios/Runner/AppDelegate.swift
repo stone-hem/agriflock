@@ -10,9 +10,10 @@ import UIKit
         let result = super.application(application, didFinishLaunchingWithOptions: launchOptions)
 
         // Disable screenshot/screen recording
-        if let window = window {
-            window.makeSecure()
-        }
+        // TODO: Re-enable when ready for production
+        // if let window = window {
+        //     window.makeSecure()
+        // }
 
         return result
     }

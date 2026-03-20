@@ -93,7 +93,8 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
               ),
               const SizedBox(height: 8),
 
-              // Email display
+              // Phone display
+              if(widget.phoneNumber != null)
               Center(
                 child: Container(
                   constraints: BoxConstraints(maxWidth: 250),
@@ -104,7 +105,7 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
                     border: Border.all(color: Colors.green.shade100),
                   ),
                   child: Text(
-                    'An OTP has been sent to your number ${widget.phoneNumber ?? widget.phoneNumber}',
+                    'An OTP has been sent to your number ${widget.phoneNumber}',
                     style: TextStyle(
                       fontSize: 14,
                       color: Theme.of(context).primaryColor,
@@ -117,7 +118,7 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> {
 
               Center(
                 child: Text(
-                  'Enter the 6-digit verification code sent to your email',
+                  'Enter the 6-digit verification code sent to your phone number',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey.shade600,
