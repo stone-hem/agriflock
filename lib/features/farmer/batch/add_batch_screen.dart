@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:agriflock/core/utils/api_error_handler.dart';
 import 'package:agriflock/core/utils/date_util.dart';
+import 'package:agriflock/core/utils/format_util.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/utils/toast_util.dart';
 import 'package:agriflock/core/widgets/custom_date_text_field.dart';
@@ -877,13 +878,11 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                         },
                         labelText: 'Cost per chick ($_currency)',
                         hintText: _isOwnHatch ? 'e.g., 0 (no cost)' : 'e.g., 50, 75, 100',
+                        onChanged: (v) => setState(() {}),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        _chickCostController.text.isNotEmpty &&
-                            _initialQuantityController.text.isNotEmpty
-                            ? 'Total cost: $_currency ${_calculateTotalChickCost().toStringAsFixed(2)}'
-                            : 'Total cost: $_currency 0.00',
+                        'Total cost: $_currency ${FormatUtil.formatAmount(_calculateTotalChickCost())}',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.green.shade700,

@@ -243,7 +243,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                             labelText: 'New Password',
                             hintText: 'Enter new password',
                             icon: Icons.lock_outline,
-                            topLabel: 'Min 8 chars · 1 uppercase · 1 digit · 1 symbol',
+                            topLabel: 'Minimum 8 characters',
                             inputFormatters: [
                               FilteringTextInputFormatter.deny(
                                 RegExp(
@@ -271,15 +271,6 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                               }
                               if (value.length < 8) {
                                 return 'Password must be at least 8 characters';
-                              }
-                              if (!RegExp(r'[A-Z]').hasMatch(value)) {
-                                return 'Password must contain at least 1 uppercase letter';
-                              }
-                              if (!RegExp(r'[0-9]').hasMatch(value)) {
-                                return 'Password must contain at least 1 digit';
-                              }
-                              if (!RegExp(r'[!@#$%^&*()\[\]{};:,.<>?/~|_\-+=\\`]').hasMatch(value)) {
-                                return 'Password must contain at least 1 symbol';
                               }
                               return null;
                             },

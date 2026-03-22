@@ -216,15 +216,6 @@ class _SignupScreenState extends State<SignupScreen> {
                               if (value.length < 8) {
                                 return 'Password must be at least 8 characters';
                               }
-                              if (!RegExp(r'[A-Z]').hasMatch(value)) {
-                                return 'Password must contain at least 1 uppercase letter';
-                              }
-                              if (!RegExp(r'[0-9]').hasMatch(value)) {
-                                return 'Password must contain at least 1 digit';
-                              }
-                              if (!RegExp(r'[!@#$%^&*()\[\]{};:,.<>?/~|_\-+=\\`]').hasMatch(value)) {
-                                return 'Password must contain at least 1 symbol';
-                              }
                               return null;
                             },
                           ),

@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:agriflock/app_routes.dart';
 import 'package:agriflock/core/utils/api_error_handler.dart';
 import 'package:agriflock/core/utils/date_util.dart';
+import 'package:agriflock/core/utils/format_util.dart';
 import 'package:agriflock/core/utils/log_util.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/utils/toast_util.dart';
@@ -589,28 +590,17 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: !_isSubmitting,
+      canPop: false,
       child: Scaffold(
         appBar: _currentPage == 3
             ? null
             : AppBar(
                 backgroundColor: Colors.transparent,
                 elevation: 0,
+                automaticallyImplyLeading: false,
                 title: Text(
                   _appBarTitle,
                   style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: _isSubmitting
-                      ? null
-                      : () {
-                          if (_currentPage > 0) {
-                            _goToPage(_currentPage - 1);
-                          } else {
-                            context.go('/day1/welcome-msg-page');
-                          }
-                        },
                 ),
                 actions: [
                   if (_isSubmitting)
@@ -1301,13 +1291,11 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                       },
                       labelText: 'Cost per chick${_currency.isNotEmpty ? ' ($_currency)' : ''}',
                       hintText: _isOwnHatch ? 'e.g., 0 (no cost)' : 'e.g., 50, 75, 100',
+                      onChanged: (v) => setState(() {}),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      _chickCostController.text.isNotEmpty &&
-                              _initialQuantityController.text.isNotEmpty
-                          ? 'Total cost: $_currency ${_calculateTotalChickCost().toStringAsFixed(2)}'
-                          : 'Total cost: $_currency 0.00',
+                      'Total cost: $_currency ${FormatUtil.formatAmount(_calculateTotalChickCost())}',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Theme.of(context).primaryColor,
@@ -1786,7 +1774,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
       builder: (dialogCtx) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1825,23 +1813,17 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
                         color: Colors.amber.shade900,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
                     _buildDialogBullet(
                       Icons.trending_up_rounded,
                       Colors.green.shade700,
                       'See real Profit & Loss — know exactly how much you\'re making or losing per batch.',
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     _buildDialogBullet(
                       Icons.bar_chart_rounded,
                       Colors.blue.shade700,
                       'Unlock detailed Financial Reports — cost per bird, revenue vs spend breakdowns.',
-                    ),
-                    const SizedBox(height: 6),
-                    _buildDialogBullet(
-                      Icons.lightbulb_outline_rounded,
-                      Colors.orange.shade700,
-                      'Make smarter decisions — track where your money goes and cut unnecessary costs.',
                     ),
                   ],
                 ),

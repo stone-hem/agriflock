@@ -1,4 +1,5 @@
 import 'package:agriflock/core/constants/app_constants.dart';
+import 'package:agriflock/core/widgets/app_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
@@ -120,12 +121,9 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Location services are disabled. Please enable them.'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        AppSnackBar.show(context,
+            message: 'Location services are disabled. Please enable them.',
+            type: SnackBarType.error);
       }
       return false;
     }
@@ -135,12 +133,9 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Location permissions are denied'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          AppSnackBar.show(context,
+              message: 'Location permission denied.',
+              type: SnackBarType.error);
         }
         return false;
       }
@@ -222,24 +217,24 @@ class _LocationPickerStepState extends State<LocationPickerStep> {
         widget.onLocationSelected(address, position.latitude, position.longitude);
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Current location detected successfully!',style: TextStyle(color: Colors.white),),
-              backgroundColor: _primaryColor,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          AppSnackBar.show(context,
+              message: 'Current location detected successfully!',
+              type: SnackBarType.success);
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error getting location: ${e.toString()}'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        final msg = e.toString().toLowerCase();
+        String friendlyMsg;
+        if (msg.contains('timeout') || msg.contains('timed out')) {
+          friendlyMsg = 'Could not get location — check your connection and try again.';
+        } else if (msg.contains('permission')) {
+          friendlyMsg = 'Location permission denied.';
+        } else {
+          friendlyMsg = 'Unable to get your location. Please try again.';
+        }
+        AppSnackBar.show(context,
+            message: friendlyMsg, type: SnackBarType.error);
       }
     } finally {
       setState(() {
