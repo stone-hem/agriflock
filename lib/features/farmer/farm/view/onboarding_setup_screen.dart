@@ -18,6 +18,7 @@ import 'package:agriflock/core/widgets/photo_upload.dart';
 import 'package:agriflock/core/models/bird_type.dart';
 import 'package:agriflock/core/repositories/bird_type_repository.dart';
 import 'package:agriflock/features/farmer/batch/repo/batch_house_repo.dart';
+import 'package:agriflock/features/farmer/farm/repositories/farm_repository.dart';
 import 'package:agriflock/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -78,12 +79,6 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
     'Kenchic', 'Suguna', 'Isinya', 'Kenbrid', 'Uzima Chicken', 'Kukuchic', 'Others',
   ];
 
-  final List<String> _batchTypes = [
-    'Meat Production',
-    'Egg Production',
-    'Breeding',
-    'Dual Purpose',
-  ];
 
   final Map<String, List<String>> _feedingTimeOptions = {
     'Day': ['06:00AM', '09:00AM', '12:00 Noon', '3:00PM', '6:00PM'],
@@ -103,6 +98,8 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
   // ── Data ───────────────────────────────────────────────
   final _batchHouseRepo = BatchHouseRepository();
   final _birdTypeRepository = BirdTypeRepository();
+  final _farmRepository = FarmRepository();
+
   List<BirdType> _birdTypes = [];
   bool _isLoadingBirdTypes = false;
 
@@ -115,6 +112,9 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
   String? _createdHouseId;
   String? _createdHouseName;
   String? _createdBatchName;
+
+  bool _farmAlreadyCreated = false;   // true once farm exists (created OR was pre-existing)
+  bool _houseAlreadyCreated = false;  // true once house exists
 
   @override
   void initState() {
@@ -285,154 +285,182 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
   }
 
   // ── Step 1: Farm creation ──────────────────────────────
-  Future<void> _createFarm() async {
+  Future<void> _submitFarm() async {
     if (!_farmFormKey.currentState!.validate()) return;
-
     setState(() => _isCreatingFarm = true);
 
     try {
-      final farmData = <String, dynamic>{
-        'farm_name': _farmNameController.text.trim(),
-        'total_area': 0.0,
-        'farm_type': 'poultry',
-      };
-
-      if (_farmDescriptionController.text.trim().isNotEmpty) {
-        farmData['description'] = _farmDescriptionController.text.trim();
-      }
-
-      if (_selectedAddress != null && _latitude != null && _longitude != null) {
-        farmData['location'] = {
-          'address': {'formatted_address': _selectedAddress},
-          'latitude': _latitude,
-          'longitude': _longitude,
+      if (_farmAlreadyCreated && _createdFarmId != null) {
+        // ── EDIT MODE ──
+        final farmData = <String, dynamic>{
+          'farm_name': _farmNameController.text.trim(),
+          'farm_type': 'poultry',
         };
-      }
-
-      http.Response response;
-
-      if (_farmPhotoFile != null) {
-        final fields = <String, String>{};
-        farmData.forEach((key, value) {
-          if (value != null) {
-            fields[key] = value is Map || value is List
-                ? jsonEncode(value)
-                : value.toString();
-          }
-        });
-
-        final multipartFile = await http.MultipartFile.fromPath(
-          'farm_avatar',
-          _farmPhotoFile!.path,
-        );
-
-        final streamedResponse = await apiClient.postMultipart(
-          '/farms',
-          fields: fields,
-          files: [multipartFile],
-        );
-        response = await http.Response.fromStream(streamedResponse);
-      } else {
-        farmData.removeWhere((key, value) => value == null);
-        response = await apiClient.post('/farms', body: farmData);
-      }
-
-      final jsonResponse = jsonDecode(response.body);
-      LogUtil.info('Farm create response: $jsonResponse');
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        final farmId = jsonResponse['id']
-            ?? jsonResponse['data']?['id']
-            ?? jsonResponse['farm']?['id'];
-
-        if (farmId == null) {
-          ToastUtil.showError('Farm created but could not retrieve ID');
-          setState(() => _isCreatingFarm = false);
-          return;
+        if (_farmDescriptionController.text.trim().isNotEmpty) {
+          farmData['description'] = _farmDescriptionController.text.trim();
+        }
+        if (_selectedAddress != null && _latitude != null && _longitude != null) {
+          farmData['location'] = {
+            'address': {'formatted_address': _selectedAddress},
+            'latitude': _latitude,
+            'longitude': _longitude,
+          };
         }
 
-        setState(() {
-          _createdFarmId = farmId.toString();
-          _createdFarmName = _farmNameController.text.trim();
-          _isCreatingFarm = false;
-        });
+        final result = await _farmRepository.updateFarm(
+          _createdFarmId!,
+          farmData,
+          photoFile: _farmPhotoFile,
+        );
 
-        ToastUtil.showSuccess('Farm "$_createdFarmName" created!');
-        _goToPage(1);
+        switch (result) {
+          case Success():
+            setState(() {
+              _createdFarmName = _farmNameController.text.trim();
+              _isCreatingFarm = false;
+            });
+            ToastUtil.showSuccess('Farm "$_createdFarmName" updated!');
+            _goToPage(1);
+          case Failure(message: final msg):
+            ToastUtil.showError(msg);
+            setState(() => _isCreatingFarm = false);
+        }
       } else {
-        ApiErrorHandler.handle(response);
-        setState(() => _isCreatingFarm = false);
+        // ── CREATE MODE (your existing _createFarm logic) ──
+        final farmData = <String, dynamic>{
+          'farm_name': _farmNameController.text.trim(),
+          'total_area': 0.0,
+          'farm_type': 'poultry',
+        };
+        if (_farmDescriptionController.text.trim().isNotEmpty) {
+          farmData['description'] = _farmDescriptionController.text.trim();
+        }
+        if (_selectedAddress != null && _latitude != null && _longitude != null) {
+          farmData['location'] = {
+            'address': {'formatted_address': _selectedAddress},
+            'latitude': _latitude,
+            'longitude': _longitude,
+          };
+        }
+
+        http.Response response;
+        if (_farmPhotoFile != null) {
+          final fields = <String, String>{};
+          farmData.forEach((key, value) {
+            if (value != null) {
+              fields[key] = value is Map || value is List ? jsonEncode(value) : value.toString();
+            }
+          });
+          final multipartFile = await http.MultipartFile.fromPath('farm_avatar', _farmPhotoFile!.path);
+          final streamedResponse = await apiClient.postMultipart('/farms', fields: fields, files: [multipartFile]);
+          response = await http.Response.fromStream(streamedResponse);
+        } else {
+          farmData.removeWhere((key, value) => value == null);
+          response = await apiClient.post('/farms', body: farmData);
+        }
+
+        final jsonResponse = jsonDecode(response.body);
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          final farmId = jsonResponse['id'] ?? jsonResponse['data']?['id'] ?? jsonResponse['farm']?['id'];
+          if (farmId == null) {
+            ToastUtil.showError('Farm created but could not retrieve ID');
+            setState(() => _isCreatingFarm = false);
+            return;
+          }
+          setState(() {
+            _createdFarmId = farmId.toString();
+            _createdFarmName = _farmNameController.text.trim();
+            _farmAlreadyCreated = true;   // <-- mark as existing
+            _isCreatingFarm = false;
+          });
+          ToastUtil.showSuccess('Farm "$_createdFarmName" created!');
+          _goToPage(1);
+        } else {
+          ApiErrorHandler.handle(response);
+          setState(() => _isCreatingFarm = false);
+        }
       }
     } catch (e) {
-      LogUtil.error('Error creating farm: $e');
-      if (e is http.Response) {
-        ApiErrorHandler.handle(e);
-      } else {
-        ToastUtil.showError('Failed to create farm: $e');
-      }
+      LogUtil.error('Error submitting farm: $e');
+      ToastUtil.showError('Failed to save farm: $e');
       setState(() => _isCreatingFarm = false);
     }
   }
 
   // ── Step 2: House creation ─────────────────────────────
-  Future<void> _createHouse() async {
+  Future<void> _submitHouse() async {
     if (!_houseFormKey.currentState!.validate()) return;
-
     if (_createdFarmId == null) {
       ToastUtil.showError('Farm not found. Please go back and create a farm.');
       return;
     }
-
     setState(() => _isCreatingHouse = true);
 
     try {
-      final houseData = <String, dynamic>{
-        'name': _houseNameController.text.trim(),
-        'capacity': int.tryParse(_houseCapacityController.text.trim()) ?? 500,
-      };
-
-      if (_houseDescriptionController.text.trim().isNotEmpty) {
-        houseData['description'] = _houseDescriptionController.text.trim();
-      }
-
-      final response = await apiClient.post(
-        '/farms/$_createdFarmId/houses',
-        body: houseData,
-      );
-
-      final jsonResponse = jsonDecode(response.body);
-      LogUtil.info('House create response: $jsonResponse');
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        final houseId = jsonResponse['id']
-            ?? jsonResponse['data']?['id']
-            ?? jsonResponse['house']?['id'];
-
-        if (houseId == null) {
-          ToastUtil.showError('House created but could not retrieve ID');
-          setState(() => _isCreatingHouse = false);
-          return;
+      if (_houseAlreadyCreated && _createdHouseId != null) {
+        // ── EDIT MODE ──
+        final houseData = <String, dynamic>{
+          'name': _houseNameController.text.trim(),
+          'capacity': int.tryParse(_houseCapacityController.text.trim()) ?? 500,
+        };
+        if (_houseDescriptionController.text.trim().isNotEmpty) {
+          houseData['description'] = _houseDescriptionController.text.trim();
         }
 
-        setState(() {
-          _createdHouseId = houseId.toString();
-          _createdHouseName = _houseNameController.text.trim();
-          _isCreatingHouse = false;
-        });
+        final result = await _batchHouseRepo.updateHouse(
+          _createdFarmId!,
+          _createdHouseId!,
+          houseData,
+        );
 
-        ToastUtil.showSuccess('House "$_createdHouseName" created!');
-        _goToPage(2);
+        switch (result) {
+          case Success():
+            setState(() {
+              _createdHouseName = _houseNameController.text.trim();
+              _isCreatingHouse = false;
+            });
+            ToastUtil.showSuccess('House "$_createdHouseName" updated!');
+            _goToPage(2);
+          case Failure(message: final msg):
+            ToastUtil.showError(msg);
+            setState(() => _isCreatingHouse = false);
+        }
       } else {
-        ApiErrorHandler.handle(response);
-        setState(() => _isCreatingHouse = false);
+        // ── CREATE MODE (your existing _createHouse logic) ──
+        final houseData = <String, dynamic>{
+          'name': _houseNameController.text.trim(),
+          'capacity': int.tryParse(_houseCapacityController.text.trim()) ?? 500,
+        };
+        if (_houseDescriptionController.text.trim().isNotEmpty) {
+          houseData['description'] = _houseDescriptionController.text.trim();
+        }
+
+        final response = await apiClient.post('/farms/$_createdFarmId/houses', body: houseData);
+        final jsonResponse = jsonDecode(response.body);
+
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          final houseId = jsonResponse['id'] ?? jsonResponse['data']?['id'] ?? jsonResponse['house']?['id'];
+          if (houseId == null) {
+            ToastUtil.showError('House created but could not retrieve ID');
+            setState(() => _isCreatingHouse = false);
+            return;
+          }
+          setState(() {
+            _createdHouseId = houseId.toString();
+            _createdHouseName = _houseNameController.text.trim();
+            _houseAlreadyCreated = true;   // <-- mark as existing
+            _isCreatingHouse = false;
+          });
+          ToastUtil.showSuccess('House "$_createdHouseName" created!');
+          _goToPage(2);
+        } else {
+          ApiErrorHandler.handle(response);
+          setState(() => _isCreatingHouse = false);
+        }
       }
     } catch (e) {
-      LogUtil.error('Error creating house: $e');
-      if (e is http.Response) {
-        ApiErrorHandler.handle(e);
-      } else {
-        ToastUtil.showError('Failed to create house: $e');
-      }
+      LogUtil.error('Error submitting house: $e');
+      ToastUtil.showError('Failed to save house: $e');
       setState(() => _isCreatingHouse = false);
     }
   }
@@ -595,25 +623,33 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
         appBar: _currentPage == 3
             ? null
             : AppBar(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                automaticallyImplyLeading: false,
-                title: Text(
-                  _appBarTitle,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          automaticallyImplyLeading: false,
+          leading: _currentPage > 0
+              ? IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: _isSubmitting
+                ? null
+                : () => _goToPage(_currentPage - 1),
+          )
+              : null,
+          title: Text(
+            _appBarTitle,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          actions: [
+            if (_isSubmitting)
+              const Padding(
+                padding: EdgeInsets.only(right: 16),
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
                 ),
-                actions: [
-                  if (_isSubmitting)
-                    const Padding(
-                      padding: EdgeInsets.only(right: 16),
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    ),
-                ],
               ),
+          ],
+        ),
         body: Column(
           children: [
             // Progress bar + step chips (hide on success page)
@@ -779,9 +815,9 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
             const SizedBox(height: 32),
 
             _buildActionButton(
-              label: 'Create Farm & Continue',
+              label: _farmAlreadyCreated ? 'Update Farm & Continue' : 'Create Farm & Continue',
               isLoading: _isCreatingFarm,
-              onPressed: _createFarm,
+              onPressed: _submitFarm,
             ),
             const SizedBox(height: 8),
             _buildSkipButton(),
@@ -879,9 +915,9 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
             const SizedBox(height: 32),
 
             _buildActionButton(
-              label: 'Create House & Continue',
+              label: _houseAlreadyCreated ? 'Update House & Continue' : 'Create House & Continue',
               isLoading: _isCreatingHouse,
-              onPressed: _createHouse,
+              onPressed: _submitHouse,
             ),
             const SizedBox(height: 8),
             _buildSkipButton(),
