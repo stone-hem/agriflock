@@ -2,6 +2,7 @@ import 'package:agriflock/core/widgets/reusable_input.dart';
 import 'package:agriflock/core/utils/age_util.dart';
 import 'package:agriflock/features/farmer/batch/model/batch_list_model.dart';
 import 'package:agriflock/features/farmer/expense/model/expense_category.dart';
+import 'package:agriflock/features/farmer/expense/views/usage_choice_view.dart';
 import 'package:agriflock/features/farmer/farm/models/farm_model.dart';
 import 'package:flutter/material.dart';
 
@@ -46,6 +47,8 @@ class _BatchSelectionViewState extends State<BatchSelectionView> {
       ? widget.item.categoryItemUnit
       : 'units';
 
+  bool get _isNonQuantifiable => isNonQuantifiableItem(widget.item);
+
   String _formatQty(double value) {
     if (value == value.truncateToDouble()) return value.toInt().toString();
     return value.toStringAsFixed(2).replaceAll(RegExp(r'\.?0+$'), '');
@@ -66,6 +69,12 @@ class _BatchSelectionViewState extends State<BatchSelectionView> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a batch')),
       );
+      return;
+    }
+
+    // Non-quantifiable items (services, etc.) always count as fully used
+    if (_isNonQuantifiable) {
+      widget.onSave(null);
       return;
     }
 
@@ -273,7 +282,8 @@ class _BatchSelectionViewState extends State<BatchSelectionView> {
 
                   const SizedBox(height: 8),
 
-                  // ── Usage section ──────────────────────────────────────────
+                  // ── Usage section (hidden for non-quantifiable items) ──────
+                  if (!_isNonQuantifiable) ...[
                   const Text(
                     'How much was used?',
                     style: TextStyle(
@@ -409,6 +419,7 @@ class _BatchSelectionViewState extends State<BatchSelectionView> {
                       ),
                     ),
                   ],
+                  ], // end if (!_isNonQuantifiable)
 
                   const SizedBox(height: 32),
 

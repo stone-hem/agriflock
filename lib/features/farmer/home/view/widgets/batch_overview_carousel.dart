@@ -564,7 +564,7 @@ class _BatchOverviewCarouselState extends State<BatchOverviewCarousel> {
                       children: [
                         _buildInfoRow(
                           'Expected avg weight',
-                          '${batch.feedingPlan?.expectedAvgWeight ?? '0.00'} kgs',
+                          '${double.tryParse(batch.feedingPlan?.expectedAvgWeight.toString() ?? '0')?.toStringAsFixed(2) ?? '0.00'} kgs',
                           Icons.monitor_weight_outlined,
                           Colors.purple,
                         ),

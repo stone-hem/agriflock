@@ -132,14 +132,28 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.all(16),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                // Header Card
-                Card(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final w = constraints.maxWidth;
+          final hPad = w > 600 ? (w - 580) / 2 : 16.0;
+          final gridAspectRatio = w > 600 ? 1.8 : (w < 360 ? 1.1 : 1.2);
+          final gridMaxExtent = w > 600 ? 300.0 : 250.0;
+          return _buildContent(context, hPad, gridAspectRatio, gridMaxExtent);
+        },
+      ),
+    );
+  }
+
+  Widget _buildContent(
+      BuildContext context, double hPad, double gridAspectRatio, double gridMaxExtent) {
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(hPad, 16, hPad, 16),
+          sliver: SliverList(
+            delegate: SliverChildListDelegate([
+              // Header Card
+              Card(
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -206,7 +220,8 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
                   gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
-                    childAspectRatio: 1.2, maxCrossAxisExtent: 250,
+                    childAspectRatio: gridAspectRatio,
+                    maxCrossAxisExtent: gridMaxExtent,
                   ),
                   itemCount: _capacityOptions.length,
                   itemBuilder: (context, index) {
@@ -264,8 +279,7 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
             ),
           ),
         ],
-      ),
-    );
+      );
   }
 
   Widget _buildCapacityCard(Map<String, dynamic> capacity) {

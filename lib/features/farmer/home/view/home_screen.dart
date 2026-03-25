@@ -741,8 +741,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onViewActivity: () => context.push('/activity'),
         farms: '${_summary!.numberOfFarms}',
         houses: '${_summary!.numberOfHouses}',
-        batches: '${_summary!.totalBatches}',
-        birds: '${_summary!.totalBirds}',
+        batches: '${_summary!.activeBatches}',
       );
     }
 
@@ -751,8 +750,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onSeePlans: () => context.push('/plans'),
         farms: '${_summary!.numberOfFarms}',
         houses: '${_summary!.numberOfHouses}',
-        batches: '${_summary!.totalBatches}',
-        birds: '${_summary!.totalBirds}',
+        batches: '${_summary!.activeBatches}',
       );
     }
 
@@ -761,8 +759,7 @@ class _HomeScreenState extends State<HomeScreen> {
       userName: _userName,
       farms: '${_summary!.numberOfFarms}',
       houses: '${_summary!.numberOfHouses}',
-      batches: '${_summary!.totalBatches}',
-      birds: '${_summary!.totalBirds}',
+      batches: '${_summary!.activeBatches}',
       daysSinceLogin: _userFirstLoginDate != null ? _daysSinceFirstLogin : null,
     );
   }

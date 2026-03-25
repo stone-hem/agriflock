@@ -2,11 +2,23 @@ import 'package:agriflock/core/utils/format_util.dart';
 import 'package:agriflock/features/farmer/expense/model/expense_category.dart';
 import 'package:flutter/material.dart';
 
+enum UsageChoice { storeIt, useNow, pastRecord }
+
+/// Returns true for items that cannot meaningfully be counted in quantity
+/// (e.g. services, generic equipment categories, utilities).
+bool isNonQuantifiableItem(CategoryItem item) {
+  if (item.id == 'custom') return false;
+  if (item.categoryItemPackagingOptions != null &&
+      item.categoryItemPackagingOptions!.isNotEmpty) return false;
+  final unit = item.categoryItemUnit.toLowerCase().trim();
+  return unit == 'service' || unit == 'category' || unit == 'set' || unit == '0.5 acre';
+}
+
 class UsageChoiceView extends StatelessWidget {
   final CategoryItem item;
   final double quantity;
   final double totalPrice;
-  final Function(bool useNow) onChoice;
+  final Function(UsageChoice choice) onChoice;
   final VoidCallback onBack;
   final bool isSubmitting;
 
@@ -22,6 +34,8 @@ class UsageChoiceView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final nonQuantifiable = isNonQuantifiableItem(item);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(12),
       child: Column(
@@ -57,11 +71,16 @@ class UsageChoiceView extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text('${quantity.toStringAsFixed(0)} units',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                    Text('KES ${FormatUtil.formatAmount(totalPrice)}',
-                        style: const TextStyle(
-                            fontSize: 13, fontWeight: FontWeight.bold, color: Colors.green)),
+                    if (!nonQuantifiable)
+                      Text(
+                        '${quantity.toStringAsFixed(0)} units',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                      ),
+                    Text(
+                      'KES ${FormatUtil.formatAmount(totalPrice)}',
+                      style: const TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.bold, color: Colors.green),
+                    ),
                   ],
                 ),
               ],
@@ -82,162 +101,153 @@ class UsageChoiceView extends StatelessWidget {
           const SizedBox(height: 14),
 
           // Option 1: Put in store
-          IgnorePointer(
-            ignoring: isSubmitting,
-            child: Opacity(
-              opacity: isSubmitting ? 0.6 : 1.0,
-              child: GestureDetector(
-                onTap: () => onChoice(false),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.blue.shade200, width: 2),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.shade50,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(Icons.inventory, color: Colors.blue.shade700, size: 20),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              isSubmitting ? 'Saving to store...' : 'PUT IN STORE',
-                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          if (isSubmitting)
-                            const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          else
-                            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey.shade400),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildBulletPoint('→ Adds to inventory', Colors.blue.shade700),
-                            const SizedBox(height: 3),
-                            _buildBulletPoint('→ Records expense only', Colors.blue.shade700),
-                            const SizedBox(height: 3),
-                            _buildBulletPoint('→ Use later for any batch', Colors.blue.shade700),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+          _buildOption(
+            context: context,
+            onTap: () => onChoice(UsageChoice.storeIt),
+            borderColor: Colors.blue.shade200,
+            iconColor: Colors.blue.shade700,
+            iconBgColor: Colors.blue.shade50,
+            icon: Icons.inventory,
+            title: isSubmitting ? 'Saving to store...' : 'PUT IN STORE',
+            bulletBg: Colors.blue.shade50,
+            bullets: const [
+              '→ Adds to inventory',
+              '→ Records expense only',
+              '→ Use later for any batch',
+            ],
+            bulletColor: Colors.blue.shade700,
+            showLoader: isSubmitting,
           ),
           const SizedBox(height: 10),
 
           // Option 2: Used it now
-          IgnorePointer(
-            ignoring: isSubmitting,
-            child: Opacity(
-              opacity: isSubmitting ? 0.6 : 1.0,
-              child: GestureDetector(
-                onTap: () => onChoice(true),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.green.shade200, width: 2),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.green.shade50,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              Icons.now_widgets_outlined,
-                              color: Theme.of(context).primaryColor,
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          const Expanded(
-                            child: Text(
-                              'USED IMMEDIATELY',
-                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey.shade400),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.green.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildBulletPoint('→ Adds to batch cost', Colors.green.shade700),
-                            const SizedBox(height: 3),
-                            _buildBulletPoint('→ Records usage activity', Colors.green.shade700),
-                            const SizedBox(height: 3),
-                            _buildBulletPoint('→ Updates schedules if applicable', Colors.green.shade700),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+          _buildOption(
+            context: context,
+            onTap: () => onChoice(UsageChoice.useNow),
+            borderColor: Colors.green.shade200,
+            iconColor: Theme.of(context).primaryColor,
+            iconBgColor: Colors.green.shade50,
+            icon: Icons.now_widgets_outlined,
+            title: 'USED IMMEDIATELY',
+            bulletBg: Colors.green.shade50,
+            bullets: const [
+              '→ Adds to batch cost',
+              '→ Records usage activity',
+              '→ Updates schedules if applicable',
+            ],
+            bulletColor: Colors.green.shade700,
+          ),
+          const SizedBox(height: 10),
+
+          // Option 3: Past record (used before batch was created)
+          _buildOption(
+            context: context,
+            onTap: () => onChoice(UsageChoice.pastRecord),
+            borderColor: Colors.amber.shade300,
+            iconColor: Colors.amber.shade800,
+            iconBgColor: Colors.amber.shade50,
+            icon: Icons.history_edu,
+            title: 'RECORDED AS PAST USE',
+            bulletBg: Colors.amber.shade50,
+            bullets: const [
+              '→ Used before this batch started',
+              '→ Links to an existing batch',
+              '→ Marked as pre-batch expense',
+            ],
+            bulletColor: Colors.amber.shade800,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildBulletPoint(String text, Color color) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Text(
-            text,
-            style: TextStyle(
-              fontSize: 13,
-              color: color,
-              fontWeight: FontWeight.w500,
+  Widget _buildOption({
+    required BuildContext context,
+    required VoidCallback onTap,
+    required Color borderColor,
+    required Color iconColor,
+    required Color iconBgColor,
+    required IconData icon,
+    required String title,
+    required Color bulletBg,
+    required List<String> bullets,
+    required Color bulletColor,
+    bool showLoader = false,
+  }) {
+    return IgnorePointer(
+      ignoring: isSubmitting,
+      child: Opacity(
+        opacity: isSubmitting ? 0.6 : 1.0,
+        child: GestureDetector(
+          onTap: onTap,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: borderColor, width: 2),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: iconBgColor,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(icon, color: iconColor, size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    if (showLoader)
+                      const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    else
+                      Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey.shade400),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: bulletBg,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (int i = 0; i < bullets.length; i++) ...[
+                        if (i > 0) const SizedBox(height: 3),
+                        Text(
+                          bullets[i],
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: bulletColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 }

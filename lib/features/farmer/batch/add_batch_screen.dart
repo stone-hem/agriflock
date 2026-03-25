@@ -1292,7 +1292,6 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
         'current_count': int.parse(_birdsAliveController.text.trim()),
         //dont send this when is purchase
         if(_isOwnHatch)'hatch_date': DateTime.parse(_hatchController.text).toUtc().toIso8601String(), // Date only
-        'birds_alive': int.parse(_birdsAliveController.text.trim()),
         'current_weight': _currentWeightController.text.isNotEmpty?double.parse(_currentWeightController.text.trim()):null,
         'cost_per_bird':double.tryParse(_chickCostController.text.trim()) ?? 0,
         if (!_isOwnHatch)

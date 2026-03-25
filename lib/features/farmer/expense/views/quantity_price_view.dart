@@ -4,6 +4,7 @@ import 'package:agriflock/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock/core/widgets/reusable_input.dart';
 import 'package:agriflock/core/widgets/reusable_time_input.dart';
 import 'package:agriflock/features/farmer/expense/model/expense_category.dart';
+import 'package:agriflock/features/farmer/expense/views/usage_choice_view.dart';
 import 'package:agriflock/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -58,6 +59,9 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
   bool _hasPackagingOptions = false;
   List<String> _packagingOptions = [];
 
+  /// Items that cannot meaningfully be quantified (services, generic categories, etc.)
+  bool get _isNonQuantifiable => isNonQuantifiableItem(widget.item);
+
   @override
   void initState() {
     super.initState();
@@ -65,7 +69,7 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
     _initializePackagingOptions();
 
     _quantityController = TextEditingController(
-      text: widget.quantity?.toString() ?? '',
+      text: _isNonQuantifiable ? '1' : (widget.quantity?.toString() ?? ''),
     );
     _unitPriceController = TextEditingController(
       text: widget.unitPrice?.toString() ?? '',
@@ -76,7 +80,7 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
     _totalPrice = widget.totalPrice ?? 0.0;
     _selectedPackagingOption = widget.selectedPackagingOption;
 
-    _quantityController.addListener(_calculateTotal);
+    if (!_isNonQuantifiable) _quantityController.addListener(_calculateTotal);
     _unitPriceController.addListener(_calculateTotal);
   }
 
@@ -101,11 +105,13 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
   }
 
   void _calculateTotal() {
-    final quantity = double.tryParse(_quantityController.text) ?? 0;
     final unitPrice = double.tryParse(_unitPriceController.text) ?? 0;
-    setState(() {
-      _totalPrice = quantity * unitPrice;
-    });
+    if (_isNonQuantifiable) {
+      setState(() => _totalPrice = unitPrice);
+    } else {
+      final quantity = double.tryParse(_quantityController.text) ?? 0;
+      setState(() => _totalPrice = quantity * unitPrice);
+    }
   }
 
   String _getUnitDisplay() {
@@ -144,8 +150,9 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
       return;
     }
 
-    final quantity = double.parse(_quantityController.text);
     final unitPrice = double.parse(_unitPriceController.text);
+    final quantity = _isNonQuantifiable ? 1.0 : double.parse(_quantityController.text);
+    final total = _isNonQuantifiable ? unitPrice : _totalPrice;
 
     final parsedDate = DateTime.parse(_dateController.text);
     final combinedDateTime = DateTime(
@@ -159,7 +166,7 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
     widget.onContinue(
       quantity: quantity,
       unitPrice: unitPrice,
-      totalPrice: _totalPrice,
+      totalPrice: total,
       selectedDate: combinedDateTime,
       selectedPackagingOption: _selectedPackagingOption,
     );
@@ -301,38 +308,40 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
                     const SizedBox(height: 16),
                   ],
 
-                  // Quantity
-                  ReusableInput(
-                    topLabel: 'Quantity *',
-                    icon: Icons.format_list_numbered,
-                    controller: _quantityController,
-                    hintText: 'Enter quantity in ${_getUnitDisplay()}',
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(
-                        RegExp(r'^\d+\.?\d{0,2}'),
-                      ),
-                    ],
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter quantity';
-                      }
-                      if (double.tryParse(value) == null) {
-                        return 'Please enter a valid number';
-                      }
-                      if (double.parse(value) <= 0) {
-                        return 'Quantity must be greater than 0';
-                      }
-                      return null;
-                    },
-                  ),
+                  // Quantity (hidden for non-quantifiable items like services)
+                  if (!_isNonQuantifiable) ...[
+                    ReusableInput(
+                      topLabel: 'Quantity *',
+                      icon: Icons.format_list_numbered,
+                      controller: _quantityController,
+                      hintText: 'Enter quantity in ${_getUnitDisplay()}',
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'^\d+\.?\d{0,2}'),
+                        ),
+                      ],
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter quantity';
+                        }
+                        if (double.tryParse(value) == null) {
+                          return 'Please enter a valid number';
+                        }
+                        if (double.parse(value) <= 0) {
+                          return 'Quantity must be greater than 0';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
 
-                  // Unit Price
+                  // Unit Price (or Amount for non-quantifiable items)
                   ReusableInput(
-                    topLabel: 'Unit Price ($_currency) *',
+                    topLabel: _isNonQuantifiable ? 'Amount ($_currency) *' : 'Unit Price ($_currency) *',
                     icon: Icons.attach_money,
                     controller: _unitPriceController,
-                    hintText: '0.00',
+                    hintText: _isNonQuantifiable ? 'Enter total amount paid' : '0.00',
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter.allow(
@@ -341,7 +350,7 @@ class _QuantityPriceViewState extends State<QuantityPriceView> {
                     ],
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter unit price';
+                        return _isNonQuantifiable ? 'Please enter amount' : 'Please enter unit price';
                       }
                       if (double.tryParse(value) == null) {
                         return 'Please enter a valid price';

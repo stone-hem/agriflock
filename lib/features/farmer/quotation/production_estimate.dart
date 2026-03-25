@@ -549,9 +549,11 @@ class _LayersTabState extends State<_LayersTab> {
 
   @override
   Widget build(BuildContext context) {
+    final sw = MediaQuery.sizeOf(context).width;
+    final hPad = sw > 600 ? (sw - 580) / 2 : 16.0;
     return CustomScrollView(slivers: [
       SliverPadding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.fromLTRB(hPad, 16, hPad, 16),
         sliver: SliverList(
           delegate: SliverChildListDelegate([
             // ── Breed Selection ──
@@ -902,30 +904,30 @@ class _LayingStageSection extends StatelessWidget {
           const SizedBox(height: 12),
 
           // Inputs
-          _buildInputRow('Flock size (birds)', state.flock.toString(), (v) {
+          _buildInputRow(context, 'Flock size (birds)', state.flock.toString(), (v) {
             state.flock = int.tryParse(v) ?? state.flock;
             onChanged();
           }, controller: state.flockController),
-          _buildInputRow('Avg egg production %', state.prodPct.toString(),
+          _buildInputRow(context, 'Avg egg production %', state.prodPct.toString(),
               note: '75% = industry average for layers', (v) {
                 state.prodPct = double.tryParse(v) ?? state.prodPct;
                 onChanged();
               }),
-          _buildInputRow('Feed bags / month', state.bagsPerMonth.toString(),
+          _buildInputRow(context, 'Feed bags / month', state.bagsPerMonth.toString(),
               note: '9 bags × 50 kg recommended', (v) {
                 state.bagsPerMonth = int.tryParse(v) ?? state.bagsPerMonth;
                 onChanged();
               }),
-          _buildInputRow('Cost per bag (Ksh)', state.bagCost.toString(), (v) {
+          _buildInputRow(context, 'Cost per bag (Ksh)', state.bagCost.toString(), (v) {
             state.bagCost = int.tryParse(v) ?? state.bagCost;
             onChanged();
           }),
-          _buildInputRow('Tray price (Ksh)', state.trayPrice.toString(),
+          _buildInputRow(context, 'Tray price (Ksh)', state.trayPrice.toString(),
               note: '30 eggs per tray', (v) {
                 state.trayPrice = int.tryParse(v) ?? state.trayPrice;
                 onChanged();
               }),
-          _buildInputRow('Other monthly costs', state.otherMonthly.toString(),
+          _buildInputRow(context, 'Other monthly costs', state.otherMonthly.toString(),
               note: 'Labour, medication, misc.', (v) {
                 state.otherMonthly = int.tryParse(v) ?? state.otherMonthly;
                 onChanged();
@@ -977,8 +979,10 @@ class _LayingStageSection extends StatelessWidget {
     ]);
   }
 
-  Widget _buildInputRow(String label, String value, ValueChanged<String> onSave,
+  Widget _buildInputRow(BuildContext context, String label, String value, ValueChanged<String> onSave,
       {String? note, bool isLast = false, TextEditingController? controller}) {
+    final sw = MediaQuery.sizeOf(context).width;
+    final inputWidth = sw < 360 ? 88.0 : sw < 600 ? 110.0 : 130.0;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 9),
       decoration: BoxDecoration(
@@ -990,7 +994,7 @@ class _LayingStageSection extends StatelessWidget {
             Text(note, style: const TextStyle(fontSize: 10, color: _kMuted)),
         ])),
         SizedBox(
-          width: 110,
+          width: inputWidth,
           child: TextFormField(
             controller: controller,
             initialValue: controller == null ? value : null,
@@ -1047,12 +1051,12 @@ class _ExLayerSaleSection extends StatelessWidget {
           const Text('End-of-Cycle — Ex-Layers',
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: _kGreen900)),
           const SizedBox(height: 14),
-          _buildRow('Birds sold at end', state.exBirds.toString(),
+          _buildRow(context, 'Birds sold at end', state.exBirds.toString(),
               note: 'Adjust for mortality / culled birds', (v) {
                 state.exBirds = int.tryParse(v) ?? state.exBirds;
                 onChanged();
               }),
-          _buildRow('Price per bird (Ksh)', state.exBirdPrice.toString(),
+          _buildRow(context, 'Price per bird (Ksh)', state.exBirdPrice.toString(),
               note: 'Spent layers typically Ksh 300–500', (v) {
                 state.exBirdPrice = int.tryParse(v) ?? state.exBirdPrice;
                 onChanged();
@@ -1076,8 +1080,10 @@ class _ExLayerSaleSection extends StatelessWidget {
     );
   }
 
-  Widget _buildRow(String label, String value, ValueChanged<String> onSave,
+  Widget _buildRow(BuildContext context, String label, String value, ValueChanged<String> onSave,
       {String? note, bool isLast = false}) {
+    final sw = MediaQuery.sizeOf(context).width;
+    final inputWidth = sw < 360 ? 88.0 : sw < 600 ? 110.0 : 130.0;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 9),
       decoration: BoxDecoration(
@@ -1089,7 +1095,7 @@ class _ExLayerSaleSection extends StatelessWidget {
             Text(note, style: const TextStyle(fontSize: 10, color: _kMuted)),
         ])),
         SizedBox(
-          width: 110,
+          width: inputWidth,
           child: TextFormField(
             initialValue: value,
             textAlign: TextAlign.right,
@@ -1456,8 +1462,10 @@ class _FrontendCalculatorPageState extends State<_FrontendCalculatorPage> {
       mortalityRate: mortalityRate, sellingPrice: sellingPrice, feedPrices: feedPrices,
     );
 
+    final sw = MediaQuery.sizeOf(context).width;
+    final hPad = sw > 600 ? (sw - 580) / 2 : 16.0;
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+      padding: EdgeInsets.fromLTRB(hPad, 0, hPad, 32),
       children: [
         _pills(),
         const SizedBox(height: 8),

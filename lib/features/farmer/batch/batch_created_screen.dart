@@ -95,7 +95,7 @@ class BatchCreatedScreen extends StatelessWidget {
                 icon: Icons.add_shopping_cart_rounded,
                 iconColor: Colors.purple,
                 title: 'Add other expenses',
-                subtitle: 'Record any additional purchases or costs',
+                subtitle: 'Any other expense e.g. transport, labour etc',
                 onTap: () => context.push('/record-expenditure', extra: farm),
               ),
               const SizedBox(height: 14),

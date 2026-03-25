@@ -2,93 +2,35 @@ import 'dart:convert';
 import 'package:agriflock/core/utils/type_safe_utils.dart';
 
 class DashboardSummary {
-  final num totalBirds;
-  final num eggsToday;
   final num activeBatches;
-  final num completedBatches;
-  final num totalBatches;
-  final num mortalityRate;
-  final num feedEfficiencyFcr;
-  final num averageWeightKg;
   final num numberOfHouses;
   final num numberOfFarms;
-  final List<BreedBreakdown> breedBreakdown;
 
   const DashboardSummary({
-    required this.totalBirds,
-    required this.eggsToday,
     required this.activeBatches,
-    required this.completedBatches,
-    required this.totalBatches,
-    required this.mortalityRate,
-    required this.feedEfficiencyFcr,
-    required this.averageWeightKg,
     required this.numberOfHouses,
     required this.numberOfFarms,
-    required this.breedBreakdown,
   });
 
   factory DashboardSummary.fromJson(Map<String, dynamic> json) {
     final breedBreakdownList = TypeUtils.toListSafe<dynamic>(json['breed_breakdown']);
 
     return DashboardSummary(
-      totalBirds: json['total_birds'] ?? 0,
-      eggsToday: json['eggs_today'] ?? 0,
       activeBatches: json['active_batches'] ?? 0,
-      completedBatches: json['completed_batches'] ?? 0,
-      totalBatches: json['total_batches'] ?? 0,
-      mortalityRate: json['mortality_rate'] ?? 0,
-      feedEfficiencyFcr: json['feed_efficiency_fcr'] ?? 0,
-      averageWeightKg: json['average_weight_kg'] ?? 0,
       numberOfHouses: json['number_of_houses'] ?? 0,
       numberOfFarms: json['number_of_farms'] ?? 0,
-      breedBreakdown: breedBreakdownList
-          .map((item) => BreedBreakdown.fromJson(
-          item is Map<String, dynamic> ? item : {}))
-          .toList(),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'total_birds': totalBirds,
-      'eggs_today': eggsToday,
       'active_batches': activeBatches,
-      'completed_batches': completedBatches,
-      'total_batches': totalBatches,
-      'mortality_rate': mortalityRate,
-      'feed_efficiency_fcr': feedEfficiencyFcr,
-      'average_weight_kg': averageWeightKg,
       'number_of_houses': numberOfHouses,
       'number_of_farms': numberOfFarms,
-      'breed_breakdown': breedBreakdown.map((b) => b.toJson()).toList(),
     };
   }
 }
 
-class BreedBreakdown {
-  final String breedName;
-  final num liveCount;
-
-  const BreedBreakdown({
-    required this.breedName,
-    required this.liveCount,
-  });
-
-  factory BreedBreakdown.fromJson(Map<String, dynamic> json) {
-    return BreedBreakdown(
-      breedName: TypeUtils.toStringSafe(json['breed_name']),
-      liveCount: json['live_count'] ?? 0,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'breed_name': breedName,
-      'live_count': liveCount,
-    };
-  }
-}
 
 class DashboardActivity {
   final String id;

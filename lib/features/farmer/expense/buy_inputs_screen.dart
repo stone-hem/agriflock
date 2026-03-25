@@ -55,7 +55,8 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
   String? _selectedPackagingOption;
 
   // Usage choice
-  bool _useNow=true; // true = use now, false = store
+  bool _useNow = true; // true = use now, false = store
+  bool _isPastRecord = false; // true = used before batch was created
 
   bool get _isOthersCategory {
     return _selectedCategory?.name.toLowerCase() == 'others' ||
@@ -188,6 +189,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
             if (widget.farm != null) 'farm_id': widget.farm!.id,
             if (_selectedBatch != null) 'batch_id': _selectedBatch!.id,
             if (_selectedBatch != null && _selectedBatch!.houseId != null) 'house_id': _selectedBatch!.houseId,
+            if (_isPastRecord) 'is_past_record': true,
           };
         } else {
           // Payload format for custom item under an existing (non-Other) category
@@ -203,6 +205,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
             if (widget.farm != null) 'farm_id': widget.farm!.id,
             if (_selectedBatch != null) 'batch_id': _selectedBatch!.id,
             if (_selectedBatch != null && _selectedBatch!.houseId != null) 'house_id': _selectedBatch!.houseId,
+            if (_isPastRecord) 'is_past_record': true,
           };
         }
       } else {
@@ -221,6 +224,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
           if (_selectedBatch != null) 'batch_id': _selectedBatch!.id,
           if (_selectedBatch != null && _selectedBatch!.houseId != null) 'house_id': _selectedBatch!.houseId,
           'used_immediately': _useNow,
+          if (_isPastRecord) 'is_past_record': true,
         };
       }
 
@@ -368,7 +372,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
                     });
                     // For custom "Others" items, skip usage choice - always use immediately
                     if (_hasCustomOtherName) {
-                      setState(() => _useNow = true);
+                      setState(() { _useNow = true; _isPastRecord = false; });
                       _pageController.jumpToPage(4); // Skip usage choice instantly
                       return;
                     }
@@ -378,7 +382,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
                       _nextPage();
                     } else {
                       // Cannot store, use immediately - skip to batch selection
-                      setState(() => _useNow = true);
+                      setState(() { _useNow = true; _isPastRecord = false; });
                       _pageController.jumpToPage(4); // Skip usage choice instantly
                     }
                   },
@@ -398,14 +402,17 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
                   quantity: _quantity!,
                   totalPrice: _totalPrice!,
                   isSubmitting: _isSubmitting,
-                  onChoice: (useNow) {
-                    setState(() => _useNow = useNow);
-                    if (useNow) {
-                      // Go to batch selection
-                      _nextPage();
-                    } else {
-                      // Submit directly (store)
-                      _submitExpense();
+                  onChoice: (choice) {
+                    switch (choice) {
+                      case UsageChoice.storeIt:
+                        setState(() { _useNow = false; _isPastRecord = false; });
+                        _submitExpense();
+                      case UsageChoice.useNow:
+                        setState(() { _useNow = true; _isPastRecord = false; });
+                        _nextPage();
+                      case UsageChoice.pastRecord:
+                        setState(() { _useNow = true; _isPastRecord = true; });
+                        _nextPage();
                     }
                   },
                   onBack: _previousPage,

@@ -523,7 +523,6 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
         'current_count': int.parse(_birdsAliveController.text.trim()),
         'hatch_date':
             DateTime.parse(_hatchController.text).toUtc().toIso8601String(),
-        'birds_alive': int.parse(_birdsAliveController.text.trim()),
         'feeding_time': _selectedFeedingTimeCategory,
         'feeding_schedule': selectedFeedingTimes.join(','),
         'cost_per_bird': double.parse(_chickCostController.text.trim()),
