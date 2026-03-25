@@ -224,10 +224,12 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
         });
       }
     } catch (_) {
-      if (mounted) setState(() {
+      if (mounted) {
+        setState(() {
         _recommendedWeight = null;
         _isLoadingRec = false;
       });
+      }
     }
   }
 

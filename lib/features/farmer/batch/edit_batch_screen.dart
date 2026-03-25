@@ -1,14 +1,15 @@
 import 'dart:io';
+import 'package:agriflock/core/repositories/bird_type_repository.dart';
 import 'package:agriflock/core/utils/api_error_handler.dart';
-import 'package:agriflock/core/utils/refresh_bus.dart';
 import 'package:agriflock/core/utils/date_util.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/utils/toast_util.dart';
+import 'package:agriflock/core/widgets/custom_date_text_field.dart';
+import 'package:agriflock/core/widgets/photo_upload.dart';
 import 'package:agriflock/core/widgets/reusable_dropdown.dart';
 import 'package:agriflock/core/widgets/reusable_input.dart';
 import 'package:agriflock/features/farmer/batch/model/batch_model.dart';
-import 'package:agriflock/core/models/bird_type.dart';
-import 'package:agriflock/core/repositories/bird_type_repository.dart';
+import 'package:agriflock/features/farmer/batch/model/bird_type.dart';
 import 'package:agriflock/features/farmer/batch/repo/batch_house_repo.dart';
 import 'package:agriflock/features/farmer/farm/models/farm_model.dart';
 import 'package:flutter/material.dart';
@@ -32,7 +33,6 @@ class EditBatchScreen extends StatefulWidget {
 
 class _EditBatchScreenState extends State<EditBatchScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _hatchController = TextEditingController();
   final _initialQuantityController = TextEditingController();
   final _birdsAliveController = TextEditingController();
   final _currentWeightController = TextEditingController();
@@ -41,10 +41,8 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
   final _repository = BatchHouseRepository();
   final _birdTypeRepository = BirdTypeRepository();
 
+
   String? _selectedBirdTypeId;
-  bool _showLayersSubType = false;
-  String? _selectedLayersSubTypeId;
-  static const String _layersCategoryId = '__layers_category__';
   String? _selectedFeedingTimeCategory;
   DateTime? _hatchDate;
   File? _batchPhotoFile;
@@ -52,6 +50,12 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
   bool _isLoadingBirdTypes = false;
 
   List<BirdType> _birdTypes = [];
+
+  final Map<String, List<String>> _feedingTimeOptions = {
+    'Day': ['06:00AM', '09:00AM', '12:00 Noon', '3:00PM', '6:00PM'],
+    'Night': ['9:00PM', '12:00 Midnight', '3:00AM', '06:00AM'],
+    'Both': ['06:00AM', '09:00AM', '12:00 Noon', '3:00PM', '6:00PM', '9:00PM', '12:00 Midnight', '3:00AM'],
+  };
 
   // Track selected feeding times within each category
   final Map<String, List<String>> _selectedFeedingTimes = {
@@ -77,15 +81,9 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
 
       switch (result) {
         case Success(data: final types):
-          final currentType = types.where((t) => t.id == widget.batch.birdTypeId).firstOrNull;
-          final isLayersSubType = currentType != null && currentType.isLayersCategory;
           setState(() {
             _birdTypes = types;
             _isLoadingBirdTypes = false;
-            if (isLayersSubType) {
-              _showLayersSubType = true;
-              _selectedLayersSubTypeId = widget.batch.birdTypeId;
-            }
           });
 
         case Failure(:final response, :final message):
@@ -108,13 +106,7 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
     final batch = widget.batch;
 
     _selectedBirdTypeId = batch.birdTypeId;
-
     _hatchDate = batch.startDate;
-
-    // Set hatch controller value
-    if (_hatchDate != null) {
-      _hatchController.text = DateUtil.toMMDDYYYY(_hatchDate!);
-    }
 
     _initialQuantityController.text = batch.initialQuantity.toString();
     _birdsAliveController.text = batch.birdsAlive.toString();
@@ -283,109 +275,55 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
                   ],
                 ),
               )
-                  : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ReusableDropdown<String>(
-                    value: _showLayersSubType
-                        ? _layersCategoryId
-                        : _selectedBirdTypeId,
-                    hintText: 'Select bird type',
-                    items: [
-                      ..._birdTypes
-                          .where((t) => !t.isLayersCategory)
-                          .map((BirdType type) => DropdownMenuItem<String>(
-                                value: type.id,
-                                child: Text(type.name),
-                              )),
-                      const DropdownMenuItem<String>(
-                        value: _layersCategoryId,
-                        child: Text('Layers'),
-                      ),
-                    ],
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        if (newValue == _layersCategoryId) {
-                          _showLayersSubType = true;
-                          _selectedBirdTypeId = null;
-                          _selectedLayersSubTypeId = null;
-                        } else {
-                          _showLayersSubType = false;
-                          _selectedBirdTypeId = newValue;
-                          _selectedLayersSubTypeId = null;
-                        }
-                      });
-                    },
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please select a bird type';
-                      }
-                      return null;
-                    },
-                  ),
-                  if (_showLayersSubType) ...[
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.shade50,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.amber.shade300),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(Icons.info_outline,
-                                  size: 14, color: Colors.amber.shade700),
-                              const SizedBox(width: 6),
-                              Text(
-                                'Select the type of layers',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.amber.shade900,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          ..._birdTypes
-                              .where((t) => t.isLayersCategory)
-                              .map((t) => RadioListTile<String>(
-                                    value: t.id,
-                                    groupValue: _selectedLayersSubTypeId,
-                                    title: Text(t.name,
-                                        style: const TextStyle(fontSize: 13)),
-                                    onChanged: (val) {
-                                      setState(() {
-                                        _selectedLayersSubTypeId = val;
-                                        _selectedBirdTypeId = val;
-                                      });
-                                    },
-                                    activeColor: Colors.amber.shade700,
-                                    contentPadding: EdgeInsets.zero,
-                                    dense: true,
-                                  )),
-                          if (_selectedLayersSubTypeId == null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                'Please select a layers type',
-                                style: TextStyle(
-                                    color: Colors.red.shade600, fontSize: 12),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ],
+                  : ReusableDropdown<String>(
+                value: _selectedBirdTypeId,
+                hintText: 'Select bird type',
+                items: _birdTypes.map((BirdType type) {
+                  return DropdownMenuItem<String>(
+                    value: type.id,
+                    child: Text(type.name),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedBirdTypeId = newValue;
+                  });
+                },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please select a bird type';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 20),
 
-              // Current Count (Birds Alive)
+
+              ReusableInput(
+                controller: _initialQuantityController,
+                keyboardType: TextInputType.number,
+                topLabel: 'Initial Count',
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter initial count';
+                  }
+                  if (int.tryParse(value) == null) {
+                    return 'Please enter a valid number';
+                  }
+                  final count = int.parse(value);
+                  if (count <= 0) {
+                    return 'Initial count must be greater than 0';
+                  }
+                  if (count > availableCapacity) {
+                    return 'Initial count ($count) exceeds available capacity ($availableCapacity)';
+                  }
+                  return null;
+                },
+                labelText: 'Initial count from hatchery',
+                hintText: 'e.g., 1000',
+              ),
+              const SizedBox(height: 20),
+
               Text(
                 'Current Count',
                 style: Theme.of(context).textTheme.titleMedium!.copyWith(
@@ -410,6 +348,148 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
                 hintText: 'e.g., 980',
               ),
               const SizedBox(height: 20),
+
+
+              // Feeding Time Selection
+              Text(
+                'Feeding Time',
+                style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey.shade800,
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // Feeding Time Category Selection
+              ReusableDropdown<String>(
+                value: _selectedFeedingTimeCategory,
+                hintText: 'Select feeding time category',
+                items: _feedingTimeOptions.keys.map((String category) {
+                  return DropdownMenuItem<String>(
+                    value: category,
+                    child: Text(category),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedFeedingTimeCategory = newValue;
+                    // Clear previous selections when category changes
+                    if (newValue != null && newValue != _selectedFeedingTimeCategory) {
+                      _selectedFeedingTimes[_selectedFeedingTimeCategory ?? 'Day']?.clear();
+                    }
+                  });
+                },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please select feeding time category';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              if (_selectedFeedingTimeCategory != null) ...[
+                Text(
+                  'Select Specific Feeding Times:',
+                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.shade800,
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                // Display all options for the selected category
+                Column(
+                  children: _feedingTimeOptions[_selectedFeedingTimeCategory]!
+                      .map((time) {
+                    bool isSelected = _selectedFeedingTimes[_selectedFeedingTimeCategory]!.contains(time);
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            if (isSelected) {
+                              _selectedFeedingTimes[_selectedFeedingTimeCategory]!.remove(time);
+                            } else {
+                              _selectedFeedingTimes[_selectedFeedingTimeCategory]!.add(time);
+                            }
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: isSelected ? Colors.green.shade50 : Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isSelected ? Colors.green : Colors.grey.shade300,
+                              width: isSelected ? 2 : 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+                                color: isSelected ? Colors.green : Colors.grey,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  time,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    color: isSelected ? Colors.green.shade800 : Colors.grey.shade800,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+
+                // Show selected times summary
+                if (_selectedFeedingTimes[_selectedFeedingTimeCategory]!.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.green.shade100),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Selected Feeding Times:',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          children: _selectedFeedingTimes[_selectedFeedingTimeCategory]!
+                              .map((time) => Chip(
+                            label: Text(
+                              time,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            backgroundColor: Colors.green,
+                          ))
+                              .toList(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 16),
+              ],
 
               // Notes
               Text(
@@ -501,11 +581,6 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
       return;
     }
 
-    if (_showLayersSubType && _selectedLayersSubTypeId == null) {
-      ToastUtil.showError('Please select the type of layers');
-      return;
-    }
-
     if (_hatchDate == null) {
       ToastUtil.showError('Please select hatch date');
       return;
@@ -529,7 +604,10 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
       final batchData = {
         'house_id': widget.house.id,
         'bird_type_id': _selectedBirdTypeId,
+        'initial_count': int.parse(_initialQuantityController.text.trim()),
         'current_count': int.parse(_birdsAliveController.text.trim()),
+        'feeding_time': _selectedFeedingTimeCategory,
+        'feeding_schedule': selectedFeedingTimes.join(','),
         'notes': _notesController.text.trim().isNotEmpty
             ? _notesController.text.trim()
             : null,
@@ -543,7 +621,6 @@ class _EditBatchScreenState extends State<EditBatchScreen> {
 
       switch (result) {
         case Success():
-          RefreshBus.instance.fire(RefreshEvent.batchUpdated);
           ToastUtil.showSuccess('Batch updated successfully!');
           if (context.mounted) {
             context.pushReplacement('/batches/details', extra: {

@@ -74,7 +74,7 @@ class BatchCreatedScreen extends StatelessWidget {
                   children: [
                     const SizedBox(width: 8),
                     Text(
-                      batch.batchNumber,
+                      batch.breed,
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -103,7 +103,7 @@ class BatchCreatedScreen extends StatelessWidget {
                 icon: Icons.open_in_new_rounded,
                 iconColor: Colors.blue,
                 title: 'View batch',
-                subtitle: 'Go to ${batch.batchNumber} details page',
+                subtitle: 'Go to ${batch.breed} details page',
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => BatchDetailsScreen(batch: batch, farm: farm),
@@ -116,10 +116,10 @@ class BatchCreatedScreen extends StatelessWidget {
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
                 child: Text(
-                  'Skip for now',
+                  'Skip for now to go to dashboard.',
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.grey.shade500,
+                    color: Colors.black,
                   ),
                 ),
               ),
