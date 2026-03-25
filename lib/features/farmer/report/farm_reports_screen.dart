@@ -9,7 +9,6 @@ import 'package:agriflock/core/utils/secure_storage.dart';
 import 'package:agriflock/core/widgets/expense/expense_marquee_banner.dart';
 import 'package:agriflock/features/farmer/farm/models/farm_model.dart';
 import 'package:agriflock/features/farmer/report/models/farm_batch_report_model.dart';
-import 'package:agriflock/features/farmer/expense/repo/expenditure_repository.dart';
 import 'package:agriflock/features/farmer/report/models/farm_financial_stats_model.dart';
 import 'package:agriflock/features/farmer/report/repo/report_repo.dart';
 import 'package:flutter/material.dart';
@@ -26,7 +25,6 @@ class FarmReportsScreen extends StatefulWidget {
 class _FarmReportsScreenState extends State<FarmReportsScreen>
     with SingleTickerProviderStateMixin {
   final _reportRepository = ReportRepository();
-  final _expenditureRepository = ExpenditureRepository();
   final _secureStorage = SecureStorage();
   late TabController _tabController;
 
@@ -142,7 +140,7 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
     });
 
     try {
-      final result = await _expenditureRepository.getFinancialStats(farmId: _selectedFarm.id);
+      final result = await _reportRepository.getFinancialReport(farmId: _selectedFarm.id);
 
       if (!mounted) return;
 
@@ -1146,22 +1144,16 @@ class _FarmReportsScreenState extends State<FarmReportsScreen>
       );
     }
 
-    final costItems = <_CostEntry>[
-      if (stats.feedCost > 0)
-        _CostEntry('Feed Cost', stats.feedCost, Colors.orange),
-      if (stats.medicationCost > 0)
-        _CostEntry('Medication Cost', stats.medicationCost, Colors.purple),
-      if (stats.vaccineCost > 0)
-        _CostEntry('Vaccine Cost', stats.vaccineCost, Colors.teal),
-      if (stats.laborCost > 0)
-        _CostEntry('Labor Cost', stats.laborCost, Colors.blue),
-      if (stats.utilitiesCost > 0)
-        _CostEntry('Utilities Cost', stats.utilitiesCost, Colors.indigo),
-      if (stats.equipmentCost > 0)
-        _CostEntry('Equipment Cost', stats.equipmentCost, Colors.brown),
-      if (stats.otherCosts > 0)
-        _CostEntry('Other Costs', stats.otherCosts, Colors.grey),
+    const categoryColors = [
+      Colors.orange, Colors.purple, Colors.teal, Colors.blue,
+      Colors.indigo, Colors.brown, Colors.grey, Colors.green,
     ];
+
+    final costItems = stats.expenditureByCategory.asMap().entries.map((entry) {
+      final idx = entry.key;
+      final cat = entry.value;
+      return _CostEntry(cat.categoryName, cat.totalAmount, categoryColors[idx % categoryColors.length]);
+    }).toList();
 
     return ExpansionTile(
       title: const Text(

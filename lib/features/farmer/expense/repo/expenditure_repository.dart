@@ -110,7 +110,6 @@ class ExpenditureRepository {
       if (batchId != null) queryParams['batch_id'] = batchId;
       if (farmId != null) queryParams['farm_id'] = farmId;
 
-      LogUtil.info('Get Financial Stats API Query Parameters: $queryParams');
 
       final response = await apiClient.get(
         '/financials/stats',
@@ -118,7 +117,6 @@ class ExpenditureRepository {
       );
 
       final jsonResponse = jsonDecode(response.body);
-      LogUtil.info('Get Financial Stats API Response: $jsonResponse');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final dataMap = jsonResponse['data'] as Map<String, dynamic>? ?? {};

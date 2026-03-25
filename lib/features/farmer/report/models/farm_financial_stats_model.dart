@@ -9,12 +9,15 @@ class FarmFinancialStatsResponse {
     required this.data,
   });
 
+  /// Parses the new /financials/report response shape:
+  /// { success, data: { summary: {...}, expenditures: [...], ... } }
   factory FarmFinancialStatsResponse.fromJson(Map<String, dynamic> json) {
     final dataMap = TypeUtils.toMapSafe(json['data']);
+    final summaryMap = TypeUtils.toMapSafe(dataMap?['summary']);
 
     return FarmFinancialStatsResponse(
       success: TypeUtils.toBoolSafe(json['success']),
-      data: FarmFinancialStats.fromJson(dataMap ?? {}),
+      data: FarmFinancialStats.fromJson(summaryMap ?? {}),
     );
   }
 
@@ -31,10 +34,11 @@ class FarmFinancialStats {
   final double eggIncome;
   final double meatIncome;
   final double otherIncome;
+  final double chickCost;
   final double feedCost;
   final double medicationCost;
   final double vaccineCost;
-  final double laborCost;
+  final double servicesCost;
   final double utilitiesCost;
   final double equipmentCost;
   final double otherCosts;
@@ -50,10 +54,11 @@ class FarmFinancialStats {
     required this.eggIncome,
     required this.meatIncome,
     required this.otherIncome,
+    required this.chickCost,
     required this.feedCost,
     required this.medicationCost,
     required this.vaccineCost,
-    required this.laborCost,
+    required this.servicesCost,
     required this.utilitiesCost,
     required this.equipmentCost,
     required this.otherCosts,
@@ -74,10 +79,11 @@ class FarmFinancialStats {
       eggIncome: TypeUtils.toDoubleSafe(json['egg_income']),
       meatIncome: TypeUtils.toDoubleSafe(json['meat_income']),
       otherIncome: TypeUtils.toDoubleSafe(json['other_income']),
+      chickCost: TypeUtils.toDoubleSafe(json['chick_cost']),
       feedCost: TypeUtils.toDoubleSafe(json['feed_cost']),
       medicationCost: TypeUtils.toDoubleSafe(json['medication_cost']),
       vaccineCost: TypeUtils.toDoubleSafe(json['vaccine_cost']),
-      laborCost: TypeUtils.toDoubleSafe(json['labor_cost']),
+      servicesCost: TypeUtils.toDoubleSafe(json['services_cost']),
       utilitiesCost: TypeUtils.toDoubleSafe(json['utilities_cost']),
       equipmentCost: TypeUtils.toDoubleSafe(json['equipment_cost']),
       otherCosts: TypeUtils.toDoubleSafe(json['other_costs']),
@@ -102,10 +108,11 @@ class FarmFinancialStats {
       'egg_income': eggIncome,
       'meat_income': meatIncome,
       'other_income': otherIncome,
+      'chick_cost': chickCost,
       'feed_cost': feedCost,
       'medication_cost': medicationCost,
       'vaccine_cost': vaccineCost,
-      'labor_cost': laborCost,
+      'services_cost': servicesCost,
       'utilities_cost': utilitiesCost,
       'equipment_cost': equipmentCost,
       'other_costs': otherCosts,
@@ -120,25 +127,33 @@ class FarmFinancialStats {
 }
 
 class ExpenditureByCategory {
-  final String category;
-  final double amount;
+  final String categoryName;
+  final double totalAmount;
+  final int count;
+  final double percentage;
 
   const ExpenditureByCategory({
-    required this.category,
-    required this.amount,
+    required this.categoryName,
+    required this.totalAmount,
+    required this.count,
+    required this.percentage,
   });
 
   factory ExpenditureByCategory.fromJson(Map<String, dynamic> json) {
     return ExpenditureByCategory(
-      category: TypeUtils.toStringSafe(json['category']),
-      amount: TypeUtils.toDoubleSafe(json['amount']),
+      categoryName: TypeUtils.toStringSafe(json['category_name']),
+      totalAmount: TypeUtils.toDoubleSafe(json['total_amount']),
+      count: TypeUtils.toIntSafe(json['count']),
+      percentage: TypeUtils.toDoubleSafe(json['percentage']),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'category': category,
-      'amount': amount,
+      'category_name': categoryName,
+      'total_amount': totalAmount,
+      'count': count,
+      'percentage': percentage,
     };
   }
 }

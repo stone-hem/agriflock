@@ -222,7 +222,7 @@ class _BatchSelectionViewState extends State<BatchSelectionView> {
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Text(
-                                        batch.batchNumber,
+                                        batch.birdType!.name,
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold,
@@ -264,7 +264,7 @@ class _BatchSelectionViewState extends State<BatchSelectionView> {
                                         borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: Text(
-                                        batch.birdType!.name,
+                                        batch.batchNumber,
                                         style: TextStyle(
                                           fontSize: 11,
                                           color: categoryColor,

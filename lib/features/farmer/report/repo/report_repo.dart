@@ -125,6 +125,56 @@ class ReportRepository {
     }
   }
 
+  /// Get financial report for a batch or farm
+  /// {{base_url}}/financials/report?batch_id=:batchId  OR  ?farm_id=:farmId
+  Future<Result<FarmFinancialStats>> getFinancialReport({
+    String? batchId,
+    String? farmId,
+  }) async {
+    try {
+      final Map<String, String> queryParams = {};
+      if (batchId != null) queryParams['batch_id'] = batchId;
+      if (farmId != null) queryParams['farm_id'] = farmId;
+
+      LogUtil.info('Fetching financial report with params: $queryParams');
+
+      final response = await apiClient.get(
+        '/financials/report',
+        queryParameters: queryParams,
+      );
+
+      final jsonResponse = jsonDecode(response.body);
+      LogUtil.info('Financial Report API Response Status: ${response.statusCode}');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final wrapper = FarmFinancialStatsResponse.fromJson(jsonResponse);
+        return Success(wrapper.data);
+      } else {
+        return Failure(
+          message: jsonResponse['message'] ?? 'Failed to fetch financial report',
+          response: response,
+          statusCode: response.statusCode,
+        );
+      }
+    } on SocketException catch (e) {
+      LogUtil.error('Network error in getFinancialReport: $e');
+      return const Failure(
+        message: 'No internet connection',
+        statusCode: 0,
+      );
+    } catch (e) {
+      LogUtil.error('Error in getFinancialReport: $e');
+      if (e is http.Response) {
+        return Failure(
+          message: 'Failed to fetch financial report',
+          response: e,
+          statusCode: e.statusCode,
+        );
+      }
+      return Failure(message: e.toString());
+    }
+  }
+
   /// Get farm financial stats
   /// {{base_url}}/financials/stats?farm_id=:farmId&start_date=2026-02-01&end_date=2026-02-11
   Future<Result<FarmFinancialStatsResponse>> getFarmFinancialStats({

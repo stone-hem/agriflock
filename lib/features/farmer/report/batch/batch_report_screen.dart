@@ -7,7 +7,6 @@ import 'package:agriflock/core/utils/feed_format_util.dart';
 import 'package:agriflock/core/utils/result.dart';
 import 'package:agriflock/core/widgets/expense/expense_button.dart';
 import 'package:agriflock/core/widgets/expense/expense_marquee_banner.dart';
-import 'package:agriflock/features/farmer/expense/repo/expenditure_repository.dart';
 import 'package:agriflock/features/farmer/report/models/batch_report_model.dart';
 import 'package:agriflock/features/farmer/report/models/farm_financial_stats_model.dart';
 import 'package:agriflock/features/farmer/report/repo/report_repo.dart';
@@ -41,7 +40,6 @@ class _BatchReportScreenState extends State<BatchReportScreen>
   String _currency = 'KES';
 
   // Financial report state
-  final ExpenditureRepository _expenditureRepository = ExpenditureRepository();
   FarmFinancialStats? _financialStats;
   bool _isLoadingFinancial = false;
   String? _financialError;
@@ -135,7 +133,7 @@ class _BatchReportScreenState extends State<BatchReportScreen>
     });
 
     try {
-      final result = await _expenditureRepository.getFinancialStats(batchId: widget.batchId);
+      final result = await _reportRepository.getFinancialReport(batchId: widget.batchId);
 
       if (!mounted) return;
 
@@ -1507,40 +1505,27 @@ class _BatchReportScreenState extends State<BatchReportScreen>
                     ],
                   ),
                   const SizedBox(height: 12),
-                  _buildCostBar(
-                    label: 'Feeding',
-                    amount: stats.feedCost,
-                    percentage: totalExpenditure > 0 ? stats.feedCost / totalExpenditure : 0,
-                    color: Colors.orange,
-                  ),
-                  const SizedBox(height: 8),
-                  _buildCostBar(
-                    label: 'Medication',
-                    amount: stats.medicationCost,
-                    percentage: totalExpenditure > 0 ? stats.medicationCost / totalExpenditure : 0,
-                    color: Colors.red,
-                  ),
-                  const SizedBox(height: 8),
-                  _buildCostBar(
-                    label: 'Vaccination',
-                    amount: stats.vaccineCost,
-                    percentage: totalExpenditure > 0 ? stats.vaccineCost / totalExpenditure : 0,
-                    color: Colors.blue,
-                  ),
-                  const SizedBox(height: 8),
-                  _buildCostBar(
-                    label: 'Labor',
-                    amount: stats.laborCost,
-                    percentage: totalExpenditure > 0 ? stats.laborCost / totalExpenditure : 0,
-                    color: Colors.teal,
-                  ),
-                  const SizedBox(height: 8),
-                  _buildCostBar(
-                    label: 'Other Expenses',
-                    amount: stats.otherCosts,
-                    percentage: totalExpenditure > 0 ? stats.otherCosts / totalExpenditure : 0,
-                    color: Colors.purple,
-                  ),
+                  ...() {
+                    final colors = [
+                      Colors.orange, Colors.red, Colors.blue, Colors.teal,
+                      Colors.purple, Colors.indigo, Colors.brown, Colors.green,
+                    ];
+                    return stats.expenditureByCategory.asMap().entries.map((entry) {
+                      final idx = entry.key;
+                      final cat = entry.value;
+                      return Column(
+                        children: [
+                          if (idx > 0) const SizedBox(height: 8),
+                          _buildCostBar(
+                            label: cat.categoryName,
+                            amount: cat.totalAmount,
+                            percentage: cat.percentage / 100,
+                            color: colors[idx % colors.length],
+                          ),
+                        ],
+                      );
+                    }).toList();
+                  }(),
                   const SizedBox(height: 12),
                   const Divider(),
                   const SizedBox(height: 8),
