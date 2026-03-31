@@ -356,29 +356,32 @@ class _ShellScaffoldState extends State<ShellScaffold> {
                   ),
                 ),
               ),
-              child: NavigationBar(
-                selectedIndex: selectedIndex,
-                onDestinationSelected: _onItemTapped,
-                indicatorColor: Theme.of(context)
-                    .primaryColor
-                    .withValues(alpha: 0.15),
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                height: 72,
-                labelBehavior:
-                NavigationDestinationLabelBehavior.alwaysShow,
-                animationDuration: const Duration(milliseconds: 300),
-                destinations:
-                _navConfigs.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final config = entry.value;
-                  return NavDestinationItem(
-                    icon: config.icon,
-                    selectedIcon: config.selectedIcon,
-                    label: config.label,
-                    isSelected: selectedIndex == index,
-                  );
-                }).toList(),
+              child: MediaQuery.withClampedTextScaling(
+                maxScaleFactor: 1.0,
+                child: NavigationBar(
+                  selectedIndex: selectedIndex,
+                  onDestinationSelected: _onItemTapped,
+                  indicatorColor: Theme.of(context)
+                      .primaryColor
+                      .withValues(alpha: 0.15),
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  height: 72,
+                  labelBehavior:
+                  NavigationDestinationLabelBehavior.alwaysShow,
+                  animationDuration: const Duration(milliseconds: 300),
+                  destinations:
+                  _navConfigs.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final config = entry.value;
+                    return NavDestinationItem(
+                      icon: config.icon,
+                      selectedIcon: config.selectedIcon,
+                      label: config.label,
+                      isSelected: selectedIndex == index,
+                    );
+                  }).toList(),
+                ),
               ),
             ),
           );

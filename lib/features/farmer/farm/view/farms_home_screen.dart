@@ -37,11 +37,11 @@ class _FarmsHomeScreenState extends State<FarmsHomeScreen> {
 
     // Listen to scroll events to hide/show FAB
     _scrollController.addListener(() {
-      if (_scrollController.offset > 100 && _showFab) {
+      if (_scrollController.offset > 0 && _showFab) {
         setState(() {
           _showFab = false;
         });
-      } else if (_scrollController.offset <= 100 && !_showFab) {
+      } else if (_scrollController.offset <= 0 && !_showFab) {
         setState(() {
           _showFab = true;
         });
