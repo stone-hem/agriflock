@@ -431,7 +431,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       if (mounted) {
-        AppSnackBar.show(context, message: 'Google sign in failed: ${e.toString()}', type: SnackBarType.error);
+        AppSnackBar.show(context, message: 'Google sign in failed. Please try again.', type: SnackBarType.error);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

@@ -3,12 +3,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:agriflock/app_routes.dart';
-import 'package:agriflock/core/utils/api_error_handler.dart';
+import 'package:agriflock/core/utils/snackbar_api_error_handler.dart';
 import 'package:agriflock/core/utils/date_util.dart';
 import 'package:agriflock/core/utils/format_util.dart';
 import 'package:agriflock/core/utils/log_util.dart';
 import 'package:agriflock/core/utils/result.dart';
-import 'package:agriflock/core/utils/toast_util.dart';
+import 'package:agriflock/core/widgets/app_snack_bar.dart';
 import 'package:agriflock/core/widgets/custom_date_text_field.dart';
 import 'package:agriflock/core/widgets/location_picker_step.dart';
 import 'package:agriflock/core/widgets/reusable_dropdown.dart';
@@ -319,10 +319,10 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
               _createdFarmName = _farmNameController.text.trim();
               _isCreatingFarm = false;
             });
-            ToastUtil.showSuccess('Farm "$_createdFarmName" updated!');
+            AppSnackBar.show(context, message: 'Farm "$_createdFarmName" updated!', type: SnackBarType.success);
             _goToPage(1);
           case Failure(message: final msg):
-            ToastUtil.showError(msg);
+            AppSnackBar.show(context, message: msg, type: SnackBarType.error);
             setState(() => _isCreatingFarm = false);
         }
       } else {
@@ -363,7 +363,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
         if (response.statusCode >= 200 && response.statusCode < 300) {
           final farmId = jsonResponse['id'] ?? jsonResponse['data']?['id'] ?? jsonResponse['farm']?['id'];
           if (farmId == null) {
-            ToastUtil.showError('Farm created but could not retrieve ID');
+            AppSnackBar.show(context, message: 'Farm created but could not retrieve ID', type: SnackBarType.error);
             setState(() => _isCreatingFarm = false);
             return;
           }
@@ -373,16 +373,16 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
             _farmAlreadyCreated = true;   // <-- mark as existing
             _isCreatingFarm = false;
           });
-          ToastUtil.showSuccess('Farm "$_createdFarmName" created!');
+          AppSnackBar.show(context, message: 'Farm "$_createdFarmName" created!', type: SnackBarType.success);
           _goToPage(1);
         } else {
-          ApiErrorHandler.handle(response);
+          SnackBarApiErrorHandler.handle(context,response);
           setState(() => _isCreatingFarm = false);
         }
       }
     } catch (e) {
       LogUtil.error('Error submitting farm: $e');
-      ToastUtil.showError('Failed to save farm: $e');
+      AppSnackBar.show(context, message: 'Failed to save farm', type: SnackBarType.error);
       setState(() => _isCreatingFarm = false);
     }
   }
@@ -391,7 +391,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
   Future<void> _submitHouse() async {
     if (!_houseFormKey.currentState!.validate()) return;
     if (_createdFarmId == null) {
-      ToastUtil.showError('Farm not found. Please go back and create a farm.');
+      AppSnackBar.show(context, message: 'Farm not found. Please go back and create a farm.', type: SnackBarType.error);
       return;
     }
     setState(() => _isCreatingHouse = true);
@@ -419,10 +419,10 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
               _createdHouseName = _houseNameController.text.trim();
               _isCreatingHouse = false;
             });
-            ToastUtil.showSuccess('House "$_createdHouseName" updated!');
+            AppSnackBar.show(context, message: 'House "$_createdHouseName" updated!', type: SnackBarType.success);
             _goToPage(2);
           case Failure(message: final msg):
-            ToastUtil.showError(msg);
+            AppSnackBar.show(context, message: msg, type: SnackBarType.error);
             setState(() => _isCreatingHouse = false);
         }
       } else {
@@ -441,7 +441,7 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
         if (response.statusCode >= 200 && response.statusCode < 300) {
           final houseId = jsonResponse['id'] ?? jsonResponse['data']?['id'] ?? jsonResponse['house']?['id'];
           if (houseId == null) {
-            ToastUtil.showError('House created but could not retrieve ID');
+            AppSnackBar.show(context, message: 'House created but could not retrieve ID', type: SnackBarType.error);
             setState(() => _isCreatingHouse = false);
             return;
           }
@@ -451,16 +451,16 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
             _houseAlreadyCreated = true;   // <-- mark as existing
             _isCreatingHouse = false;
           });
-          ToastUtil.showSuccess('House "$_createdHouseName" created!');
+          AppSnackBar.show(context, message: 'House "$_createdHouseName" created!', type: SnackBarType.success);
           _goToPage(2);
         } else {
-          ApiErrorHandler.handle(response);
+          SnackBarApiErrorHandler.handle(context,response);
           setState(() => _isCreatingHouse = false);
         }
       }
     } catch (e) {
       LogUtil.error('Error submitting house: $e');
-      ToastUtil.showError('Failed to save house: $e');
+      AppSnackBar.show(context, message: 'Failed to save house', type: SnackBarType.error);
       setState(() => _isCreatingHouse = false);
     }
   }
@@ -470,28 +470,28 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
     if (!_batchFormKey.currentState!.validate()) return;
 
     if (_showLayersSubType && _selectedLayersSubTypeId == null) {
-      ToastUtil.showError('Please select the type of layers');
+      AppSnackBar.show(context, message: 'Please select the type of layers', type: SnackBarType.error);
       return;
     }
 
     // Hatch date / chick age validation
     if (_isOwnHatch) {
       if (_hatchController.text.isEmpty) {
-        ToastUtil.showError('Please select a hatch date');
+        AppSnackBar.show(context, message: 'Please select a hatch date', type: SnackBarType.error);
         return;
       }
     } else {
       if (_chickAgeController.text.isEmpty) {
-        ToastUtil.showError('Please enter chick age');
+        AppSnackBar.show(context, message: 'Please enter chick age', type: SnackBarType.error);
         return;
       }
       final age = int.tryParse(_chickAgeController.text) ?? -1;
       if (age < 0) {
-        ToastUtil.showError('Chick age cannot be negative');
+        AppSnackBar.show(context, message: 'Chick age cannot be negative', type: SnackBarType.error);
         return;
       }
       if (age > 365) {
-        ToastUtil.showError('Chick age cannot be more than 1 year');
+        AppSnackBar.show(context, message: 'Chick age cannot be more than 1 year', type: SnackBarType.error);
         return;
       }
       _hatchController.text = DateTime.now()
@@ -501,12 +501,12 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
 
     if (_selectedFeedingTimeCategory == null ||
         _selectedFeedingTimes[_selectedFeedingTimeCategory]!.isEmpty) {
-      ToastUtil.showError('Please select at least one feeding time');
+      AppSnackBar.show(context, message: 'Please select at least one feeding time', type: SnackBarType.error);
       return;
     }
 
     if (_createdHouseId == null) {
-      ToastUtil.showError('House not found. Please go back and create a house.');
+      AppSnackBar.show(context, message: 'House not found. Please go back and create a house.', type: SnackBarType.error);
       return;
     }
 
@@ -580,18 +580,18 @@ class _OnboardingSetupScreenState extends State<OnboardingSetupScreen> {
           _isCreatingBatch = false;
         });
 
-        ToastUtil.showSuccess('Batch created successfully!');
+        AppSnackBar.show(context, message: 'Batch created successfully!', type: SnackBarType.success);
         _goToPage(3);
       } else {
-        ApiErrorHandler.handle(response);
+        SnackBarApiErrorHandler.handle(context,response);
         setState(() => _isCreatingBatch = false);
       }
     } catch (e) {
       LogUtil.error('Error creating batch: $e');
       if (e is http.Response) {
-        ApiErrorHandler.handle(e);
+        SnackBarApiErrorHandler.handle(context,e);
       } else {
-        ToastUtil.showError('Failed to create batch: $e');
+        AppSnackBar.show(context, message: 'Failed to create batch', type: SnackBarType.error);
       }
       setState(() => _isCreatingBatch = false);
     }

@@ -677,7 +677,7 @@ class _SignupScreenState extends State<SignupScreen> {
       }
     } catch (e) {
       if (mounted) {
-        AppSnackBar.show(context, message: 'Google sign up failed: ${e.toString()}', type: SnackBarType.error);
+        AppSnackBar.show(context, message: 'Google sign up failed. Please try again.', type: SnackBarType.error);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

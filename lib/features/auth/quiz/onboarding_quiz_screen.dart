@@ -9,8 +9,8 @@ import 'package:agriflock/features/auth/quiz/steps/vet_professional_step.dart';
 import 'package:agriflock/features/auth/quiz/steps/vet_documents_step.dart';
 import 'package:agriflock/features/auth/quiz/steps/congratulations_step.dart';
 import 'package:agriflock/core/widgets/location_picker_step.dart';
-import 'package:agriflock/core/utils/api_error_handler.dart';
-import 'package:agriflock/core/utils/toast_util.dart';
+import 'package:agriflock/core/utils/snackbar_api_error_handler.dart';
+import 'package:agriflock/core/widgets/app_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
@@ -236,7 +236,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
 
       if (result['success'] == true) {
         await SharedPrefs.setBool('hasCompletedOnboarding', true);
-        ToastUtil.showSuccess(result['message']);
+        if (mounted) AppSnackBar.show(context, message: result['message'] ?? 'Onboarding complete!', type: SnackBarType.success);
 
         if (mounted) {
           _goToNextPage();
@@ -245,7 +245,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         _handleApiError(result);
       }
     } catch (e) {
-      ApiErrorHandler.handle(e);
+      SnackBarApiErrorHandler.handle(context,e);
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -279,7 +279,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
 
       if (result['success'] == true) {
         await SharedPrefs.setBool('hasCompletedOnboarding', true);
-        ToastUtil.showSuccess(result['message']);
+        if (mounted) AppSnackBar.show(context, message: result['message'] ?? 'Onboarding complete!', type: SnackBarType.success);
 
         if (mounted) {
           _goToNextPage();
@@ -288,7 +288,7 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
         _handleApiError(result);
       }
     } catch (e) {
-      ApiErrorHandler.handle(e);
+      SnackBarApiErrorHandler.handle(context,e);
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -296,11 +296,11 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
 
   void _handleApiError(Map<String, dynamic> result) {
     if (result.containsKey('response')) {
-      ApiErrorHandler.handle(result['response']);
+      SnackBarApiErrorHandler.handle(context,result['response']);
     } else if (result.containsKey('error')) {
-      ApiErrorHandler.handle(result['error']);
+      SnackBarApiErrorHandler.handle(context,result['error']);
     } else {
-      ToastUtil.showError(result['message']);
+      AppSnackBar.show(context, message: result['message'] ?? 'An error occurred', type: SnackBarType.error);
     }
   }
 
@@ -316,11 +316,11 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
 
   bool _validateFarmerFields() {
     if (_farmerExperienceController.text.isEmpty) {
-      ToastUtil.showError("Please enter your years of experience");
+      AppSnackBar.show(context, message: 'Please enter your years of experience', type: SnackBarType.error);
       return false;
     }
     if (_selectedAddress == null || _latitude == null || _longitude == null) {
-      ToastUtil.showError("Please select your location");
+      AppSnackBar.show(context, message: 'Please select your location', type: SnackBarType.error);
       return false;
     }
     return true;
@@ -328,35 +328,35 @@ class _OnboardingQuestionsScreenState extends State<OnboardingQuestionsScreen> {
 
   bool _validateVetFields() {
     if (_selectedAddress == null || _latitude == null || _longitude == null) {
-      ToastUtil.showError("Please select a location");
+      AppSnackBar.show(context, message: 'Please select a location', type: SnackBarType.error);
       return false;
     }
     if (_dobController.text.isEmpty) {
-      ToastUtil.showError("Please select your date of birth");
+      AppSnackBar.show(context, message: 'Please select your date of birth', type: SnackBarType.error);
       return false;
     }
     if (_selectedGender == null) {
-      ToastUtil.showError("Please select your gender");
+      AppSnackBar.show(context, message: 'Please select your gender', type: SnackBarType.error);
       return false;
     }
     if (_vetExperienceController.text.isEmpty) {
-      ToastUtil.showError("Please enter your years of experience");
+      AppSnackBar.show(context, message: 'Please enter your years of experience', type: SnackBarType.error);
       return false;
     }
     if (_selectedEducationLevel == null) {
-      ToastUtil.showError("Please select your education level");
+      AppSnackBar.show(context, message: 'Please select your education level', type: SnackBarType.error);
       return false;
     }
     if (_idPhotoFile == null) {
-      ToastUtil.showError("Please upload your ID photo");
+      AppSnackBar.show(context, message: 'Please upload your ID photo', type: SnackBarType.error);
       return false;
     }
     if (_selfieFile == null) {
-      ToastUtil.showError("Please upload your selfie");
+      AppSnackBar.show(context, message: 'Please upload your selfie', type: SnackBarType.error);
       return false;
     }
     if (_uploadedCertificates.isEmpty) {
-      ToastUtil.showError("Please upload at least one qualification certificate");
+      AppSnackBar.show(context, message: 'Please upload at least one qualification certificate', type: SnackBarType.error);
       return false;
     }
     return true;

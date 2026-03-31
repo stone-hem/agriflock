@@ -57,8 +57,8 @@ class SocialAuthService {
         if (e.code == 'sign_in_cancelled') {
           return const Failure(message: 'Sign in was cancelled', statusCode: 0);
         }
-        return Failure(
-          message: 'Google sign in failed: ${e.message ?? e.code}',
+        return const Failure(
+          message: 'Google sign in failed. Please try again.',
           statusCode: 0,
         );
       }
@@ -116,9 +116,9 @@ class SocialAuthService {
       if (e.code == 'sign_in_cancelled') {
         return const Failure(message: 'Sign in was cancelled', statusCode: 0);
       }
-      return Failure(message: 'Google sign in failed: ${e.message ?? e.code}', statusCode: 0);
+      return const Failure(message: 'Google sign in failed. Please try again.', statusCode: 0);
     } catch (e) {
-      return Failure(message: e.toString(), statusCode: 0);
+      return const Failure(message: 'Google sign in failed. Please try again.', statusCode: 0);
     }
   }
 
