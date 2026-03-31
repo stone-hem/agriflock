@@ -674,10 +674,10 @@ class _LayersTabState extends State<_LayersTab> {
 
               ImageWithDescriptionWidget(
                   imageAssetPath: 'assets/quotation/img_7.png',
-                  description: 'This is the first image description'),
+                  description: 'Figure 1'),
               ImageWithDescriptionWidget(
                   imageAssetPath: 'assets/quotation/img_8.png',
-                  description: 'This is the first image description'),
+                  description: 'Figure 2'),
               const SizedBox(height: 10),
               _LayersDisclaimer(),
               const SizedBox(height: 32),

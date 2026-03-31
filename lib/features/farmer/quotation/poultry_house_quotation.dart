@@ -422,23 +422,23 @@ class _PoultryHouseQuotationScreenState extends State<PoultryHouseQuotationScree
 
         ImageWithDescriptionWidget(
           imageAssetPath: 'assets/quotation/img.png',
-          description: 'This is the first image description',
+          description: 'Figure 1',
         ),
         ImageWithDescriptionWidget(
           imageAssetPath: 'assets/quotation/img_1.png',
-          description: 'This is the second image description',
+          description: 'Figure 2',
         ),
         ImageWithDescriptionWidget(
           imageAssetPath: 'assets/quotation/img_2.png',
-          description: 'This is the third image description',
+          description: 'Figure 3',
         ),
         ImageWithDescriptionWidget(
           imageAssetPath: 'assets/quotation/img_3.png',
-          description: 'This is the fourth image description',
+          description: 'Figure 4',
         ),
         ImageWithDescriptionWidget(
           imageAssetPath: 'assets/quotation/img_4.png',
-          description: 'This is the fifth image description',
+          description: 'Figure 5',
         ),
 
         const SizedBox(height: 10),

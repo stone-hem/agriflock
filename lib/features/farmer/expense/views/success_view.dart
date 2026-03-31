@@ -165,20 +165,10 @@ class SuccessView extends StatelessWidget {
                     _buildUpdateItem(
                       Icons.trending_up,
                       'Batch cost updated',
-                      '${batch!.batchNumber} +KES ${FormatUtil.formatAmount(totalPrice)}',
+                      '${batch!.birdType!.name} +KES ${FormatUtil.formatAmount(totalPrice)}',
                       Colors.blue,
                     ),
                   const SizedBox(height: 16),
-
-                  // Activity recorded
-                  _buildUpdateItem(
-                    Icons.history,
-                    useNow ? 'Usage recorded' : 'Inventory updated',
-                    useNow
-                        ? 'Activity logged for ${batch?.batchNumber ?? 'batch'}'
-                        : '${quantity.toStringAsFixed(0)} units added to store',
-                    Colors.orange,
-                  ),
 
                   if (_isVaccineOrMedicine && batch != null) ...[
                     const SizedBox(height: 16),
@@ -237,7 +227,14 @@ class SuccessView extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
 
-                  _buildDetailRow('Batch', batch!.batchNumber),
+                  Text('${batch!.birdType?.name}',
+                    textAlign: .center,
+                    style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),),
+                  SizedBox(height: 10,),
+
                   _buildDetailRow('Birds', '${batch!.currentCount}'),
                   _buildDetailRow('Age', 'Day ${batch!.ageInDays}'),
                   if (batch!.farm != null)

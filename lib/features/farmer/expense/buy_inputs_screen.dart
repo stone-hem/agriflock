@@ -236,6 +236,7 @@ class _BuyInputsPageViewState extends State<BuyInputsPageView> {
       switch (result) {
         case Success():
           RefreshBus.instance.fire(RefreshEvent.expenseCreated);
+          setState(() => _isSubmitting = false);
           // Move to success page
           _nextPage();
           break;
