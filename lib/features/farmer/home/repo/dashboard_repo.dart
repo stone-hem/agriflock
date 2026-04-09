@@ -1,4 +1,3 @@
-// lib/features/dashboard/repositories/dashboard_repository.dart
 
 import 'dart:convert';
 import 'dart:io';
@@ -17,7 +16,6 @@ class DashboardRepository {
       final response = await apiClient.get('/dashboard/summary');
 
       final jsonResponse = jsonDecode(response.body);
-      LogUtil.info('Dashboard Summary API Response: $jsonResponse');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return Success(DashboardSummary.fromJson(jsonResponse));
@@ -56,7 +54,6 @@ class DashboardRepository {
       final response = await apiClient.get('/dashboard/recent_activity?limit=$limit');
 
       final jsonResponse = jsonDecode(response.body);
-      LogUtil.info('Recent Activities API Response: $jsonResponse');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         List<DashboardActivity> activities = [];
@@ -106,7 +103,6 @@ class DashboardRepository {
       final response = await apiClient.get('/financials/overview');
 
       final jsonResponse = jsonDecode(response.body);
-      LogUtil.info('Financial Overview API Response: $jsonResponse');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return Success(FinancialOverview.fromJson(jsonResponse));
@@ -221,7 +217,6 @@ class DashboardRepository {
       final response = await apiClient.get('/farm-reports/my-batches');
 
       final jsonResponse = jsonDecode(response.body);
-      LogUtil.info('User Batches API Response: $jsonResponse');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final batchResponse = BatchHomeResponse.fromJson(jsonResponse);

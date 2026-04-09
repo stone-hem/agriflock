@@ -40,15 +40,11 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> with CodeAutoFill {
   void initState() {
     super.initState();
     _startCountdown();
-    _initSmsAutofill();
-  }
-
-  /// Initialize SMS autofill — Android only.
-  /// iOS uses AutofillGroup + AutofillHints.oneTimeCode (handled in build).
-  Future<void> _initSmsAutofill() async {
     if (Platform.isAndroid) {
-      // Start listening for the incoming OTP SMS
-      await SmsAutoFill().listenForCode();
+      SmsAutoFill().listenForCode();
+      SmsAutoFill().getAppSignature.then(
+        (hash) => debugPrint('APP HASH: $hash'),
+      );
     }
   }
 
@@ -193,7 +189,12 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> with CodeAutoFill {
                                   focusNode: _focusNodes[index],
                                   textAlign: TextAlign.center,
                                   keyboardType: TextInputType.number,
-                                  maxLength: 1,
+                                  // First field: allow full code via paste / autofill.
+                                  // Other fields: enforce single digit.
+                                  maxLength: isFirst ? 6 : 1,
+                                  maxLengthEnforcement: isFirst
+                                      ? MaxLengthEnforcement.none
+                                      : MaxLengthEnforcement.enforced,
 
                                   // ── iOS autofill hint ──────────────────
                                   // Only the FIRST field needs the hint;
@@ -233,6 +234,12 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> with CodeAutoFill {
                                     contentPadding: EdgeInsets.zero,
                                   ),
                                   onChanged: (value) {
+                                    // Paste or autofill of full code into first field
+                                    if (isFirst && value.length > 1) {
+                                      _fillOtpFields(value);
+                                      return;
+                                    }
+
                                     if (value.length == 1 && index < 5) {
                                       _focusNodes[index + 1].requestFocus();
                                     } else if (value.isEmpty && index > 0) {
@@ -392,10 +399,7 @@ class _OTPVerifyScreenState extends State<OTPVerifyScreen> with CodeAutoFill {
       _countdown = 60;
     });
 
-    // Re-start SMS listener on Android for the new code.
-    if (Platform.isAndroid) {
-      await SmsAutoFill().listenForCode();
-    }
+    if (Platform.isAndroid) SmsAutoFill().listenForCode();
 
     try {
       final result = await _authRepository.resendVerificationCode(

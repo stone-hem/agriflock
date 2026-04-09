@@ -130,10 +130,6 @@ class SocialAuthService {
           AppleIDAuthorizationScopes.email,
           AppleIDAuthorizationScopes.fullName,
         ],
-        webAuthenticationOptions: WebAuthenticationOptions(
-          clientId: 'YOUR_CLIENT_ID',
-          redirectUri: Uri.parse('YOUR_REDIRECT_URI'),
-        ),
       );
 
       final Map<String, dynamic> authData = {

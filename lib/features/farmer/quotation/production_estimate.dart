@@ -1397,33 +1397,7 @@ class _LayersDisclaimer extends StatelessWidget {
   const _LayersDisclaimer();
 
   @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: Colors.grey.withOpacity(0.2))),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
-            const Icon(Icons.warning, color: Colors.orange, size: 20),
-            const SizedBox(width: 8),
-            const Text('DISCLAIMER',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.orange)),
-          ]),
-          const SizedBox(height: 12),
-          Text(
-            '• Prices are estimates and may vary based on location and market conditions\n'
-                '• Mortality rates and production figures are industry averages\n'
-                '• Consult with agricultural experts for specific farm conditions\n'
-                '• Equipment costs are one-time expenses\n'
-                '• Revenue projections are based on current market prices',
-            style: TextStyle(fontSize: 14, color: Colors.grey.shade700, height: 1.5),
-          ),
-        ]),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => const _ProductionDisclaimer();
 }
 
 // ─── FRONTEND CALCULATOR PAGE (Broilers & Indigenous) ────────────────────────
@@ -1675,15 +1649,17 @@ class _FrontendCalculatorPageState extends State<_FrontendCalculatorPage> {
 
 // ─── DISCLAIMER WIDGET ───────────────────────────────────────────────────────
 
-class _DisclaimerWidget extends StatefulWidget {
+class _DisclaimerWidget extends StatelessWidget {
   const _DisclaimerWidget();
 
   @override
-  State<_DisclaimerWidget> createState() => _DisclaimerWidgetState();
+  Widget build(BuildContext context) => const _ProductionDisclaimer();
 }
 
-class _DisclaimerWidgetState extends State<_DisclaimerWidget> {
-  bool _open = false;
+// ─── SHARED PRODUCTION DISCLAIMER ────────────────────────────────────────────
+
+class _ProductionDisclaimer extends StatelessWidget {
+  const _ProductionDisclaimer();
 
   @override
   Widget build(BuildContext context) {
@@ -1693,53 +1669,37 @@ class _DisclaimerWidgetState extends State<_DisclaimerWidget> {
         border: Border.all(color: const Color(0xFFF0D080), width: 1.5),
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Column(children: [
-        GestureDetector(
-          onTap: () => setState(() => _open = !_open),
-          child: Container(padding: const EdgeInsets.all(16),
-              child: Row(children: [
-                const Expanded(child: Text('⚠️ Costs NOT captured in this quotation',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF7A5000)))),
-                Icon(_open ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                    color: const Color(0xFF7A5000)),
-              ])),
-        ),
-        if (_open) ...[
-          const Divider(height: 1, color: Color(0xFFF0D080)),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('This calculator covers direct production costs only (chicks, feeds, medications, vaccines). Estimate these separately:',
-                  style: TextStyle(fontSize: 12, color: Color(0xFF444444))),
-              const SizedBox(height: 12),
-              _dg('Equipment', _equipmentItems),
-              const SizedBox(height: 8),
-              _dg('Utilities & Overhead', _utilityItems),
-              const SizedBox(height: 12),
-              const Text('Disclaimer: All figures are estimates based on Kenyan market averages. Actual costs and revenues will vary by region, season, breed performance, management, and market prices. For planning purposes only. Consult a qualified livestock officer for farm-specific guidance.',
-                  style: TextStyle(fontSize: 10, color: Color(0xFF999999), fontStyle: FontStyle.italic)),
-            ]),
+      padding: const EdgeInsets.all(16),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── NOTE ──────────────────────────────────────────────────────────
+          Text('NOTE:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF7A5000))),
+          SizedBox(height: 4),
+          Text(
+            'Adjust Mortality, Laying period, Input prices, Number of chickens, Egg prices as per your region to get the right quote and analysis.',
+            style: TextStyle(fontSize: 12, color: Color(0xFF444444), height: 1.5),
+          ),
+          SizedBox(height: 12),
+          // ── EXCLUDED ──────────────────────────────────────────────────────
+          Text('EXCLUDED:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF7A5000))),
+          SizedBox(height: 4),
+          Text(
+            'Housing & Infrastructure, Maintenance & repairs, Brooding, Drinkers & Feeders, Cages, Wood Pallets, Weighing scale, Transport, Electricity, Water, Labour. Among others.',
+            style: TextStyle(fontSize: 12, color: Color(0xFF444444), height: 1.5),
+          ),
+          SizedBox(height: 12),
+          // ── DISCLAIMER ────────────────────────────────────────────────────
+          Text('Disclaimer', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF7A5000))),
+          SizedBox(height: 4),
+          Text(
+            'These figures are estimates based on your inputs and indicative market assumptions. Actual costs, revenue, and returns will vary depending on flock health, feed conversion, mortality, and market prices at the time of sale. This is not a formal quotation or financial advice, and AgriFlock 360 is not liable for decisions made based on these results.',
+            style: TextStyle(fontSize: 11, color: Color(0xFF666666), fontStyle: FontStyle.italic, height: 1.5),
           ),
         ],
-      ]),
+      ),
     );
   }
-
-  Widget _dg(String title, List<String> items) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(title.toUpperCase(), style: const TextStyle(
-          fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: _kGreen900)),
-      const SizedBox(height: 4),
-      ...items.map((item) => Padding(
-        padding: const EdgeInsets.only(bottom: 3, left: 8),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('• ', style: TextStyle(fontSize: 11, color: Color(0xFF666666))),
-          Expanded(child: Text(item, style: const TextStyle(fontSize: 11, color: Color(0xFF444444)))),
-        ]),
-      )),
-    ],
-  );
 }
 
 // ─── EXTENSION ───────────────────────────────────────────────────────────────
